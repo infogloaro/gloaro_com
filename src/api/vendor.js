@@ -1,0 +1,28 @@
+import api from './axios'
+
+export const vendorApi = {
+  dashboard: () => api.get('/vendors/me/dashboard'),
+  profile: () => api.get('/vendors/me/profile'),
+  createProfile: (data) => api.post('/vendors', data),
+  updateProfile: (id, data) => api.patch(`/vendors/${id}`, data),
+  products: (params) => api.get('/vendors/me/products', { params }),
+  createProduct: (data) => api.post('/products', data),
+  updateProduct: (id, data) => api.patch(`/products/${id}`, data),
+  deleteProduct: (id) => api.delete(`/products/${id}`),
+  services: (params) => api.get('/vendors/me/services', { params }),
+  createService: (data) => api.post('/services', data),
+  updateService: (id, data) => api.patch(`/services/${id}`, data),
+  deleteService: (id) => api.delete(`/services/${id}`),
+  leads: (params) => api.get('/leads', { params }),
+  updateLead: (id, data) => api.patch(`/leads/${id}/status`, data),
+  addLeadNote: (id, data) => api.post(`/leads/${id}/notes`, data),
+  reviews: (params) => api.get('/vendors/me/reviews', { params }),
+  replyReview: (id, data) => api.post(`/reviews/${id}/reply`, data),
+  membership: () => api.get('/memberships/my'),
+  membershipHistory: (params) => api.get('/memberships/my/history', { params }),
+  plans: () => api.get('/memberships/plans'),
+  purchase: (data) => api.post('/memberships/purchase', data),
+  renew: (data) => api.post('/memberships/renew', data),
+  payments: (params) => api.get('/vendors/me/payments', { params }),
+  subscriptions: (params) => api.get('/vendors/me/subscriptions', { params }),
+}
