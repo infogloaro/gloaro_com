@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { ShoppingBag, ShoppingCart, Store, UserRound, UsersRound } from 'lucide-react'
 import heroNetworkIcon from '../assets/hero_net_icon.png'
 import heroBackground from '../assets/herobg-1.png'
 import businessImage from '../assets/business_img.png'
-import tickIcon from '../assets/tick_icon.png'
 import benefitImage1 from '../assets/img1.png'
 import benefitImage2 from '../assets/img2.png'
 import benefitImage3 from '../assets/img3.png'
@@ -27,6 +27,8 @@ const heroSlides = [
   heroBackground,
 ]
 
+const loginLink = (type, redirect) => `/login?type=${type}&redirect=${encodeURIComponent(redirect)}`
+
 const whyGloaroPoints = [
   { title: 'Grow Your Network', description: 'GLOARO is not just a business network; it is a growth ecosystem where entrepreneurs find opportunities, investors discover potential, and together they create sustainable success' },
   { title: 'Generate Referrals', description: 'Structured networking meetings designed to build strong business relationships and create referral partnerships.' },
@@ -38,11 +40,12 @@ const serviceItems = [
   'Analytics', 'Franchise', 'B2B solutions', 'Digital Marketing', 'Resources',
 ]
 
-const ecosystemPillars = [
-  { title: 'Connect', subtitle: 'Build Strong Relationships', items: ['One-to-One Referrals', 'Referral Meetings', 'Business Directory Listing'] },
-  { title: 'Promote', subtitle: 'Increase Your Visibility', items: ['Digital Referral & Marketing', 'Social Media Support', 'Network Promotion'] },
-  { title: 'Expand', subtitle: 'Explore New Opportunities', items: ['Business Expo & Trade events', 'Global Business Visits', 'International Networking'] },
-  { title: 'Scale', subtitle: 'Grow & Scale Your Business', items: ['E-Commerce & App Support', 'Strategic Partnerships', 'Lead Generation Support'] },
+const ecosystemActions = [
+  { Icon: UserRound, title: 'Membership', description: 'Join Gloaro Network and get exclusive member benefits', action: 'Apply Now', href: loginLink('membership', '/membership-agreement'), color: 'text-[#ffb21a]', bg: '#fff3d0' },
+  { Icon: Store, title: 'Franchise', description: 'Run your own Gloaro franchise and grow together', action: 'Apply Now', href: loginLink('franchise', '/membership-application'), color: 'text-[#7b4df1]', bg: '#f0eaff' },
+  { Icon: UsersRound, title: 'Business Network', description: 'Connect with global businesses and professionals', action: 'Apply Now', href: loginLink('b2b', '/vendors'), color: 'text-[#20b15a]', bg: '#e6f8ed' },
+  { Icon: ShoppingCart, title: 'B2B Marketplace', description: 'Buy quality products and services from trusted sellers', action: 'Shop Now', href: loginLink('b2b', '/vendors'), color: 'text-[#1377f2]', bg: '#e8f1ff' },
+  { Icon: ShoppingBag, title: 'Vendor (Sell)', description: 'Sell your products and services to global buyers', action: 'Apply Now', href: loginLink('vendor', '/vendor'), color: 'text-[#ff7a1a]', bg: '#fff0e6' },
 ]
 
 const memberBenefits = [
@@ -168,7 +171,7 @@ export default function Home() {
           <div className="flex items-center gap-2 rounded-2xl border border-white/15 bg-slate-400/40 px-4 py-2 shadow-xl backdrop-blur sm:px-7 sm:py-3"><img src={heroNetworkIcon} alt="Gloaro network" className="h-7 w-7 object-contain sm:h-8 sm:w-8" /><span className="text-base font-semibold tracking-tight text-white sm:text-2xl">GLOARO BUSINESS NETWORK</span></div>
           <h1 className="mt-7 max-w-5xl font-playfair text-5xl font-medium italic leading-[0.92] tracking-tight text-white sm:mt-8 sm:text-7xl lg:text-8xl"><span className="block">We Give. <span className="text-[#ffa900]">We Grow.</span></span><span className="mt-3 block sm:mt-4"><span className="text-[#ff9515]">We</span> Win Together.</span></h1>
           <p className="mt-6 max-w-7xl font-urbanist text-base font-medium leading-7 tracking-[0.05em] text-white sm:text-lg">A trusted network of professionals and entrepreneurs building relationships, creating opportunities,<br className="hidden md:block" /> and shaping future success together.</p>
-          <div className="mt-5 flex flex-wrap justify-center gap-3"><a href="#membership" className="rounded-lg bg-[#10499b] px-6 py-3 text-lg font-bold text-white shadow-lg shadow-black/30">Become a Member&nbsp; ↗</a><a href="#why-gloaro" className="rounded-lg border border-white/15 bg-slate-700/70 px-6 py-3 text-lg font-bold text-white shadow-lg shadow-black/30 backdrop-blur">Explore Network&nbsp; ↗</a></div>
+          <div className="mt-5 flex flex-wrap justify-center gap-3"><a href={loginLink('membership', '/membership-agreement')} className="rounded-lg bg-[#10499b] px-6 py-3 text-lg font-bold text-white shadow-lg shadow-black/30">Become a Member&nbsp; ↗</a><a href="#why-gloaro" className="rounded-lg border border-white/15 bg-slate-700/70 px-6 py-3 text-lg font-bold text-white shadow-lg shadow-black/30 backdrop-blur">Explore Network&nbsp; ↗</a></div>
           <p className="mt-5 font-serif text-2xl font-bold text-[#f6a600]">Connect. Collaborate. Grow Globally</p>
           <div className="mt-5 flex gap-2">{heroSlides.map((_, index) => <button key={index} onClick={() => setActiveSlide(index)} aria-label={`Show slide ${index + 1}`} className={`h-1.5 rounded-full transition-all ${index === activeSlide ? 'w-7 bg-[#ffad16]' : 'w-1.5 bg-white/50'}`} />)}</div>
         </div>
@@ -182,13 +185,33 @@ export default function Home() {
     <section id="why-gloaro" className="bg-[#fdf9e9] py-12 sm:py-16 lg:py-20"><div className="mx-auto grid max-w-6xl items-center gap-8 px-5 sm:gap-10 lg:grid-cols-[minmax(0,400px)_minmax(0,1fr)] lg:gap-14 lg:px-8"><img className="h-auto w-full max-w-[400px] justify-self-center rounded-lg object-cover shadow-sm lg:h-[400px] lg:w-[400px] lg:justify-self-start" src={businessImage} alt="Business professionals collaborating" /><div className="text-center lg:text-left"><h2 className="font-playfair text-3xl font-semibold italic leading-tight text-[#0d4697] sm:text-4xl lg:text-[38px]">Why <span className="text-[#ffae13]">Gloaro</span></h2><p className="mx-auto mt-4 max-w-[670px] text-left font-urbanist text-base font-medium leading-relaxed text-[#151515] sm:text-lg lg:mx-0">GLOARO is more than just a business network; it is a powerful growth ecosystem designed to connect entrepreneurs, investors, and innovators. It creates a platform where businesses can discover new opportunities, build meaningful partnerships, and unlock their full potential. By bringing the right people together, GLOARO helps transform ideas into impactful ventures and supports the journey toward sustainable success.</p><a href="#membership" className="mt-5 inline-block rounded-lg bg-[#0d4697] px-6 py-3 font-urbanist text-base font-semibold text-white shadow-sm sm:text-lg">Explore Network&nbsp; ↗</a></div></div></section>
 
     {/* 3. Business Categories */}
-    <section id="business-categories" className="bg-[#0d4697] px-5 py-12 sm:py-16 lg:px-8 lg:py-12"><div className="mx-auto max-w-7xl"><div className="text-center text-white"><h2 className="font-playfair text-4xl font-semibold italic sm:text-5xl"><span className="mr-3 align-middle text-xl not-italic sm:mr-6">—</span><span className="text-[#ffae13]">Business</span> Categories<span className="ml-3 align-middle text-xl not-italic sm:ml-6">—</span></h2><p className="mt-1 font-urbanist text-base font-medium sm:text-lg">Explore business opportunities across the Gloaro network</p></div><div className="mt-7 grid gap-5 sm:grid-cols-2 lg:grid-cols-5 lg:gap-x-6 lg:gap-y-5">{serviceItems.map((service) => <a key={service} href="/categories" className="flex min-h-20 items-center justify-between rounded-2xl border border-white/25 bg-white/15 px-7 font-playfair text-xl font-semibold italic text-white shadow-[inset_0_1px_12px_rgba(255,255,255,.12)] transition hover:-translate-y-1 hover:bg-white/25"><span className={service === 'B2B solutions' || service === 'Digital Marketing' ? 'max-w-[88px] leading-5' : ''}>{service}</span><span className="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-white text-sm not-italic text-[#0d4697]">›</span></a>)}</div></div></section>
+    <section id="business-categories" className="bg-[#0d4697] px-5 py-12 sm:py-16 lg:px-8 lg:py-12"><div className="mx-auto max-w-7xl"><div className="text-center text-white"><h2 className="font-playfair text-4xl font-semibold italic sm:text-5xl"><span className="mr-3 align-middle text-xl not-italic sm:mr-6">—</span><span className="text-[#ffae13]">Business</span> Categories<span className="ml-3 align-middle text-xl not-italic sm:ml-6">—</span></h2><p className="mt-1 font-urbanist text-base font-medium sm:text-lg">Explore business opportunities across the Gloaro network</p></div><div className="mt-7 grid gap-5 sm:grid-cols-2 lg:grid-cols-5 lg:gap-x-6 lg:gap-y-5">{serviceItems.map((service) => <a key={service} href={service === 'B2B solutions' ? loginLink('b2b', '/vendors') : service === 'Franchise' ? loginLink('franchise', '/membership-application') : '/categories'} className="flex min-h-20 items-center justify-between rounded-2xl border border-white/25 bg-white/15 px-7 font-playfair text-xl font-semibold italic text-white shadow-[inset_0_1px_12px_rgba(255,255,255,.12)] transition hover:-translate-y-1 hover:bg-white/25"><span className={service === 'B2B solutions' || service === 'Digital Marketing' ? 'max-w-[88px] leading-5' : ''}>{service}</span><span className="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-white text-sm not-italic text-[#0d4697]">›</span></a>)}</div></div></section>
 
     {/* 4. Features */}
     <section id="features" className="border-t-4 border-[#0d4697] bg-[#fdf9e9] py-12 sm:py-16 lg:py-18"><div className="mx-auto grid max-w-5xl items-center gap-10 px-5 lg:grid-cols-[1.15fr_.85fr] lg:gap-16 lg:px-8"><div><h2 className="font-playfair text-4xl font-semibold leading-tight sm:text-5xl"><span className="italic text-[#ffae13]">Features</span> of <span className="italic text-[#0d4697]">Gloaro</span> <span className="font-play not-italic text-[#0d4697]">360</span></h2><div className="mt-4 space-y-5 font-urbanist">{whyGloaroPoints.map((point, index) => <div key={point.title}><h3 className="text-xl font-bold text-[#0d4697]">{index + 1}. {point.title}</h3><p className="mt-1 text-base font-semibold leading-[1.28] text-[#161616]">{point.description}</p></div>)}</div></div><img src={whyImage} alt="Business team in a strategy meeting" className="h-72 w-full rounded-[28px] object-cover shadow-sm sm:h-96 lg:h-[330px]" /></div></section>
 
     {/* 5. Gloaro 360 Ecosystem */}
-    <section id="marketplace" className="bg-[#0b1f3d] px-5 py-12 text-white sm:py-16 lg:px-8"><div className="mx-auto max-w-7xl"><div className="text-center"><h2 className="font-playfair text-4xl font-semibold italic leading-tight sm:text-5xl"><span>Explore </span><span className="text-[#ffae13]">Gloaro</span> <span className="font-play not-italic text-[#ffae13]">360</span> Ecosystem</h2><p className="mt-2 font-urbanist text-lg font-semibold">We Give. We Grow. We Win Together.</p></div><div className="mt-7 grid gap-5 sm:grid-cols-2 xl:grid-cols-4 xl:gap-10">{ecosystemPillars.map((pillar) => <article key={pillar.title} className="rounded-2xl border border-white/45 bg-slate-500/25 p-5 shadow-[inset_0_1px_12px_rgba(255,255,255,.06)] sm:p-6"><h3 className="font-playfair text-3xl font-semibold italic">{pillar.title}</h3><p className="mt-1 font-urbanist text-base font-medium">{pillar.subtitle}</p><ul className="mt-4 space-y-2 font-urbanist text-sm leading-5 text-slate-100">{pillar.items.map((item) => <li key={item} className="flex gap-3"><img src={tickIcon} alt="" className="mt-0.5 h-3.5 w-3.5 shrink-0 object-contain" /><span>{item}</span></li>)}</ul></article>)}</div></div></section>
+    <section id="marketplace" className="bg-white px-5 py-10 sm:py-12 lg:px-8">
+      <div className="mx-auto max-w-7xl">
+        <div className="text-center">
+          <h2 className="font-playfair text-4xl font-semibold italic leading-tight text-[#0d4697] sm:text-5xl"><span>Explore </span><span className="text-[#ffae13]">Gloaro</span> <span className="font-play not-italic text-[#ffae13]">360</span> Ecosystem</h2>
+          <p className="mt-2 font-urbanist text-lg font-semibold text-[#1f2937]">We Give. We Grow. We Win Together.</p>
+          <p className="mt-7 font-urbanist text-base font-semibold text-[#4b5563] sm:text-lg">Everything you need to grow your business</p>
+        </div>
+        <div className="mx-auto mt-5 grid max-w-6xl gap-5 sm:grid-cols-2 lg:grid-cols-5">
+          {ecosystemActions.map(({ Icon, title, description, action, href, color, bg }) => (
+            <a key={title} href={href} className="group flex min-h-[190px] flex-col items-center rounded-lg border border-[#e6ebf2] bg-white px-4 py-5 text-center shadow-[0_8px_24px_rgba(15,23,42,.06)] transition hover:-translate-y-1 hover:shadow-[0_14px_30px_rgba(15,23,42,.12)]">
+              <span className="relative grid h-12 w-12 place-items-center rounded-full" style={{ backgroundColor: bg }}>
+                <Icon className={`h-10 w-10 ${color}`} strokeWidth={2.4} />
+              </span>
+              <h3 className="mt-3 font-urbanist text-base font-extrabold text-[#111827]">{title}</h3>
+              <p className="mt-2 min-h-[58px] max-w-[145px] font-urbanist text-xs font-semibold leading-5 text-[#4b5563]">{description}</p>
+              <span className="mt-2 inline-flex items-center gap-2 font-urbanist text-xs font-extrabold text-[#1366d6]">{action} <span className="transition group-hover:translate-x-1">→</span></span>
+            </a>
+          ))}
+        </div>
+      </div>
+    </section>
 
     {/* 6. Member Benefits */}
     <section id="membership" className="border-t-2 border-[#0d4697] bg-[#fdf9e9] px-5 py-12 sm:py-16 lg:px-8"><div className="mx-auto max-w-7xl"><div className="text-center"><p className="font-inter text-sm font-medium tracking-[0.16em] text-[#0d4697] sm:text-base">GLOARO 360 MEMBER BENEFITS</p><h2 className="mt-1 font-playfair text-3xl font-semibold italic leading-tight text-[#0d4697] sm:text-4xl">Everything you need to <span className="text-[#ff7e15]">grow your business</span></h2><p className="mt-1 font-urbanist text-sm font-medium text-[#161616] sm:text-base">Our membership opens the door to powerful connections, global exposure and<br className="hidden sm:block" /> resources that help you build, scale and succeed.</p></div><div className="mt-4 flex justify-end"><a href="#premium" className="font-urbanist text-base font-bold text-[#0d4697]">View All&nbsp; →</a></div><div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">{memberBenefits.map(([title, image]) => <a key={title} href="#premium" className="group relative h-48 overflow-hidden rounded-xl bg-slate-700 sm:h-52"><img src={image} alt={title} className="h-full w-full object-cover transition duration-500 group-hover:scale-105" /><div className="absolute inset-x-3 bottom-3 flex items-center justify-between gap-3 rounded-xl border border-white/35 bg-slate-100/10 px-4 py-2.5 text-white backdrop-blur-sm"><span className="max-w-[210px] font-urbanist text-base font-semibold leading-5">{title}</span><span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-white text-xl leading-none text-[#0d4697]">›</span></div></a>)}</div></div></section>

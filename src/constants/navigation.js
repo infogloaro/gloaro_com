@@ -11,6 +11,7 @@ import {
   Home,
   LayoutDashboard,
   ListTree,
+  Network,
   Package,
   Settings,
   ShoppingBag,
@@ -27,7 +28,17 @@ export const adminNav = [
   ['Products', '/admin/products', Package],
   ['Services', '/admin/services', BriefcaseBusiness],
   ['Memberships', '/admin/memberships', CreditCard],
-  ['Applications', '/admin/membership-applications', FileText],
+  {
+    label: 'Applications',
+    icon: FileText,
+    children: [
+      ['All Applications', '/admin/applications', FileText],
+      ['Membership', '/admin/applications/membership', CreditCard],
+      ['Franchise', '/admin/applications/franchise', BriefcaseBusiness],
+      ['Business Network', '/admin/applications/business-network', Network],
+      ['Vendor', '/admin/applications/vendor', Building2],
+    ],
+  },
   ['Events', '/admin/events', CalendarDays],
   ['Referrals', '/admin/referrals', Ticket],
   ['Banners', '/admin/banners', FileText],
@@ -64,4 +75,14 @@ export const customerNav = [
   ['Notifications', '/customer/notifications', Bell],
   ['Profile', '/customer/profile', Users],
   ['Support', '/customer/support', HelpCircle],
+]
+
+export const membershipNav = [
+  ['Dashboard', '/membership/dashboard', LayoutDashboard],
+  ['Benefits', '/membership/benefits', Star],
+  ['Events', '/membership/events', CalendarDays],
+  ['Referral', '/membership/referral', Ticket],
+  ['Notifications', '/membership/notifications', Bell],
+  ['Profile', '/membership/profile', Users],
+  ['Support', '/membership/support', HelpCircle],
 ]

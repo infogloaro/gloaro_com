@@ -1,6 +1,6 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
-import { adminNav, customerNav, vendorNav } from './constants/navigation'
+import { adminNav, customerNav, membershipNav, vendorNav } from './constants/navigation'
 import DashboardLayout from './layouts/DashboardLayout'
 import PublicLayout from './layouts/PublicLayout'
 import ProtectedRoute from './routes/ProtectedRoute'
@@ -19,6 +19,7 @@ import {
   AdminCategoriesPage,
   AdminEventsPage,
   AdminFaqsPage,
+  AdminModuleApplicationsPage,
   AdminMembershipApplicationsPage,
   AdminMembershipsPage,
   AdminPaymentsPage,
@@ -65,6 +66,15 @@ import MembershipAgreement from './pages/public/MembershipAgreement'
 import MembershipApplication from './pages/public/MembershipApplication'
 import MembershipQualification from './pages/public/MembershipQualification'
 import MembershipApplicationTrack from './pages/public/MembershipApplicationTrack'
+import MembershipDashboard from './pages/membership/MembershipDashboard'
+import {
+  MembershipBenefitsPage,
+  MembershipEventsPage,
+  MembershipNotificationsPage,
+  MembershipProfilePage,
+  MembershipReferralPage,
+  MembershipSupportPage,
+} from './pages/membership/MembershipPages'
 
 function App() {
   return (
@@ -107,6 +117,11 @@ function App() {
             <Route path="/admin/products" element={<AdminProductsPage />} />
             <Route path="/admin/services" element={<AdminServicesPage />} />
             <Route path="/admin/memberships" element={<AdminMembershipsPage />} />
+            <Route path="/admin/applications" element={<AdminMembershipApplicationsPage />} />
+            <Route path="/admin/applications/membership" element={<AdminMembershipApplicationsPage />} />
+            <Route path="/admin/applications/franchise" element={<AdminModuleApplicationsPage title="Franchise Applications" />} />
+            <Route path="/admin/applications/business-network" element={<AdminModuleApplicationsPage title="Business Network Applications" />} />
+            <Route path="/admin/applications/vendor" element={<AdminModuleApplicationsPage title="Vendor Applications" />} />
             <Route path="/admin/membership-applications" element={<AdminMembershipApplicationsPage />} />
             <Route path="/admin/plans" element={<AdminPlansPage />} />
             <Route path="/admin/events" element={<AdminEventsPage />} />
@@ -146,6 +161,18 @@ function App() {
             <Route path="/customer/profile" element={<CustomerProfilePage />} />
             <Route path="/customer/support" element={<CustomerSupportPage />} />
             <Route path="/customer/events" element={<EventsPage />} />
+          </Route>
+        </Route>
+
+        <Route element={<ProtectedRoute roles={['customer', 'user', 'vendor']} />}>
+          <Route element={<DashboardLayout navItems={membershipNav} title="Membership Console" />}>
+            <Route path="/membership/dashboard" element={<MembershipDashboard />} />
+            <Route path="/membership/benefits" element={<MembershipBenefitsPage />} />
+            <Route path="/membership/events" element={<MembershipEventsPage />} />
+            <Route path="/membership/referral" element={<MembershipReferralPage />} />
+            <Route path="/membership/notifications" element={<MembershipNotificationsPage />} />
+            <Route path="/membership/profile" element={<MembershipProfilePage />} />
+            <Route path="/membership/support" element={<MembershipSupportPage />} />
           </Route>
         </Route>
 

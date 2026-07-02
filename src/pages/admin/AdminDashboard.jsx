@@ -10,6 +10,7 @@ import { useApi } from '../../hooks/useApi'
 import { formatCurrency } from '../../utils/format'
 
 const monthLabel = (item) => `${item._id?.month || ''}/${item._id?.year || ''}`
+const statusValue = (value) => Number(value || 0) > 0 ? value : 'Pending'
 
 export default function AdminDashboard() {
   const dashboard = useApi(adminApi.dashboard)
@@ -19,9 +20,16 @@ export default function AdminDashboard() {
 
   const stats = dashboard.data || {}
   const report = analytics.data || {}
+  const applicationStatuses = stats.applicationStatusCounts || {}
 
   return (
     <div className="space-y-6">
+      <section className="grid gap-4 md:grid-cols-3">
+        <StatCard label="Documents Verified" value={statusValue(applicationStatuses.documentsVerified)} icon={FileText} />
+        <StatCard label="Under Review" value={statusValue(applicationStatuses.underReview)} icon={FileText} />
+        <StatCard label="Final Approval" value={statusValue(applicationStatuses.finalApproval)} icon={FileText} />
+      </section>
+
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard label="Total Users" value={stats.totalUsers} helper={`${stats.newUsersToday || 0} today`} icon={Users} />
         <StatCard label="Total Vendors" value={stats.totalVendors} helper={`${stats.pendingVendors || 0} pending`} icon={Building2} />

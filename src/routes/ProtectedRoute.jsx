@@ -3,9 +3,12 @@ import LoadingSpinner from '../components/common/LoadingSpinner'
 import { useAuth } from '../hooks/useAuth'
 
 const roleMatches = (allowed, actual) => {
-  if (allowed === actual) return true
-  if (allowed === 'customer' && actual === 'user') return true
-  if (allowed === 'user' && actual === 'customer') return true
+  const allowedRole = String(allowed || '').toLowerCase().replace(/\s+/g, '')
+  const actualRole = String(actual || '').toLowerCase().replace(/\s+/g, '')
+  if (allowedRole === actualRole) return true
+  if (allowedRole === 'superadmin' && actualRole === 'super_admin') return true
+  if (allowedRole === 'customer' && actualRole === 'user') return true
+  if (allowedRole === 'user' && actualRole === 'customer') return true
   return false
 }
 

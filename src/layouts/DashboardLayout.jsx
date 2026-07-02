@@ -1,4 +1,4 @@
-import { Menu, Moon, Sun } from 'lucide-react'
+import { ChevronDown, Menu, Moon, Sun } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { NavLink, Outlet } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
@@ -22,18 +22,47 @@ export default function DashboardLayout({ navItems = [], title = 'Dashboard' }) 
         </div>
       </div>
       <nav className="space-y-1 p-3">
-        {navItems.map(([label, to, Icon]) => (
-          <NavLink
-            key={to}
-            to={to}
-            end={to === '/admin' || to === '/vendor'}
-            onClick={() => setOpen(false)}
-            className={({ isActive }) => `flex h-10 items-center gap-3 rounded-md px-3 text-sm font-bold ${isActive ? 'bg-[#0d4697] text-white' : 'text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-900'}`}
-          >
-            <Icon className="h-4 w-4" />
-            {label}
-          </NavLink>
-        ))}
+        {navItems.map((item) => {
+          if (!Array.isArray(item)) {
+            const Icon = item.icon
+            return (
+              <div key={item.label} className="space-y-1">
+                <div className="flex h-10 items-center gap-3 rounded-md bg-[#0d4697] px-3 text-sm font-bold text-white">
+                  <Icon className="h-4 w-4" />
+                  <span className="flex-1">{item.label}</span>
+                  <ChevronDown className="h-4 w-4" />
+                </div>
+                <div className="space-y-1 pl-4">
+                  {item.children.map(([label, to, ChildIcon]) => (
+                    <NavLink
+                      key={to}
+                      to={to}
+                      onClick={() => setOpen(false)}
+                      className={({ isActive }) => `flex h-9 items-center gap-3 rounded-md px-3 text-sm font-bold ${isActive ? 'bg-blue-50 text-[#0d4697] dark:bg-slate-900 dark:text-white' : 'text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-900'}`}
+                    >
+                      <ChildIcon className="h-3.5 w-3.5" />
+                      {label}
+                    </NavLink>
+                  ))}
+                </div>
+              </div>
+            )
+          }
+
+          const [label, to, Icon] = item
+          return (
+            <NavLink
+              key={to}
+              to={to}
+              end={to === '/admin' || to === '/vendor'}
+              onClick={() => setOpen(false)}
+              className={({ isActive }) => `flex h-10 items-center gap-3 rounded-md px-3 text-sm font-bold ${isActive ? 'bg-[#0d4697] text-white' : 'text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-900'}`}
+            >
+              <Icon className="h-4 w-4" />
+              {label}
+            </NavLink>
+          )
+        })}
       </nav>
     </aside>
   )

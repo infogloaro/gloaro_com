@@ -1,12 +1,14 @@
-import { useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import toast from 'react-hot-toast'
-import { Download, Edit3, Headphones, Search } from 'lucide-react'
+import { CheckCircle2, Cuboid, Download, Edit3, Headphones, Search } from 'lucide-react'
 import { membershipApplicationApi } from '../../api/membershipApplication'
 import { formatDate } from '../../utils/format'
+import { useAuth } from '../../hooks/useAuth'
 
 const statusMeta = {
-  submitted: { label: 'Under Review', badge: 'Active Review', step: 2 },
+  submitted: { label: 'Submitted', badge: 'Submitted', step: 0 },
+  documents_verified: { label: 'Documents Verified', badge: 'Documents Verified', step: 1 },
   under_review: { label: 'Under Review', badge: 'Active Review', step: 2 },
   approved: { label: 'Final Approval', badge: 'Approved', step: 3 },
   rejected: { label: 'Requires Info', badge: 'Rejected', step: 2 },
@@ -19,26 +21,46 @@ export default function MembershipApplicationTrack() {
   const [applicationId, setApplicationId] = useState(initialApplication?.applicationNumber || '')
   const [mobileNumber, setMobileNumber] = useState(initialApplication?.personal?.mobileNumber || '')
   const [tracking, setTracking] = useState(false)
+  const [lastUpdatedAt, setLastUpdatedAt] = useState(null)
 
   const meta = statusMeta[application?.status] || statusMeta.submitted
   const documentCount = useMemo(() => Object.values(application?.documents || {}).filter(Boolean).length, [application])
 
-  const trackApplication = async () => {
+  const fetchApplication = useCallback(async ({ silent = false } = {}) => {
     if (!applicationId || !mobileNumber) {
-      toast.error('Enter application ID and mobile number')
+      if (!silent) toast.error('Enter application ID and mobile number')
       return
     }
 
-    setTracking(true)
+    if (!silent) setTracking(true)
     try {
       const response = await membershipApplicationApi.track({ applicationId, mobileNumber })
       setApplication(response.data?.data)
-      toast.success('Application status updated')
+      setLastUpdatedAt(new Date())
+      if (!silent) toast.success('Application status updated')
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Application not found')
+      if (!silent) toast.error(error.response?.data?.message || 'Application not found')
     } finally {
-      setTracking(false)
+      if (!silent) setTracking(false)
     }
+  }, [applicationId, mobileNumber])
+
+  useEffect(() => {
+    if (!applicationId || !mobileNumber) return undefined
+    const initialTimer = window.setTimeout(() => fetchApplication({ silent: true }), 0)
+    const timer = window.setInterval(() => fetchApplication({ silent: true }), 10000)
+    return () => {
+      window.clearTimeout(initialTimer)
+      window.clearInterval(timer)
+    }
+  }, [applicationId, mobileNumber, fetchApplication])
+
+  const trackApplication = async () => {
+    await fetchApplication()
+  }
+
+  if (application?.status === 'approved') {
+    return <ApprovedApplication application={application} lastUpdatedAt={lastUpdatedAt} />
   }
 
   return (
@@ -58,6 +80,7 @@ export default function MembershipApplicationTrack() {
               {tracking ? 'Tracking...' : 'Track Application'}
             </button>
           </div>
+          {lastUpdatedAt && <p className="mt-3 text-right text-[11px] font-bold text-slate-400">Last updated {lastUpdatedAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>}
         </section>
 
         <section className="mt-8 rounded-sm border border-slate-200 bg-white p-8 shadow-sm">
@@ -117,12 +140,73 @@ export default function MembershipApplicationTrack() {
   )
 }
 
+function ApprovedApplication({ application, lastUpdatedAt }) {
+  const { isAuthenticated } = useAuth()
+  const memberId = application.applicationNumber || 'GN-8842-109X'
+  const dashboardLink = isAuthenticated ? '/membership/dashboard' : '/login?type=membership&redirect=%2Fmembership%2Fdashboard'
+
+  return (
+    <main className="min-h-screen bg-[#fff9e8] px-4 py-10 text-slate-950">
+      <section className="mx-auto max-w-5xl">
+        <div className="rounded-lg border border-slate-100 bg-white px-6 py-10 text-center shadow-sm sm:px-10">
+          <span className="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-4 py-2 text-xs font-extrabold uppercase tracking-wide text-emerald-700 ring-1 ring-emerald-200">
+            <CheckCircle2 className="h-4 w-4" />
+            Approved
+          </span>
+          <h1 className="mx-auto mt-7 max-w-4xl font-playfair text-4xl font-black leading-tight text-[#0b469e] sm:text-6xl">
+            Congratulations! Your Application<br className="hidden sm:block" />
+            Has Been <span className="text-[#ffab16]">Approved</span>
+          </h1>
+          <p className="mx-auto mt-5 max-w-xl text-base font-medium leading-7 text-slate-600">
+            Welcome to the Gloaro ecosystem. Your account is now active and you can access your dashboard and member benefits.
+          </p>
+          <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
+            <Link to={dashboardLink} className="inline-flex h-12 items-center justify-center gap-2 rounded-md bg-[#0b469e] px-9 text-sm font-extrabold text-white shadow-lg shadow-blue-950/20">
+              Open Dashboard →
+            </Link>
+            <Link to="/#membership" className="inline-flex h-12 items-center justify-center gap-2 rounded-md border border-slate-300 bg-[#ededf7] px-9 text-sm font-extrabold text-slate-800">
+              Explore Benefits ♢
+            </Link>
+          </div>
+        </div>
+
+        <div className="mx-auto mt-12 max-w-sm rounded-lg bg-gradient-to-br from-[#0d5ad7] to-[#082f88] p-6 text-white shadow-2xl shadow-blue-950/25">
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="text-[10px] font-extrabold uppercase tracking-[0.4em] text-blue-100/70">Gloaro Network</p>
+              <h2 className="mt-2 font-playfair text-2xl font-black">Executive Member</h2>
+            </div>
+            <div className="grid h-10 w-10 place-items-center rounded-md border border-white/25 bg-white/10">
+              <Cuboid className="h-5 w-5 text-[#ffcf25]" />
+            </div>
+          </div>
+          <div className="mt-12 grid grid-cols-2 gap-6">
+            <div>
+              <p className="text-[9px] font-extrabold uppercase tracking-[0.32em] text-blue-100/60">Member ID</p>
+              <p className="mt-2 text-sm font-semibold tracking-wider">{memberId}</p>
+            </div>
+            <div className="text-right">
+              <p className="text-[9px] font-extrabold uppercase tracking-[0.32em] text-blue-100/60">Issued On</p>
+              <p className="mt-2 text-sm font-semibold">{formatDate(application.reviewedAt || application.updatedAt || application.createdAt)}</p>
+            </div>
+          </div>
+        </div>
+
+        <p className="mt-5 text-center text-xs font-semibold text-slate-300">
+          Your digital ID is now ready for use across all partner lounges.
+          {lastUpdatedAt ? ` Last updated ${lastUpdatedAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}.` : ''}
+        </p>
+      </section>
+    </main>
+  )
+}
+
 function Progress({ application, activeStep, documentCount }) {
   const submittedDate = formatDate(application?.createdAt)
   const steps = [
-    { title: 'Submitted', note: submittedDate, active: activeStep >= 0 },
-    { title: 'Documents Verified', note: documentCount ? `${documentCount} document(s)` : 'Pending', active: documentCount > 0 },
-    { title: 'Under Review', note: application?.status === 'rejected' ? 'Requires info' : 'In Progress', active: activeStep >= 2 },
+    { title: 'Submitted', note: submittedDate, active: Boolean(application) && activeStep >= 0 },
+    { title: 'Documents Verified', note: activeStep >= 1 ? `${documentCount} document(s)` : 'Pending', active: activeStep >= 1 },
+    { title: 'Under Review', note: application?.status === 'rejected' ? 'Requires info' : activeStep >= 2 ? 'In Progress' : 'Pending', active: activeStep >= 2 },
     { title: 'Final Approval', note: application?.status === 'approved' ? 'Approved' : 'Pending', active: activeStep >= 3 },
   ]
 

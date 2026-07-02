@@ -6,7 +6,8 @@ export default function RoleRedirect() {
   const { loading, user } = useAuth()
   if (loading) return <LoadingSpinner />
   if (!user) return <Navigate to="/" replace />
-  if (['admin', 'superadmin'].includes(user.role)) return <Navigate to="/admin" replace />
-  if (user.role === 'vendor') return <Navigate to="/vendor" replace />
+  const role = String(user.role || '').toLowerCase().replace(/\s+/g, '')
+  if (['admin', 'superadmin'].includes(role)) return <Navigate to="/admin" replace />
+  if (role === 'vendor') return <Navigate to="/vendor" replace />
   return <Navigate to="/customer/profile" replace />
 }

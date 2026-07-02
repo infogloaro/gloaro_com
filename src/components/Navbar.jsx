@@ -41,7 +41,14 @@ const networkHighlights = [
   [ShieldCheck, 'Verified Network', 'Trusted enterprise leaders'],
 ]
 
-const getNetworkLink = (section) => section === 'Membership' ? '/membership-agreement' : '#membership'
+const loginLink = (type, redirect) => `/login?type=${type}&redirect=${encodeURIComponent(redirect)}`
+
+const getNetworkLink = (section) => {
+  if (section === 'Membership') return loginLink('membership', '/membership-agreement')
+  if (section === 'Franchise') return loginLink('franchise', '/membership-application')
+  if (section === 'Business Network') return loginLink('b2b', '/vendors')
+  return '#membership'
+}
 
 export default function Navbar() {
   const [open, setOpen] = useState(false)
@@ -50,7 +57,8 @@ export default function Navbar() {
   const navItems = [
     [shopIcon, 'Shop', '/products', 'bg-[#ffb20c] text-[#063a85]'],
     [nearMeIcon, 'Near Me', '/nearby', 'bg-[#ffb20c] text-[#063a85]'],
-    [b2bIcon, 'B2B Marketplace', '/vendors', 'bg-[#ffb20c] text-[#063a85]'],
+    [b2bIcon, 'B2B Marketplace', loginLink('b2b', '/vendors'), 'bg-[#ffb20c] text-[#063a85]'],
+    [loginIcon, 'Become a Vendor', loginLink('vendor', '/vendor'), 'bg-[#0b469e] text-white', 'brightness-0 invert'],
   ]
 
   return (
@@ -67,11 +75,11 @@ export default function Navbar() {
               </button>
               {networkOpen && <GloaroNetworkMenu onClose={() => setNetworkOpen(false)} />}
             </div>
-            {navItems.map(([icon, label, href, colors]) => <a key={label} href={href} className={`flex h-10 items-center gap-2 whitespace-nowrap rounded-full px-5 text-sm font-medium shadow-sm transition hover:-translate-y-px ${colors}`}><img src={icon} alt="" className="h-4 w-4 object-contain" />{label}</a>)}
+            {navItems.map(([icon, label, href, colors, iconClass = '']) => <a key={label} href={href} className={`flex h-10 items-center gap-2 whitespace-nowrap rounded-full px-5 text-sm font-medium shadow-sm transition hover:-translate-y-px ${colors}`}><img src={icon} alt="" className={`h-4 w-4 object-contain ${iconClass}`} />{label}</a>)}
           </div>
 
           <div className="ml-auto hidden items-center gap-4 text-[#0b469e] lg:flex">
-            <a href="/signin" aria-label="Account" className="flex items-center gap-1 text-sm font-medium"><img src={loginIcon} alt="" className="h-5 w-5 object-contain" /> Login</a>
+            <a href={loginLink('user', '/customer/profile')} aria-label="Account" className="flex items-center gap-1 text-sm font-medium"><img src={loginIcon} alt="" className="h-5 w-5 object-contain" /> Login</a>
             <div className="relative"><button onClick={() => setOpen(!open)} className="flex h-8 items-center gap-2 rounded-md bg-[#0b469e] px-3 text-xs font-medium text-white"><PinIcon />Kallakurichy <span className="border-l border-white/40 pl-2">⌄</span><SearchIcon /></button>{open && <div className="absolute right-0 top-10 w-52 rounded-b-md bg-white p-3 shadow-xl"><p className="mb-2 flex items-center gap-1 text-xs font-medium text-[#f3a900]"><PinIcon /> Kallakurichy</p><input placeholder="Search City..." className="w-full rounded-md border border-slate-200 px-3 py-2 text-xs text-slate-600 outline-none focus:border-[#0b469e]" /></div>}</div>
           </div>
 
@@ -92,7 +100,7 @@ export default function Navbar() {
               <span className="text-lg leading-none">{mobileNetworkOpen ? '−' : '+'}</span>
             </button>
             {mobileNetworkOpen && <MobileGloaroNetworkMenu onNavigate={() => setOpen(false)} />}
-            {navItems.map(([icon, label, href, colors]) => <a onClick={() => setOpen(false)} key={label} href={href} className={`flex items-center rounded-lg px-4 py-3 font-medium ${colors}`}><img src={icon} alt="" className="mr-2 h-4 w-4 object-contain" />{label}</a>)}
+            {navItems.map(([icon, label, href, colors, iconClass = '']) => <a onClick={() => setOpen(false)} key={label} href={href} className={`flex items-center rounded-lg px-4 py-3 font-medium ${colors}`}><img src={icon} alt="" className={`mr-2 h-4 w-4 object-contain ${iconClass}`} />{label}</a>)}
           </div>
           <div className="mt-4 rounded-lg border border-slate-200 p-3"><p className="mb-2 flex items-center gap-1 text-xs font-medium text-[#f3a900]"><PinIcon /> Kallakurichy</p><input placeholder="Search City..." className="w-full rounded-md border border-slate-200 px-3 py-2 text-sm outline-none" /></div>
         </div>
@@ -137,7 +145,7 @@ function MobileGloaroNetworkMenu({ onNavigate }) {
             </div>
           ))}
         </div>
-        <a onClick={onNavigate} href="/membership-agreement" className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-[#0b469e] px-4 py-3 text-xs font-extrabold text-white shadow-lg shadow-blue-950/20">Join Membership <span className="text-base leading-none">→</span></a>
+        <a onClick={onNavigate} href={loginLink('membership', '/membership-agreement')} className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-[#0b469e] px-4 py-3 text-xs font-extrabold text-white shadow-lg shadow-blue-950/20">Join Membership <span className="text-base leading-none">→</span></a>
       </aside>
     </div>
   )
@@ -180,7 +188,7 @@ function GloaroNetworkMenu({ onClose }) {
               </div>
             ))}
           </div>
-          <a href="/membership-agreement" className="mt-auto inline-flex items-center justify-center gap-2 rounded-lg bg-[#0b469e] px-4 py-3 text-xs font-extrabold text-white shadow-lg shadow-blue-950/20">Join Membership <span className="text-base leading-none">→</span></a>
+          <a href={loginLink('membership', '/membership-agreement')} className="mt-auto inline-flex items-center justify-center gap-2 rounded-lg bg-[#0b469e] px-4 py-3 text-xs font-extrabold text-white shadow-lg shadow-blue-950/20">Join Membership <span className="text-base leading-none">→</span></a>
         </aside>
       </div>
     </div>

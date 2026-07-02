@@ -75,16 +75,23 @@ export function AdminMembershipApplicationsPage() {
       const response = await adminApi.updateMembershipApplicationStatus(selected._id, { status, adminNotes })
       const updated = response.data?.data || { ...selected, status, adminNotes }
       setSelected(updated)
-      toast.success(status === 'approved' ? 'Application approved' : 'Application rejected')
+      toast.success(`Application marked ${status.replaceAll('_', ' ')}`)
       reloadList?.()
     } finally {
       setUpdatingStatus(false)
     }
   }
 
+  const changeRowStatus = async (row, status, reload) => {
+    if (!row?._id || !status || status === row.status) return
+    await adminApi.updateMembershipApplicationStatus(row._id, { status, adminNotes: row.adminNotes || '' })
+    toast.success(`Application marked ${status.replaceAll('_', ' ')}`)
+    reload?.()
+  }
+
   return (
     <>
-      <ResourceListPage title="Membership Applications" fetcher={adminApi.membershipApplications} filters={[{ key: 'status', label: 'Status', options: ['submitted', 'under_review', 'approved', 'rejected'].map((value) => ({ value, label: value })) }]} columns={[
+      <ResourceListPage title="Membership Applications" fetcher={adminApi.membershipApplications} filters={[{ key: 'status', label: 'Status', options: ['submitted', 'documents_verified', 'under_review', 'approved', 'rejected'].map((value) => ({ value, label: value.replaceAll('_', ' ') })) }]} columns={[
         { key: 'fullName', header: 'Applicant', render: (row) => row.personal?.fullName || 'Applicant' },
         { key: 'company', header: 'Company', render: (row) => row.professional?.companyName || 'Not added' },
         { key: 'email', header: 'Email', render: (row) => row.personal?.emailAddress || row.professional?.businessEmail || 'Not added' },
@@ -92,10 +99,24 @@ export function AdminMembershipApplicationsPage() {
         { key: 'createdAt', header: 'Submitted', render: (row) => formatDate(row.createdAt) },
         { key: 'status', header: 'Status', render: (row) => <StatusBadge value={row.status} /> },
       ]} renderActions={(row, { reload }) => (
-        <button onClick={() => openDetails(row, reload)} className="inline-flex items-center gap-1.5 rounded-md border border-[#0d4697]/20 px-3 py-1.5 text-xs font-extrabold text-[#0d4697] hover:bg-blue-50">
-          <Eye className="h-3.5 w-3.5" />
-          View
-        </button>
+        <>
+          <button onClick={() => openDetails(row, reload)} className="inline-flex items-center gap-1.5 rounded-md border border-[#0d4697]/20 px-3 py-1.5 text-xs font-extrabold text-[#0d4697] hover:bg-blue-50">
+            <Eye className="h-3.5 w-3.5" />
+            View
+          </button>
+          <select
+            value={row.status || 'submitted'}
+            onChange={(event) => changeRowStatus(row, event.target.value, reload)}
+            className="h-8 rounded-md border border-slate-200 bg-white px-2 text-xs font-extrabold text-slate-700 outline-none focus:border-[#0d4697]"
+            aria-label="Change application status"
+          >
+            <option value="submitted">Submitted</option>
+            <option value="documents_verified">Documents Verified</option>
+            <option value="under_review">Under Review</option>
+            <option value="approved">Final Approval</option>
+            <option value="rejected">Rejected</option>
+          </select>
+        </>
       )} />
 
       <Modal open={Boolean(selected)} title="Membership Application Details" onClose={() => setSelected(null)} maxWidth="max-w-6xl">
@@ -109,6 +130,8 @@ export function AdminMembershipApplicationsPage() {
             adminNotes={adminNotes}
             onNotesChange={setAdminNotes}
             onClose={() => setSelected(null)}
+            onDocumentsVerified={() => changeStatus('documents_verified')}
+            onUnderReview={() => changeStatus('under_review')}
             onApprove={() => changeStatus('approved')}
             onReject={() => changeStatus('rejected')}
             updating={updatingStatus}
@@ -119,7 +142,7 @@ export function AdminMembershipApplicationsPage() {
   )
 }
 
-function MembershipApplicationDetails({ application, adminNotes, onNotesChange, onClose, onApprove, onReject, updating }) {
+function MembershipApplicationDetails({ application, adminNotes, onNotesChange, onClose, onDocumentsVerified, onUnderReview, onApprove, onReject, updating }) {
   if (!application) return null
 
   const openDocument = async (field) => {
@@ -266,6 +289,12 @@ function MembershipApplicationDetails({ application, adminNotes, onNotesChange, 
         <button disabled={updating} onClick={onClose} className="inline-flex items-center justify-center rounded-md border border-slate-200 px-4 py-2 text-sm font-extrabold text-slate-700 hover:bg-slate-50 disabled:opacity-60">
           Close
         </button>
+        <button disabled={updating} onClick={onDocumentsVerified} className="inline-flex items-center justify-center rounded-md border border-blue-200 px-4 py-2 text-sm font-extrabold text-[#0d4697] hover:bg-blue-50 disabled:opacity-60">
+          Documents Verified
+        </button>
+        <button disabled={updating} onClick={onUnderReview} className="inline-flex items-center justify-center rounded-md border border-amber-200 px-4 py-2 text-sm font-extrabold text-amber-700 hover:bg-amber-50 disabled:opacity-60">
+          Under Review
+        </button>
         <button disabled={updating} onClick={onReject} className="inline-flex items-center justify-center gap-2 rounded-md border border-red-200 px-4 py-2 text-sm font-extrabold text-red-600 hover:bg-red-50 disabled:opacity-60">
           <XCircle className="h-4 w-4" />
           Reject
@@ -298,6 +327,17 @@ function DetailGrid({ items }) {
         </div>
       ))}
     </dl>
+  )
+}
+
+export function AdminModuleApplicationsPage({ title }) {
+  return (
+    <section>
+      <h2 className="text-2xl font-extrabold text-slate-950 dark:text-white">{title}</h2>
+      <div className="mt-5 rounded-lg border border-slate-200 bg-white p-8 text-center shadow-sm dark:border-slate-800 dark:bg-slate-950">
+        <p className="text-sm font-bold text-slate-500">No applications found for this module yet.</p>
+      </div>
+    </section>
   )
 }
 

@@ -3,21 +3,44 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import FormField from '../../components/forms/FormField'
 import { useAuth } from '../../hooks/useAuth'
 
+const loginTypes = {
+  vendor: { label: 'Vendor', expectedRole: 'vendor', redirect: '/vendor' },
+  membership: { label: 'Membership', expectedRole: 'customer', redirect: '/membership-agreement' },
+  franchise: { label: 'Franchise', expectedRole: 'customer', redirect: '/membership-application' },
+  b2b: { label: 'B2B Marketplace', expectedRole: 'customer', redirect: '/vendors' },
+  user: { label: 'User', expectedRole: 'customer', redirect: '/customer/profile' },
+}
+
 const dashboardFor = (role) => {
   if (['admin', 'superadmin'].includes(role)) return '/admin'
   if (role === 'vendor') return '/vendor'
   return '/customer/profile'
 }
 
+const normalizeRole = (role) => role === 'user' ? 'customer' : role
+
 export default function Login() {
   const { login } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
+  const query = new URLSearchParams(location.search)
+  const loginType = query.get('type') || ''
+  const selectedType = loginTypes[loginType] || null
+  const activeType = selectedType || loginTypes.user
+  const redirect = query.get('redirect') || activeType.redirect
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm({ defaultValues: { remember: true } })
 
   const onSubmit = async (values) => {
     const user = await login({ email: values.email, password: values.password }, values.remember)
-    navigate(location.state?.from?.pathname || dashboardFor(user.role), { replace: true })
+    if (['admin', 'superadmin'].includes(user.role)) {
+      navigate('/admin', { replace: true })
+      return
+    }
+
+    const expectedRole = activeType.expectedRole
+    const userRole = normalizeRole(user.role)
+    const canUseSelectedType = expectedRole === userRole
+    navigate(location.state?.from?.pathname || (canUseSelectedType ? redirect : dashboardFor(user.role)), { replace: true })
   }
 
   return (
@@ -37,7 +60,7 @@ export default function Login() {
         <Link to="/forgot-password" className="font-extrabold text-[#0d4697]">Forgot password?</Link>
       </div>
       <button disabled={isSubmitting} className="mt-5 h-12 w-full rounded-md bg-[#0d4697] font-extrabold text-white disabled:opacity-60">{isSubmitting ? 'Signing in...' : 'Sign In'}</button>
-      <p className="mt-6 text-center text-sm font-medium text-slate-500">No account? <Link to="/register" className="font-extrabold text-[#0d4697]">Create one</Link></p>
+      <p className="mt-6 text-center text-sm font-medium text-slate-500">No account? <Link to={`/register?type=${loginType || 'user'}`} className="font-extrabold text-[#0d4697]">Create one</Link></p>
     </form>
   )
 }
