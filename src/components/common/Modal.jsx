@@ -7,8 +7,13 @@ export default function Modal({ open, title, children, onClose, maxWidth = 'max-
       <div className={`max-h-[90vh] w-full ${maxWidth} overflow-auto rounded-lg bg-white shadow-xl`}>
         <div className="sticky top-0 flex items-center justify-between border-b border-slate-200 bg-white px-5 py-4">
           <h3 className="text-lg font-extrabold text-slate-900">{title}</h3>
-          <button onClick={onClose} className="grid h-8 w-8 place-items-center rounded-md hover:bg-slate-100" aria-label="Close modal"><X className="h-4 w-4" /></button>
-        </div>
+<button
+  type="button"
+  onClick={onClose}
+  className="grid h-9 w-9 place-items-center rounded-full border border-slate-300 bg-white hover:bg-slate-100"
+>
+  <X className="h-5 w-5 text-slate-900" />
+</button>        </div>
         <div className="p-5">{children}</div>
       </div>
     </div>

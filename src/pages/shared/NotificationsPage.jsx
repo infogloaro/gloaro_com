@@ -2,9 +2,11 @@ import { notificationApi } from '../../api/notification'
 import StatusBadge from '../../components/common/StatusBadge'
 import ResourceListPage from './ResourceListPage'
 
-export default function NotificationsPage() {
+export default function NotificationsPage({ module, section = 'list' }) {
   return (
     <ResourceListPage
+      module={module}
+      section={section}
       title="Notifications"
       description="Your notification center"
       fetcher={notificationApi.list}

@@ -2,6 +2,7 @@ import { useForm } from 'react-hook-form'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import FormField from '../../components/forms/FormField'
 import { useAuth } from '../../hooks/useAuth'
+import { isAdminRole } from '../../constants/adminRoles'
 
 const loginTypes = {
   vendor: { label: 'Vendor', expectedRole: 'vendor', redirect: '/vendor' },
@@ -12,7 +13,7 @@ const loginTypes = {
 }
 
 const dashboardFor = (role) => {
-  if (['admin', 'superadmin'].includes(role)) return '/admin'
+  if (isAdminRole(role)) return '/admin'
   if (role === 'vendor') return '/vendor'
   return '/customer/profile'
 }
@@ -32,7 +33,7 @@ export default function Login() {
 
   const onSubmit = async (values) => {
     const user = await login({ email: values.email, password: values.password }, values.remember)
-    if (['admin', 'superadmin'].includes(user.role)) {
+    if (isAdminRole(user.role)) {
       navigate('/admin', { replace: true })
       return
     }

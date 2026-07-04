@@ -4,6 +4,7 @@ import { CheckCircle2, ExternalLink, Eye, FileText, Loader2, XCircle } from 'luc
 import { adminApi } from '../../api/admin'
 import Modal from '../../components/common/Modal'
 import StatusBadge from '../../components/common/StatusBadge'
+import { useAuth } from '../../hooks/useAuth'
 import { formatCurrency, formatDate } from '../../utils/format'
 import ResourceListPage from '../shared/ResourceListPage'
 import SimpleJsonForm from '../shared/SimpleJsonForm'
@@ -11,37 +12,37 @@ import SimpleJsonForm from '../shared/SimpleJsonForm'
 const statusFilters = [{ key: 'status', label: 'Status', options: ['pending', 'approved', 'rejected', 'active', 'completed', 'failed'].map((value) => ({ value, label: value })) }]
 
 export function AdminUsersPage() {
-  return <ResourceListPage title="User Management" fetcher={adminApi.users} filters={[{ key: 'role', label: 'Role', options: ['customer', 'vendor', 'admin', 'superadmin'].map((value) => ({ value, label: value })) }]} columns={[
+  return <ResourceListPage module="members" section="users" title="User Management" fetcher={adminApi.users} filters={[{ key: 'role', label: 'Role', options: ['customer', 'vendor', 'admin', 'superadmin'].map((value) => ({ value, label: value })) }]} columns={[
     { key: 'name', header: 'Name' }, { key: 'email', header: 'Email' }, { key: 'role', header: 'Role' }, { key: 'isActive', header: 'Status', render: (row) => <StatusBadge value={row.isActive ? 'active' : 'blocked'} /> },
   ]} updateAction={adminApi.updateUser} deleteAction={adminApi.deleteUser} renderForm={(props) => <SimpleJsonForm {...props} fields={[{ name: 'name' }, { name: 'phone' }, { name: 'role', type: 'select', options: ['customer', 'vendor', 'admin'].map((value) => ({ value, label: value })) }]} />} />
 }
 
 export function AdminVendorsPage() {
-  return <ResourceListPage title="Vendor Management" fetcher={adminApi.vendors} filters={statusFilters} columns={[
+  return <ResourceListPage module="vendors" section="vendors" title="Vendor Management" fetcher={adminApi.vendors} filters={statusFilters} columns={[
     { key: 'businessName', header: 'Business' }, { key: 'email', header: 'Email' }, { key: 'city', header: 'City', render: (row) => row.address?.city || 'Not added' }, { key: 'status', header: 'Status', render: (row) => <StatusBadge value={row.status} /> },
   ]} />
 }
 
 export function AdminCategoriesPage() {
-  return <ResourceListPage title="Category Management" fetcher={adminApi.categories} createAction={adminApi.createCategory} updateAction={adminApi.updateCategory} deleteAction={adminApi.deleteCategory} columns={[
+  return <ResourceListPage module="settings" section="categories" title="Category Management" fetcher={adminApi.categories} createAction={adminApi.createCategory} updateAction={adminApi.updateCategory} deleteAction={adminApi.deleteCategory} columns={[
     { key: 'name', header: 'Name' }, { key: 'type', header: 'Type' }, { key: 'isActive', header: 'Status', render: (row) => <StatusBadge value={row.isActive ? 'active' : 'inactive'} /> },
   ]} renderForm={(props) => <SimpleJsonForm {...props} fields={[{ name: 'name' }, { name: 'type', type: 'select', options: ['business', 'product', 'service', 'event'].map((value) => ({ value, label: value })) }, { name: 'description', type: 'textarea' }]} />} />
 }
 
 export function AdminProductsPage() {
-  return <ResourceListPage title="Product Management" fetcher={adminApi.products} filters={statusFilters} columns={[
+  return <ResourceListPage module="marketplace" section="products" title="Product Management" fetcher={adminApi.products} filters={statusFilters} columns={[
     { key: 'title', header: 'Product' }, { key: 'vendor', header: 'Vendor', render: (row) => row.vendor?.businessName || 'Vendor' }, { key: 'price', header: 'Price', render: (row) => formatCurrency(row.pricing?.sellingPrice) }, { key: 'status', header: 'Status', render: (row) => <StatusBadge value={row.status} /> },
   ]} />
 }
 
 export function AdminServicesPage() {
-  return <ResourceListPage title="Service Management" fetcher={adminApi.services} filters={statusFilters} columns={[
+  return <ResourceListPage module="marketplace" section="services" title="Service Management" fetcher={adminApi.services} filters={statusFilters} columns={[
     { key: 'title', header: 'Service' }, { key: 'vendor', header: 'Vendor', render: (row) => row.vendor?.businessName || 'Vendor' }, { key: 'status', header: 'Status', render: (row) => <StatusBadge value={row.status} /> },
   ]} />
 }
 
 export function AdminMembershipsPage() {
-  return <ResourceListPage title="Vendor Memberships" fetcher={adminApi.memberships} filters={statusFilters} columns={[
+  return <ResourceListPage module="members" section="memberships" title="Vendor Memberships" fetcher={adminApi.memberships} filters={statusFilters} columns={[
     { key: 'vendor', header: 'Vendor', render: (row) => row.vendor?.businessName || 'Vendor' }, { key: 'plan', header: 'Plan' }, { key: 'price', header: 'Price', render: (row) => formatCurrency(row.price) }, { key: 'status', header: 'Status', render: (row) => <StatusBadge value={row.status} /> },
   ]} />
 }
@@ -91,20 +92,20 @@ export function AdminMembershipApplicationsPage() {
 
   return (
     <>
-      <ResourceListPage title="Membership Applications" fetcher={adminApi.membershipApplications} filters={[{ key: 'status', label: 'Status', options: ['submitted', 'documents_verified', 'under_review', 'approved', 'rejected'].map((value) => ({ value, label: value.replaceAll('_', ' ') })) }]} columns={[
+      <ResourceListPage module="members" section="applications" title="Membership Applications" fetcher={adminApi.membershipApplications} filters={[{ key: 'status', label: 'Status', options: ['submitted', 'documents_verified', 'under_review', 'approved', 'rejected'].map((value) => ({ value, label: value.replaceAll('_', ' ') })) }]} columns={[
         { key: 'fullName', header: 'Applicant', render: (row) => row.personal?.fullName || 'Applicant' },
         { key: 'company', header: 'Company', render: (row) => row.professional?.companyName || 'Not added' },
         { key: 'email', header: 'Email', render: (row) => row.personal?.emailAddress || row.professional?.businessEmail || 'Not added' },
         { key: 'documents', header: 'Documents', render: (row) => Object.values(row.documents || {}).filter(Boolean).length },
         { key: 'createdAt', header: 'Submitted', render: (row) => formatDate(row.createdAt) },
         { key: 'status', header: 'Status', render: (row) => <StatusBadge value={row.status} /> },
-      ]} renderActions={(row, { reload }) => (
+      ]} renderActions={(row, { reload }, permissions) => (
         <>
-          <button onClick={() => openDetails(row, reload)} className="inline-flex items-center gap-1.5 rounded-md border border-[#0d4697]/20 px-3 py-1.5 text-xs font-extrabold text-[#0d4697] hover:bg-blue-50">
+          {permissions.hasOperation('members', 'view') && <button onClick={() => openDetails(row, reload)} className="inline-flex items-center gap-1.5 rounded-md border border-[#0d4697]/20 px-3 py-1.5 text-xs font-extrabold text-[#0d4697] hover:bg-blue-50">
             <Eye className="h-3.5 w-3.5" />
             View
-          </button>
-          <select
+          </button>}
+          {permissions.hasOperation('members', 'approve') && <select
             value={row.status || 'submitted'}
             onChange={(event) => changeRowStatus(row, event.target.value, reload)}
             className="h-8 rounded-md border border-slate-200 bg-white px-2 text-xs font-extrabold text-slate-700 outline-none focus:border-[#0d4697]"
@@ -115,7 +116,7 @@ export function AdminMembershipApplicationsPage() {
             <option value="under_review">Under Review</option>
             <option value="approved">Final Approval</option>
             <option value="rejected">Rejected</option>
-          </select>
+          </select>}
         </>
       )} />
 
@@ -143,6 +144,7 @@ export function AdminMembershipApplicationsPage() {
 }
 
 function MembershipApplicationDetails({ application, adminNotes, onNotesChange, onClose, onDocumentsVerified, onUnderReview, onApprove, onReject, updating }) {
+  const { hasOperation } = useAuth()
   if (!application) return null
 
   const openDocument = async (field) => {
@@ -154,6 +156,8 @@ function MembershipApplicationDetails({ application, adminNotes, onNotesChange, 
       toast.error('Unable to open document')
     }
   }
+
+  const canApprove = hasOperation('members', 'approve')
 
   const documents = [
     ['profilePhoto', 'Profile Photo'],
@@ -289,20 +293,20 @@ function MembershipApplicationDetails({ application, adminNotes, onNotesChange, 
         <button disabled={updating} onClick={onClose} className="inline-flex items-center justify-center rounded-md border border-slate-200 px-4 py-2 text-sm font-extrabold text-slate-700 hover:bg-slate-50 disabled:opacity-60">
           Close
         </button>
-        <button disabled={updating} onClick={onDocumentsVerified} className="inline-flex items-center justify-center rounded-md border border-blue-200 px-4 py-2 text-sm font-extrabold text-[#0d4697] hover:bg-blue-50 disabled:opacity-60">
+        {canApprove && <button disabled={updating} onClick={onDocumentsVerified} className="inline-flex items-center justify-center rounded-md border border-blue-200 px-4 py-2 text-sm font-extrabold text-[#0d4697] hover:bg-blue-50 disabled:opacity-60">
           Documents Verified
-        </button>
-        <button disabled={updating} onClick={onUnderReview} className="inline-flex items-center justify-center rounded-md border border-amber-200 px-4 py-2 text-sm font-extrabold text-amber-700 hover:bg-amber-50 disabled:opacity-60">
+        </button>}
+        {canApprove && <button disabled={updating} onClick={onUnderReview} className="inline-flex items-center justify-center rounded-md border border-amber-200 px-4 py-2 text-sm font-extrabold text-amber-700 hover:bg-amber-50 disabled:opacity-60">
           Under Review
-        </button>
-        <button disabled={updating} onClick={onReject} className="inline-flex items-center justify-center gap-2 rounded-md border border-red-200 px-4 py-2 text-sm font-extrabold text-red-600 hover:bg-red-50 disabled:opacity-60">
+        </button>}
+        {canApprove && <button disabled={updating} onClick={onReject} className="inline-flex items-center justify-center gap-2 rounded-md border border-red-200 px-4 py-2 text-sm font-extrabold text-red-600 hover:bg-red-50 disabled:opacity-60">
           <XCircle className="h-4 w-4" />
           Reject
-        </button>
-        <button disabled={updating} onClick={onApprove} className="inline-flex items-center justify-center gap-2 rounded-md bg-emerald-600 px-4 py-2 text-sm font-extrabold text-white hover:bg-emerald-700 disabled:opacity-60">
+        </button>}
+        {canApprove && <button disabled={updating} onClick={onApprove} className="inline-flex items-center justify-center gap-2 rounded-md bg-emerald-600 px-4 py-2 text-sm font-extrabold text-white hover:bg-emerald-700 disabled:opacity-60">
           <CheckCircle2 className="h-4 w-4" />
           Approve
-        </button>
+        </button>}
       </div>
     </div>
   )
@@ -342,39 +346,39 @@ export function AdminModuleApplicationsPage({ title }) {
 }
 
 export function AdminPlansPage() {
-  return <ResourceListPage title="Membership Plans" fetcher={adminApi.plans} createAction={adminApi.createPlan} updateAction={adminApi.updatePlan} columns={[
+  return <ResourceListPage module="members" section="plans" title="Membership Plans" fetcher={adminApi.plans} createAction={adminApi.createPlan} updateAction={adminApi.updatePlan} columns={[
     { key: 'displayName', header: 'Plan' }, { key: 'name', header: 'Code' }, { key: 'price', header: 'Monthly', render: (row) => formatCurrency(row.price?.monthly) },
   ]} renderForm={(props) => <SimpleJsonForm {...props} fields={[{ name: 'name' }, { name: 'displayName' }, { name: 'description', type: 'textarea' }]} />} />
 }
 
 export function AdminEventsPage() {
-  return <ResourceListPage title="Event Management" fetcher={adminApi.events} columns={[{ key: 'title', header: 'Title' }, { key: 'type', header: 'Type' }, { key: 'startDate', header: 'Starts', render: (row) => formatDate(row.startDate) }, { key: 'status', header: 'Status', render: (row) => <StatusBadge value={row.status} /> }]} />
+  return <ResourceListPage module="events" section="events" title="Event Management" fetcher={adminApi.events} columns={[{ key: 'title', header: 'Title' }, { key: 'type', header: 'Type' }, { key: 'startDate', header: 'Starts', render: (row) => formatDate(row.startDate) }, { key: 'status', header: 'Status', render: (row) => <StatusBadge value={row.status} /> }]} />
 }
 
 export function AdminReferralsPage() {
-  return <ResourceListPage title="Referral Management" fetcher={adminApi.referrals} columns={[{ key: 'referrer', header: 'Referrer', render: (row) => row.referrer?.name || 'User' }, { key: 'status', header: 'Status', render: (row) => <StatusBadge value={row.status} /> }]} />
+  return <ResourceListPage module="referrals" section="referrals" title="Referral Management" fetcher={adminApi.referrals} columns={[{ key: 'referrer', header: 'Referrer', render: (row) => row.referrer?.name || 'User' }, { key: 'status', header: 'Status', render: (row) => <StatusBadge value={row.status} /> }]} />
 }
 
 export function AdminPaymentsPage() {
-  return <ResourceListPage title="Payment & Transaction Management" fetcher={adminApi.payments} filters={statusFilters} columns={[{ key: 'user', header: 'User', render: (row) => row.user?.name || row.user?.email || 'User' }, { key: 'amount', header: 'Amount', render: (row) => formatCurrency(row.amount, row.currency) }, { key: 'gateway', header: 'Gateway' }, { key: 'status', header: 'Status', render: (row) => <StatusBadge value={row.status} /> }]} />
+  return <ResourceListPage module="reports" section="payments" title="Payment & Transaction Management" fetcher={adminApi.payments} filters={statusFilters} columns={[{ key: 'user', header: 'User', render: (row) => row.user?.name || row.user?.email || 'User' }, { key: 'amount', header: 'Amount', render: (row) => formatCurrency(row.amount, row.currency) }, { key: 'gateway', header: 'Gateway' }, { key: 'status', header: 'Status', render: (row) => <StatusBadge value={row.status} /> }]} />
 }
 
 export function AdminReviewsPage() {
-  return <ResourceListPage title="Review Management" fetcher={adminApi.reviews} filters={statusFilters} columns={[{ key: 'user', header: 'User', render: (row) => row.user?.name || 'User' }, { key: 'vendor', header: 'Vendor', render: (row) => row.vendor?.businessName || 'Vendor' }, { key: 'rating', header: 'Rating' }, { key: 'status', header: 'Status', render: (row) => <StatusBadge value={row.status} /> }]} />
+  return <ResourceListPage module="marketplace" section="reviews" title="Review Management" fetcher={adminApi.reviews} filters={statusFilters} columns={[{ key: 'user', header: 'User', render: (row) => row.user?.name || 'User' }, { key: 'vendor', header: 'Vendor', render: (row) => row.vendor?.businessName || 'Vendor' }, { key: 'rating', header: 'Rating' }, { key: 'status', header: 'Status', render: (row) => <StatusBadge value={row.status} /> }]} />
 }
 
 export function AdminSupportPage() {
-  return <ResourceListPage title="Support Tickets" fetcher={adminApi.support} filters={statusFilters} columns={[{ key: 'ticketNumber', header: 'Ticket' }, { key: 'subject', header: 'Subject' }, { key: 'priority', header: 'Priority' }, { key: 'status', header: 'Status', render: (row) => <StatusBadge value={row.status} /> }]} />
+  return <ResourceListPage module="settings" section="support" title="Support Tickets" fetcher={adminApi.support} filters={statusFilters} columns={[{ key: 'ticketNumber', header: 'Ticket' }, { key: 'subject', header: 'Subject' }, { key: 'priority', header: 'Priority' }, { key: 'status', header: 'Status', render: (row) => <StatusBadge value={row.status} /> }]} />
 }
 
 export function AdminBannersPage() {
-  return <ResourceListPage title="Banner Management" fetcher={adminApi.banners} createAction={adminApi.createBanner} updateAction={adminApi.updateBanner} deleteAction={adminApi.deleteBanner} columns={[{ key: 'title', header: 'Title' }, { key: 'placement', header: 'Placement' }, { key: 'isActive', header: 'Status', render: (row) => <StatusBadge value={row.isActive ? 'active' : 'inactive'} /> }]} renderForm={(props) => <SimpleJsonForm {...props} fields={[{ name: 'title' }, { name: 'subtitle' }, { name: 'placement', type: 'select', options: ['home', 'directory', 'marketplace', 'events', 'dashboard'].map((value) => ({ value, label: value })) }, { name: 'link' }]} />} />
+  return <ResourceListPage module="settings" section="banners" title="Banner Management" fetcher={adminApi.banners} createAction={adminApi.createBanner} updateAction={adminApi.updateBanner} deleteAction={adminApi.deleteBanner} columns={[{ key: 'title', header: 'Title' }, { key: 'placement', header: 'Placement' }, { key: 'isActive', header: 'Status', render: (row) => <StatusBadge value={row.isActive ? 'active' : 'inactive'} /> }]} renderForm={(props) => <SimpleJsonForm {...props} fields={[{ name: 'title' }, { name: 'subtitle' }, { name: 'placement', type: 'select', options: ['home', 'directory', 'marketplace', 'events', 'dashboard'].map((value) => ({ value, label: value })) }, { name: 'link' }]} />} />
 }
 
 export function AdminFaqsPage() {
-  return <ResourceListPage title="FAQ Management" fetcher={adminApi.faqs} createAction={adminApi.createFaq} updateAction={adminApi.updateFaq} deleteAction={adminApi.deleteFaq} columns={[{ key: 'question', header: 'Question' }, { key: 'category', header: 'Category' }, { key: 'isActive', header: 'Status', render: (row) => <StatusBadge value={row.isActive ? 'active' : 'inactive'} /> }]} renderForm={(props) => <SimpleJsonForm {...props} fields={[{ name: 'question' }, { name: 'answer', type: 'textarea' }, { name: 'category' }]} />} />
+  return <ResourceListPage module="settings" section="faqs" title="FAQ Management" fetcher={adminApi.faqs} createAction={adminApi.createFaq} updateAction={adminApi.updateFaq} deleteAction={adminApi.deleteFaq} columns={[{ key: 'question', header: 'Question' }, { key: 'category', header: 'Category' }, { key: 'isActive', header: 'Status', render: (row) => <StatusBadge value={row.isActive ? 'active' : 'inactive'} /> }]} renderForm={(props) => <SimpleJsonForm {...props} fields={[{ name: 'question' }, { name: 'answer', type: 'textarea' }, { name: 'category' }]} />} />
 }
 
 export function AdminSettingsPage() {
-  return <ResourceListPage title="Settings" fetcher={adminApi.settings} columns={[{ key: 'key', header: 'Key' }, { key: 'group', header: 'Group' }, { key: 'value', header: 'Value', render: (row) => typeof row.value === 'object' ? JSON.stringify(row.value) : String(row.value) }]} />
+  return <ResourceListPage module="settings" section="settings" title="Settings" fetcher={adminApi.settings} columns={[{ key: 'key', header: 'Key' }, { key: 'group', header: 'Group' }, { key: 'value', header: 'Value', render: (row) => typeof row.value === 'object' ? JSON.stringify(row.value) : String(row.value) }]} />
 }
