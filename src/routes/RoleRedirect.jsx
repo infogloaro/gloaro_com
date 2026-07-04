@@ -8,7 +8,9 @@ export default function RoleRedirect() {
   if (loading) return <LoadingSpinner />
   if (!user) return <Navigate to="/" replace />
   const role = String(user.role || '').toLowerCase().replace(/\s+/g, '')
+
   if (isAdminRole(role)) return <Navigate to="/admin" replace />
+
   if (role === 'vendor') return <Navigate to="/vendor" replace />
   return <Navigate to="/customer/profile" replace />
 }

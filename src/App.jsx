@@ -1,6 +1,6 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
-import { adminNav, customerNav, membershipNav, vendorNav } from './constants/navigation'
+import { adminNav, customerNav, membershipNav, vendorNav, secretaryNav } from './constants/navigation'
 import DashboardLayout from './layouts/DashboardLayout'
 import PublicLayout from './layouts/PublicLayout'
 import ProtectedRoute from './routes/ProtectedRoute'
@@ -120,6 +120,13 @@ import {
   MembershipReferralPage,
   MembershipSupportPage,
 } from './pages/membership/MembershipPages'
+import SecretaryDashboard from './pages/secretary/SecretaryDashboard'
+import MembersPage from './pages/secretary/MembersPage'
+import MinutesPage from './pages/secretary/MinutesPage'
+import AttendancePage from './pages/secretary/AttendancePage'
+import DocumentsPage from './pages/secretary/DocumentsPage'
+import ReportsPage from './pages/secretary/ReportsPage'
+import SettingsPage from './pages/secretary/SettingsPage'
 
 function App() {
   const { role, permissionsLoading, canAccessPath } = useAuth()
@@ -275,6 +282,19 @@ function App() {
             <Route path="/membership/notifications" element={<MembershipNotificationsPage />} />
             <Route path="/membership/profile" element={<MembershipProfilePage />} />
             <Route path="/membership/support" element={<MembershipSupportPage />} />
+          </Route>
+        </Route>
+
+        <Route element={<ProtectedRoute roles={['secretary']} />}>
+          <Route element={<DashboardLayout navItems={secretaryNav} title="Secretary Console" />}>
+            <Route path="/secretary" element={<Navigate to="/secretary/dashboard" replace />} />
+            <Route path="/secretary/dashboard" element={<SecretaryDashboard />} />
+            <Route path="/secretary/members" element={<MembersPage />} />
+            <Route path="/secretary/minutes" element={<MinutesPage />} />
+            <Route path="/secretary/attendance" element={<AttendancePage />} />
+            <Route path="/secretary/documents" element={<DocumentsPage />} />
+            <Route path="/secretary/reports" element={<ReportsPage />} />
+            <Route path="/secretary/settings" element={<SettingsPage />} />
           </Route>
         </Route>
 

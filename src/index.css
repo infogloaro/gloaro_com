@@ -15,5 +15,22 @@
   --font-playball: "Playball", cursive;
 }
 
-html { scroll-behavior: smooth; }
-body { margin: 0; background: #f8fafc; color: #183153; }
+html {
+  scroll-behavior: smooth;
+  height: 100%;
+  background-color: #f8fafc;
+  overscroll-behavior: none;
+}
+body {
+  margin: 0;
+  height: 100%;
+  background-color: #f8fafc;
+  color: #183153;
+  overscroll-behavior: none;
+}
+#root {
+  min-height: 100vh;
+}
+html.dark, html.dark body {
+  background-color: #020617;
+}

@@ -15,6 +15,7 @@ const loginTypes = {
 const dashboardFor = (role) => {
   if (isAdminRole(role)) return '/admin'
   if (role === 'vendor') return '/vendor'
+  if (role === 'secretary') return '/secretary/dashboard'
   return '/customer/profile'
 }
 

@@ -96,7 +96,7 @@ export default function ResourceListPage({
         <div className="flex flex-col gap-2 sm:flex-row">
           <SearchBar value={search} onChange={(value) => { setSearch(value); setPage(1) }} placeholder={`Search ${title.toLowerCase()}`} />
           {filters.map((filter) => (
-            <select key={filter.key} value={filterValues[filter.key] || ''} onChange={(event) => setFilterValues((current) => ({ ...current, [filter.key]: event.target.value || undefined }))} className="h-10 rounded-md border border-slate-200 bg-white px-3 text-sm font-bold">
+            <select key={filter.key} value={filterValues[filter.key] || ''} onChange={(event) => setFilterValues((current) => ({ ...current, [filter.key]: event.target.value || undefined }))} className="h-10 rounded-md border border-slate-200 bg-white px-3 text-sm font-bold text-slate-800">
               <option value="">{filter.label}</option>
               {filter.options.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
             </select>
