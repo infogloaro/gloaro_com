@@ -1,9 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import toast from 'react-hot-toast'
 import { io } from 'socket.io-client'
+import { adminApi } from '../api/admin'
 import { authApi } from '../api/auth'
 import { API_BASE_URL } from '../api/axios'
+import { isAdminRole } from '../constants/adminRoles'
 import { storage } from '../utils/storage'
+import { createPermissionHelpers } from '../utils/permissions'
 import { AuthContext } from './AuthContextObject'
 
 const socketUrl = API_BASE_URL.replace('/api/v1', '')
@@ -11,6 +14,7 @@ const socketUrl = API_BASE_URL.replace('/api/v1', '')
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(() => storage.getUser())
   const [loading, setLoading] = useState(true)
+  const [permissionConfig, setPermissionConfig] = useState(() => (isAdminRole(storage.getUser()?.role) ? undefined : null))
   const socketRef = useRef(null)
 
   const login = useCallback(async (payload, remember = true) => {
@@ -18,6 +22,7 @@ export function AuthProvider({ children }) {
     const data = response.data.data
     storage.setSession(data, remember)
     setUser(data.user)
+    setPermissionConfig(isAdminRole(data.user?.role) ? undefined : null)
     toast.success('Signed in successfully')
     return data.user
   }, [])
@@ -36,6 +41,7 @@ export function AuthProvider({ children }) {
     }
     storage.clearSession()
     setUser(null)
+    setPermissionConfig(null)
     socketRef.current?.disconnect()
     toast.success('Logged out')
   }, [])
@@ -51,9 +57,11 @@ export function AuthProvider({ children }) {
         const response = await authApi.me()
         const nextUser = response.data.data?.user || response.data.data
         setUser(nextUser)
+        setPermissionConfig(isAdminRole(nextUser?.role) ? undefined : null)
       } catch {
         storage.clearSession()
         setUser(null)
+        setPermissionConfig(null)
       } finally {
         setLoading(false)
       }
@@ -61,6 +69,26 @@ export function AuthProvider({ children }) {
 
     hydrate()
   }, [])
+
+  useEffect(() => {
+    if (!user || !isAdminRole(user.role)) return
+
+    let mounted = true
+
+    adminApi.roleConfiguration(user.role)
+      .then((response) => {
+        if (!mounted) return
+        setPermissionConfig(response.data?.data || null)
+      })
+      .catch(() => {
+        if (!mounted) return
+        setPermissionConfig(null)
+      })
+
+    return () => {
+      mounted = false
+    }
+  }, [user])
 
   useEffect(() => {
     const token = storage.getAccessToken()
@@ -77,15 +105,21 @@ export function AuthProvider({ children }) {
     }
   }, [user])
 
+  const permissionHelpers = useMemo(() => createPermissionHelpers(user, permissionConfig), [user, permissionConfig])
+  const permissionsLoading = Boolean(user && isAdminRole(user.role) && permissionConfig === undefined)
+
   const value = useMemo(() => ({
     user,
     loading,
+    permissionsLoading,
+    permissionConfig,
     isAuthenticated: Boolean(user),
     role: user?.role,
     login,
     register,
     logout,
-  }), [user, loading, login, register, logout])
+    ...permissionHelpers,
+  }), [user, loading, permissionsLoading, permissionConfig, login, register, logout, permissionHelpers])
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }

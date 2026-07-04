@@ -2,12 +2,16 @@ import { reportApi } from '../../api/report'
 import LoadingSpinner from '../../components/common/LoadingSpinner'
 import ChartCard from '../../components/charts/ChartCard'
 import DataTable from '../../components/tables/DataTable'
+import { useAuth } from '../../hooks/useAuth'
 import { useApi } from '../../hooks/useApi'
 
 const label = (item) => `${item._id?.month}/${item._id?.year}`
 
 export default function AdminAnalytics() {
-  const { data, loading } = useApi(() => reportApi.analytics({ from: '2025-01-01' }))
+  const { hasSection, hasOperation } = useAuth()
+  const canView = hasSection('reports', 'analytics') && hasOperation('reports', 'view')
+  const { data, loading } = useApi(() => reportApi.analytics({ from: '2025-01-01' }), [canView], { immediate: canView })
+  if (!canView) return null
   if (loading) return <LoadingSpinner />
   return (
     <div className="space-y-5">

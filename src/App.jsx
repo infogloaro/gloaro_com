@@ -5,6 +5,8 @@ import DashboardLayout from './layouts/DashboardLayout'
 import PublicLayout from './layouts/PublicLayout'
 import ProtectedRoute from './routes/ProtectedRoute'
 import RoleRedirect from './routes/RoleRedirect'
+import LoadingSpinner from './components/common/LoadingSpinner'
+import { useAuth } from './hooks/useAuth'
 import AuthLayout from './pages/auth/AuthLayout'
 import Login from './pages/auth/Login'
 import Register from './pages/auth/Register'
@@ -14,6 +16,49 @@ import VerifyEmail from './pages/auth/VerifyEmail'
 import AdminDashboard from './pages/admin/AdminDashboard'
 import AdminAnalytics from './pages/admin/AdminAnalytics'
 import AdminNotifications from './pages/admin/AdminNotifications'
+import AdminManagementPage from './pages/admin/AdminManagementPage'
+import {
+  AuditLogsPage,
+  DashboardConfigurationPage,
+  FeatureManagementPage,
+  ModuleConfigurationPage,
+  NotificationsConfigPage,
+  PermissionMatrixPage,
+  ReportsCenterPage,
+  SuperAdminDashboardPage,
+  SuperAdminModulePage,
+  SystemLogsPage,
+} from './pages/admin/SuperAdminPages'
+import { superAdminModuleConfigs } from './constants/superAdminModuleConfigs'
+import {
+  ActivityCenterPage,
+  AIInsightsPage,
+  AttendanceEnginePage,
+  BusinessWallManagementPage,
+  BusinessNetworkingPage,
+  ChapterManagementPage,
+  ChapterDashboardPage,
+  EnterpriseAnalyticsPage,
+  EnterpriseCalendarPage,
+  EnterpriseReportBuilderPage,
+  ExecutiveDashboardPage,
+  GlobalSearchPage,
+  HierarchyAssignmentPage,
+  MarketplaceApprovalPage,
+  MeetingManagementPage,
+  MemberJourneyPage,
+  NotificationAutomationPage,
+  OrganizationManagementPage,
+  PerformanceScorecardPage,
+  ReferralPipelinePage,
+  TestimonialsManagementPage,
+  TaskManagementPage,
+  TrainingManagementPage,
+  VendorApprovalWorkflowPage,
+  VisitorConversionEnginePage,
+  VisitorManagementPage,
+  WorkflowEnginePage,
+} from './pages/admin/EnterpriseManagementPages'
 import {
   AdminBannersPage,
   AdminCategoriesPage,
@@ -84,6 +129,86 @@ import ReportsPage from './pages/secretary/ReportsPage'
 import SettingsPage from './pages/secretary/SettingsPage'
 
 function App() {
+  const { role, permissionsLoading, canAccessPath } = useAuth()
+  const isAdminSession = ['superadmin', 'admin', 'franchise_admin', 'ecommerce_admin', 'marketplace_admin', 'digital_marketing_admin', 'training_admin', 'finance_admin', 'state_director', 'area_director', 'executive_director', 'launch_director', 'direct_consultant', 'operation_vice_president', 'membership_verification_admin', 'custom_admin'].includes(role)
+
+  const adminRouteDefs = [
+    { path: '/admin', element: <SuperAdminDashboardPage /> },
+    { path: '/admin/legacy-dashboard', element: <AdminDashboard /> },
+    { path: '/admin/admin-management', element: <AdminManagementPage />, roles: ['superadmin'] },
+    { path: '/admin/organization', element: <OrganizationManagementPage />, roles: ['superadmin'] },
+    { path: '/admin/assignments', element: <HierarchyAssignmentPage />, roles: ['superadmin'] },
+    { path: '/admin/roles', element: <SuperAdminModulePage {...superAdminModuleConfigs.roles} />, roles: ['superadmin'] },
+    { path: '/admin/permissions', element: <PermissionMatrixPage />, roles: ['superadmin'] },
+    { path: '/admin/features', element: <FeatureManagementPage />, roles: ['superadmin'] },
+    { path: '/admin/dashboard-config', element: <DashboardConfigurationPage />, roles: ['superadmin'] },
+    { path: '/admin/module-config', element: <ModuleConfigurationPage />, roles: ['superadmin'] },
+    { path: '/admin/membership-workflow', element: <WorkflowEnginePage />, roles: ['superadmin'] },
+    { path: '/admin/workflow-engine', element: <WorkflowEnginePage />, roles: ['superadmin'] },
+    { path: '/admin/users', element: <AdminUsersPage /> },
+    { path: '/admin/vendors', element: <AdminVendorsPage /> },
+    { path: '/admin/vendor-settings', element: <SuperAdminModulePage {...superAdminModuleConfigs.vendor} /> },
+    { path: '/admin/vendor-approval-workflow', element: <VendorApprovalWorkflowPage /> },
+    { path: '/admin/categories', element: <AdminCategoriesPage /> },
+    { path: '/admin/business', element: <BusinessNetworkingPage /> },
+    { path: '/admin/business-wall', element: <BusinessWallManagementPage /> },
+    { path: '/admin/products', element: <AdminProductsPage /> },
+    { path: '/admin/services', element: <AdminServicesPage /> },
+    { path: '/admin/marketplace-settings', element: <SuperAdminModulePage {...superAdminModuleConfigs.marketplace} /> },
+    { path: '/admin/marketplace-approval', element: <MarketplaceApprovalPage /> },
+    { path: '/admin/memberships', element: <AdminMembershipsPage /> },
+    { path: '/admin/visitors', element: <VisitorManagementPage /> },
+    { path: '/admin/visitor-conversion', element: <VisitorConversionEnginePage /> },
+    { path: '/admin/attendance', element: <AttendanceEnginePage /> },
+    { path: '/admin/meetings', element: <MeetingManagementPage /> },
+    { path: '/admin/chapters', element: <ChapterManagementPage /> },
+    { path: '/admin/chapter-dashboard', element: <ChapterDashboardPage /> },
+    { path: '/admin/applications', element: <AdminMembershipApplicationsPage /> },
+    { path: '/admin/applications/membership', element: <AdminMembershipApplicationsPage /> },
+    { path: '/admin/applications/franchise', element: <AdminModuleApplicationsPage title="Franchise Applications" /> },
+    { path: '/admin/applications/business-network', element: <AdminModuleApplicationsPage title="Business Network Applications" /> },
+    { path: '/admin/applications/vendor', element: <AdminModuleApplicationsPage title="Vendor Applications" /> },
+    { path: '/admin/membership-applications', element: <AdminMembershipApplicationsPage /> },
+    { path: '/admin/plans', element: <AdminPlansPage /> },
+    { path: '/admin/meeting-settings', element: <MeetingManagementPage /> },
+    { path: '/admin/events', element: <AdminEventsPage /> },
+    { path: '/admin/training', element: <TrainingManagementPage /> },
+    { path: '/admin/testimonials', element: <TestimonialsManagementPage /> },
+    { path: '/admin/referrals', element: <ReferralPipelinePage /> },
+    { path: '/admin/referrals-table', element: <AdminReferralsPage /> },
+    { path: '/admin/payments', element: <AdminPaymentsPage /> },
+    { path: '/admin/reviews', element: <AdminReviewsPage /> },
+    { path: '/admin/banners', element: <AdminBannersPage /> },
+    { path: '/admin/faqs', element: <AdminFaqsPage /> },
+    { path: '/admin/settings', element: <AdminSettingsPage /> },
+    { path: '/admin/support', element: <AdminSupportPage /> },
+    { path: '/admin/reports', element: <EnterpriseReportBuilderPage /> },
+    { path: '/admin/reports-center', element: <ReportsCenterPage /> },
+    { path: '/admin/analytics', element: <EnterpriseAnalyticsPage /> },
+    { path: '/admin/legacy-analytics', element: <AdminAnalytics /> },
+    { path: '/admin/scorecards', element: <PerformanceScorecardPage /> },
+    { path: '/admin/executive-dashboard', element: <ExecutiveDashboardPage /> },
+    { path: '/admin/activity', element: <ActivityCenterPage /> },
+    { path: '/admin/global-search', element: <GlobalSearchPage /> },
+    { path: '/admin/notifications', element: <NotificationsConfigPage /> },
+    { path: '/admin/notification-automation', element: <NotificationAutomationPage /> },
+    { path: '/admin/tasks', element: <TaskManagementPage /> },
+    { path: '/admin/calendar', element: <EnterpriseCalendarPage /> },
+    { path: '/admin/member-journey', element: <MemberJourneyPage /> },
+    { path: '/admin/ai-insights', element: <AIInsightsPage /> },
+    { path: '/admin/broadcast-notifications', element: <AdminNotifications /> },
+    { path: '/admin/audit-logs', element: <AuditLogsPage /> },
+    { path: '/admin/system-logs', element: <SystemLogsPage />, roles: ['superadmin'] },
+  ]
+
+  const allowedAdminRoutes = adminRouteDefs.filter((route) => {
+    if (route.roles?.length && !route.roles.includes(role)) return false
+    return canAccessPath(route.path)
+  })
+  const adminHomePath = allowedAdminRoutes[0]?.path || '/dashboard'
+
+  if (isAdminSession && permissionsLoading) return <LoadingSpinner label="Loading access" />
+
   return (
     <>
       <Routes>
@@ -117,31 +242,8 @@ function App() {
 
         <Route element={<ProtectedRoute roles={['admin', 'superadmin']} />}>
           <Route element={<DashboardLayout navItems={adminNav} title="Admin Console" />}>
-            <Route path="/admin" element={<AdminDashboard />} />
-            <Route path="/admin/users" element={<AdminUsersPage />} />
-            <Route path="/admin/vendors" element={<AdminVendorsPage />} />
-            <Route path="/admin/categories" element={<AdminCategoriesPage />} />
-            <Route path="/admin/products" element={<AdminProductsPage />} />
-            <Route path="/admin/services" element={<AdminServicesPage />} />
-            <Route path="/admin/memberships" element={<AdminMembershipsPage />} />
-            <Route path="/admin/applications" element={<AdminMembershipApplicationsPage />} />
-            <Route path="/admin/applications/membership" element={<AdminMembershipApplicationsPage />} />
-            <Route path="/admin/applications/franchise" element={<AdminModuleApplicationsPage title="Franchise Applications" />} />
-            <Route path="/admin/applications/business-network" element={<AdminModuleApplicationsPage title="Business Network Applications" />} />
-            <Route path="/admin/applications/vendor" element={<AdminModuleApplicationsPage title="Vendor Applications" />} />
-            <Route path="/admin/membership-applications" element={<AdminMembershipApplicationsPage />} />
-            <Route path="/admin/plans" element={<AdminPlansPage />} />
-            <Route path="/admin/events" element={<AdminEventsPage />} />
-            <Route path="/admin/referrals" element={<AdminReferralsPage />} />
-            <Route path="/admin/payments" element={<AdminPaymentsPage />} />
-            <Route path="/admin/reviews" element={<AdminReviewsPage />} />
-            <Route path="/admin/banners" element={<AdminBannersPage />} />
-            <Route path="/admin/faqs" element={<AdminFaqsPage />} />
-            <Route path="/admin/settings" element={<AdminSettingsPage />} />
-            <Route path="/admin/support" element={<AdminSupportPage />} />
-            <Route path="/admin/reports" element={<AdminAnalytics />} />
-            <Route path="/admin/analytics" element={<AdminAnalytics />} />
-            <Route path="/admin/notifications" element={<AdminNotifications />} />
+            {allowedAdminRoutes.map((route) => <Route key={route.path} path={route.path} element={route.element} />)}
+            <Route path="/admin/*" element={<Navigate to={adminHomePath} replace />} />
           </Route>
         </Route>
 
