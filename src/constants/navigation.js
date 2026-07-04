@@ -86,3 +86,14 @@ export const membershipNav = [
   ['Profile', '/membership/profile', Users],
   ['Support', '/membership/support', HelpCircle],
 ]
+
+export const secretaryNav = [
+  ['Dashboard', '/secretary/dashboard', LayoutDashboard],
+  ['Members', '/secretary/members', Users],
+  ['Minutes', '/secretary/minutes', FileText],
+  ['Attendance', '/secretary/attendance', CalendarDays],
+  ['Documents', '/secretary/documents', ShoppingBag],
+  ['Reports', '/secretary/reports', BarChart3],
+  ['Settings', '/secretary/settings', Settings],
+]
+
