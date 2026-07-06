@@ -6,6 +6,8 @@ import {
   Building2,
   CalendarDays,
   CheckCircle2,
+  ChevronDown,
+  ChevronRight,
   Download,
   GitBranch,
   Kanban,
@@ -215,7 +217,207 @@ export function ChapterManagementPage() {
 }
 
 export function EnterpriseReportBuilderPage() {
-  return <EnterpriseRecordsPage module="report" />
+  const { user } = useAuth()
+  const [loading, setLoading] = useState(false)
+  const [dataList, setDataList] = useState([])
+  const [reportType, setReportType] = useState('summary')
+
+  const userRole = user?.role || 'superadmin'
+
+  const loadReport = useCallback(async (type) => {
+    setLoading(true)
+    setReportType(type)
+    try {
+      if (type === 'hierarchy' || type === 'region' || type === 'state' || type === 'district') {
+        const res = await api.get('/directory/organization-hierarchy')
+        const allData = res.data?.data || []
+        
+        let filtered = allData
+        if (type === 'region') {
+          filtered = allData.filter(item => item.type === 'region')
+        } else if (type === 'state') {
+          filtered = allData.filter(item => item.type === 'state')
+        } else if (type === 'district') {
+          filtered = allData.filter(item => item.type === 'district')
+        }
+
+        setDataList(filtered.map(item => ({
+          ID: item._id,
+          Name: item.name,
+          Code: item.code || '-',
+          Type: item.type?.toUpperCase(),
+          ParentID: item.parent || 'None'
+        })))
+      } else if (type === 'membership') {
+        const res = await api.get('/membership-applications')
+        const apps = res.data?.data || []
+        setDataList(apps.map(item => ({
+          Applicant: item.personal?.fullName || 'N/A',
+          Company: item.professional?.companyName || 'N/A',
+          Email: item.personal?.emailAddress || 'N/A',
+          Status: item.status?.toUpperCase(),
+          Submitted: formatDate(item.createdAt)
+        })))
+      } else {
+        // default summary report
+        const res = await api.get('/admin/dashboard')
+        const stats = res.data || {}
+        setDataList([
+          { Metric: 'Total Officials', Value: stats.totalUsers || 0 },
+          { Metric: 'Total Vendors', Value: stats.totalVendors || 0 },
+          { Metric: 'Products Count', Value: stats.productsCount || 0 },
+          { Metric: 'Services Count', Value: stats.servicesCount || 0 },
+          { Metric: 'Membership Applications', Value: stats.membershipApplicationsCount || 0 },
+          { Metric: 'Pending Applications', Value: stats.pendingMembershipApplications || 0 }
+        ])
+      }
+    } catch {
+      toast.error('Failed to generate report')
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    // Determine default report based on role
+    if (['region_director'].includes(userRole)) {
+      loadReport('region')
+    } else if (['state_director'].includes(userRole)) {
+      loadReport('state')
+    } else if (['district_director', 'area_director'].includes(userRole)) {
+      loadReport('district')
+    } else if (['executive_director'].includes(userRole)) {
+      loadReport('membership')
+    } else {
+      loadReport('summary')
+    }
+  }, [userRole, loadReport])
+
+  const exportCSV = () => {
+    if (dataList.length === 0) return
+    const headers = Object.keys(dataList[0]).join(',')
+    const rows = dataList.map(row => Object.values(row).map(v => `"${v}"`).join(','))
+    const csvContent = "data:text/csv;charset=utf-8," + [headers, ...rows].join('\n')
+    const encodedUri = encodeURI(csvContent)
+    const link = document.createElement("a")
+    link.setAttribute("href", encodedUri)
+    link.setAttribute("download", `${reportType}_report.csv`)
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    toast.success('Report exported to CSV')
+  }
+
+  const printReport = () => {
+    window.print()
+  }
+
+  const headers = dataList.length > 0 ? Object.keys(dataList[0]) : []
+
+  return (
+    <div className="space-y-6">
+      <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between rounded-2xl border border-white/60 bg-white/85 p-6 shadow-sm backdrop-blur print:hidden dark:border-slate-800 dark:bg-slate-900">
+        <div>
+          <p className="inline-flex items-center gap-2 text-xs font-extrabold uppercase tracking-[0.18em] text-[#0d4697]">
+            <Activity className="h-4 w-4" /> Reports Center
+          </p>
+          <h1 className="mt-3 text-3xl font-black text-slate-950 dark:text-white">Role-Based Reports</h1>
+          <p className="mt-2 text-sm font-semibold text-slate-500">
+            Generate and export location status, member directories, and administrative performance indicators.
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <button
+            onClick={exportCSV}
+            disabled={loading || dataList.length === 0}
+            className="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-slate-200 bg-white px-4 text-xs font-extrabold text-slate-700 hover:bg-slate-50 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300"
+          >
+            <Download className="h-3.5 w-3.5" /> Export Excel
+          </button>
+          <button
+            onClick={printReport}
+            disabled={loading || dataList.length === 0}
+            className="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-[#0d4697] px-4 text-xs font-extrabold text-white hover:bg-blue-800 disabled:opacity-60"
+          >
+            <Printer className="h-3.5 w-3.5" /> Print
+          </button>
+        </div>
+      </header>
+
+      {/* Tabs */}
+      <div className="flex border-b border-slate-200 dark:border-slate-800 print:hidden">
+        {['superadmin', 'admin'].includes(userRole) && (
+          <button
+            onClick={() => loadReport('summary')}
+            className={`px-4 py-2 text-sm font-bold border-b-2 transition ${reportType === 'summary' ? 'border-[#0d4697] text-[#0d4697]' : 'border-transparent text-slate-500 hover:text-slate-850'}`}
+          >
+            Dashboard Summary
+          </button>
+        )}
+        {['superadmin', 'admin', 'region_director'].includes(userRole) && (
+          <button
+            onClick={() => loadReport('region')}
+            className={`px-4 py-2 text-sm font-bold border-b-2 transition ${reportType === 'region' ? 'border-[#0d4697] text-[#0d4697]' : 'border-transparent text-slate-500 hover:text-slate-850'}`}
+          >
+            Region Performance
+          </button>
+        )}
+        {['superadmin', 'admin', 'region_director', 'state_director'].includes(userRole) && (
+          <button
+            onClick={() => loadReport('state')}
+            className={`px-4 py-2 text-sm font-bold border-b-2 transition ${reportType === 'state' ? 'border-[#0d4697] text-[#0d4697]' : 'border-transparent text-slate-500 hover:text-slate-850'}`}
+          >
+            State Summary
+          </button>
+        )}
+        {['superadmin', 'admin', 'region_director', 'state_director', 'district_director', 'area_director'].includes(userRole) && (
+          <button
+            onClick={() => loadReport('district')}
+            className={`px-4 py-2 text-sm font-bold border-b-2 transition ${reportType === 'district' ? 'border-[#0d4697] text-[#0d4697]' : 'border-transparent text-slate-500 hover:text-slate-850'}`}
+          >
+            District Chapters
+          </button>
+        )}
+        <button
+          onClick={() => loadReport('membership')}
+          className={`px-4 py-2 text-sm font-bold border-b-2 transition ${reportType === 'membership' ? 'border-[#0d4697] text-[#0d4697]' : 'border-transparent text-slate-500 hover:text-slate-850'}`}
+        >
+          Membership Applications
+        </button>
+      </div>
+
+      <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-950">
+        {loading ? (
+          <LoadingSpinner label="Generating Report Data" />
+        ) : dataList.length > 0 ? (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm print:text-black">
+              <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500 dark:bg-slate-900 dark:text-slate-400">
+                <tr>
+                  {headers.map(h => (
+                    <th key={h} className="px-4 py-3 font-extrabold">{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                {dataList.map((row, idx) => (
+                  <tr key={idx} className="hover:bg-slate-50 dark:hover:bg-slate-900">
+                    {headers.map(h => (
+                      <td key={h} className="px-4 py-3 font-bold text-slate-700 dark:text-slate-300">
+                        {typeof row[h] === 'object' ? JSON.stringify(row[h]) : String(row[h] ?? '-')}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <p className="text-sm font-semibold text-slate-500 text-center py-12">No data retrieved for this report type.</p>
+        )}
+      </div>
+    </div>
+  )
 }
 
 export function PerformanceScorecardPage() {
@@ -513,30 +715,103 @@ function EnterpriseRecordsPage({ module, config: overrideConfig, extraPanel, wiz
 
 function OrganizationTreePanel() {
   const [tree, setTree] = useState([])
+  const [searchQuery, setSearchQuery] = useState('')
 
   useEffect(() => {
     adminApi.organizationTree().then((response) => setTree(response.data?.data || [])).catch(() => setTree([]))
   }, [])
 
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-      <h2 className="flex items-center gap-2 text-lg font-extrabold text-slate-950"><GitBranch className="h-5 w-5 text-[#0d4697]" />Hierarchy Tree</h2>
-      <div className="mt-4 space-y-2">
-        {tree.length ? tree.map((node) => <TreeNode key={node._id} node={node} />) : <p className="text-sm font-semibold text-slate-500">Create organization records to build the hierarchy tree.</p>}
+    <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-slate-100 dark:border-slate-800 pb-4">
+        <h2 className="flex items-center gap-2 text-lg font-black text-slate-950 dark:text-white">
+          <GitBranch className="h-5 w-5 text-[#0d4697]" />
+          Hierarchy Tree
+        </h2>
+        <div className="relative w-full max-w-xs">
+          <Search className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search tree nodes..."
+            className="h-10 w-full rounded-md border border-slate-250 bg-white pl-9 pr-4 text-sm font-semibold outline-none focus:border-[#0d4697] dark:border-slate-800 dark:bg-slate-900"
+          />
+        </div>
+      </div>
+      <div className="mt-4 space-y-2 overflow-x-auto">
+        {tree.length ? (
+          tree.map((node) => (
+            <TreeNode key={node._id} node={node} searchQuery={searchQuery} />
+          ))
+        ) : (
+          <p className="text-sm font-semibold text-slate-500">Create organization records to build the hierarchy tree.</p>
+        )}
       </div>
     </section>
   )
 }
 
-function TreeNode({ node, depth = 0 }) {
+function TreeNode({ node, depth = 0, searchQuery = '' }) {
+  const hasChildren = Boolean(node.children && node.children.length)
+  
+  const isSelfMatched = searchQuery ? node.name.toLowerCase().includes(searchQuery.toLowerCase()) : false
+  
+  const anyChildMatches = (n) => {
+    if (!searchQuery) return false
+    if (n.name.toLowerCase().includes(searchQuery.toLowerCase())) return true
+    return (n.children || []).some(anyChildMatches)
+  }
+  const isChildMatched = anyChildMatches(node)
+  
+  const [expanded, setExpanded] = useState(true)
+
+  useEffect(() => {
+    if (searchQuery && (isSelfMatched || isChildMatched)) {
+      setExpanded(true)
+    }
+  }, [searchQuery, isSelfMatched, isChildMatched])
+
+  if (searchQuery && !isSelfMatched && !isChildMatched) {
+    return null
+  }
+
   return (
-    <div style={{ marginLeft: depth * 18 }}>
-      <div className="rounded-lg border border-slate-100 bg-slate-50 px-3 py-2 text-sm font-bold text-slate-700">
-        {node.name} <span className="text-xs text-slate-400">({formatLabel(node.type)})</span>
+    <div style={{ marginLeft: depth > 0 ? 20 : 0 }} className="relative">
+      {depth > 0 && (
+        <span className="absolute -left-3.5 top-5 h-full w-px bg-slate-200 dark:bg-slate-800" />
+      )}
+      <div className="flex items-center gap-2 py-1">
+        {hasChildren ? (
+          <button
+            type="button"
+            onClick={() => setExpanded(!expanded)}
+            className="grid h-6 w-6 place-items-center rounded hover:bg-slate-100 dark:hover:bg-slate-800"
+            aria-label={expanded ? 'Collapse node' : 'Expand node'}
+          >
+            {expanded ? (
+              <ChevronDown className="h-4 w-4 text-slate-500" />
+            ) : (
+              <ChevronRight className="h-4 w-4 text-slate-500" />
+            )}
+          </button>
+        ) : (
+          <span className="w-6 h-6 shrink-0" />
+        )}
+        <div className={`flex flex-wrap items-center gap-2 rounded-lg border px-3 py-2 text-sm font-bold shadow-sm transition ${isSelfMatched ? 'border-amber-400 bg-amber-50 text-amber-900 dark:border-amber-600 dark:bg-amber-955 dark:text-amber-100' : 'border-slate-100 bg-slate-50 text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300'}`}>
+          <span>{node.name}</span>
+          <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
+            ({formatLabel(node.type)})
+          </span>
+        </div>
       </div>
-      <div className="mt-2 space-y-2">
-        {(node.children || []).map((child) => <TreeNode key={child._id} node={child} depth={depth + 1} />)}
-      </div>
+      {hasChildren && expanded && (
+        <div className="mt-1 space-y-1">
+          {node.children.map((child) => (
+            <TreeNode key={child._id} node={child} depth={depth + 1} searchQuery={searchQuery} />
+          ))}
+        </div>
+      )}
     </div>
   )
 }

@@ -411,14 +411,42 @@ export function MembershipWorkflowPage() {
 }
 
 export function AuditLogsPage() {
+  const { user } = useAuth()
+  const isAuthorized = ['superadmin', 'admin'].includes(user?.role)
+
+  if (!isAuthorized) {
+    return (
+      <div className="rounded-2xl border border-red-200 bg-red-50 p-6">
+        <h2 className="text-xl font-black text-red-950">Unauthorized Access</h2>
+        <p className="mt-2 text-sm font-semibold text-red-800">You do not have permission to view the audit logs.</p>
+      </div>
+    )
+  }
+
+  const logFilters = [
+    {
+      key: 'action',
+      label: 'Action Type',
+      options: [
+        { value: 'create_user', label: 'Created User' },
+        { value: 'update_user', label: 'Updated User' },
+        { value: 'membership_approved', label: 'Membership Approved' },
+        { value: 'membership_rejected', label: 'Membership Rejected' },
+        { value: 'login', label: 'Login' },
+        { value: 'password_changed', label: 'Password Changed' }
+      ]
+    }
+  ]
+
   return (
     <ResourceListPage
       title="Audit Logs"
       description="Every important action stored with user, action, module, date, IP address, and browser."
       fetcher={adminApi.auditLogs}
+      filters={logFilters}
       columns={[
         { key: 'user', header: 'User', render: (row) => row.user?.name || row.user?.email || '-' },
-        { key: 'action', header: 'Action' },
+        { key: 'action', header: 'Action', render: (row) => row.action?.replaceAll('_', ' ').toUpperCase() },
         { key: 'module', header: 'Module' },
         { key: 'ipAddress', header: 'IP Address' },
         { key: 'createdAt', header: 'Date', render: (row) => formatDate(row.createdAt) },

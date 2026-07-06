@@ -48,6 +48,7 @@ export function AdminMembershipsPage() {
 }
 
 export function AdminMembershipApplicationsPage() {
+  const { user } = useAuth()
   const [selected, setSelected] = useState(null)
   const [loadingDetails, setLoadingDetails] = useState(false)
   const [updatingStatus, setUpdatingStatus] = useState(false)
@@ -99,26 +100,30 @@ export function AdminMembershipApplicationsPage() {
         { key: 'documents', header: 'Documents', render: (row) => Object.values(row.documents || {}).filter(Boolean).length },
         { key: 'createdAt', header: 'Submitted', render: (row) => formatDate(row.createdAt) },
         { key: 'status', header: 'Status', render: (row) => <StatusBadge value={row.status} /> },
-      ]} renderActions={(row, { reload }, permissions) => (
-        <>
-          {permissions.hasOperation('members', 'view') && <button onClick={() => openDetails(row, reload)} className="inline-flex items-center gap-1.5 rounded-md border border-[#0d4697]/20 px-3 py-1.5 text-xs font-extrabold text-[#0d4697] hover:bg-blue-50">
-            <Eye className="h-3.5 w-3.5" />
-            View
-          </button>}
-          {permissions.hasOperation('members', 'approve') && <select
-            value={row.status || 'submitted'}
-            onChange={(event) => changeRowStatus(row, event.target.value, reload)}
-            className="h-8 rounded-md border border-slate-200 bg-white px-2 text-xs font-extrabold text-slate-700 outline-none focus:border-[#0d4697]"
-            aria-label="Change application status"
-          >
-            <option value="submitted">Submitted</option>
-            <option value="documents_verified">Documents Verified</option>
-            <option value="under_review">Under Review</option>
-            <option value="approved">Final Approval</option>
-            <option value="rejected">Rejected</option>
-          </select>}
-        </>
-      )} />
+      ]} renderActions={(row, { reload }, permissions) => {
+        const userRole = user?.role || ''
+        const showDropdownStatus = ['superadmin', 'admin'].includes(userRole)
+        return (
+          <>
+            {permissions.hasOperation('members', 'view') && <button onClick={() => openDetails(row, reload)} className="inline-flex items-center gap-1.5 rounded-md border border-[#0d4697]/20 px-3 py-1.5 text-xs font-extrabold text-[#0d4697] hover:bg-blue-50">
+              <Eye className="h-3.5 w-3.5" />
+              View
+            </button>}
+            {showDropdownStatus && <select
+              value={row.status || 'submitted'}
+              onChange={(event) => changeRowStatus(row, event.target.value, reload)}
+              className="h-8 rounded-md border border-slate-200 bg-white px-2 text-xs font-extrabold text-slate-700 outline-none focus:border-[#0d4697]"
+              aria-label="Change application status"
+            >
+              <option value="submitted">Submitted</option>
+              <option value="documents_verified">Documents Verified</option>
+              <option value="under_review">Under Review</option>
+              <option value="approved">Final Approval</option>
+              <option value="rejected">Rejected</option>
+            </select>}
+          </>
+        )
+      }} />
 
       <Modal open={Boolean(selected)} title="Membership Application Details" onClose={() => setSelected(null)} maxWidth="max-w-6xl">
         {loadingDetails ? (
@@ -136,6 +141,7 @@ export function AdminMembershipApplicationsPage() {
             onApprove={() => changeStatus('approved')}
             onReject={() => changeStatus('rejected')}
             updating={updatingStatus}
+            user={user}
           />
         )}
       </Modal>
@@ -143,8 +149,7 @@ export function AdminMembershipApplicationsPage() {
   )
 }
 
-function MembershipApplicationDetails({ application, adminNotes, onNotesChange, onClose, onDocumentsVerified, onUnderReview, onApprove, onReject, updating }) {
-  const { hasOperation } = useAuth()
+function MembershipApplicationDetails({ application, adminNotes, onNotesChange, onClose, onDocumentsVerified, onUnderReview, onApprove, onReject, updating, user }) {
   if (!application) return null
 
   const openDocument = async (field) => {
@@ -157,7 +162,24 @@ function MembershipApplicationDetails({ application, adminNotes, onNotesChange, 
     }
   }
 
-  const canApprove = hasOperation('members', 'approve')
+  const userRole = user?.role || ''
+  
+  let showVerifyBtn = false
+  let showApproveBtn = false
+  let showRejectBtn = false
+
+  if (['superadmin', 'admin'].includes(userRole)) {
+    showVerifyBtn = true
+    showApproveBtn = true
+    showRejectBtn = true
+  } else if (userRole === 'direct_consultant') {
+    showVerifyBtn = true
+    showApproveBtn = true
+    showRejectBtn = true
+  } else if (userRole === 'executive_director') {
+    showApproveBtn = true
+    showRejectBtn = true
+  }
 
   const documents = [
     ['profilePhoto', 'Profile Photo'],
@@ -201,7 +223,14 @@ function MembershipApplicationDetails({ application, adminNotes, onNotesChange, 
         ]} />
       </div>
 
-      <DetailSection title="Professional Details" items={[
+      <div className="grid gap-4 lg:grid-cols-2">
+        <DetailSection title="Organization Assignment" items={[
+          ['Region', application.regionId?.name || 'Not Assigned'],
+          ['State', application.stateId?.name || 'Not Assigned'],
+          ['District', application.districtId?.name || 'Not Assigned'],
+          ['Chapter', application.chapterId?.name || 'Not Assigned'],
+        ]} />
+        <DetailSection title="Professional Details" items={[
         ['Company Name', application.professional?.companyName],
         ['Designation', application.professional?.designation],
         ['Industry Category', application.professional?.industry],
@@ -214,6 +243,7 @@ function MembershipApplicationDetails({ application, adminNotes, onNotesChange, 
         ['Professional Background', application.professional?.backgroundSummary],
         ['Why Join Gloaro', application.professional?.joinReason],
       ]} />
+      </div>
 
       <DetailSection title="Business Credentials" items={[
         ['Business Registration Number', application.credentials?.businessRegistrationNumber],
@@ -293,17 +323,17 @@ function MembershipApplicationDetails({ application, adminNotes, onNotesChange, 
         <button disabled={updating} onClick={onClose} className="inline-flex items-center justify-center rounded-md border border-slate-200 px-4 py-2 text-sm font-extrabold text-slate-700 hover:bg-slate-50 disabled:opacity-60">
           Close
         </button>
-        {canApprove && <button disabled={updating} onClick={onDocumentsVerified} className="inline-flex items-center justify-center rounded-md border border-blue-200 px-4 py-2 text-sm font-extrabold text-[#0d4697] hover:bg-blue-50 disabled:opacity-60">
+        {showVerifyBtn && <button disabled={updating} onClick={onDocumentsVerified} className="inline-flex items-center justify-center rounded-md border border-blue-200 px-4 py-2 text-sm font-extrabold text-[#0d4697] hover:bg-blue-50 disabled:opacity-60">
           Documents Verified
         </button>}
-        {canApprove && <button disabled={updating} onClick={onUnderReview} className="inline-flex items-center justify-center rounded-md border border-amber-200 px-4 py-2 text-sm font-extrabold text-amber-700 hover:bg-amber-50 disabled:opacity-60">
+        {showVerifyBtn && <button disabled={updating} onClick={onUnderReview} className="inline-flex items-center justify-center rounded-md border border-amber-200 px-4 py-2 text-sm font-extrabold text-amber-700 hover:bg-amber-50 disabled:opacity-60">
           Under Review
         </button>}
-        {canApprove && <button disabled={updating} onClick={onReject} className="inline-flex items-center justify-center gap-2 rounded-md border border-red-200 px-4 py-2 text-sm font-extrabold text-red-600 hover:bg-red-50 disabled:opacity-60">
+        {showRejectBtn && <button disabled={updating} onClick={onReject} className="inline-flex items-center justify-center gap-2 rounded-md border border-red-200 px-4 py-2 text-sm font-extrabold text-red-600 hover:bg-red-50 disabled:opacity-60">
           <XCircle className="h-4 w-4" />
           Reject
         </button>}
-        {canApprove && <button disabled={updating} onClick={onApprove} className="inline-flex items-center justify-center gap-2 rounded-md bg-emerald-600 px-4 py-2 text-sm font-extrabold text-white hover:bg-emerald-700 disabled:opacity-60">
+        {showApproveBtn && <button disabled={updating} onClick={onApprove} className="inline-flex items-center justify-center gap-2 rounded-md bg-emerald-600 px-4 py-2 text-sm font-extrabold text-white hover:bg-emerald-700 disabled:opacity-60">
           <CheckCircle2 className="h-4 w-4" />
           Approve
         </button>}

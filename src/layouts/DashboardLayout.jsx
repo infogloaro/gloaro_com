@@ -1,4 +1,4 @@
-import { ChevronDown, ChevronLeft, Menu, Moon, Search, Sun } from 'lucide-react'
+import { ChevronDown, ChevronLeft, Menu, Moon, Search, Sun, LayoutDashboard, Users, FileBarChart, Settings, CreditCard, UserRound, Building2, MapPinned } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
@@ -52,12 +52,100 @@ export default function DashboardLayout({ navItems = [], title = 'Dashboard' }) 
     return hasSidebar(label)
   }, [hasSidebar, isSuperAdmin])
 
+  const ROLE_NAV_ITEMS = useMemo(() => ({
+    admin: [
+      ['Dashboard', '/admin', LayoutDashboard],
+      {
+        label: 'Organization Management',
+        icon: Building2,
+        children: [
+          ['Locations', '/admin/locations', MapPinned],
+        ],
+      },
+      ['Region Directors', '/admin/users', Users],
+      ['Reports', '/admin/reports', FileBarChart],
+      ['Settings', '/admin/settings', Settings]
+    ],
+    region_director: [
+      ['Dashboard', '/admin', LayoutDashboard],
+      {
+        label: 'Organization Master',
+        icon: Building2,
+        children: [
+          ['States', '/admin/locations', MapPinned],
+        ],
+      },
+      ['State Directors', '/admin/users', Users],
+      ['Memberships', '/admin/memberships', CreditCard],
+      ['Reports', '/admin/reports', FileBarChart]
+    ],
+    state_director: [
+      ['Dashboard', '/admin', LayoutDashboard],
+      {
+        label: 'Organization Master',
+        icon: Building2,
+        children: [
+          ['Districts', '/admin/locations', MapPinned],
+        ],
+      },
+      ['District Directors', '/admin/users', Users],
+      ['Memberships', '/admin/memberships', CreditCard]
+    ],
+    district_director: [
+      ['Dashboard', '/admin', LayoutDashboard],
+      {
+        label: 'Organization Master',
+        icon: Building2,
+        children: [
+          ['Chapters', '/admin/locations', MapPinned],
+        ],
+      },
+      ['Executive Directors', '/admin/users', Users],
+      ['Memberships', '/admin/memberships', CreditCard]
+    ],
+    executive_director: [
+      ['Dashboard', '/admin', LayoutDashboard],
+      ['Launch Directors', '/admin/users', Users],
+      ['Membership Approval', '/admin/applications/membership', CreditCard]
+    ],
+    launch_director: [
+      ['Dashboard', '/admin', LayoutDashboard],
+      ['Direct Consultants', '/admin/users', Users]
+    ],
+    direct_consultant: [
+      ['Dashboard', '/admin', LayoutDashboard],
+      ['Chapter Presidents', '/admin/users', Users],
+      ['Membership Approval', '/admin/applications/membership', CreditCard]
+    ],
+    chapter_president: [
+      ['Dashboard', '/admin', LayoutDashboard],
+      ['Vice Presidents', '/admin/users', Users]
+    ],
+    vice_president: [
+      ['Dashboard', '/admin', LayoutDashboard],
+      ['Secretaries', '/admin/users', Users],
+      ['Member Registration', '/membership-application', UserRound]
+    ],
+    secretary: [
+      ['Dashboard', '/admin', LayoutDashboard],
+      ['Members', '/admin/memberships', Users]
+    ]
+  }), []);
+
   const filteredNav = useMemo(() => {
     const value = query.trim().toLowerCase()
-    const visibleNavItems = navItems
+    let activeNavItems = navItems
+    let bypassEnabledCheck = false
+
+    if (user?.role && ROLE_NAV_ITEMS[user.role]) {
+      activeNavItems = ROLE_NAV_ITEMS[user.role]
+      bypassEnabledCheck = true
+    }
+
+    const visibleNavItems = activeNavItems
       .map((item) => {
-        if (Array.isArray(item)) return isSidebarItemEnabled(item[0]) ? item : null
-        const children = item.children.filter(([label]) => isSidebarItemEnabled(label))
+        if (Array.isArray(item)) return (bypassEnabledCheck || isSidebarItemEnabled(item[0])) ? item : null
+        const children = item.children.filter(([label]) => bypassEnabledCheck || isSidebarItemEnabled(label))
         return children.length ? { ...item, children } : null
       })
       .filter(Boolean)
@@ -72,7 +160,7 @@ export default function DashboardLayout({ navItems = [], title = 'Dashboard' }) 
         return null
       })
       .filter(Boolean)
-  }, [isSidebarItemEnabled, navItems, query])
+  }, [isSidebarItemEnabled, navItems, query, user?.role, ROLE_NAV_ITEMS])
 
   const pageTitle = useMemo(() => {
     for (const item of navItems) {

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import toast from 'react-hot-toast'
 import { Copy, Eye, KeyRound, LogIn, Plus, ShieldCheck, UserCog } from 'lucide-react'
 import { adminApi } from '../../api/admin'
+import api from '../../api/axios'
 import Modal from '../../components/common/Modal'
 import SearchBar from '../../components/common/SearchBar'
 import StatusBadge from '../../components/common/StatusBadge'
@@ -130,7 +131,32 @@ export default function AdminManagementPage() {
   const [editing, setEditing] = useState(null)
   const [form, setForm] = useState(emptyForm)
 
-  const params = useMemo(() => ({ page, limit: 10, search: search || undefined, role: role || undefined, status: status || undefined }), [page, role, search, status])
+  const CREATOR_CHILD_ROLE = useMemo(() => ({
+    superadmin: 'admin',
+    admin: 'region_director',
+    region_director: 'state_director',
+    state_director: 'district_director',
+    district_director: 'executive_director',
+    area_director: 'executive_director',
+    executive_director: 'launch_director',
+    launch_director: 'direct_consultant',
+    direct_consultant: 'chapter_president',
+    chapter_president: 'vice_president',
+    vice_president: 'secretary',
+  }), []);
+
+  const childRole = CREATOR_CHILD_ROLE[user?.role]
+
+  const params = useMemo(() => {
+    const filterRole = user?.role === 'superadmin' ? (role || undefined) : childRole
+    return {
+      page,
+      limit: 10,
+      search: search || undefined,
+      role: filterRole,
+      status: status || undefined
+    }
+  }, [page, role, search, status, user?.role, childRole])
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -149,15 +175,18 @@ export default function AdminManagementPage() {
 
   const rows = getList(payload)
   const pagination = getPagination(payload)
-  const canCreateAdmin = user?.role === 'superadmin'
+  const canCreateAdmin = user?.role === 'superadmin' || Boolean(childRole)
 
   const openCreate = () => {
     if (!canCreateAdmin) {
-      toast.error('Only Super Admin can create admin accounts')
+      toast.error('You are not authorized to create accounts')
       return
     }
     setEditing(null)
-    setForm(emptyForm)
+    setForm({
+      ...emptyForm,
+      role: childRole || 'admin'
+    })
     setWizardOpen(true)
   }
 
@@ -200,6 +229,24 @@ const saveAdmin = async () => {
 
     if(!/^[6-9]\d{9}$/.test(form.phone)){
         toast.error("Enter a valid 10-digit mobile number")
+        return
+    }
+
+    // Jurisdiction location validation to ensure "Location Master first -> Official account second"
+    if (form.role === 'region_director' && !form.organization?.region) {
+        toast.error("Please create the Region in the Organization Master before creating a Region Director account.")
+        return
+    }
+    if (form.role === 'state_director' && !form.organization?.state) {
+        toast.error("Please create the State in the Organization Master before creating a State Director account.")
+        return
+    }
+    if (form.role === 'district_director' && !form.organization?.district) {
+        toast.error("Please create the District in the Organization Master before creating a District Director account.")
+        return
+    }
+    if (['executive_director', 'launch_director', 'direct_consultant', 'chapter_president', 'vice_president', 'secretary'].includes(form.role) && !form.organization?.chapter) {
+        toast.error("Please create the Chapter in the Organization Master before creating this official account.")
         return
     }
 
@@ -266,19 +313,21 @@ const saveAdmin = async () => {
   return (
     <section className="space-y-6">
       <header className="rounded-2xl border border-white/60 bg-white/85 p-6 shadow-sm backdrop-blur">
-        <p className="inline-flex items-center gap-2 text-xs font-extrabold uppercase tracking-[0.18em] text-[#0d4697]"><UserCog className="h-4 w-4" />Admin Management</p>
-        <h1 className="mt-3 text-3xl font-black text-slate-950">Admin Management & Access Control</h1>
-        <p className="mt-2 max-w-4xl text-sm font-semibold leading-6 text-slate-500">Create admin accounts, assign organization scope, configure modules, permissions, workflows, widgets, sidebar, security, and support impersonation.</p>
+        <p className="inline-flex items-center gap-2 text-xs font-extrabold uppercase tracking-[0.18em] text-[#0d4697]"><UserCog className="h-4 w-4" />{childRole ? `${roleLabel(childRole)} Management` : 'Admin Management'}</p>
+        <h1 className="mt-3 text-3xl font-black text-slate-950">{childRole ? `Manage ${roleLabel(childRole)}s` : 'Admin Management & Access Control'}</h1>
+        <p className="mt-2 max-w-4xl text-sm font-semibold leading-6 text-slate-500">{childRole ? `Manage and assign organization jurisdictions for your subordinate ${roleLabel(childRole)}s.` : 'Create admin accounts, assign organization scope, configure modules, permissions, workflows, widgets, sidebar, security, and support impersonation.'}</p>
       </header>
 
       <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
         <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
           <div className="grid gap-2 md:grid-cols-[1fr_auto_auto] xl:min-w-[760px]">
-            <SearchBar value={search} onChange={(value) => { setSearch(value); setPage(1) }} placeholder="Search admin accounts" />
-            <select value={role} onChange={(event) => { setRole(event.target.value); setPage(1) }} className="h-10 rounded-md border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-900">
-              <option value="">All Roles</option>
-              {ADMIN_ROLE_OPTIONS.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
-            </select>
+            <SearchBar value={search} onChange={(value) => { setSearch(value); setPage(1) }} placeholder={childRole ? `Search ${roleLabel(childRole)} accounts` : 'Search admin accounts'} />
+            {!childRole && (
+              <select value={role} onChange={(event) => { setRole(event.target.value); setPage(1) }} className="h-10 rounded-md border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-900">
+                <option value="">All Roles</option>
+                {ADMIN_ROLE_OPTIONS.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+              </select>
+            )}
             <select value={status} onChange={(event) => { setStatus(event.target.value); setPage(1) }} className="h-10 rounded-md border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-900">
               <option value="">All Status</option>
               <option value="active">Active</option>
@@ -286,17 +335,17 @@ const saveAdmin = async () => {
               <option value="blocked">Locked</option>
             </select>
           </div>
-          {canCreateAdmin && <button type="button" onClick={openCreate} className="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-[#0d4697] px-4 text-sm font-extrabold text-white"><Plus className="h-4 w-4" />Create New Admin</button>}
+          {canCreateAdmin && <button type="button" onClick={openCreate} className="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-[#0d4697] px-4 text-sm font-extrabold text-white"><Plus className="h-4 w-4" />{childRole ? `Create New ${roleLabel(childRole)}` : 'Create New Admin'}</button>}
         </div>
       </div>
 
       <DataTable
         columns={[
-          { key: 'name', header: 'Admin' },
-          { key: 'role', header: 'Role', render: (row) => roleLabel(row.role) },
-          { key: 'organization', header: 'Organization', render: (row) => organizationLabel(row.meta?.adminProfile?.organization) },
+          { key: 'officialId', header: 'Official ID', render: (row) => row.officialId || '-' },
+          { key: 'name', header: 'Name' },
+          { key: 'email', header: 'Email' },
+          { key: 'location', header: childRole === 'region_director' ? 'Region' : 'Location', render: (row) => getSubordinateLocation(row) },
           { key: 'status', header: 'Status', render: (row) => <StatusBadge value={row.isBlocked ? 'locked' : row.isSuspended ? 'suspended' : row.isActive ? 'active' : 'inactive'} /> },
-          { key: 'lastLogin', header: 'Last Login', render: (row) => formatDate(row.lastLogin) },
         ]}
         rows={rows}
         loading={loading}
@@ -315,18 +364,18 @@ const saveAdmin = async () => {
         )}
       />
 
-      <Modal open={wizardOpen} title={editing ? 'Edit Admin' : 'Create New Admin Wizard'} onClose={() => setWizardOpen(false)} maxWidth="max-w-6xl">
-        <AdminWizard form={form} setForm={setForm} editing={Boolean(editing)} onSave={saveAdmin} />
+      <Modal open={wizardOpen} title={editing ? (childRole ? `Edit ${roleLabel(childRole)}` : 'Edit Admin') : (childRole ? `Create New ${roleLabel(childRole)} Wizard` : 'Create New Admin Wizard')} onClose={() => setWizardOpen(false)} maxWidth="max-w-6xl">
+        <AdminWizard form={form} setForm={setForm} editing={Boolean(editing)} onSave={saveAdmin} user={user} />
       </Modal>
 
-      <Modal open={Boolean(viewing)} title="Admin Details" onClose={() => setViewing(null)} maxWidth="max-w-4xl">
+      <Modal open={Boolean(viewing)} title={childRole ? `${roleLabel(childRole)} Details` : 'Admin Details'} onClose={() => setViewing(null)} maxWidth="max-w-4xl">
         {viewing && <AdminDetails admin={viewing} activity={activity} />}
       </Modal>
     </section>
   )
 }
 
-function AdminWizard({ form, setForm, editing, onSave }) {
+function AdminWizard({ form, setForm, editing, onSave, user }) {
   const update = (patch) => setForm((current) => ({ ...current, ...patch }))
   const updateOrg = (key, value) => setForm((current) => ({ ...current, organization: { ...current.organization, [key]: value } }))
   const toggleArray = (key, value) => setForm((current) => ({ ...current, [key]: toggleValue(current[key] || [], value) }))
@@ -390,19 +439,24 @@ function AdminWizard({ form, setForm, editing, onSave }) {
       </WizardSection>
 
       <WizardSection number="2" title="Role Selection">
-<select
-    value={form.role}
-    onChange={(e)=>handleRoleChange(e.target.value)}
-    className="h-10 rounded-md border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-900"
->          {ADMIN_ROLE_OPTIONS.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
-        </select>
+        {user?.role === 'superadmin' ? (
+          <select
+            value={form.role}
+            onChange={(e)=>handleRoleChange(e.target.value)}
+            className="h-10 w-full rounded-md border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-900 focus:border-[#0d4697] focus:outline-none"
+          >
+            {ADMIN_ROLE_OPTIONS.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+          </select>
+        ) : (
+          <div className="h-10 w-full rounded-md border border-slate-200 bg-slate-50 px-3 flex items-center text-sm font-extrabold text-slate-800 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-350">
+            {roleLabel(form.role)} (Read Only)
+          </div>
+        )}
         {form.role === 'custom_admin' && <Input label="Custom Role Name" value={form.customRoleName} onChange={(value) => update({ customRoleName: value })} />}
       </WizardSection>
 
       <WizardSection number="3" title="Organization Assignment">
-        <div className="grid gap-3 md:grid-cols-5">
-          {['region', 'state', 'area', 'district', 'chapter'].map((item) => <Input key={item} label={roleLabel(item)} value={form.organization[item] || ''} onChange={(value) => updateOrg(item, value)} />)}
-        </div>
+        <OrganizationAssignmentSection organization={form.organization} onChangeOrg={updateOrg} user={user} targetRole={form.role} />
       </WizardSection>
 
       <WizardSection number="4" title="Module Access">
@@ -541,4 +595,277 @@ function organizationLabel(organization = {}) {
 
 function toggleValue(values, value) {
   return values.includes(value) ? values.filter((item) => item !== value) : [...values, value]
+}
+
+function SelectField({ label, value, onChange, placeholder, options = [], disabled, className = '', loading, error }) {
+  let displayPlaceholder = placeholder
+  if (loading) displayPlaceholder = `Loading ${label}...`
+  else if (error) displayPlaceholder = error
+  else if (!options || options.length === 0) displayPlaceholder = `No ${label} Found`
+
+  return (
+    <label className={`block ${className}`}>
+      <span className="text-xs font-extrabold uppercase text-slate-555">{label}</span>
+      <select
+        disabled={disabled || loading}
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        className="mt-1 h-11 w-full rounded-md border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-900 outline-none focus:border-[#0d4697] disabled:bg-slate-50 disabled:opacity-60"
+      >
+        <option value="">{displayPlaceholder}</option>
+        {!loading && !error && options.map((opt) => (
+          <option key={opt.value} value={opt.value}>
+            {opt.label}
+          </option>
+        ))}
+      </select>
+    </label>
+  )
+}
+
+function OrganizationAssignmentSection({ organization, onChangeOrg, user, targetRole = '' }) {
+  const [regions, setRegions] = useState([])
+  const [states, setStates] = useState([])
+  const [districts, setDistricts] = useState([])
+  const [chapters, setChapters] = useState([])
+
+  const [loadingRegions, setLoadingRegions] = useState(false)
+  const [loadingStates, setLoadingStates] = useState(false)
+  const [loadingDistricts, setLoadingDistricts] = useState(false)
+  const [loadingChapters, setLoadingChapters] = useState(false)
+
+  const [errRegions, setErrRegions] = useState('')
+  const [errStates, setErrStates] = useState('')
+  const [errDistricts, setErrDistricts] = useState('')
+  const [errChapters, setErrChapters] = useState('')
+
+  const creatorRole = user?.role || 'superadmin'
+  const creatorOrg = user?.meta?.adminProfile?.organization || {}
+  const isGlobal = ['superadmin', 'admin'].includes(creatorRole)
+
+  // Determine visibility of location selectors
+  let showRegion = false
+  let showState = false
+  let showDistrict = false
+  let showChapter = false
+
+  if (targetRole === 'region_director') {
+    showRegion = true
+  } else if (targetRole === 'state_director') {
+    showRegion = true
+    showState = true
+  } else if (targetRole === 'district_director') {
+    showRegion = true
+    showState = true
+    showDistrict = true
+  } else if (targetRole === 'executive_director') {
+    showRegion = true
+    showState = true
+    showDistrict = true
+    showChapter = true
+  } else {
+    showRegion = true
+    showState = true
+    showDistrict = true
+    showChapter = true
+  }
+
+  // Determine locking states
+  const isRegionLocked = !isGlobal || (targetRole !== 'region_director' && organization.region)
+  const isStateLocked = (!isGlobal && creatorRole !== 'region_director') || (targetRole !== 'state_director' && organization.state)
+  const isDistrictLocked = (!isGlobal && !['region_director', 'state_director'].includes(creatorRole)) || (targetRole !== 'district_director' && organization.district)
+  const isChapterLocked = (!isGlobal && !['region_director', 'state_director', 'district_director'].includes(creatorRole)) || (targetRole !== 'executive_director' && organization.chapter)
+
+  // Auto-fill creator credentials once on mount
+  useEffect(() => {
+    if (!isGlobal) {
+      console.log('[DEBUG] Auto-filling creator organization path:', creatorOrg)
+      if (creatorOrg.region) onChangeOrg('region', creatorOrg.region)
+      if (creatorOrg.state) onChangeOrg('state', creatorOrg.state)
+      if (creatorOrg.district) onChangeOrg('district', creatorOrg.district)
+      if (creatorOrg.chapter) onChangeOrg('chapter', creatorOrg.chapter)
+    }
+  }, [user, isGlobal])
+
+  // 1. Fetch Regions
+  useEffect(() => {
+    console.log('[DEBUG] API request: GET /organization/regions')
+    setLoadingRegions(true)
+    setErrRegions('')
+    api.get('/organization/regions')
+      .then(res => {
+        const list = res.data?.data?.regions || []
+        console.log('[DEBUG] API response: GET /organization/regions:', list)
+        setRegions(list)
+      })
+      .catch(err => {
+        console.error('[DEBUG] API failed: GET /organization/regions:', err)
+        setErrRegions('Unable to load Regions. Please try again.')
+      })
+      .finally(() => setLoadingRegions(false))
+  }, [])
+
+  // 2. Fetch States
+  useEffect(() => {
+    const currentReg = organization.region || creatorOrg.region
+    if (!currentReg) {
+      setStates([])
+      return
+    }
+    console.log('[DEBUG] API request: GET /organization/states', { regionId: currentReg })
+    setLoadingStates(true)
+    setErrStates('')
+    api.get('/organization/states', { params: { regionId: currentReg } })
+      .then(res => {
+        const list = res.data?.data?.states || []
+        console.log('[DEBUG] API response: GET /organization/states:', list)
+        setStates(list)
+      })
+      .catch(err => {
+        console.error('[DEBUG] API failed: GET /organization/states:', err)
+        setErrStates('Unable to load States. Please try again.')
+      })
+      .finally(() => setLoadingStates(false))
+  }, [organization.region, creatorOrg.region])
+
+  // 3. Fetch Districts
+  useEffect(() => {
+    const currentState = organization.state || creatorOrg.state
+    if (!currentState) {
+      setDistricts([])
+      return
+    }
+    console.log('[DEBUG] API request: GET /organization/districts', { stateId: currentState })
+    setLoadingDistricts(true)
+    setErrDistricts('')
+    api.get('/organization/districts', { params: { stateId: currentState } })
+      .then(res => {
+        const list = res.data?.data?.districts || []
+        console.log('[DEBUG] API response: GET /organization/districts:', list)
+        setDistricts(list)
+      })
+      .catch(err => {
+        console.error('[DEBUG] API failed: GET /organization/districts:', err)
+        setErrDistricts('Unable to load Districts. Please try again.')
+      })
+      .finally(() => setLoadingDistricts(false))
+  }, [organization.state, creatorOrg.state])
+
+  // 4. Fetch Chapters
+  useEffect(() => {
+    const currentDist = organization.district || creatorOrg.district
+    if (!currentDist) {
+      setChapters([])
+      return
+    }
+    console.log('[DEBUG] API request: GET /organization/chapters', { districtId: currentDist })
+    setLoadingChapters(true)
+    setErrChapters('')
+    api.get('/organization/chapters', { params: { districtId: currentDist } })
+      .then(res => {
+        const list = res.data?.data?.chapters || []
+        console.log('[DEBUG] API response: GET /organization/chapters:', list)
+        setChapters(list)
+      })
+      .catch(err => {
+        console.error('[DEBUG] API failed: GET /organization/chapters:', err)
+        setErrChapters('Unable to load Chapters. Please try again.')
+      })
+      .finally(() => setLoadingChapters(false))
+  }, [organization.district, creatorOrg.district])
+
+  const getSelectedLabel = (id, optionsList, lockedVal) => {
+    if (!id && !lockedVal) return '-'
+    const match = optionsList.find(opt => opt.value === id || opt._id === id || opt.label === id)
+    return match ? match.label || match.name : (lockedVal || id)
+  }
+
+  return (
+    <div className="space-y-6 w-full">
+      <div className="grid gap-4 md:grid-cols-4 w-full">
+        {showRegion && (
+          <SelectField
+            label="Region"
+            value={organization.region || ''}
+            placeholder="Select Region"
+            disabled={isRegionLocked}
+            loading={loadingRegions}
+            error={errRegions}
+            onChange={(val) => {
+              onChangeOrg('region', val)
+              onChangeOrg('state', '')
+              onChangeOrg('district', '')
+              onChangeOrg('chapter', '')
+            }}
+            options={regions.map(r => ({ label: r.name, value: r._id }))}
+          />
+        )}
+        {showState && (
+          <SelectField
+            label="State"
+            value={organization.state || ''}
+            placeholder="Select State"
+            disabled={isStateLocked || !organization.region}
+            loading={loadingStates}
+            error={errStates}
+            onChange={(val) => {
+              onChangeOrg('state', val)
+              onChangeOrg('district', '')
+              onChangeOrg('chapter', '')
+            }}
+            options={states.map(s => ({ label: s.name, value: s._id }))}
+          />
+        )}
+        {showDistrict && (
+          <SelectField
+            label="District"
+            value={organization.district || ''}
+            placeholder="Select District"
+            disabled={isDistrictLocked || !organization.state}
+            loading={loadingDistricts}
+            error={errDistricts}
+            onChange={(val) => {
+              onChangeOrg('district', val)
+              onChangeOrg('chapter', '')
+            }}
+            options={districts.map(d => ({ label: d.name, value: d._id }))}
+          />
+        )}
+        {showChapter && (
+          <SelectField
+            label="Chapter"
+            value={organization.chapter || ''}
+            placeholder="Select Chapter"
+            disabled={isChapterLocked || !organization.district}
+            loading={loadingChapters}
+            error={errChapters}
+            onChange={(val) => {
+              onChangeOrg('chapter', val)
+            }}
+            options={chapters.map(c => ({ label: c.name, value: c._id }))}
+          />
+        )}
+      </div>
+
+      <div className="rounded-xl border border-blue-100 bg-blue-50/40 p-4 dark:border-slate-800 dark:bg-slate-900/60 shadow-inner">
+        <h4 className="text-xs font-black uppercase tracking-wider text-[#0d4697] dark:text-blue-400 mb-3">Assigned Hierarchy Summary</h4>
+        <div className="grid gap-2 text-sm font-semibold text-slate-800 dark:text-slate-200">
+          {showRegion && <div><span className="text-slate-555 dark:text-slate-400 font-bold">Region:</span> {getSelectedLabel(organization.region, regions, creatorOrg.region)}</div>}
+          {showState && <div><span className="text-slate-555 dark:text-slate-400 font-bold">State:</span> {getSelectedLabel(organization.state, states, creatorOrg.state)}</div>}
+          {showDistrict && <div><span className="text-slate-555 dark:text-slate-400 font-bold">District:</span> {getSelectedLabel(organization.district, districts, creatorOrg.district)}</div>}
+          {showChapter && <div><span className="text-slate-555 dark:text-slate-400 font-bold">Chapter:</span> {getSelectedLabel(organization.chapter, chapters, creatorOrg.chapter)}</div>}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function getSubordinateLocation(row) {
+  const org = row.meta?.adminProfile?.organization || {}
+  if (row.role === 'region_director') return org.assignedRegion?.name || 'Not Assigned'
+  if (row.role === 'state_director') return org.assignedState?.name || 'Not Assigned'
+  if (row.role === 'district_director' || row.role === 'executive_director' || row.role === 'area_director') {
+    return org.assignedDistrict?.name || 'Not Assigned'
+  }
+  return org.assignedChapter?.name || 'Not Assigned'
 }
