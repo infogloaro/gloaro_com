@@ -33,10 +33,16 @@ import {
 export const adminNav = [
   ['Dashboard', '/admin', LayoutDashboard],
   {
+    label: 'Organization Management',
+    icon: Building2,
+    children: [
+      ['Locations', '/admin/locations', MapPinned],
+    ],
+  },
+  {
     label: 'Super Admin',
     icon: ShieldCheck,
     children: [
-      ['Organization', '/admin/organization', MapPinned],
       ['Admin Management', '/admin/admin-management', Users],
       ['Assignments', '/admin/assignments', Workflow],
       ['Roles', '/admin/roles', ShieldCheck],

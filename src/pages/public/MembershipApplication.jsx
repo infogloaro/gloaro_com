@@ -1,6 +1,8 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { BriefcaseBusiness, Building2, Camera, Globe2, MapPin, UserRound } from 'lucide-react'
+import api from '../../api/axios'
+import { useAuth } from '../../hooks/useAuth'
 import { getMembershipDraft, saveMembershipDraft, setMembershipFile } from '../../utils/membershipOnboarding'
 
 const expertise = ['Technology', 'Finance', 'Real Estate', 'Education', 'Marketing', 'Healthcare', 'Design', 'Manufacturing']
@@ -8,12 +10,146 @@ const industries = ['Technology', 'Finance', 'Real Estate', 'Education', 'Health
 const businessTypes = ['B2B Enterprise', 'B2C Business', 'D2C Brand', 'Startup', 'SME', 'Private Limited', 'LLP', 'Partnership', 'Sole Proprietorship', 'Franchise', 'Consultancy', 'Non Profit']
 
 export default function MembershipApplication() {
+  const { user } = useAuth()
   const draft = getMembershipDraft()
   const [personal, setPersonal] = useState(draft.personal || {})
   const [address, setAddress] = useState(draft.address || {})
   const [professional, setProfessional] = useState(draft.professional || { expertise: [] })
   const mobileDigits = String(personal.mobileNumber || '').replace(/\D/g, '')
   const mobileInvalid = Boolean(personal.mobileNumber) && (mobileDigits.length < 10 || mobileDigits.length > 15)
+
+  const [regions, setRegions] = useState([])
+  const [states, setStates] = useState([])
+  const [districts, setDistricts] = useState([])
+  const [chapters, setChapters] = useState([])
+
+  const [selectedRegion, setSelectedRegion] = useState(draft.regionId || '')
+  const [selectedState, setSelectedState] = useState(draft.stateId || '')
+  const [selectedDistrict, setSelectedDistrict] = useState(draft.districtId || '')
+  const [selectedChapter, setSelectedChapter] = useState(draft.chapterId || '')
+
+  const isVicePresident = user?.role === 'vice_president'
+  const userOrg = user?.meta?.adminProfile?.organization || {}
+
+  // 1. Fetch Regions
+  useEffect(() => {
+    api.get('/organization/regions')
+      .then(res => {
+        setRegions(res.data?.data?.regions || [])
+      })
+      .catch(() => {})
+  }, [])
+
+  // Auto-fill from Vice President details
+  useEffect(() => {
+    if (isVicePresident) {
+      if (userOrg.region) {
+        setSelectedRegion(userOrg.region)
+        updateLocationDraft('regionId', userOrg.region)
+      }
+      if (userOrg.state) {
+        setSelectedState(userOrg.state)
+        updateLocationDraft('stateId', userOrg.state)
+      }
+      if (userOrg.district) {
+        setSelectedDistrict(userOrg.district)
+        updateLocationDraft('districtId', userOrg.district)
+      }
+      if (userOrg.chapter) {
+        setSelectedChapter(userOrg.chapter)
+        updateLocationDraft('chapterId', userOrg.chapter)
+      }
+    }
+  }, [user, isVicePresident])
+
+  // 2. Fetch States
+  useEffect(() => {
+    const rId = isVicePresident ? userOrg.region : selectedRegion
+    if (!rId) {
+      setStates([])
+      return
+    }
+    api.get('/organization/states', { params: { regionId: rId } })
+      .then(res => {
+        setStates(res.data?.data?.states || [])
+      })
+      .catch(() => {})
+  }, [selectedRegion, isVicePresident, userOrg.region])
+
+  // 3. Fetch Districts
+  useEffect(() => {
+    const sId = isVicePresident ? userOrg.state : selectedState
+    if (!sId) {
+      setDistricts([])
+      return
+    }
+    api.get('/organization/districts', { params: { stateId: sId } })
+      .then(res => {
+        setDistricts(res.data?.data?.districts || [])
+      })
+      .catch(() => {})
+  }, [selectedState, isVicePresident, userOrg.state])
+
+  // 4. Fetch Chapters
+  useEffect(() => {
+    const dId = isVicePresident ? userOrg.district : selectedDistrict
+    if (!dId) {
+      setChapters([])
+      return
+    }
+    api.get('/organization/chapters', { params: { districtId: dId } })
+      .then(res => {
+        setChapters(res.data?.data?.chapters || [])
+      })
+      .catch(() => {})
+  }, [selectedDistrict, isVicePresident, userOrg.district])
+
+  const updateLocationDraft = (field, value) => {
+    const draftData = getMembershipDraft()
+    const next = { ...draftData, [field]: value }
+    localStorage.setItem('gloaro_membership_onboarding', JSON.stringify(next))
+  }
+
+  const handleRegionChange = (val) => {
+    setSelectedRegion(val)
+    setSelectedState('')
+    setSelectedDistrict('')
+    setSelectedChapter('')
+    setStates([])
+    setDistricts([])
+    setChapters([])
+    
+    updateLocationDraft('regionId', val)
+    updateLocationDraft('stateId', '')
+    updateLocationDraft('districtId', '')
+    updateLocationDraft('chapterId', '')
+  }
+
+  const handleStateChange = (val) => {
+    setSelectedState(val)
+    setSelectedDistrict('')
+    setSelectedChapter('')
+    setDistricts([])
+    setChapters([])
+
+    updateLocationDraft('stateId', val)
+    updateLocationDraft('districtId', '')
+    updateLocationDraft('chapterId', '')
+  }
+
+  const handleDistrictChange = (val) => {
+    setSelectedDistrict(val)
+    setSelectedChapter('')
+    setChapters([])
+
+    updateLocationDraft('districtId', val)
+    updateLocationDraft('chapterId', '')
+  }
+
+  const handleChapterChange = (val) => {
+    setSelectedChapter(val)
+    updateLocationDraft('chapterId', val)
+  }
 
   const updateSection = (section, setter) => (field, value) => {
     setter((current) => {
@@ -75,6 +211,44 @@ export default function MembershipApplication() {
                 <Field label="State" value={address.state || ''} onChange={(value) => updateAddress('state', value)} placeholder="NY" />
                 <Field label="Pincode" value={address.pincode || ''} onChange={(value) => updateAddress('pincode', value)} placeholder="10001" />
               </div>
+            </div>
+          </ApplicationSection>
+
+          <ApplicationSection icon={MapPin} title="Location & Chapter Assignment">
+            <div className="grid gap-4 md:grid-cols-2">
+              <SelectField
+                label="Region *"
+                value={selectedRegion}
+                onChange={handleRegionChange}
+                placeholder="Select Region"
+                options={regions.map(r => ({ label: r.name, value: r._id }))}
+                disabled={isVicePresident}
+              />
+              <SelectField
+                label="State *"
+                value={selectedState}
+                onChange={handleStateChange}
+                placeholder="Select State"
+                options={states.map(s => ({ label: s.name, value: s._id }))}
+                disabled={isVicePresident || !selectedRegion}
+              />
+              <SelectField
+                label="District *"
+                value={selectedDistrict}
+                onChange={handleDistrictChange}
+                placeholder="Select District"
+                options={districts.map(d => ({ label: d.name, value: d._id }))}
+                disabled={isVicePresident || !selectedState}
+              />
+              <SelectField
+                label="Chapter *"
+                value={selectedChapter}
+                onChange={handleChapterChange}
+                placeholder="Select Chapter"
+                options={chapters.map(c => ({ label: c.name, value: c._id }))}
+                disabled={isVicePresident || !selectedDistrict}
+                className="md:col-span-2"
+              />
             </div>
           </ApplicationSection>
 
@@ -145,13 +319,17 @@ function Field({ label, placeholder, type = 'text', value, onChange, className =
   )
 }
 
-function SelectField({ label, placeholder, value, onChange, options = [placeholder] }) {
+function SelectField({ label, placeholder, value, onChange, options = [placeholder], disabled, className = '' }) {
   return (
-    <label className="block">
+    <label className={`block ${className}`}>
       <span className="text-xs font-black text-slate-700">{label}</span>
-      <select value={value} onChange={(event) => onChange(event.target.value)} className="mt-1 h-9 w-full rounded-md border border-slate-300 bg-white px-3 text-xs font-medium text-slate-500 outline-none focus:border-[#0b469e]">
+      <select value={value} onChange={(event) => onChange(event.target.value)} disabled={disabled} className="mt-1 h-9 w-full rounded-md border border-slate-300 bg-white px-3 text-xs font-medium text-slate-500 outline-none focus:border-[#0b469e] disabled:opacity-50">
         <option value="">{placeholder}</option>
-        {options.map((option) => <option key={option} value={option}>{option}</option>)}
+        {options.map((option) => {
+          const optVal = typeof option === 'object' ? option.value : option;
+          const optLbl = typeof option === 'object' ? option.label : option;
+          return <option key={optVal} value={optVal}>{optLbl}</option>;
+        })}
       </select>
     </label>
   )

@@ -118,8 +118,9 @@ export function AuthProvider({ children }) {
     login,
     register,
     logout,
+    socket: socketRef.current,
     ...permissionHelpers,
-  }), [user, loading, permissionsLoading, permissionConfig, login, register, logout, permissionHelpers])
+  }), [user, loading, permissionsLoading, permissionConfig, login, register, logout, permissionHelpers, socketRef.current])
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }

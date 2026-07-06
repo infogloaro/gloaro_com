@@ -78,6 +78,7 @@ import {
   AdminUsersPage,
   AdminVendorsPage,
 } from './pages/admin/AdminResourcePages'
+import LocationsManagementPage from './pages/admin/LocationsManagementPage'
 import VendorDashboard from './pages/vendor/VendorDashboard'
 import {
   VendorLeadsPage,
@@ -130,7 +131,7 @@ import SettingsPage from './pages/secretary/SettingsPage'
 
 function App() {
   const { role, permissionsLoading, canAccessPath } = useAuth()
-  const isAdminSession = ['superadmin', 'admin', 'franchise_admin', 'ecommerce_admin', 'marketplace_admin', 'digital_marketing_admin', 'training_admin', 'finance_admin', 'state_director', 'area_director', 'executive_director', 'launch_director', 'direct_consultant', 'operation_vice_president', 'membership_verification_admin', 'custom_admin'].includes(role)
+  const isAdminSession = ['superadmin', 'admin', 'franchise_admin', 'ecommerce_admin', 'marketplace_admin', 'digital_marketing_admin', 'training_admin', 'finance_admin', 'region_director', 'state_director', 'district_director', 'area_director', 'executive_director', 'launch_director', 'direct_consultant', 'chapter_president', 'vice_president', 'secretary', 'operation_vice_president', 'membership_verification_admin', 'custom_admin'].includes(role)
 
   const adminRouteDefs = [
     { path: '/admin', element: <SuperAdminDashboardPage /> },
@@ -145,10 +146,11 @@ function App() {
     { path: '/admin/module-config', element: <ModuleConfigurationPage />, roles: ['superadmin'] },
     { path: '/admin/membership-workflow', element: <WorkflowEnginePage />, roles: ['superadmin'] },
     { path: '/admin/workflow-engine', element: <WorkflowEnginePage />, roles: ['superadmin'] },
-    { path: '/admin/users', element: <AdminUsersPage /> },
+    { path: '/admin/users', element: <AdminManagementPage /> },
     { path: '/admin/vendors', element: <AdminVendorsPage /> },
     { path: '/admin/vendor-settings', element: <SuperAdminModulePage {...superAdminModuleConfigs.vendor} /> },
     { path: '/admin/vendor-approval-workflow', element: <VendorApprovalWorkflowPage /> },
+    { path: '/admin/locations', element: <LocationsManagementPage /> },
     { path: '/admin/categories', element: <AdminCategoriesPage /> },
     { path: '/admin/business', element: <BusinessNetworkingPage /> },
     { path: '/admin/business-wall', element: <BusinessWallManagementPage /> },
