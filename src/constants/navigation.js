@@ -174,3 +174,58 @@ export const secretaryNav = [
   ['Settings', '/secretary/settings', Settings],
 ]
 
+export const stateDirectorNav = [
+  ['Dashboard', '/state-director/dashboard', LayoutDashboard],
+  {
+    label: 'Organization Master',
+    icon: Building2,
+    children: [
+      ['Districts', '/state-director/districts', MapPinned],
+    ],
+  },
+  ['District Directors', '/state-director/district-directors', Users],
+  ['Memberships', '/state-director/memberships', CreditCard],
+  ['Reports', '/state-director/reports', FileBarChart],
+  ['Settings', '/state-director/settings', Settings],
+]
+
+export const districtDirectorNav = [
+  ['Dashboard', '/district-director/dashboard', LayoutDashboard],
+  {
+    label: 'Organization Master',
+    icon: Building2,
+    children: [
+      ['Chapters', '/district-director/chapters', MapPinned],
+    ],
+  },
+  ['Chapter Directors', '/district-director/chapter-directors', Users],
+  ['Memberships', '/district-director/memberships', CreditCard],
+  ['Reports', '/district-director/reports', FileBarChart],
+  ['Settings', '/district-director/settings', Settings],
+]
+
+export const chapterDirectorNav = [
+  ['Dashboard', '/chapter-director/dashboard', LayoutDashboard],
+  ['President', '/chapter-director/president', Users],
+  ['Memberships', '/chapter-director/memberships', CreditCard],
+  ['Reports', '/chapter-director/reports', FileBarChart],
+  ['Settings', '/chapter-director/settings', Settings],
+]
+
+export const presidentNav = [
+  ['Dashboard', '/president/dashboard', LayoutDashboard],
+  ['Vice President', '/president/vice-president', Users],
+  ['Memberships', '/president/memberships', CreditCard],
+  ['Reports', '/president/reports', FileBarChart],
+  ['Settings', '/president/settings', Settings],
+]
+
+export const vicePresidentNav = [
+  ['Dashboard', '/vice-president/dashboard', LayoutDashboard],
+  ['Secretary', '/vice-president/secretary', Users],
+  ['Members', '/vice-president/members', Users],
+  ['Memberships', '/vice-president/memberships', CreditCard],
+  ['Reports', '/vice-president/reports', FileBarChart],
+  ['Settings', '/vice-president/settings', Settings],
+]
+

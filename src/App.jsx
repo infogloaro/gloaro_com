@@ -1,6 +1,6 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
-import { adminNav, customerNav, membershipNav, vendorNav, secretaryNav } from './constants/navigation'
+import { adminNav, customerNav, membershipNav, vendorNav, secretaryNav, stateDirectorNav, districtDirectorNav, chapterDirectorNav, presidentNav, vicePresidentNav } from './constants/navigation'
 import DashboardLayout from './layouts/DashboardLayout'
 import PublicLayout from './layouts/PublicLayout'
 import ProtectedRoute from './routes/ProtectedRoute'
@@ -128,6 +128,11 @@ import AttendancePage from './pages/secretary/AttendancePage'
 import DocumentsPage from './pages/secretary/DocumentsPage'
 import ReportsPage from './pages/secretary/ReportsPage'
 import SettingsPage from './pages/secretary/SettingsPage'
+import StateDirectorDashboard from './pages/state-director/StateDirectorDashboard'
+import DistrictDirectorDashboard from './pages/district-director/DistrictDirectorDashboard'
+import ChapterDirectorDashboard from './pages/chapter-director/ChapterDirectorDashboard'
+import PresidentDashboard from './pages/president/PresidentDashboard'
+import VicePresidentDashboard from './pages/vice-president/VicePresidentDashboard'
 
 function App() {
   const { role, permissionsLoading, canAccessPath } = useAuth()
@@ -297,6 +302,64 @@ function App() {
             <Route path="/secretary/documents" element={<DocumentsPage />} />
             <Route path="/secretary/reports" element={<ReportsPage />} />
             <Route path="/secretary/settings" element={<SettingsPage />} />
+          </Route>
+        </Route>
+
+        <Route element={<ProtectedRoute roles={['state_director']} />}>
+          <Route element={<DashboardLayout navItems={stateDirectorNav} title="State Director Console" />}>
+            <Route path="/state-director" element={<Navigate to="/state-director/dashboard" replace />} />
+            <Route path="/state-director/dashboard" element={<StateDirectorDashboard />} />
+            <Route path="/state-director/districts" element={<LocationsManagementPage />} />
+            <Route path="/state-director/district-directors" element={<AdminManagementPage />} />
+            <Route path="/state-director/memberships" element={<AdminMembershipsPage />} />
+            <Route path="/state-director/reports" element={<EnterpriseReportBuilderPage />} />
+            <Route path="/state-director/settings" element={<AdminSettingsPage />} />
+          </Route>
+        </Route>
+
+        <Route element={<ProtectedRoute roles={['district_director']} />}>
+          <Route element={<DashboardLayout navItems={districtDirectorNav} title="District Director Console" />}>
+            <Route path="/district-director" element={<Navigate to="/district-director/dashboard" replace />} />
+            <Route path="/district-director/dashboard" element={<DistrictDirectorDashboard />} />
+            <Route path="/district-director/chapters" element={<LocationsManagementPage />} />
+            <Route path="/district-director/chapter-directors" element={<AdminManagementPage />} />
+            <Route path="/district-director/memberships" element={<AdminMembershipsPage />} />
+            <Route path="/district-director/reports" element={<EnterpriseReportBuilderPage />} />
+            <Route path="/district-director/settings" element={<AdminSettingsPage />} />
+          </Route>
+        </Route>
+
+        <Route element={<ProtectedRoute roles={['executive_director']} />}>
+          <Route element={<DashboardLayout navItems={chapterDirectorNav} title="Chapter Director Console" />}>
+            <Route path="/chapter-director" element={<Navigate to="/chapter-director/dashboard" replace />} />
+            <Route path="/chapter-director/dashboard" element={<ChapterDirectorDashboard />} />
+            <Route path="/chapter-director/president" element={<AdminManagementPage />} />
+            <Route path="/chapter-director/memberships" element={<AdminMembershipsPage />} />
+            <Route path="/chapter-director/reports" element={<EnterpriseReportBuilderPage />} />
+            <Route path="/chapter-director/settings" element={<AdminSettingsPage />} />
+          </Route>
+        </Route>
+
+        <Route element={<ProtectedRoute roles={['chapter_president']} />}>
+          <Route element={<DashboardLayout navItems={presidentNav} title="President Console" />}>
+            <Route path="/president" element={<Navigate to="/president/dashboard" replace />} />
+            <Route path="/president/dashboard" element={<PresidentDashboard />} />
+            <Route path="/president/vice-president" element={<AdminManagementPage />} />
+            <Route path="/president/memberships" element={<AdminMembershipsPage />} />
+            <Route path="/president/reports" element={<EnterpriseReportBuilderPage />} />
+            <Route path="/president/settings" element={<AdminSettingsPage />} />
+          </Route>
+        </Route>
+
+        <Route element={<ProtectedRoute roles={['vice_president']} />}>
+          <Route element={<DashboardLayout navItems={vicePresidentNav} title="Vice President Console" />}>
+            <Route path="/vice-president" element={<Navigate to="/vice-president/dashboard" replace />} />
+            <Route path="/vice-president/dashboard" element={<VicePresidentDashboard />} />
+            <Route path="/vice-president/secretary" element={<AdminManagementPage />} />
+            <Route path="/vice-president/members" element={<AdminManagementPage role="customer" />} />
+            <Route path="/vice-president/memberships" element={<AdminMembershipsPage />} />
+            <Route path="/vice-president/reports" element={<EnterpriseReportBuilderPage />} />
+            <Route path="/vice-president/settings" element={<AdminSettingsPage />} />
           </Route>
         </Route>
 

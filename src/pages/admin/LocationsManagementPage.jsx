@@ -557,7 +557,7 @@ export default function LocationsManagementPage() {
                     <input
                       type="text"
                       disabled
-                      value={pathList[pathList.length - 2]?.name || ''}
+                      value={user?.role === 'state_director' ? (user?.meta?.adminProfile?.organization?.assignedRegion?.name || '') : (pathList[pathList.length - 2]?.name || '')}
                       className="mt-1 h-11 w-full rounded-md border border-slate-200 bg-slate-50 px-3 text-sm font-semibold text-slate-500"
                     />
                   </div>
@@ -566,7 +566,7 @@ export default function LocationsManagementPage() {
                     <input
                       type="text"
                       disabled
-                      value={selectedNode?.name || ''}
+                      value={user?.role === 'state_director' ? (user?.meta?.adminProfile?.organization?.assignedState?.name || '') : (selectedNode?.name || '')}
                       className="mt-1 h-11 w-full rounded-md border border-slate-200 bg-slate-50 px-3 text-sm font-semibold text-slate-500"
                     />
                   </div>
@@ -580,25 +580,25 @@ export default function LocationsManagementPage() {
                     <input
                       type="text"
                       disabled
-                      value={pathList[pathList.length - 3]?.name || ''}
+                      value={user?.role === 'district_director' ? (user?.meta?.adminProfile?.organization?.assignedRegion?.name || '') : (pathList[pathList.length - 3]?.name || '')}
                       className="mt-1 h-11 w-full rounded-md border border-slate-200 bg-slate-50 px-3 text-sm font-semibold text-slate-500"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-extrabold uppercase text-slate-500">State (Read Only)</label>
+                    <label className="block text-xs font-extrabold uppercase text-slate-555">State (Read Only)</label>
                     <input
                       type="text"
                       disabled
-                      value={pathList[pathList.length - 2]?.name || ''}
+                      value={user?.role === 'district_director' ? (user?.meta?.adminProfile?.organization?.assignedState?.name || '') : (pathList[pathList.length - 2]?.name || '')}
                       className="mt-1 h-11 w-full rounded-md border border-slate-200 bg-slate-50 px-3 text-sm font-semibold text-slate-500"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-extrabold uppercase text-slate-500">District (Read Only)</label>
+                    <label className="block text-xs font-extrabold uppercase text-slate-555">District (Read Only)</label>
                     <input
                       type="text"
                       disabled
-                      value={selectedNode?.name || ''}
+                      value={user?.role === 'district_director' ? (user?.meta?.adminProfile?.organization?.assignedDistrict?.name || '') : (selectedNode?.name || '')}
                       className="mt-1 h-11 w-full rounded-md border border-slate-200 bg-slate-50 px-3 text-sm font-semibold text-slate-500"
                     />
                   </div>
