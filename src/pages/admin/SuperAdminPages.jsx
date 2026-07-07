@@ -49,7 +49,7 @@ function SuperAdminOnlyNotice({ title = 'Super Admin access required' }) {
 }
 
 const moduleCards = [
-  ['Organization', 'Regions, states, areas, districts, chapters, and director assignment.', MapPinned],
+  ['Organization', 'Regions, states, districts, chapters, and director assignment.', MapPinned],
   ['Users', 'Create admins, reset passwords, block users, and review activity.', Users],
   ['Roles & Permissions', 'Configure role access, clone permissions, and manage feature visibility.', ShieldCheck],
   ['Membership', 'Membership categories, workflow settings, approvals, and categories.', ClipboardList],

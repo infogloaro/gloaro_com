@@ -71,7 +71,6 @@ const ROLE_CONFIGS = {
   finance_admin: createRoleConfig({ modules: ['dashboard', 'members', 'reports', 'meetings', 'settings'], workflows: ['meeting'], widgets: ['members', 'meetings', ...alwaysExtraWidgets], sidebar: ['dashboard', 'members', 'reports', 'meetings', 'settings'], permissionFields: ['canView', 'canApprove', 'canExport', 'canPrint'], workflowActions: reviewWorkflowActions }),
   state_director: createRoleConfig({ modules: ['dashboard', 'members', 'meetings', 'attendance', 'visitors', 'events', 'reports', 'settings'], workflows: ['membership', 'meeting'], widgets: ['members', 'meetings', 'attendance', 'visitors', ...alwaysExtraWidgets], sidebar: ['dashboard', 'members', 'meetings', 'attendance', 'visitors', 'events', 'reports', 'settings'] }),
   district_director: createRoleConfig({ modules: ['dashboard', 'members', 'meetings', 'attendance', 'visitors', 'events', 'reports', 'settings'], workflows: ['membership', 'meeting'], widgets: ['members', 'meetings', 'attendance', 'visitors', ...alwaysExtraWidgets], sidebar: ['dashboard', 'members', 'meetings', 'attendance', 'visitors', 'events', 'reports', 'settings'] }),
-  area_director: createRoleConfig({ modules: ['dashboard', 'members', 'meetings', 'attendance'], workflows: ['membership', 'meeting'], widgets: ['members', 'meetings', 'attendance', 'visitors'], sidebar: ['dashboard', 'members', 'meetings', 'visitors'], permissionFields: operatorPermissionKeys, workflowActions: reviewWorkflowActions }),
   executive_director: createRoleConfig({ modules: ['dashboard', 'members', 'meetings', 'attendance', 'visitors', 'reports'], workflows: ['membership', 'meeting'], widgets: ['members', 'meetings', 'attendance', 'visitors', ...alwaysExtraWidgets], sidebar: ['dashboard', 'members', 'meetings', 'attendance', 'visitors', 'reports'] }),
   launch_director: createRoleConfig({ modules: ['dashboard', 'members', 'meetings', 'attendance'], workflows: ['membership', 'meeting'], widgets: ['members', 'meetings', 'attendance', 'visitors'], sidebar: ['dashboard', 'members', 'meetings', 'visitors'], permissionFields: operatorPermissionKeys, workflowActions: reviewWorkflowActions }),
   direct_consultant: createRoleConfig({ modules: ['dashboard', 'members', 'meetings'], workflows: ['membership', 'meeting'], widgets: ['members', 'meetings', 'attendance'], sidebar: ['dashboard', 'members', 'meetings'], permissionFields: readOnlyPermissionKeys, workflowActions: ['create', 'review'] }),
@@ -85,7 +84,7 @@ const ROLE_CONFIGS = {
 }
 
 function getRoleConfig(role) {
-  return ROLE_CONFIGS[role] || ROLE_CONFIGS.area_director
+  return ROLE_CONFIGS[role] || ROLE_CONFIGS.admin
 }
 
 function applyRoleConfig(role, current) {
@@ -130,9 +129,9 @@ const emptyForm = {
   phone: '',
   password: '',
   avatar: null,
-  role: 'area_director',
+  role: 'region_director',
   customRoleName: '',
-  organization: { region: '', state: '', area: '', district: '', chapter: '' },
+  organization: { region: '', state: '', district: '', chapter: '' },
   modules: ['dashboard', 'members', 'meetings', 'visitors'],
   permissions: {},
   workflowPermissions: {},
@@ -163,8 +162,7 @@ export default function AdminManagementPage({ role: overrideRole }) {
     region_director: 'state_director',
     state_director: 'district_director',
     district_director: 'executive_director',
-    area_director: 'executive_director',
-    executive_director: 'chapter_president',
+    executive_director: 'launch_director',
     launch_director: 'direct_consultant',
     direct_consultant: 'chapter_president',
     chapter_president: 'vice_president',
@@ -642,7 +640,13 @@ function buildPayload(form, editing) {
 }
 
 function organizationLabel(organization = {}) {
-  return ['region', 'state', 'area', 'district', 'chapter'].map((key) => organization?.[key]).filter(Boolean).join(' / ') || 'All Organization'
+  return ['region', 'state', 'district', 'chapter']
+    .map((key) => {
+      const assigned = organization?.[`assigned${key.charAt(0).toUpperCase() + key.slice(1)}`];
+      return assigned?.name || (typeof organization?.[key] === 'string' && organization[key].length !== 24 ? organization[key] : null);
+    })
+    .filter(Boolean)
+    .join(' / ') || 'All Organization'
 }
 
 function toggleValue(values, value) {
@@ -971,7 +975,7 @@ function getSubordinateLocation(row) {
   const org = row.meta?.adminProfile?.organization || {}
   if (row.role === 'region_director') return org.assignedRegion?.name || 'Not Assigned'
   if (row.role === 'state_director') return org.assignedState?.name || 'Not Assigned'
-  if (row.role === 'district_director' || row.role === 'area_director') {
+  if (row.role === 'district_director') {
     return org.assignedDistrict?.name || 'Not Assigned'
   }
   return org.assignedChapter?.name || 'Not Assigned'

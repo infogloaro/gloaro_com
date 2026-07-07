@@ -136,7 +136,7 @@ import VicePresidentDashboard from './pages/vice-president/VicePresidentDashboar
 
 function App() {
   const { role, permissionsLoading, canAccessPath } = useAuth()
-  const isAdminSession = ['superadmin', 'admin', 'franchise_admin', 'ecommerce_admin', 'marketplace_admin', 'digital_marketing_admin', 'training_admin', 'finance_admin', 'region_director', 'state_director', 'district_director', 'area_director', 'executive_director', 'launch_director', 'direct_consultant', 'chapter_president', 'vice_president', 'secretary', 'operation_vice_president', 'membership_verification_admin', 'custom_admin'].includes(role)
+  const isAdminSession = ['superadmin', 'admin', 'franchise_admin', 'ecommerce_admin', 'marketplace_admin', 'digital_marketing_admin', 'training_admin', 'finance_admin', 'region_director', 'state_director', 'district_director', 'executive_director', 'launch_director', 'direct_consultant', 'chapter_president', 'vice_president', 'secretary', 'operation_vice_president', 'membership_verification_admin', 'custom_admin'].includes(role)
 
   const adminRouteDefs = [
     { path: '/admin', element: <SuperAdminDashboardPage /> },
@@ -322,7 +322,7 @@ function App() {
             <Route path="/district-director" element={<Navigate to="/district-director/dashboard" replace />} />
             <Route path="/district-director/dashboard" element={<DistrictDirectorDashboard />} />
             <Route path="/district-director/chapters" element={<LocationsManagementPage />} />
-            <Route path="/district-director/chapter-directors" element={<AdminManagementPage />} />
+            <Route path="/district-director/executive-directors" element={<AdminManagementPage />} />
             <Route path="/district-director/memberships" element={<AdminMembershipsPage />} />
             <Route path="/district-director/reports" element={<EnterpriseReportBuilderPage />} />
             <Route path="/district-director/settings" element={<AdminSettingsPage />} />
@@ -333,7 +333,7 @@ function App() {
           <Route element={<DashboardLayout navItems={chapterDirectorNav} title="Chapter Director Console" />}>
             <Route path="/chapter-director" element={<Navigate to="/chapter-director/dashboard" replace />} />
             <Route path="/chapter-director/dashboard" element={<ChapterDirectorDashboard />} />
-            <Route path="/chapter-director/president" element={<AdminManagementPage />} />
+            <Route path="/chapter-director/launch-directors" element={<AdminManagementPage />} />
             <Route path="/chapter-director/memberships" element={<AdminMembershipsPage />} />
             <Route path="/chapter-director/reports" element={<EnterpriseReportBuilderPage />} />
             <Route path="/chapter-director/settings" element={<AdminSettingsPage />} />
@@ -344,7 +344,7 @@ function App() {
           <Route element={<DashboardLayout navItems={presidentNav} title="President Console" />}>
             <Route path="/president" element={<Navigate to="/president/dashboard" replace />} />
             <Route path="/president/dashboard" element={<PresidentDashboard />} />
-            <Route path="/president/vice-president" element={<AdminManagementPage />} />
+            <Route path="/president/vice-presidents" element={<AdminManagementPage />} />
             <Route path="/president/memberships" element={<AdminMembershipsPage />} />
             <Route path="/president/reports" element={<EnterpriseReportBuilderPage />} />
             <Route path="/president/settings" element={<AdminSettingsPage />} />
@@ -355,8 +355,9 @@ function App() {
           <Route element={<DashboardLayout navItems={vicePresidentNav} title="Vice President Console" />}>
             <Route path="/vice-president" element={<Navigate to="/vice-president/dashboard" replace />} />
             <Route path="/vice-president/dashboard" element={<VicePresidentDashboard />} />
-            <Route path="/vice-president/secretary" element={<AdminManagementPage />} />
+            <Route path="/vice-president/secretaries" element={<AdminManagementPage />} />
             <Route path="/vice-president/members" element={<AdminManagementPage role="customer" />} />
+            <Route path="/vice-president/register-member" element={<AdminManagementPage role="customer" />} />
             <Route path="/vice-president/memberships" element={<AdminMembershipsPage />} />
             <Route path="/vice-president/reports" element={<EnterpriseReportBuilderPage />} />
             <Route path="/vice-president/settings" element={<AdminSettingsPage />} />
