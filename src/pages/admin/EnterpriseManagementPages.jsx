@@ -34,16 +34,16 @@ const statusOptions = ['draft', 'pending', 'under_review', 'active', 'inactive',
 const moduleConfig = {
   organization: {
     title: 'Organization Management',
-    description: 'Manage India, regions, states, areas, districts, chapters, and director assignments.',
+    description: 'Manage India, regions, states, districts, chapters, and director assignments.',
     icon: GitBranch,
-    types: ['country', 'region', 'state', 'area', 'district', 'chapter'],
+    types: ['country', 'region', 'state', 'district', 'chapter'],
     fields: ['code', 'type', 'director', 'parent', 'membersCount', 'meetingsCount'],
   },
   assignment: {
     title: 'Hierarchy Assignment',
-    description: 'Assign and transfer state directors, area directors, executive directors, launch directors, direct consultants, and chapters.',
+    description: 'Assign and transfer state directors, executive directors, launch directors, direct consultants, and chapters.',
     icon: Network,
-    types: ['state_director', 'area_director', 'executive_director', 'launch_director', 'direct_consultant', 'chapter_assignment'],
+    types: ['state_director', 'executive_director', 'launch_director', 'direct_consultant', 'chapter_assignment'],
     fields: ['code', 'type', 'assignedTo', 'reportsTo', 'chapter'],
   },
   visitor: {
@@ -55,9 +55,9 @@ const moduleConfig = {
   },
   meeting: {
     title: 'Meeting Management',
-    description: 'Manage national, state, area, executive, chapter, vendor, training, online, and offline meetings.',
+    description: 'Manage national, state, executive, chapter, vendor, training, online, and offline meetings.',
     icon: CalendarDays,
-    types: ['national', 'state', 'area', 'executive', 'chapter', 'vendor', 'training', 'online', 'offline'],
+    types: ['national', 'state', 'executive', 'chapter', 'vendor', 'training', 'online', 'offline'],
     fields: ['code', 'type', 'chapter', 'attendanceCount', 'visitorsCount', 'businessValue'],
   },
   business: {
@@ -76,7 +76,7 @@ const moduleConfig = {
   },
   report: {
     title: 'Interactive Report Builder',
-    description: 'Create reusable reports with date, chapter, role, area, and region filters plus export controls.',
+    description: 'Create reusable reports with date, chapter, role, and region filters plus export controls.',
     icon: BarChart3,
     types: ['membership', 'attendance', 'meeting', 'vendor', 'business', 'marketplace'],
     fields: ['code', 'type', 'metadata.filters', 'metadata.exportFormat'],
@@ -285,7 +285,7 @@ export function EnterpriseReportBuilderPage() {
       loadReport('region')
     } else if (['state_director'].includes(userRole)) {
       loadReport('state')
-    } else if (['district_director', 'area_director'].includes(userRole)) {
+    } else if (['district_director'].includes(userRole)) {
       loadReport('district')
     } else if (['executive_director'].includes(userRole)) {
       loadReport('membership')
@@ -371,7 +371,7 @@ export function EnterpriseReportBuilderPage() {
             State Summary
           </button>
         )}
-        {['superadmin', 'admin', 'region_director', 'state_director', 'district_director', 'area_director'].includes(userRole) && (
+        {['superadmin', 'admin', 'region_director', 'state_director', 'district_director'].includes(userRole) && (
           <button
             onClick={() => loadReport('district')}
             className={`px-4 py-2 text-sm font-bold border-b-2 transition ${reportType === 'district' ? 'border-[#0d4697] text-[#0d4697]' : 'border-transparent text-slate-500 hover:text-slate-850'}`}
@@ -565,7 +565,7 @@ export function EnterpriseAnalyticsPage() {
 }
 
 export function ExecutiveDashboardPage() {
-  return <EnterpriseRecordsPage module="executive_dashboard" config={{ title: 'Executive Dashboard', description: 'Director KPIs, meetings conducted, attendance, visitors, members joined, business generated, referrals, vendor approvals, score, and ranking.', icon: BarChart3, types: ['director', 'executive_director', 'area_director', 'state_director'], fields: ['code', 'type', 'assignedTo', 'meetingsCount', 'attendanceCount', 'visitorsCount', 'membersCount', 'businessValue', 'referralValue'] }} />
+  return <EnterpriseRecordsPage module="executive_dashboard" config={{ title: 'Executive Dashboard', description: 'Director KPIs, meetings conducted, attendance, visitors, members joined, business generated, referrals, vendor approvals, score, and ranking.', icon: BarChart3, types: ['director', 'executive_director', 'state_director'], fields: ['code', 'type', 'assignedTo', 'meetingsCount', 'attendanceCount', 'visitorsCount', 'membersCount', 'businessValue', 'referralValue'] }} />
 }
 
 export function ChapterDashboardPage() {

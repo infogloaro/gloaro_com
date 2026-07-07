@@ -544,7 +544,7 @@ export default function LocationsManagementPage() {
                   <input
                     type="text"
                     disabled
-                    value={selectedNode?.name || ''}
+                    value={user?.role === 'region_director' ? (user?.meta?.adminProfile?.organization?.assignedRegion?.name || 'Not Assigned') : (selectedNode?.name || '')}
                     className="mt-1 h-11 w-full rounded-md border border-slate-200 bg-slate-50 px-3 text-sm font-semibold text-slate-500"
                   />
                 </div>

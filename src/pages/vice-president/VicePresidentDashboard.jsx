@@ -132,7 +132,7 @@ export default function VicePresidentDashboard() {
         <h3 className="text-base font-extrabold text-slate-900 dark:text-white mb-4">Quick Actions</h3>
         <div className="grid gap-4 sm:grid-cols-4">
           <button
-            onClick={() => navigate('/vice-president/secretary')}
+            onClick={() => navigate('/vice-president/secretaries')}
             className="flex items-center justify-between p-4 rounded-xl border border-slate-100 bg-slate-50/50 hover:bg-[#eef4ff] transition group text-left dark:border-slate-800 dark:bg-slate-900"
           >
             <div>
