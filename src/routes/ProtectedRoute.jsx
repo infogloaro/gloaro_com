@@ -1,5 +1,5 @@
 import { Navigate, Outlet, useLocation } from 'react-router-dom'
-import LoadingSpinner from '../components/common/LoadingSpinner'
+import LoadingScreen from '../components/common/LoadingScreen'
 import { useAuth } from '../hooks/useAuth'
 import { isAdminRole } from '../constants/adminRoles'
 
@@ -18,10 +18,10 @@ export default function ProtectedRoute({ roles, requirePathAccess = false, fallb
   const { loading, isAuthenticated, role, permissionsLoading, canAccessPath } = useAuth()
   const location = useLocation()
 
-  if (loading) return <LoadingSpinner label="Checking session" />
+  if (loading) return <LoadingScreen label="Checking session..." />
   if (!isAuthenticated) return <Navigate to="/login" replace state={{ from: location }} />
   if (roles?.length && !roles.some((allowed) => roleMatches(allowed, role))) return <Navigate to="/" replace />
-  if (requirePathAccess && permissionsLoading) return <LoadingSpinner label="Loading access" />
+  if (requirePathAccess && permissionsLoading) return <LoadingScreen label="Loading access..." />
   if (requirePathAccess && !canAccessPath(location.pathname)) return <Navigate to={fallback} replace state={{ from: location }} />
   return <Outlet />
 }

@@ -1,11 +1,11 @@
 import { Navigate } from 'react-router-dom'
-import LoadingSpinner from '../components/common/LoadingSpinner'
+import LoadingScreen from '../components/common/LoadingScreen'
 import { useAuth } from '../hooks/useAuth'
 import { isAdminRole } from '../constants/adminRoles'
 
 export default function RoleRedirect() {
   const { loading, user } = useAuth()
-  if (loading) return <LoadingSpinner />
+  if (loading) return <LoadingScreen label="Loading dashboard..." />
   if (!user) return <Navigate to="/" replace />
   const role = String(user.role || '').toLowerCase().replace(/\s+/g, '')
 

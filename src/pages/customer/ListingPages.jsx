@@ -5,6 +5,7 @@ import { useForm } from 'react-hook-form'
 import { customerApi } from '../../api/customer'
 import EmptyState from '../../components/common/EmptyState'
 import LoadingSpinner from '../../components/common/LoadingSpinner'
+import LoadingScreen from '../../components/common/LoadingScreen'
 import StatusBadge from '../../components/common/StatusBadge'
 import FormField from '../../components/forms/FormField'
 import { useApi } from '../../hooks/useApi'
@@ -38,7 +39,7 @@ function CardGrid({ items, type }) {
 export function CustomerHomePage() {
   const vendors = useApi(() => customerApi.vendors({ limit: 6, status: 'approved' }))
   const products = useApi(() => customerApi.products({ limit: 6 }))
-  if (vendors.loading || products.loading) return <LoadingSpinner />
+  if (vendors.loading || products.loading) return <LoadingScreen label="Loading marketplace..." />
   return (
     <main className="bg-[#fdf9e9] px-5 py-10 lg:px-8">
       <div className="mx-auto max-w-7xl">
@@ -495,7 +496,7 @@ export function DetailPage({ type }) {
   const fetcher = type === 'vendors' ? customerApi.vendor : type === 'products' ? customerApi.product : customerApi.service
   const { data, loading } = useApi(() => fetcher(id), [id])
   const item = data
-  if (loading) return <LoadingSpinner />
+  if (loading) return <LoadingScreen label="Loading details..." />
   return (
     <section className="mx-auto max-w-5xl px-5 py-8">
       <img src={item.logo?.url || item.images?.[0]?.url || item.gallery?.[0]?.url || item.coverImage?.url || '/logo.png'} alt="" className="h-72 w-full rounded-lg object-cover" />

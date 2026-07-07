@@ -25,6 +25,7 @@ import Modal from '../../components/common/Modal'
 import SearchBar from '../../components/common/SearchBar'
 import StatusBadge from '../../components/common/StatusBadge'
 import DataTable from '../../components/tables/DataTable'
+import LoadingScreen from '../../components/common/LoadingScreen'
 import { useAuth } from '../../hooks/useAuth'
 import SimpleJsonForm from '../shared/SimpleJsonForm'
 import { formatCurrency, formatDate, getList, getPagination } from '../../utils/format'
@@ -389,7 +390,7 @@ export function EnterpriseReportBuilderPage() {
 
       <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-950">
         {loading ? (
-          <LoadingSpinner label="Generating Report Data" />
+          <LoadingScreen label="Generating Report Data..." />
         ) : dataList.length > 0 ? (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm print:text-black">

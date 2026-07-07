@@ -15,7 +15,7 @@ import {
 import { Link } from 'react-router-dom'
 import { vendorApi } from '../../api/vendor'
 import EmptyState from '../../components/common/EmptyState'
-import LoadingSpinner from '../../components/common/LoadingSpinner'
+import LoadingScreen from '../../components/common/LoadingScreen'
 import StatusBadge from '../../components/common/StatusBadge'
 import DataTable from '../../components/tables/DataTable'
 import { useApi } from '../../hooks/useApi'
@@ -23,7 +23,7 @@ import { formatCurrency, formatDate } from '../../utils/format'
 
 export default function VendorDashboard() {
   const { data, loading, error } = useApi(vendorApi.dashboard)
-  if (loading) return <LoadingSpinner label="Loading vendor dashboard" />
+  if (loading) return <LoadingScreen label="Loading vendor dashboard..." />
   if (error?.response?.status === 404 || !data) return <VendorSetupState />
 
   const vendor = data.vendor || {}

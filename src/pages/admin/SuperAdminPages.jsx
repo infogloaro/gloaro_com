@@ -27,7 +27,7 @@ import { adminApi } from '../../api/admin'
 import { notificationApi } from '../../api/notification'
 import { reportApi } from '../../api/report'
 import ChartCard from '../../components/charts/ChartCard'
-import LoadingSpinner from '../../components/common/LoadingSpinner'
+import LoadingScreen from '../../components/common/LoadingScreen'
 import StatusBadge from '../../components/common/StatusBadge'
 import DataTable from '../../components/tables/DataTable'
 import { useAuth } from '../../hooks/useAuth'
@@ -195,7 +195,7 @@ export function FeatureManagementPage() {
   }
 
   if (!isSuperAdmin) return <SuperAdminOnlyNotice title="Feature Management is Super Admin only" />
-  if (config.loading) return <LoadingSpinner label="Loading feature matrix" />
+  if (config.loading) return <LoadingScreen label="Loading feature matrix..." />
 
   return (
     <section className="space-y-6">
@@ -284,7 +284,7 @@ export function DashboardConfigurationPage() {
   }
 
   if (!isSuperAdmin) return <SuperAdminOnlyNotice title="Dashboard Builder is Super Admin only" />
-  if (config.loading) return <LoadingSpinner label="Loading dashboard builder" />
+  if (config.loading) return <LoadingScreen label="Loading dashboard builder..." />
 
   return (
     <section className="space-y-6">
@@ -366,7 +366,7 @@ export function MembershipWorkflowPage() {
   }
 
   if (!isSuperAdmin) return <SuperAdminOnlyNotice title="Workflow Settings are Super Admin only" />
-  if (config.loading) return <LoadingSpinner label="Loading workflow builder" />
+  if (config.loading) return <LoadingScreen label="Loading workflow builder..." />
 
   return (
     <section className="space-y-6">

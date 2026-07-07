@@ -20,7 +20,7 @@ import { adminApi } from '../../api/admin'
 import { reportApi } from '../../api/report'
 import api from '../../api/axios'
 import ChartCard from '../../components/charts/ChartCard'
-import LoadingSpinner from '../../components/common/LoadingSpinner'
+import LoadingScreen from '../../components/common/LoadingScreen'
 import StatusBadge from '../../components/common/StatusBadge'
 import DataTable from '../../components/tables/DataTable'
 import { useAuth } from '../../hooks/useAuth'
@@ -114,7 +114,7 @@ export default function DistrictDirectorDashboard() {
   ]
 
   if (dashboard.loading || analytics.loading) {
-    return <LoadingSpinner label="Loading dashboard statistics" />
+    return <LoadingScreen label="Loading dashboard statistics..." />
   }
 
   return (

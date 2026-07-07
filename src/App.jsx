@@ -5,7 +5,7 @@ import DashboardLayout from './layouts/DashboardLayout'
 import PublicLayout from './layouts/PublicLayout'
 import ProtectedRoute from './routes/ProtectedRoute'
 import RoleRedirect from './routes/RoleRedirect'
-import LoadingSpinner from './components/common/LoadingSpinner'
+import LoadingScreen from './components/common/LoadingScreen'
 import { useAuth } from './hooks/useAuth'
 import AuthLayout from './pages/auth/AuthLayout'
 import Login from './pages/auth/Login'
@@ -214,7 +214,7 @@ function App() {
   })
   const adminHomePath = allowedAdminRoutes[0]?.path || '/dashboard'
 
-  if (isAdminSession && permissionsLoading) return <LoadingSpinner label="Loading access" />
+  if (isAdminSession && permissionsLoading) return <LoadingScreen label="Loading access..." />
 
   return (
     <>
