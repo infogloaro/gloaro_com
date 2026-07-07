@@ -15,6 +15,7 @@ import {
   Plus,
   Search,
   Sparkles,
+  Printer,
   Upload,
   Users,
   Workflow,

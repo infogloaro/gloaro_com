@@ -80,33 +80,39 @@ export default function DashboardLayout({ navItems = [], title = 'Dashboard' }) 
       ['Reports', '/admin/reports', FileBarChart]
     ],
     state_director: [
-      ['Dashboard', '/admin', LayoutDashboard],
+      ['Dashboard', '/state-director/dashboard', LayoutDashboard],
       {
         label: 'Organization Master',
         icon: Building2,
         children: [
-          ['Districts', '/admin/locations', MapPinned],
+          ['Districts', '/state-director/districts', MapPinned],
         ],
       },
-      ['District Directors', '/admin/users', Users],
-      ['Memberships', '/admin/memberships', CreditCard]
+      ['District Directors', '/state-director/district-directors', Users],
+      ['Memberships', '/state-director/memberships', CreditCard],
+      ['Reports', '/state-director/reports', FileBarChart],
+      ['Settings', '/state-director/settings', Settings]
     ],
     district_director: [
-      ['Dashboard', '/admin', LayoutDashboard],
+      ['Dashboard', '/district-director/dashboard', LayoutDashboard],
       {
         label: 'Organization Master',
         icon: Building2,
         children: [
-          ['Chapters', '/admin/locations', MapPinned],
+          ['Chapters', '/district-director/chapters', MapPinned],
         ],
       },
-      ['Executive Directors', '/admin/users', Users],
-      ['Memberships', '/admin/memberships', CreditCard]
+      ['Chapter Directors', '/district-director/chapter-directors', Users],
+      ['Memberships', '/district-director/memberships', CreditCard],
+      ['Reports', '/district-director/reports', FileBarChart],
+      ['Settings', '/district-director/settings', Settings]
     ],
     executive_director: [
-      ['Dashboard', '/admin', LayoutDashboard],
-      ['Launch Directors', '/admin/users', Users],
-      ['Membership Approval', '/admin/applications/membership', CreditCard]
+      ['Dashboard', '/chapter-director/dashboard', LayoutDashboard],
+      ['President', '/chapter-director/president', Users],
+      ['Memberships', '/chapter-director/memberships', CreditCard],
+      ['Reports', '/chapter-director/reports', FileBarChart],
+      ['Settings', '/chapter-director/settings', Settings]
     ],
     launch_director: [
       ['Dashboard', '/admin', LayoutDashboard],
@@ -118,13 +124,19 @@ export default function DashboardLayout({ navItems = [], title = 'Dashboard' }) 
       ['Membership Approval', '/admin/applications/membership', CreditCard]
     ],
     chapter_president: [
-      ['Dashboard', '/admin', LayoutDashboard],
-      ['Vice Presidents', '/admin/users', Users]
+      ['Dashboard', '/president/dashboard', LayoutDashboard],
+      ['Vice President', '/president/vice-president', Users],
+      ['Memberships', '/president/memberships', CreditCard],
+      ['Reports', '/president/reports', FileBarChart],
+      ['Settings', '/president/settings', Settings]
     ],
     vice_president: [
-      ['Dashboard', '/admin', LayoutDashboard],
-      ['Secretaries', '/admin/users', Users],
-      ['Member Registration', '/membership-application', UserRound]
+      ['Dashboard', '/vice-president/dashboard', LayoutDashboard],
+      ['Secretary', '/vice-president/secretary', Users],
+      ['Members', '/vice-president/members', Users],
+      ['Memberships', '/vice-president/memberships', CreditCard],
+      ['Reports', '/vice-president/reports', FileBarChart],
+      ['Settings', '/vice-president/settings', Settings]
     ],
     secretary: [
       ['Dashboard', '/admin', LayoutDashboard],
