@@ -1,6 +1,7 @@
 import { ChevronDown, ChevronLeft, Menu, Moon, Search, Sun, LayoutDashboard, Users, FileBarChart, Settings, CreditCard, UserRound, Building2, MapPinned, CalendarDays, FileText } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { NavLink, Outlet, useLocation } from 'react-router-dom'
+import logo from '../assets/signup_logo.png'
 import { useAuth } from '../hooks/useAuth'
 import { storage } from '../utils/storage'
 
@@ -191,8 +192,17 @@ export default function DashboardLayout({ navItems = [], title = 'Dashboard' }) 
     <aside className="flex h-full flex-col border-r border-slate-900 bg-[#07111f] text-white shadow-2xl">
       <div className="flex h-16 items-center justify-between border-b border-white/10 px-4">
         <div className={collapsed ? 'hidden' : 'block'}>
-          <p className="font-playfair text-2xl font-bold text-white">Gloaro</p>
-          <p className="text-[10px] font-extrabold uppercase tracking-[0.16em] text-[#ffbf1a]">{title}</p>
+          <div className="flex items-center gap-3">
+            <div className="grid h-10 w-10 place-items-center rounded-lg p-1 shadow-sm">
+              <img src={logo} alt="Gloaro" className="h-full w-full object-contain" />
+            </div>
+            <div>
+              <p className="font-playfair text-2xl font-bold leading-none text-white">Gloaro</p>
+            </div>
+          </div>
+          <div className="mt-1 flex w-full justify-center text-center">
+            <p className="text-[10px] font-extrabold text-center uppercase tracking-[0.16em] text-[#ffbf1a]">{title}</p>
+          </div>
         </div>
         <button type="button" onClick={() => setCollapsed((value) => !value)} className="hidden h-9 w-9 place-items-center rounded-md border border-white/10 text-slate-300 hover:bg-white/10 lg:grid" aria-label="Collapse menu">
           <ChevronLeft className={`h-4 w-4 transition ${collapsed ? 'rotate-180' : ''}`} />
