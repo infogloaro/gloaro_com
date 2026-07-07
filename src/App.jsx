@@ -334,6 +334,7 @@ function App() {
             <Route path="/chapter-director" element={<Navigate to="/chapter-director/dashboard" replace />} />
             <Route path="/chapter-director/dashboard" element={<ChapterDirectorDashboard />} />
             <Route path="/chapter-director/president" element={<AdminManagementPage />} />
+            <Route path="/chapter-director/members" element={<AdminManagementPage role="customer" />} />
             <Route path="/chapter-director/memberships" element={<AdminMembershipsPage />} />
             <Route path="/chapter-director/reports" element={<EnterpriseReportBuilderPage />} />
             <Route path="/chapter-director/settings" element={<AdminSettingsPage />} />

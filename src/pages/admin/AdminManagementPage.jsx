@@ -343,6 +343,8 @@ const saveAdmin = async () => {
     (user?.role === 'vice_president' && childRole === 'secretary' && listData.length >= 1)
   )
 
+  const showCreateButton = canCreateAdmin && !(user?.role === 'executive_director' && childRole === 'customer')
+
   const getDisabledTitle = () => {
     if (!isCreateDisabled) return ""
     if (user?.role === 'executive_director') return "A Chapter President already exists for this Chapter"
@@ -376,7 +378,7 @@ const saveAdmin = async () => {
               <option value="blocked">Locked</option>
             </select>
           </div>
-          {canCreateAdmin && (
+          {showCreateButton && (
             <button
               type="button"
               onClick={openCreate}
@@ -397,23 +399,48 @@ const saveAdmin = async () => {
           { key: 'name', header: 'Name' },
           { key: 'email', header: 'Email' },
           { key: 'location', header: childRole === 'region_director' ? 'Region' : 'Location', render: (row) => getSubordinateLocation(row) },
-          { key: 'status', header: 'Status', render: (row) => <StatusBadge value={row.isBlocked ? 'locked' : row.isSuspended ? 'suspended' : row.isActive ? 'active' : 'inactive'} /> },
+          { key: 'status', header: 'Status', render: (row) => <StatusBadge value={row.role === 'customer' ? row.status : (row.isBlocked ? 'locked' : row.isSuspended ? 'suspended' : row.isActive ? 'active' : 'inactive')} /> },
         ]}
         rows={rows}
         loading={loading}
         pagination={pagination}
         onPageChange={setPage}
-        actions={(row) => (
-          <div className="flex flex-wrap gap-2">
-            <button onClick={() => viewAdmin(row)} className="rounded-md border border-slate-200 px-2 py-1.5 text-xs font-bold text-slate-900"><Eye className="h-3.5 w-3.5" /></button>
-            <button onClick={() => openEdit(row)} className="rounded-md border border-slate-200 px-3 py-1.5 text-xs font-bold text-slate-900">Edit</button>
-            <button onClick={() => cloneAdmin(row)} className="rounded-md border border-slate-200 px-2 py-1.5 text-xs font-bold text-slate-900"><Copy className="h-3.5 w-3.5" /></button>
-            <button onClick={() => setAdminStatus(row, row.isSuspended ? 'activate' : 'suspend')} className="rounded-md border border-slate-200 px-3 py-1.5 text-xs font-bold text-slate-900">{row.isSuspended ? 'Activate' : 'Suspend'}</button>
-            <button onClick={() => resetPassword(row)} className="rounded-md border border-slate-200 px-2 py-1.5 text-xs font-bold text-slate-900"><KeyRound className="h-3.5 w-3.5" /></button>
-            <button onClick={() => loginAs(row)} className="rounded-md border border-blue-200 px-2 py-1.5 text-xs font-bold text-[#0d4697]"><LogIn className="h-3.5 w-3.5" /></button>
-            {row.role !== 'superadmin' && <button onClick={() => deleteAdmin(row)} className="rounded-md border border-red-200 px-3 py-1.5 text-xs font-bold text-red-600">Delete</button>}
-          </div>
-        )}
+        actions={(row) => {
+          if (user?.role === 'executive_director' && childRole === 'customer') {
+            return (
+              <div className="flex flex-wrap gap-2">
+                <button onClick={() => viewAdmin(row)} className="rounded-md border border-slate-200 px-2 py-1.5 text-xs font-bold text-slate-900" title="View Details"><Eye className="h-3.5 w-3.5" /></button>
+                {row.status === 'pending_approval' && (
+                  <>
+                    <button
+                      onClick={() => setAdminStatus(row, 'approve')}
+                      className="rounded-md border border-emerald-250 bg-emerald-50 px-3 py-1.5 text-xs font-bold text-emerald-700 hover:bg-emerald-100"
+                    >
+                      Approve
+                    </button>
+                    <button
+                      onClick={() => setAdminStatus(row, 'reject')}
+                      className="rounded-md border border-red-250 bg-red-50 px-3 py-1.5 text-xs font-bold text-red-700 hover:bg-red-100"
+                    >
+                      Reject
+                    </button>
+                  </>
+                )}
+              </div>
+            )
+          }
+          return (
+            <div className="flex flex-wrap gap-2">
+              <button onClick={() => viewAdmin(row)} className="rounded-md border border-slate-200 px-2 py-1.5 text-xs font-bold text-slate-900"><Eye className="h-3.5 w-3.5" /></button>
+              <button onClick={() => openEdit(row)} className="rounded-md border border-slate-200 px-3 py-1.5 text-xs font-bold text-slate-900">Edit</button>
+              <button onClick={() => cloneAdmin(row)} className="rounded-md border border-slate-200 px-2 py-1.5 text-xs font-bold text-slate-900"><Copy className="h-3.5 w-3.5" /></button>
+              <button onClick={() => setAdminStatus(row, row.isSuspended ? 'activate' : 'suspend')} className="rounded-md border border-slate-200 px-3 py-1.5 text-xs font-bold text-slate-900">{row.isSuspended ? 'Activate' : 'Suspend'}</button>
+              <button onClick={() => resetPassword(row)} className="rounded-md border border-slate-200 px-2 py-1.5 text-xs font-bold text-slate-900"><KeyRound className="h-3.5 w-3.5" /></button>
+              <button onClick={() => loginAs(row)} className="rounded-md border border-blue-200 px-2 py-1.5 text-xs font-bold text-[#0d4697]"><LogIn className="h-3.5 w-3.5" /></button>
+              {row.role !== 'superadmin' && <button onClick={() => deleteAdmin(row)} className="rounded-md border border-red-200 px-3 py-1.5 text-xs font-bold text-red-600">Delete</button>}
+            </div>
+          )
+        }}
       />
 
       <Modal open={wizardOpen} title={editing ? (childRole ? `Edit ${roleLabel(childRole)}` : 'Edit Admin') : (childRole ? `Create New ${roleLabel(childRole)} Wizard` : 'Create New Admin Wizard')} onClose={() => setWizardOpen(false)} maxWidth="max-w-6xl">
