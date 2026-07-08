@@ -1,5 +1,7 @@
+import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { Eye, EyeOff } from 'lucide-react'
 import FormField from '../../components/forms/FormField'
 import { useAuth } from '../../hooks/useAuth'
 
@@ -15,6 +17,7 @@ export default function Register() {
   const { register: createAccount } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
+  const [showPassword, setShowPassword] = useState(false)
   const query = new URLSearchParams(location.search)
   const type = query.get('type') || 'user'
   const role = typeRoleMap[type] || 'customer'
@@ -33,7 +36,23 @@ export default function Register() {
         <FormField label="Email" error={errors.email?.message}><input {...register('email', { required: 'Email is required' })} type="email" className="h-11 w-full rounded-md border border-slate-300 px-3 outline-none" /></FormField>
         <FormField label="Phone"><input {...register('phone')} className="h-11 w-full rounded-md border border-slate-300 px-3 outline-none" /></FormField>
         <input type="hidden" {...register('role')} value={role} />
-        <FormField label="Password" error={errors.password?.message}><input {...register('password', { required: 'Password is required', minLength: { value: 8, message: 'Minimum 8 characters' } })} type="password" className="h-11 w-full rounded-md border border-slate-300 px-3 outline-none" /></FormField>
+        <FormField label="Password" error={errors.password?.message}>
+          <div className="relative">
+            <input
+              {...register('password', { required: 'Password is required', minLength: { value: 8, message: 'Minimum 8 characters' } })}
+              type={showPassword ? 'text' : 'password'}
+              className="h-11 w-full rounded-md border border-slate-300 px-3 pr-11 outline-none"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword((current) => !current)}
+              aria-label={showPassword ? 'Hide password' : 'Show password'}
+              className="absolute inset-y-0 right-0 flex items-center px-3 text-slate-500 transition hover:text-slate-700"
+            >
+              {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            </button>
+          </div>
+        </FormField>
       </div>
       <button disabled={isSubmitting} className="mt-5 h-12 w-full rounded-md bg-[#0d4697] font-extrabold text-white disabled:opacity-60">{isSubmitting ? 'Creating...' : 'Create Account'}</button>
       <p className="mt-6 text-center text-sm font-medium text-slate-500">Already have an account? <Link to={`/login?type=${type}`} className="font-extrabold text-[#0d4697]">Sign in</Link></p>

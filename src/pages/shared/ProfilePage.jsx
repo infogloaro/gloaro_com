@@ -15,7 +15,6 @@ const REPORTING_STRUCTURE = {
   region_director: 'Admin',
   state_director: 'Region Director',
   district_director: 'State Director',
-  area_director: 'State Director',
   executive_director: 'District Director',
   launch_director: 'Executive Director',
   direct_consultant: 'Launch Director',

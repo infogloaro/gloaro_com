@@ -302,6 +302,39 @@ function MembershipApplicationDetails({ application, adminNotes, onNotesChange, 
         ['Declarations Accepted', application.agreement?.declarationsAccepted?.length],
       ]} />
 
+      {/* Workflow History Timeline */}
+      <section className="rounded-lg border border-slate-200 bg-white p-4">
+        <h4 className="text-sm font-extrabold text-slate-950">Workflow History Timeline</h4>
+        <div className="mt-4 space-y-4">
+          {(application.workflowHistory || []).map((step, idx) => (
+            <div key={idx} className="flex gap-4">
+              <div className="flex flex-col items-center">
+                <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#0d4697] text-xs font-bold text-white">
+                  {idx + 1}
+                </div>
+                {idx < application.workflowHistory.length - 1 && (
+                  <div className="h-full w-0.5 bg-slate-200" />
+                )}
+              </div>
+              <div>
+                <p className="text-sm font-bold text-slate-800">
+                  Status: <span className="capitalize text-[#0d4697]">{step.action}</span>
+                </p>
+                <p className="text-xs font-semibold text-slate-500">
+                  Role: <span className="capitalize">{step.role?.replace('_', ' ')}</span> | Remarks: {step.remarks || 'None'}
+                </p>
+                <p className="text-[10px] font-medium text-slate-400">
+                  {formatDate(step.timestamp)}
+                </p>
+              </div>
+            </div>
+          ))}
+          {!application.workflowHistory?.length && (
+            <p className="text-sm font-semibold text-slate-500">No workflow steps recorded yet.</p>
+          )}
+        </div>
+      </section>
+
       <section className="rounded-lg border border-slate-200 bg-white p-4">
         <label htmlFor="membership-admin-notes" className="text-sm font-extrabold text-slate-950">Admin Notes</label>
         <textarea

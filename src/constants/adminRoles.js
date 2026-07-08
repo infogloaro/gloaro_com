@@ -4,7 +4,6 @@ export const ADMIN_ROLE_OPTIONS = [
   ['region_director', 'Region Director'],
   ['state_director', 'State Director'],
   ['district_director', 'District Director'],
-  ['area_director', 'Area Director'],
   ['executive_director', 'Executive Director'],
   ['launch_director', 'Launch Director'],
   ['direct_consultant', 'Direct Consultant'],

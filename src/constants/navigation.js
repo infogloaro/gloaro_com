@@ -186,7 +186,6 @@ export const stateDirectorNav = [
   ['District Directors', '/state-director/district-directors', Users],
   ['Memberships', '/state-director/memberships', CreditCard],
   ['Reports', '/state-director/reports', FileBarChart],
-  ['Settings', '/state-director/settings', Settings],
 ]
 
 export const districtDirectorNav = [
@@ -198,10 +197,9 @@ export const districtDirectorNav = [
       ['Chapters', '/district-director/chapters', MapPinned],
     ],
   },
-  ['Chapter Directors', '/district-director/chapter-directors', Users],
+  ['Executive Directors', '/district-director/executive-directors', Users],
   ['Memberships', '/district-director/memberships', CreditCard],
   ['Reports', '/district-director/reports', FileBarChart],
-  ['Settings', '/district-director/settings', Settings],
 ]
 
 export const chapterDirectorNav = [
@@ -209,24 +207,22 @@ export const chapterDirectorNav = [
   ['President', '/chapter-director/president', Users],
   ['Members', '/chapter-director/members', Users],
   ['Memberships', '/chapter-director/memberships', CreditCard],
+  ['Launch Directors', '/chapter-director/launch-directors', Users],
+  ['Membership Approvals', '/chapter-director/memberships', CreditCard],
   ['Reports', '/chapter-director/reports', FileBarChart],
-  ['Settings', '/chapter-director/settings', Settings],
 ]
 
 export const presidentNav = [
   ['Dashboard', '/president/dashboard', LayoutDashboard],
-  ['Vice President', '/president/vice-president', Users],
-  ['Memberships', '/president/memberships', CreditCard],
+  ['Vice Presidents', '/president/vice-presidents', Users],
   ['Reports', '/president/reports', FileBarChart],
-  ['Settings', '/president/settings', Settings],
 ]
 
 export const vicePresidentNav = [
   ['Dashboard', '/vice-president/dashboard', LayoutDashboard],
-  ['Secretary', '/vice-president/secretary', Users],
+  ['Secretaries', '/vice-president/secretaries', Users],
   ['Members', '/vice-president/members', Users],
-  ['Memberships', '/vice-president/memberships', CreditCard],
+  ['Member Registration', '/vice-president/register-member', Users],
   ['Reports', '/vice-president/reports', FileBarChart],
-  ['Settings', '/vice-president/settings', Settings],
 ]
 

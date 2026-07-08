@@ -1,5 +1,7 @@
+import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { Eye, EyeOff } from 'lucide-react'
 import FormField from '../../components/forms/FormField'
 import { useAuth } from '../../hooks/useAuth'
 import { isAdminRole } from '../../constants/adminRoles'
@@ -25,6 +27,7 @@ export default function Login() {
   const { login } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
+  const [showPassword, setShowPassword] = useState(false)
   const query = new URLSearchParams(location.search)
   const loginType = query.get('type') || ''
   const selectedType = loginTypes[loginType] || null
@@ -54,7 +57,21 @@ export default function Login() {
           <input {...register('email', { required: 'Email is required' })} type="email" className="h-11 w-full rounded-md border border-slate-300 px-3 outline-none focus:border-[#0d4697]" />
         </FormField>
         <FormField label="Password" error={errors.password?.message}>
-          <input {...register('password', { required: 'Password is required' })} type="password" className="h-11 w-full rounded-md border border-slate-300 px-3 outline-none focus:border-[#0d4697]" />
+          <div className="relative">
+            <input
+              {...register('password', { required: 'Password is required' })}
+              type={showPassword ? 'text' : 'password'}
+              className="h-11 w-full rounded-md border border-slate-300 px-3 pr-11 outline-none focus:border-[#0d4697]"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword((current) => !current)}
+              aria-label={showPassword ? 'Hide password' : 'Show password'}
+              className="absolute inset-y-0 right-0 flex items-center px-3 text-slate-500 transition hover:text-slate-700"
+            >
+              {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            </button>
+          </div>
         </FormField>
       </div>
       <div className="mt-4 flex items-center justify-between text-sm">

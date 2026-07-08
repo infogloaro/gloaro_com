@@ -1,6 +1,7 @@
-import { ChevronDown, ChevronLeft, Menu, Moon, Search, Sun, LayoutDashboard, Users, FileBarChart, Settings, CreditCard, UserRound, Building2, MapPinned } from 'lucide-react'
+import { ChevronDown, ChevronLeft, Menu, Moon, Search, Sun, LayoutDashboard, Users, FileBarChart, Settings, CreditCard, UserRound, Building2, MapPinned, CalendarDays, FileText } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { NavLink, Outlet, useLocation } from 'react-router-dom'
+import logo from '../assets/signup_logo.png'
 import { useAuth } from '../hooks/useAuth'
 import { storage } from '../utils/storage'
 
@@ -56,10 +57,10 @@ export default function DashboardLayout({ navItems = [], title = 'Dashboard' }) 
     admin: [
       ['Dashboard', '/admin', LayoutDashboard],
       {
-        label: 'Organization Management',
+        label: 'Organization Master',
         icon: Building2,
         children: [
-          ['Locations', '/admin/locations', MapPinned],
+          ['Regions', '/admin/locations', MapPinned],
         ],
       },
       ['Region Directors', '/admin/users', Users],
@@ -90,8 +91,7 @@ export default function DashboardLayout({ navItems = [], title = 'Dashboard' }) 
       },
       ['District Directors', '/state-director/district-directors', Users],
       ['Memberships', '/state-director/memberships', CreditCard],
-      ['Reports', '/state-director/reports', FileBarChart],
-      ['Settings', '/state-director/settings', Settings]
+      ['Reports', '/state-director/reports', FileBarChart]
     ],
     district_director: [
       ['Dashboard', '/district-director/dashboard', LayoutDashboard],
@@ -102,10 +102,9 @@ export default function DashboardLayout({ navItems = [], title = 'Dashboard' }) 
           ['Chapters', '/district-director/chapters', MapPinned],
         ],
       },
-      ['Chapter Directors', '/district-director/chapter-directors', Users],
+      ['Executive Directors', '/district-director/executive-directors', Users],
       ['Memberships', '/district-director/memberships', CreditCard],
-      ['Reports', '/district-director/reports', FileBarChart],
-      ['Settings', '/district-director/settings', Settings]
+      ['Reports', '/district-director/reports', FileBarChart]
     ],
     executive_director: [
       ['Dashboard', '/chapter-director/dashboard', LayoutDashboard],
@@ -114,34 +113,38 @@ export default function DashboardLayout({ navItems = [], title = 'Dashboard' }) 
       ['Memberships', '/chapter-director/memberships', CreditCard],
       ['Reports', '/chapter-director/reports', FileBarChart],
       ['Settings', '/chapter-director/settings', Settings]
+      ['Launch Directors', '/chapter-director/launch-directors', Users],
+      ['Membership Approvals', '/chapter-director/memberships', CreditCard],
+      ['Reports', '/chapter-director/reports', FileBarChart]
     ],
     launch_director: [
       ['Dashboard', '/admin', LayoutDashboard],
-      ['Direct Consultants', '/admin/users', Users]
+      ['Direct Consultants', '/admin/users', Users],
+      ['Memberships', '/admin/memberships', CreditCard]
     ],
     direct_consultant: [
       ['Dashboard', '/admin', LayoutDashboard],
       ['Chapter Presidents', '/admin/users', Users],
-      ['Membership Approval', '/admin/applications/membership', CreditCard]
+      ['Membership Approvals', '/admin/applications/membership', CreditCard]
     ],
     chapter_president: [
       ['Dashboard', '/president/dashboard', LayoutDashboard],
-      ['Vice President', '/president/vice-president', Users],
-      ['Memberships', '/president/memberships', CreditCard],
-      ['Reports', '/president/reports', FileBarChart],
-      ['Settings', '/president/settings', Settings]
+      ['Vice Presidents', '/president/vice-presidents', Users],
+      ['Reports', '/president/reports', FileBarChart]
     ],
     vice_president: [
       ['Dashboard', '/vice-president/dashboard', LayoutDashboard],
-      ['Secretary', '/vice-president/secretary', Users],
+      ['Secretaries', '/vice-president/secretaries', Users],
       ['Members', '/vice-president/members', Users],
-      ['Memberships', '/vice-president/memberships', CreditCard],
-      ['Reports', '/vice-president/reports', FileBarChart],
-      ['Settings', '/vice-president/settings', Settings]
+      ['Member Registration', '/vice-president/register-member', Users],
+      ['Reports', '/vice-president/reports', FileBarChart]
     ],
     secretary: [
-      ['Dashboard', '/admin', LayoutDashboard],
-      ['Members', '/admin/memberships', Users]
+      ['Dashboard', '/secretary/dashboard', LayoutDashboard],
+      ['Members', '/secretary/members', Users],
+      ['Attendance', '/secretary/attendance', CalendarDays],
+      ['Meetings', '/secretary/minutes', FileText],
+      ['Reports', '/secretary/reports', FileBarChart]
     ]
   }), []);
 
@@ -194,8 +197,17 @@ export default function DashboardLayout({ navItems = [], title = 'Dashboard' }) 
     <aside className="flex h-full flex-col border-r border-slate-900 bg-[#07111f] text-white shadow-2xl">
       <div className="flex h-16 items-center justify-between border-b border-white/10 px-4">
         <div className={collapsed ? 'hidden' : 'block'}>
-          <p className="font-playfair text-2xl font-bold text-white">Gloaro</p>
-          <p className="text-[10px] font-extrabold uppercase tracking-[0.16em] text-[#ffbf1a]">{title}</p>
+          <div className="flex items-center gap-3">
+            <div className="grid h-10 w-10 place-items-center rounded-lg p-1 shadow-sm">
+              <img src={logo} alt="Gloaro" className="h-full w-full object-contain" />
+            </div>
+            <div>
+              <p className="font-playfair text-2xl font-bold leading-none text-white">Gloaro</p>
+            </div>
+          </div>
+          <div className="mt-1 flex w-full justify-center text-center">
+            <p className="text-[10px] font-extrabold text-center uppercase tracking-[0.16em] text-[#ffbf1a]">{title}</p>
+          </div>
         </div>
         <button type="button" onClick={() => setCollapsed((value) => !value)} className="hidden h-9 w-9 place-items-center rounded-md border border-white/10 text-slate-300 hover:bg-white/10 lg:grid" aria-label="Collapse menu">
           <ChevronLeft className={`h-4 w-4 transition ${collapsed ? 'rotate-180' : ''}`} />

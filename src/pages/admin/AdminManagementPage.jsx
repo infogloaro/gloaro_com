@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import toast from 'react-hot-toast'
-import { Copy, Eye, KeyRound, LogIn, Plus, ShieldCheck, UserCog } from 'lucide-react'
+import { Copy, Eye, EyeOff, KeyRound, LogIn, Plus, ShieldCheck, UserCog } from 'lucide-react'
 import { adminApi } from '../../api/admin'
 import api from '../../api/axios'
 import Modal from '../../components/common/Modal'
+import LoadingSpinner from '../../components/common/LoadingSpinner'
 import SearchBar from '../../components/common/SearchBar'
 import StatusBadge from '../../components/common/StatusBadge'
 import DataTable from '../../components/tables/DataTable'
@@ -71,7 +72,6 @@ const ROLE_CONFIGS = {
   finance_admin: createRoleConfig({ modules: ['dashboard', 'members', 'reports', 'meetings', 'settings'], workflows: ['meeting'], widgets: ['members', 'meetings', ...alwaysExtraWidgets], sidebar: ['dashboard', 'members', 'reports', 'meetings', 'settings'], permissionFields: ['canView', 'canApprove', 'canExport', 'canPrint'], workflowActions: reviewWorkflowActions }),
   state_director: createRoleConfig({ modules: ['dashboard', 'members', 'meetings', 'attendance', 'visitors', 'events', 'reports', 'settings'], workflows: ['membership', 'meeting'], widgets: ['members', 'meetings', 'attendance', 'visitors', ...alwaysExtraWidgets], sidebar: ['dashboard', 'members', 'meetings', 'attendance', 'visitors', 'events', 'reports', 'settings'] }),
   district_director: createRoleConfig({ modules: ['dashboard', 'members', 'meetings', 'attendance', 'visitors', 'events', 'reports', 'settings'], workflows: ['membership', 'meeting'], widgets: ['members', 'meetings', 'attendance', 'visitors', ...alwaysExtraWidgets], sidebar: ['dashboard', 'members', 'meetings', 'attendance', 'visitors', 'events', 'reports', 'settings'] }),
-  area_director: createRoleConfig({ modules: ['dashboard', 'members', 'meetings', 'attendance'], workflows: ['membership', 'meeting'], widgets: ['members', 'meetings', 'attendance', 'visitors'], sidebar: ['dashboard', 'members', 'meetings', 'visitors'], permissionFields: operatorPermissionKeys, workflowActions: reviewWorkflowActions }),
   executive_director: createRoleConfig({ modules: ['dashboard', 'members', 'meetings', 'attendance', 'visitors', 'reports'], workflows: ['membership', 'meeting'], widgets: ['members', 'meetings', 'attendance', 'visitors', ...alwaysExtraWidgets], sidebar: ['dashboard', 'members', 'meetings', 'attendance', 'visitors', 'reports'] }),
   launch_director: createRoleConfig({ modules: ['dashboard', 'members', 'meetings', 'attendance'], workflows: ['membership', 'meeting'], widgets: ['members', 'meetings', 'attendance', 'visitors'], sidebar: ['dashboard', 'members', 'meetings', 'visitors'], permissionFields: operatorPermissionKeys, workflowActions: reviewWorkflowActions }),
   direct_consultant: createRoleConfig({ modules: ['dashboard', 'members', 'meetings'], workflows: ['membership', 'meeting'], widgets: ['members', 'meetings', 'attendance'], sidebar: ['dashboard', 'members', 'meetings'], permissionFields: readOnlyPermissionKeys, workflowActions: ['create', 'review'] }),
@@ -85,7 +85,7 @@ const ROLE_CONFIGS = {
 }
 
 function getRoleConfig(role) {
-  return ROLE_CONFIGS[role] || ROLE_CONFIGS.area_director
+  return ROLE_CONFIGS[role] || ROLE_CONFIGS.admin
 }
 
 function applyRoleConfig(role, current) {
@@ -130,9 +130,9 @@ const emptyForm = {
   phone: '',
   password: '',
   avatar: null,
-  role: 'area_director',
+  role: 'region_director',
   customRoleName: '',
-  organization: { region: '', state: '', area: '', district: '', chapter: '' },
+  organization: { region: '', state: '', district: '', chapter: '' },
   modules: ['dashboard', 'members', 'meetings', 'visitors'],
   permissions: {},
   workflowPermissions: {},
@@ -156,6 +156,7 @@ export default function AdminManagementPage({ role: overrideRole }) {
   const [activity, setActivity] = useState([])
   const [editing, setEditing] = useState(null)
   const [form, setForm] = useState(emptyForm)
+  const [saving, setSaving] = useState(false)
 
   const CREATOR_CHILD_ROLE = useMemo(() => ({
     superadmin: 'admin',
@@ -163,8 +164,7 @@ export default function AdminManagementPage({ role: overrideRole }) {
     region_director: 'state_director',
     state_director: 'district_director',
     district_director: 'executive_director',
-    area_director: 'executive_director',
-    executive_director: 'chapter_president',
+    executive_director: 'launch_director',
     launch_director: 'direct_consultant',
     direct_consultant: 'chapter_president',
     chapter_president: 'vice_president',
@@ -276,6 +276,7 @@ const saveAdmin = async () => {
         return
     }
 
+    setSaving(true)
     try {
         const payloadData = buildPayload(form, Boolean(editing))
 
@@ -291,6 +292,8 @@ const saveAdmin = async () => {
         const message = error.response?.data?.message || error.response?.data?.error || error.message
         console.error('Save failed:', JSON.stringify(error.response?.data, null, 2))
         toast.error(message || 'Failed to save admin')
+    } finally {
+        setSaving(false)
     }
 }
   const cloneAdmin = async (admin) => {
@@ -444,7 +447,7 @@ const saveAdmin = async () => {
       />
 
       <Modal open={wizardOpen} title={editing ? (childRole ? `Edit ${roleLabel(childRole)}` : 'Edit Admin') : (childRole ? `Create New ${roleLabel(childRole)} Wizard` : 'Create New Admin Wizard')} onClose={() => setWizardOpen(false)} maxWidth="max-w-6xl">
-        <AdminWizard form={form} setForm={setForm} editing={Boolean(editing)} onSave={saveAdmin} user={user} />
+        <AdminWizard form={form} setForm={setForm} editing={Boolean(editing)} onSave={saveAdmin} user={user} saving={saving} />
       </Modal>
 
       <Modal open={Boolean(viewing)} title={childRole ? `${roleLabel(childRole)} Details` : 'Admin Details'} onClose={() => setViewing(null)} maxWidth="max-w-4xl">
@@ -454,7 +457,8 @@ const saveAdmin = async () => {
   )
 }
 
-function AdminWizard({ form, setForm, editing, onSave, user }) {
+function AdminWizard({ form, setForm, editing, onSave, user, saving }) {
+  const [showPassword, setShowPassword] = useState(false)
   const update = (patch) => setForm((current) => ({ ...current, ...patch }))
   const updateOrg = (key, value) => setForm((current) => ({ ...current, organization: { ...current.organization, [key]: value } }))
   const toggleArray = (key, value) => setForm((current) => ({ ...current, [key]: toggleValue(current[key] || [], value) }))
@@ -475,6 +479,10 @@ function AdminWizard({ form, setForm, editing, onSave, user }) {
 
   const roleConfig = useMemo(() => getRoleConfig(form.role), [form.role])
 
+  useEffect(() => {
+    setShowPassword(false)
+  }, [editing])
+
   const handleRoleChange = useCallback((role) => {
     setForm((current) => ({ ...current, role, ...applyRoleConfig(role, current) }))
   }, [setForm])
@@ -488,7 +496,12 @@ function AdminWizard({ form, setForm, editing, onSave, user }) {
   const visibleModules = form.modules.filter((m) => allowedModules.includes(m))
 
   return (
-    <div className="space-y-6">
+    <div className="relative space-y-6">
+      {saving && (
+        <div className="absolute inset-0 z-20 grid place-items-center rounded-2xl bg-white/80 backdrop-blur-sm">
+          <LoadingSpinner label={editing ? 'Updating admin...' : 'Creating admin...'} />
+        </div>
+      )}
       <WizardSection number="1" title="Basic Information">
         <div className="grid gap-3 md:grid-cols-2">
           <Input label="Name" value={form.name} onChange={(value) => update({ name: value })} />
@@ -502,7 +515,17 @@ function AdminWizard({ form, setForm, editing, onSave, user }) {
         update({phone})
     }}
 />
-          {!editing && <Input label="Password" value={form.password} type="password" onChange={(value) => update({ password: value })} />}
+          {!editing && (
+            <Input
+              label="Password"
+              value={form.password}
+              type={showPassword ? 'text' : 'password'}
+              onChange={(value) => update({ password: value })}
+              showToggle
+              isPasswordVisible={showPassword}
+              onTogglePassword={() => setShowPassword((current) => !current)}
+            />
+          )}
           <label className="block">
             <span className="text-xs font-extrabold uppercase text-slate-500">Profile Photo</span>
             <input
@@ -573,7 +596,15 @@ function AdminWizard({ form, setForm, editing, onSave, user }) {
       </WizardSection>
 
       <div className="flex justify-end">
-        <button type="button" onClick={onSave} className="inline-flex h-11 items-center gap-2 rounded-md bg-[#0d4697] px-5 text-sm font-extrabold text-white"><ShieldCheck className="h-4 w-4" />Save Admin Access</button>
+        <button
+          type="button"
+          onClick={onSave}
+          disabled={saving}
+          className="inline-flex h-11 items-center gap-2 rounded-md bg-[#0d4697] px-5 text-sm font-extrabold text-white transition disabled:cursor-not-allowed disabled:bg-[#8aa7d4]"
+        >
+          {saving ? <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" /> : <ShieldCheck className="h-4 w-4" />}
+          {saving ? 'Saving...' : 'Save Admin Access'}
+        </button>
       </div>
     </div>
   )
@@ -588,11 +619,29 @@ function WizardSection({ number, title, children }) {
   )
 }
 
-function Input({ label, value, onChange, type = 'text', disabled }) {
+function Input({ label, value, onChange, type = 'text', disabled, showToggle = false, isPasswordVisible = false, onTogglePassword }) {
   return (
     <label className="block">
       <span className="text-xs font-extrabold uppercase text-slate-500">{label}</span>
-      <input disabled={disabled} type={type} value={value || ''} onChange={(event) => onChange(event.target.value)} className="mt-1 h-11 w-full rounded-md border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-900 outline-none focus:border-[#0d4697] disabled:bg-slate-50" />
+      <div className="relative mt-1">
+        <input
+          disabled={disabled}
+          type={type}
+          value={value || ''}
+          onChange={(event) => onChange(event.target.value)}
+          className={`h-11 w-full rounded-md border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-900 outline-none focus:border-[#0d4697] disabled:bg-slate-50 ${showToggle ? 'pr-11' : ''}`}
+        />
+        {showToggle && (
+          <button
+            type="button"
+            onClick={onTogglePassword}
+            aria-label={isPasswordVisible ? `Hide ${label}` : `Show ${label}`}
+            className="absolute inset-y-0 right-0 flex items-center px-3 text-slate-500 transition hover:text-slate-700"
+          >
+            {isPasswordVisible ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+          </button>
+        )}
+      </div>
     </label>
   )
 }
@@ -669,7 +718,13 @@ function buildPayload(form, editing) {
 }
 
 function organizationLabel(organization = {}) {
-  return ['region', 'state', 'area', 'district', 'chapter'].map((key) => organization?.[key]).filter(Boolean).join(' / ') || 'All Organization'
+  return ['region', 'state', 'district', 'chapter']
+    .map((key) => {
+      const assigned = organization?.[`assigned${key.charAt(0).toUpperCase() + key.slice(1)}`];
+      return assigned?.name || (typeof organization?.[key] === 'string' && organization[key].length !== 24 ? organization[key] : null);
+    })
+    .filter(Boolean)
+    .join(' / ') || 'All Organization'
 }
 
 function toggleValue(values, value) {
@@ -998,7 +1053,7 @@ function getSubordinateLocation(row) {
   const org = row.meta?.adminProfile?.organization || {}
   if (row.role === 'region_director') return org.assignedRegion?.name || 'Not Assigned'
   if (row.role === 'state_director') return org.assignedState?.name || 'Not Assigned'
-  if (row.role === 'district_director' || row.role === 'area_director') {
+  if (row.role === 'district_director') {
     return org.assignedDistrict?.name || 'Not Assigned'
   }
   return org.assignedChapter?.name || 'Not Assigned'
