@@ -108,6 +108,11 @@ export default function DashboardLayout({ navItems = [], title = 'Dashboard' }) 
     ],
     executive_director: [
       ['Dashboard', '/chapter-director/dashboard', LayoutDashboard],
+      ['President', '/chapter-director/president', Users],
+      ['Members', '/chapter-director/members', Users],
+      ['Memberships', '/chapter-director/memberships', CreditCard],
+      ['Reports', '/chapter-director/reports', FileBarChart],
+      ['Settings', '/chapter-director/settings', Settings]
       ['Launch Directors', '/chapter-director/launch-directors', Users],
       ['Membership Approvals', '/chapter-director/memberships', CreditCard],
       ['Reports', '/chapter-director/reports', FileBarChart]

@@ -204,6 +204,9 @@ export const districtDirectorNav = [
 
 export const chapterDirectorNav = [
   ['Dashboard', '/chapter-director/dashboard', LayoutDashboard],
+  ['President', '/chapter-director/president', Users],
+  ['Members', '/chapter-director/members', Users],
+  ['Memberships', '/chapter-director/memberships', CreditCard],
   ['Launch Directors', '/chapter-director/launch-directors', Users],
   ['Membership Approvals', '/chapter-director/memberships', CreditCard],
   ['Reports', '/chapter-director/reports', FileBarChart],
