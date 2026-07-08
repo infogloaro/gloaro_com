@@ -2,6 +2,7 @@ import { Navigate, Outlet, useLocation } from 'react-router-dom'
 import LoadingScreen from '../components/common/LoadingScreen'
 import { useAuth } from '../hooks/useAuth'
 import { isAdminRole } from '../constants/adminRoles'
+import { storage } from '../utils/storage'
 
 const roleMatches = (allowed, actual) => {
   const allowedRole = String(allowed || '').toLowerCase().replace(/\s+/g, '')
@@ -15,10 +16,11 @@ const roleMatches = (allowed, actual) => {
 }
 
 export default function ProtectedRoute({ roles, requirePathAccess = false, fallback = '/dashboard' }) {
-  const { loading, isAuthenticated, role, permissionsLoading, canAccessPath } = useAuth()
+  const { loading, isAuthenticated, role, permissionsLoading, canAccessPath, user } = useAuth()
   const location = useLocation()
 
-  if (loading) return <LoadingScreen label="Checking session..." />
+  const isHydrating = loading || (storage.getAccessToken() && !user)
+  if (isHydrating) return <LoadingScreen label="Checking session..." />
   if (!isAuthenticated) return <Navigate to="/login" replace state={{ from: location }} />
   if (roles?.length && !roles.some((allowed) => roleMatches(allowed, role))) return <Navigate to="/" replace />
   if (requirePathAccess && permissionsLoading) return <LoadingScreen label="Loading access..." />

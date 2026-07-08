@@ -28,6 +28,8 @@ import {
   ToggleLeft,
   Users,
   Workflow,
+  PlusCircle,
+  ClipboardList,
 } from 'lucide-react'
 
 export const adminNav = [
@@ -162,6 +164,14 @@ export const membershipNav = [
   ['Notifications', '/membership/notifications', Bell],
   ['Profile', '/membership/profile', Users],
   ['Support', '/membership/support', HelpCircle],
+]
+
+export const memberNav = [
+  ['Dashboard', '/member/dashboard', LayoutDashboard],
+  ['Vendor Application', '/member/vendor-application', PlusCircle],
+  ['Application Status', '/member/vendor-application-status', ClipboardList],
+  ['Profile', '/member/profile', Users],
+  ['Settings', '/member/settings', Settings],
 ]
 
 export const secretaryNav = [

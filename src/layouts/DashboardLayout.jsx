@@ -1,4 +1,4 @@
-import { ChevronDown, ChevronLeft, Menu, Moon, Search, Sun, LayoutDashboard, Users, FileBarChart, Settings, CreditCard, UserRound, Building2, MapPinned, CalendarDays, FileText } from 'lucide-react'
+import { ChevronDown, ChevronLeft, Menu, Moon, Search, Sun, LayoutDashboard, Users, FileBarChart, Settings, CreditCard, Building2, MapPinned, CalendarDays, FileText } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import logo from '../assets/signup_logo.png'
@@ -64,6 +64,8 @@ export default function DashboardLayout({ navItems = [], title = 'Dashboard' }) 
         ],
       },
       ['Region Directors', '/admin/users', Users],
+      ['Vendor Approvals', '/admin/applications/vendor', CreditCard],
+      ['Approved Vendors', '/admin/approved-vendors', Building2],
       ['Reports', '/admin/reports', FileBarChart],
       ['Settings', '/admin/settings', Settings]
     ],
@@ -78,6 +80,7 @@ export default function DashboardLayout({ navItems = [], title = 'Dashboard' }) 
       },
       ['State Directors', '/admin/users', Users],
       ['Memberships', '/admin/memberships', CreditCard],
+      ['Approved Vendors', '/admin/approved-vendors', Building2],
       ['Reports', '/admin/reports', FileBarChart]
     ],
     state_director: [
@@ -91,6 +94,7 @@ export default function DashboardLayout({ navItems = [], title = 'Dashboard' }) 
       },
       ['District Directors', '/state-director/district-directors', Users],
       ['Memberships', '/state-director/memberships', CreditCard],
+      ['Approved Vendors', '/admin/approved-vendors', Building2],
       ['Reports', '/state-director/reports', FileBarChart]
     ],
     district_director: [
@@ -104,6 +108,7 @@ export default function DashboardLayout({ navItems = [], title = 'Dashboard' }) 
       },
       ['Executive Directors', '/district-director/executive-directors', Users],
       ['Memberships', '/district-director/memberships', CreditCard],
+      ['Approved Vendors', '/admin/approved-vendors', Building2],
       ['Reports', '/district-director/reports', FileBarChart]
     ],
     executive_director: [
@@ -111,25 +116,29 @@ export default function DashboardLayout({ navItems = [], title = 'Dashboard' }) 
       ['President', '/chapter-director/president', Users],
       ['Members', '/chapter-director/members', Users],
       ['Memberships', '/chapter-director/memberships', CreditCard],
-      ['Reports', '/chapter-director/reports', FileBarChart],
-      ['Settings', '/chapter-director/settings', Settings]
       ['Launch Directors', '/chapter-director/launch-directors', Users],
       ['Membership Approvals', '/chapter-director/memberships', CreditCard],
-      ['Reports', '/chapter-director/reports', FileBarChart]
+      ['Vendor Approvals', '/admin/applications/vendor', CreditCard],
+      ['Approved Vendors', '/admin/approved-vendors', Building2],
+      ['Reports', '/chapter-director/reports', FileBarChart],
+      ['Settings', '/chapter-director/settings', Settings]
     ],
     launch_director: [
       ['Dashboard', '/admin', LayoutDashboard],
       ['Direct Consultants', '/admin/users', Users],
+      ['Approved Vendors', '/admin/approved-vendors', Building2],
       ['Memberships', '/admin/memberships', CreditCard]
     ],
     direct_consultant: [
       ['Dashboard', '/admin', LayoutDashboard],
       ['Chapter Presidents', '/admin/users', Users],
-      ['Membership Approvals', '/admin/applications/membership', CreditCard]
+      ['Membership Approvals', '/admin/applications/membership', CreditCard],
+      ['Approved Vendors', '/admin/approved-vendors', Building2]
     ],
     chapter_president: [
       ['Dashboard', '/president/dashboard', LayoutDashboard],
       ['Vice Presidents', '/president/vice-presidents', Users],
+      ['Approved Vendors', '/admin/approved-vendors', Building2],
       ['Reports', '/president/reports', FileBarChart]
     ],
     vice_president: [
@@ -137,6 +146,7 @@ export default function DashboardLayout({ navItems = [], title = 'Dashboard' }) 
       ['Secretaries', '/vice-president/secretaries', Users],
       ['Members', '/vice-president/members', Users],
       ['Member Registration', '/vice-president/register-member', Users],
+      ['Approved Vendors', '/admin/approved-vendors', Building2],
       ['Reports', '/vice-president/reports', FileBarChart]
     ],
     secretary: [
@@ -144,6 +154,7 @@ export default function DashboardLayout({ navItems = [], title = 'Dashboard' }) 
       ['Members', '/secretary/members', Users],
       ['Attendance', '/secretary/attendance', CalendarDays],
       ['Meetings', '/secretary/minutes', FileText],
+      ['Approved Vendors', '/admin/approved-vendors', Building2],
       ['Reports', '/secretary/reports', FileBarChart]
     ]
   }), []);
@@ -241,7 +252,7 @@ export default function DashboardLayout({ navItems = [], title = 'Dashboard' }) 
                 {!collapsed && isExpanded && <div className="space-y-1 pl-4">
                   {item.children.map(([label, to, ChildIcon]) => (
                     <NavLink
-                      key={to}
+                      key={label}
                       to={to}
                       onClick={() => setOpen(false)}
                       className={({ isActive }) => `flex h-9 items-center gap-3 rounded-md px-3 text-sm font-bold ${isActive ? 'bg-[#0d4697] text-white shadow-lg shadow-blue-950/30' : 'text-slate-300 hover:bg-white/10 hover:text-white'}`}
@@ -258,7 +269,7 @@ export default function DashboardLayout({ navItems = [], title = 'Dashboard' }) 
           const [label, to, Icon] = item
           return (
             <NavLink
-              key={to}
+              key={label}
               to={to}
               end={['/admin', '/vendor', '/membership/dashboard'].includes(to)}
               onClick={() => setOpen(false)}
