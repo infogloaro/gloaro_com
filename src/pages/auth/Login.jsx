@@ -4,24 +4,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { Eye, EyeOff } from 'lucide-react'
 import FormField from '../../components/forms/FormField'
 import { useAuth } from '../../hooks/useAuth'
-import { isAdminRole } from '../../constants/adminRoles'
 
-const loginTypes = {
-  vendor: { label: 'Vendor', expectedRole: 'vendor', redirect: '/vendor' },
-  membership: { label: 'Membership', expectedRole: 'customer', redirect: '/membership-agreement' },
-  franchise: { label: 'Franchise', expectedRole: 'customer', redirect: '/membership-application' },
-  b2b: { label: 'B2B Marketplace', expectedRole: 'customer', redirect: '/vendors' },
-  user: { label: 'User', expectedRole: 'customer', redirect: '/customer/profile' },
-}
-
-const dashboardFor = (role) => {
-  if (isAdminRole(role)) return '/admin'
-  if (role === 'vendor') return '/vendor'
-  if (role === 'secretary') return '/secretary/dashboard'
-  return '/customer/profile'
-}
-
-const normalizeRole = (role) => role === 'user' ? 'customer' : role
 
 export default function Login() {
   const { login } = useAuth()
@@ -30,22 +13,13 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false)
   const query = new URLSearchParams(location.search)
   const loginType = query.get('type') || ''
-  const selectedType = loginTypes[loginType] || null
-  const activeType = selectedType || loginTypes.user
-  const redirect = query.get('redirect') || activeType.redirect
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm({ defaultValues: { remember: true } })
 
   const onSubmit = async (values) => {
-    const user = await login({ email: values.email, password: values.password }, values.remember)
-    if (isAdminRole(user.role)) {
-      navigate('/admin', { replace: true })
-      return
-    }
-
-    const expectedRole = activeType.expectedRole
-    const userRole = normalizeRole(user.role)
-    const canUseSelectedType = expectedRole === userRole
-    navigate(location.state?.from?.pathname || (canUseSelectedType ? redirect : dashboardFor(user.role)), { replace: true })
+    await login({ email: values.email, password: values.password }, values.remember)
+    const fromPath = location.state?.from?.pathname
+    const finalDest = fromPath && fromPath !== '/' && fromPath !== '/login' ? fromPath : '/dashboard'
+    navigate(finalDest, { replace: true })
   }
 
   return (

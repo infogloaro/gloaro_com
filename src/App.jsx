@@ -1,6 +1,6 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
-import { adminNav, customerNav, membershipNav, vendorNav, secretaryNav, stateDirectorNav, districtDirectorNav, chapterDirectorNav, presidentNav, vicePresidentNav } from './constants/navigation'
+import { adminNav, customerNav, membershipNav, memberNav, vendorNav, secretaryNav, stateDirectorNav, districtDirectorNav, chapterDirectorNav, presidentNav, vicePresidentNav } from './constants/navigation'
 import DashboardLayout from './layouts/DashboardLayout'
 import PublicLayout from './layouts/PublicLayout'
 import ProtectedRoute from './routes/ProtectedRoute'
@@ -17,6 +17,8 @@ import AdminDashboard from './pages/admin/AdminDashboard'
 import AdminAnalytics from './pages/admin/AdminAnalytics'
 import AdminNotifications from './pages/admin/AdminNotifications'
 import AdminManagementPage from './pages/admin/AdminManagementPage'
+import AdminVendorApplicationsPage from './pages/admin/AdminVendorApplicationsPage'
+import ApprovedVendorsPage from './pages/shared/ApprovedVendorsPage'
 import {
   AuditLogsPage,
   DashboardConfigurationPage,
@@ -113,6 +115,9 @@ import MembershipApplication from './pages/public/MembershipApplication'
 import MembershipQualification from './pages/public/MembershipQualification'
 import MembershipApplicationTrack from './pages/public/MembershipApplicationTrack'
 import MembershipDashboard from './pages/membership/MembershipDashboard'
+import MemberDashboard from './pages/membership/MemberDashboard'
+import VendorApplicationForm from './pages/membership/VendorApplicationForm'
+import VendorApplicationStatus from './pages/membership/VendorApplicationStatus'
 import {
   MembershipBenefitsPage,
   MembershipEventsPage,
@@ -153,6 +158,7 @@ function App() {
     { path: '/admin/workflow-engine', element: <WorkflowEnginePage />, roles: ['superadmin'] },
     { path: '/admin/users', element: <AdminManagementPage /> },
     { path: '/admin/vendors', element: <AdminVendorsPage /> },
+    { path: '/admin/approved-vendors', element: <ApprovedVendorsPage /> },
     { path: '/admin/vendor-settings', element: <SuperAdminModulePage {...superAdminModuleConfigs.vendor} /> },
     { path: '/admin/vendor-approval-workflow', element: <VendorApprovalWorkflowPage /> },
     { path: '/admin/locations', element: <LocationsManagementPage /> },
@@ -174,7 +180,7 @@ function App() {
     { path: '/admin/applications/membership', element: <AdminMembershipApplicationsPage /> },
     { path: '/admin/applications/franchise', element: <AdminModuleApplicationsPage title="Franchise Applications" /> },
     { path: '/admin/applications/business-network', element: <AdminModuleApplicationsPage title="Business Network Applications" /> },
-    { path: '/admin/applications/vendor', element: <AdminModuleApplicationsPage title="Vendor Applications" /> },
+    { path: '/admin/applications/vendor', element: <AdminVendorApplicationsPage /> },
     { path: '/admin/membership-applications', element: <AdminMembershipApplicationsPage /> },
     { path: '/admin/plans', element: <AdminPlansPage /> },
     { path: '/admin/meeting-settings', element: <MeetingManagementPage /> },
@@ -289,6 +295,16 @@ function App() {
             <Route path="/membership/notifications" element={<MembershipNotificationsPage />} />
             <Route path="/membership/profile" element={<MembershipProfilePage />} />
             <Route path="/membership/support" element={<MembershipSupportPage />} />
+          </Route>
+        </Route>
+
+        <Route element={<ProtectedRoute roles={['customer', 'user']} />}>
+          <Route element={<DashboardLayout navItems={memberNav} title="Member Console" />}>
+            <Route path="/member/dashboard" element={<MemberDashboard />} />
+            <Route path="/member/vendor-application" element={<VendorApplicationForm />} />
+            <Route path="/member/vendor-application-status" element={<VendorApplicationStatus />} />
+            <Route path="/member/profile" element={<MembershipProfilePage />} />
+            <Route path="/member/settings" element={<MembershipProfilePage />} />
           </Route>
         </Route>
 

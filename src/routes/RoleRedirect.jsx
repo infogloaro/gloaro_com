@@ -2,10 +2,12 @@ import { Navigate } from 'react-router-dom'
 import LoadingScreen from '../components/common/LoadingScreen'
 import { useAuth } from '../hooks/useAuth'
 import { isAdminRole } from '../constants/adminRoles'
+import { storage } from '../utils/storage'
 
 export default function RoleRedirect() {
   const { loading, user } = useAuth()
-  if (loading) return <LoadingScreen label="Loading dashboard..." />
+  const isHydrating = loading || (storage.getAccessToken() && !user)
+  if (isHydrating) return <LoadingScreen label="Loading dashboard..." />
   if (!user) return <Navigate to="/" replace />
   const role = String(user.role || '').toLowerCase().replace(/\s+/g, '')
 
@@ -18,5 +20,8 @@ export default function RoleRedirect() {
   if (isAdminRole(role)) return <Navigate to="/admin" replace />
 
   if (role === 'vendor') return <Navigate to="/vendor" replace />
+  if (role === 'customer' && user.memberId && (user.isActive || user.status === 'approved' || user.status === 'active')) {
+    return <Navigate to="/member/dashboard" replace />
+  }
   return <Navigate to="/customer/profile" replace />
 }
