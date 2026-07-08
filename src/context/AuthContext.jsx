@@ -48,22 +48,31 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     const hydrate = async () => {
-      if (!storage.getAccessToken()) {
+      const initialToken = storage.getAccessToken()
+      if (!initialToken) {
         setLoading(false)
         return
       }
 
       try {
         const response = await authApi.me()
+        if (storage.getAccessToken() !== initialToken) {
+          return
+        }
         const nextUser = response.data.data?.user || response.data.data
         setUser(nextUser)
         setPermissionConfig(isAdminRole(nextUser?.role) ? undefined : null)
       } catch {
+        if (storage.getAccessToken() !== initialToken) {
+          return
+        }
         storage.clearSession()
         setUser(null)
         setPermissionConfig(null)
       } finally {
-        setLoading(false)
+        if (storage.getAccessToken() === initialToken) {
+          setLoading(false)
+        }
       }
     }
 
