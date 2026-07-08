@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { authApi } from '../../api/auth'
-import LoadingSpinner from '../../components/common/LoadingSpinner'
+import LoadingScreen from '../../components/common/LoadingScreen'
 
 export default function VerifyEmail() {
   const { token } = useParams()
@@ -9,7 +9,7 @@ export default function VerifyEmail() {
   useEffect(() => {
     authApi.verifyEmail(token).then((response) => setMessage(response.data.message)).catch((error) => setMessage(error.response?.data?.message || 'Verification failed'))
   }, [token])
-  if (!message) return <LoadingSpinner label="Verifying email" />
+  if (!message) return <LoadingScreen label="Verifying email..." />
   return (
     <div className="w-full rounded-lg bg-white p-6 text-center shadow-xl">
       <h2 className="font-playfair text-4xl font-bold text-[#0d4697]">Email Verification</h2>

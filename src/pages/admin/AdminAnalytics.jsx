@@ -1,5 +1,5 @@
 import { reportApi } from '../../api/report'
-import LoadingSpinner from '../../components/common/LoadingSpinner'
+import LoadingScreen from '../../components/common/LoadingScreen'
 import ChartCard from '../../components/charts/ChartCard'
 import DataTable from '../../components/tables/DataTable'
 import { useAuth } from '../../hooks/useAuth'
@@ -12,7 +12,7 @@ export default function AdminAnalytics() {
   const canView = hasSection('reports', 'analytics') && hasOperation('reports', 'view')
   const { data, loading } = useApi(() => reportApi.analytics({ from: '2025-01-01' }), [canView], { immediate: canView })
   if (!canView) return null
-  if (loading) return <LoadingSpinner />
+  if (loading) return <LoadingScreen label="Loading analytics..." />
   return (
     <div className="space-y-5">
       <div className="grid gap-5 xl:grid-cols-2">

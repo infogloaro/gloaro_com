@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
 import { useApi } from '../../hooks/useApi'
 import { secretaryApi } from '../../api/secretary'
-import LoadingSpinner from '../../components/common/LoadingSpinner'
+import LoadingScreen from '../../components/common/LoadingScreen'
 import EmptyState from '../../components/common/EmptyState'
 import StatCard from '../../components/dashboard/StatCard'
 import { formatDate } from '../../utils/format'
@@ -10,7 +10,7 @@ import { Users, FileText, CalendarDays, ShoppingBag, FolderOpen } from 'lucide-r
 export default function SecretaryDashboard() {
   const { data, loading, error } = useApi(secretaryApi.dashboard)
 
-  if (loading) return <LoadingSpinner label="Loading Secretary Dashboard" />
+  if (loading) return <LoadingScreen label="Loading Secretary Dashboard..." />
 
   if (error || !data) {
     return (

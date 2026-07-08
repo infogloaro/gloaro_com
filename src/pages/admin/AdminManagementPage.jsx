@@ -4,7 +4,7 @@ import { Copy, Eye, EyeOff, KeyRound, LogIn, Plus, ShieldCheck, UserCog } from '
 import { adminApi } from '../../api/admin'
 import api from '../../api/axios'
 import Modal from '../../components/common/Modal'
-import LoadingSpinner from '../../components/common/LoadingSpinner'
+import LoadingScreen from '../../components/common/LoadingScreen'
 import SearchBar from '../../components/common/SearchBar'
 import StatusBadge from '../../components/common/StatusBadge'
 import DataTable from '../../components/tables/DataTable'
@@ -498,9 +498,7 @@ function AdminWizard({ form, setForm, editing, onSave, user, saving }) {
   return (
     <div className="relative space-y-6">
       {saving && (
-        <div className="absolute inset-0 z-20 grid place-items-center rounded-2xl bg-white/80 backdrop-blur-sm">
-          <LoadingSpinner label={editing ? 'Updating admin...' : 'Creating admin...'} />
-        </div>
+        <LoadingScreen label={editing ? 'Updating admin...' : 'Creating admin...'} />
       )}
       <WizardSection number="1" title="Basic Information">
         <div className="grid gap-3 md:grid-cols-2">

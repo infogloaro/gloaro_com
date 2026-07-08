@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
 import { notificationApi } from '../../api/notification'
-import LoadingSpinner from '../../components/common/LoadingSpinner'
+import LoadingScreen from '../../components/common/LoadingScreen'
 import { useAuth } from '../../hooks/useAuth'
 import {
   Bell,
@@ -116,7 +116,7 @@ export default function NotificationsPage() {
     }
   }
 
-  if (loading) return <LoadingSpinner label="Loading Notifications" />
+  if (loading) return <LoadingScreen label="Loading Notifications..." />
 
   return (
     <div className="mx-auto max-w-4xl space-y-6">

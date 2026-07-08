@@ -4,7 +4,7 @@ import { useEffect, useState, useMemo } from 'react'
 import api from '../../api/axios'
 import { adminApi } from '../../api/admin'
 import FormField from '../../components/forms/FormField'
-import LoadingSpinner from '../../components/common/LoadingSpinner'
+import LoadingScreen from '../../components/common/LoadingScreen'
 import { useApi } from '../../hooks/useApi'
 import { roleLabel } from '../../constants/adminRoles'
 import { formatDate } from '../../utils/format'
@@ -90,7 +90,7 @@ export default function ProfilePage() {
       .join(' / ') || 'None assigned'
   }, [user])
 
-  if (loading) return <LoadingSpinner label="Loading Profile" />
+  if (loading) return <LoadingScreen label="Loading Profile..." />
 
   return (
     <div className="mx-auto max-w-6xl space-y-6">

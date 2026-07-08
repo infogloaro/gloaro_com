@@ -1,7 +1,7 @@
 import { Building2, CreditCard, FileText, Package, ShoppingBag, Users } from 'lucide-react'
 import { adminApi } from '../../api/admin'
 import { reportApi } from '../../api/report'
-import LoadingSpinner from '../../components/common/LoadingSpinner'
+import LoadingScreen from '../../components/common/LoadingScreen'
 import StatusBadge from '../../components/common/StatusBadge'
 import ChartCard from '../../components/charts/ChartCard'
 import StatCard from '../../components/dashboard/StatCard'
@@ -24,7 +24,7 @@ export default function AdminDashboard() {
 
   if (!canView) return null
 
-  if (dashboard.loading || analytics.loading) return <LoadingSpinner label="Loading admin dashboard" />
+  if (dashboard.loading || analytics.loading) return <LoadingScreen label="Loading admin dashboard..." />
 
   const stats = dashboard.data || {}
   const report = analytics.data || {}

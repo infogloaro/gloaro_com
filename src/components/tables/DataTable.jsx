@@ -1,9 +1,9 @@
 import EmptyState from '../common/EmptyState'
-import LoadingSpinner from '../common/LoadingSpinner'
+import LoadingScreen from '../common/LoadingScreen'
 import Pagination from '../common/Pagination'
 
 export default function DataTable({ columns, rows = [], loading, pagination, onPageChange, actions }) {
-  if (loading) return <LoadingSpinner label="Loading records" />
+  if (loading) return <LoadingScreen label="Loading records..." />
   if (!rows.length) return <EmptyState />
 
   return (
