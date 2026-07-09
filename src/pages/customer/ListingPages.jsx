@@ -362,7 +362,7 @@ function normalizeNearbyItem(item, type, location) {
     ...item,
     type,
     name: type === 'business' ? item.businessName || item.name : item.title || item.name,
-    providerName: vendor.businessName || item.businessName || 'Gloaro vendor',
+    providerName: vendor.user?.name || vendor.ownerName || vendor.businessName || item.businessName || 'Gloaro vendor',
     category: item.category?.name || item.businessCategory?.name || vendor.businessCategory?.name || 'Business',
     image: getItemImage(item, vendor, type),
     phone: vendor.phone || item.phone || '',
@@ -577,27 +577,44 @@ export function ProductsPage() {
                         {product.title}
                       </h3>
                       <p className="mt-0.5 text-[11px] font-semibold text-slate-500">
-                        Seller: {product.vendor?.businessName || 'Merchant'}
+                        Seller: {product.vendor?.user?.name || product.vendor?.ownerName || product.vendor?.businessName || 'Merchant'}
                       </p>
                     </div>
                   </div>
-                  <div className="border-t border-slate-100 p-4 pt-3 flex items-center justify-between mt-auto">
-                    <div className="flex flex-col">
-                      {product.pricing?.mrp > product.pricing?.sellingPrice && (
-                        <span className="text-[10px] font-semibold text-slate-400 line-through">
-                          {formatCurrency(product.pricing.mrp)}
+                  <div className="border-t border-slate-100 p-4 pt-3 flex flex-col gap-3 mt-auto">
+                    <div className="flex items-center justify-between">
+                      <div className="flex flex-col">
+                        {product.pricing?.mrp > product.pricing?.sellingPrice && (
+                          <span className="text-[10px] font-semibold text-slate-400 line-through">
+                            {formatCurrency(product.pricing.mrp)}
+                          </span>
+                        )}
+                        <span className="text-sm font-black text-slate-900">
+                          {formatCurrency(product.pricing?.sellingPrice)}
                         </span>
-                      )}
-                      <span className="text-sm font-black text-slate-900">
-                        {formatCurrency(product.pricing?.sellingPrice)}
-                      </span>
+                      </div>
+                      <Link 
+                        to={`/products/${product._id}`} 
+                        className="text-xs font-extrabold text-[#0d4697] hover:underline"
+                      >
+                        View Details
+                      </Link>
                     </div>
-                    <Link 
-                      to={`/products/${product._id}`} 
-                      className="rounded-md bg-[#0d4697] px-3 py-1.5 text-xs font-extrabold text-white hover:bg-blue-800 transition"
-                    >
-                      View Details
-                    </Link>
+
+                    <div className="grid grid-cols-2 gap-2 mt-1">
+                      <button
+                        onClick={() => toast.success('Added to Cart!')}
+                        className="h-9 rounded-md border border-[#0d4697] text-xs font-extrabold text-[#0d4697] hover:bg-blue-50 transition"
+                      >
+                        Add to Cart
+                      </button>
+                      <button
+                        onClick={() => toast.success('Buy Now flow triggered!')}
+                        className="h-9 rounded-md bg-[#0d4697] text-xs font-extrabold text-white hover:bg-blue-800 transition"
+                      >
+                        Buy Now
+                      </button>
+                    </div>
                   </div>
                 </article>
               )
@@ -716,7 +733,7 @@ export function ServicesPage() {
                       {service.title}
                     </h3>
                     <p className="mt-0.5 text-[11px] font-semibold text-slate-500">
-                      Provider: {service.vendor?.businessName || 'Professional'}
+                      Provider: {service.vendor?.user?.name || service.vendor?.ownerName || service.vendor?.businessName || 'Professional'}
                     </p>
                   </div>
                 </div>
