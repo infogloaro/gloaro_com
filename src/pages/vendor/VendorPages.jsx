@@ -1,3 +1,5 @@
+import { useEffect, useState } from 'react'
+import api from '../../api/axios'
 import toast from 'react-hot-toast'
 import { vendorApi } from '../../api/vendor'
 import { customerApi } from '../../api/customer'
@@ -26,15 +28,186 @@ export function VendorProfilePage() {
 }
 
 export function VendorProductsPage() {
-  return <ResourceListPage title="Products" fetcher={vendorApi.products} createAction={vendorApi.createProduct} updateAction={vendorApi.updateProduct} deleteAction={vendorApi.deleteProduct} columns={[
-    { key: 'title', header: 'Product' }, { key: 'price', header: 'Price', render: (row) => formatCurrency(row.pricing?.sellingPrice) }, { key: 'inventory', header: 'Stock', render: (row) => row.inventory?.quantity ?? 0 }, { key: 'status', header: 'Status', render: (row) => <StatusBadge value={row.status} /> },
-  ]} renderForm={(props) => <SimpleJsonForm {...props} fields={[{ name: 'title' }, { name: 'description', type: 'textarea' }, { name: 'category' }, { name: 'pricing.mrp', type: 'number' }, { name: 'pricing.sellingPrice', type: 'number' }]} />} />
+  const [categories, setCategories] = useState([])
+
+  useEffect(() => {
+    api.get('/categories?type=product')
+      .then((res) => {
+        const list = res.data?.data || res.data || []
+        setCategories(list.map((cat) => ({ value: cat._id, label: cat.name })))
+      })
+      .catch(() => {})
+  }, [])
+
+  const handleCreateProduct = async (data) => {
+    const formData = new FormData()
+    formData.append('title', data.title)
+    formData.append('description', data.description || '')
+    formData.append('category', data.category)
+    formData.append('pricing[mrp]', data.pricing?.mrp)
+    formData.append('pricing[sellingPrice]', data.pricing?.sellingPrice)
+    formData.append('inventory[quantity]', data.inventory?.quantity ?? 0)
+    
+    if (data.images && data.images.length > 0) {
+      for (let i = 0; i < data.images.length; i++) {
+        if (data.images[i] instanceof File) {
+          formData.append('images', data.images[i])
+        }
+      }
+    }
+    return vendorApi.createProduct(formData)
+  }
+
+  const handleUpdateProduct = async (id, data) => {
+    const formData = new FormData()
+    formData.append('title', data.title)
+    formData.append('description', data.description || '')
+    formData.append('category', data.category)
+    formData.append('pricing[mrp]', data.pricing?.mrp)
+    formData.append('pricing[sellingPrice]', data.pricing?.sellingPrice)
+    formData.append('inventory[quantity]', data.inventory?.quantity ?? 0)
+    
+    if (data.images && data.images.length > 0) {
+      for (let i = 0; i < data.images.length; i++) {
+        if (data.images[i] instanceof File) {
+          formData.append('images', data.images[i])
+        }
+      }
+    }
+    return vendorApi.updateProduct(id, formData)
+  }
+
+  return (
+    <ResourceListPage
+      title="Products"
+      fetcher={vendorApi.products}
+      createAction={handleCreateProduct}
+      updateAction={handleUpdateProduct}
+      deleteAction={vendorApi.deleteProduct}
+      columns={[
+        { key: 'image', header: 'Image', render: (row) => (
+          <img
+            src={row.images?.[0]?.url || '/logo.png'}
+            alt=""
+            className="h-10 w-10 rounded-md object-cover border border-slate-200"
+          />
+        ) },
+        { key: 'title', header: 'Product' },
+        { key: 'price', header: 'Price', render: (row) => formatCurrency(row.pricing?.sellingPrice) },
+        { key: 'inventory', header: 'Stock', render: (row) => row.inventory?.quantity ?? 0 },
+        { key: 'status', header: 'Status', render: (row) => <StatusBadge value={row.status} /> },
+      ]}
+      renderForm={(props) => {
+        const normalizedValues = {
+          ...props.initialValues,
+          category: props.initialValues?.category?._id || props.initialValues?.category || ''
+        }
+        return (
+          <SimpleJsonForm
+            {...props}
+            initialValues={normalizedValues}
+            fields={[
+              { name: 'title' },
+              { name: 'description', type: 'textarea' },
+              { name: 'category', type: 'select', options: categories },
+              { name: 'pricing.mrp', type: 'number' },
+              { name: 'pricing.sellingPrice', type: 'number' },
+              { name: 'inventory.quantity', type: 'number', label: 'Stock' },
+              { name: 'images', type: 'file', label: 'Product Images' }
+            ]}
+          />
+        )
+      }}
+    />
+  )
 }
 
 export function VendorServicesPage() {
-  return <ResourceListPage title="Services" fetcher={vendorApi.services} createAction={vendorApi.createService} updateAction={vendorApi.updateService} deleteAction={vendorApi.deleteService} columns={[
-    { key: 'title', header: 'Service' }, { key: 'category', header: 'Category', render: (row) => row.category?.name || 'Category' }, { key: 'status', header: 'Status', render: (row) => <StatusBadge value={row.status} /> },
-  ]} renderForm={(props) => <SimpleJsonForm {...props} fields={[{ name: 'title' }, { name: 'description', type: 'textarea' }, { name: 'category' }, { name: 'pricing.minPrice', type: 'number' }]} />} />
+  const [categories, setCategories] = useState([])
+
+  useEffect(() => {
+    api.get('/categories?type=service')
+      .then((res) => {
+        const list = res.data?.data || res.data || []
+        setCategories(list.map((cat) => ({ value: cat._id, label: cat.name })))
+      })
+      .catch(() => {})
+  }, [])
+
+  const handleCreateService = async (data) => {
+    const formData = new FormData()
+    formData.append('title', data.title)
+    formData.append('description', data.description || '')
+    formData.append('category', data.category)
+    formData.append('pricing[minPrice]', data.pricing?.minPrice)
+    
+    if (data.images && data.images.length > 0) {
+      for (let i = 0; i < data.images.length; i++) {
+        if (data.images[i] instanceof File) {
+          formData.append('images', data.images[i])
+        }
+      }
+    }
+    return vendorApi.createService(formData)
+  }
+
+  const handleUpdateService = async (id, data) => {
+    const formData = new FormData()
+    formData.append('title', data.title)
+    formData.append('description', data.description || '')
+    formData.append('category', data.category)
+    formData.append('pricing[minPrice]', data.pricing?.minPrice)
+    
+    if (data.images && data.images.length > 0) {
+      for (let i = 0; i < data.images.length; i++) {
+        if (data.images[i] instanceof File) {
+          formData.append('images', data.images[i])
+        }
+      }
+    }
+    return vendorApi.updateService(id, formData)
+  }
+
+  return (
+    <ResourceListPage
+      title="Services"
+      fetcher={vendorApi.services}
+      createAction={handleCreateService}
+      updateAction={handleUpdateService}
+      deleteAction={vendorApi.deleteService}
+      columns={[
+        { key: 'image', header: 'Image', render: (row) => (
+          <img
+            src={row.gallery?.[0]?.url || '/logo.png'}
+            alt=""
+            className="h-10 w-10 rounded-md object-cover border border-slate-200"
+          />
+        ) },
+        { key: 'title', header: 'Service' },
+        { key: 'category', header: 'Category', render: (row) => row.category?.name || 'Category' },
+        { key: 'status', header: 'Status', render: (row) => <StatusBadge value={row.status} /> },
+      ]}
+      renderForm={(props) => {
+        const normalizedValues = {
+          ...props.initialValues,
+          category: props.initialValues?.category?._id || props.initialValues?.category || ''
+        }
+        return (
+          <SimpleJsonForm
+            {...props}
+            initialValues={normalizedValues}
+            fields={[
+              { name: 'title' },
+              { name: 'description', type: 'textarea' },
+              { name: 'category', type: 'select', options: categories },
+              { name: 'pricing.minPrice', type: 'number' },
+              { name: 'images', type: 'file', label: 'Service Images' }
+            ]}
+          />
+        )
+      }}
+    />
+  )
 }
 
 export function VendorLeadsPage() {

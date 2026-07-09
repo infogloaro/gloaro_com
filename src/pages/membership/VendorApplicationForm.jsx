@@ -13,12 +13,14 @@ import {
   UsersRound,
   ArrowRight,
   ShieldAlert,
-  ArrowLeft
+  ArrowLeft,
+  Clock
 } from 'lucide-react'
 import api from '../../api/axios'
 import LoadingScreen from '../../components/common/LoadingScreen'
 import { customerApi } from '../../api/customer'
 import toast from 'react-hot-toast'
+import StatusBadge from '../../components/common/StatusBadge'
 
 const BUSINESS_TYPES = ['Private Limited', 'Partnership', 'Sole Proprietorship', 'LLP', 'One Person Company', 'Other']
 
@@ -31,6 +33,9 @@ export default function VendorApplicationForm() {
 
   // Current Application details
   const [appId, setAppId] = useState(null)
+  const [isAlreadyApproved, setIsAlreadyApproved] = useState(false)
+  const [isAlreadySubmitted, setIsAlreadySubmitted] = useState(false)
+  const [app, setApp] = useState(null)
   
   // Step 1: Agreements
   const [step1, setStep1] = useState({
@@ -120,10 +125,19 @@ export default function VendorApplicationForm() {
         const appRes = await api.get('/vendor-applications/my-application')
         const application = appRes.data?.data
         if (application) {
+          setApp(application)
           setAppId(application._id)
           setStep(application.step || 1)
-          if (application.status !== 'draft') {
-            // Already submitted, approved, or rejected - redirect to status page
+          if (application.status === 'approved') {
+            setIsAlreadyApproved(true)
+            setLoading(false)
+            return
+          } else if (['submitted', 'under_review'].includes(application.status)) {
+            setIsAlreadySubmitted(true)
+            setLoading(false)
+            return
+          } else if (application.status !== 'draft') {
+            // Already submitted (other statuses, e.g., rejected) - redirect to status page
             navigate('/member/vendor-application-status')
             return
           }
@@ -308,6 +322,96 @@ export default function VendorApplicationForm() {
 
   if (loading) {
     return <LoadingScreen label="Setting up onboarding portal..." />
+  }
+
+  if (isAlreadyApproved) {
+    return (
+      <div className="flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+        <section className="w-full max-w-lg rounded-2xl border border-slate-200 bg-white p-8 text-center shadow-xl dark:border-slate-800 dark:bg-slate-900">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full p-3 shadow-inner bg-emerald-50 dark:bg-emerald-950/30">
+            <CheckCircle2 className="h-8 w-8 text-emerald-500" />
+          </div>
+          
+          <h2 className="mt-6 text-2xl font-black text-slate-900 dark:text-white">
+            Application Approved
+          </h2>
+          
+          <p className="mt-4 text-sm font-semibold leading-relaxed text-slate-500 dark:text-slate-400">
+            You are already approved as a verified vendor in the Gloaro Network!
+          </p>
+
+          <div className="mt-6 inline-flex flex-col items-center justify-center gap-2 rounded-xl bg-slate-50 border border-slate-100 p-4 w-full dark:bg-slate-950 dark:border-slate-800">
+            <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 text-center max-w-sm">
+              Your vendor profile is active. You can list products, manage orders, and edit your shop configuration from your dashboard.
+            </p>
+          </div>
+
+          <div className="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
+            <button
+              onClick={() => navigate('/member/products')}
+              className="inline-flex h-11 items-center justify-center gap-1.5 rounded-lg bg-[#0d4697] px-6 py-2.5 text-sm font-extrabold text-white hover:bg-blue-800 transition duration-150 ease-in-out shadow-md"
+            >
+              Manage Products
+              <ArrowRight className="h-4 w-4" />
+            </button>
+            <button
+              onClick={() => navigate('/member/vendor-application-status')}
+              className="inline-flex h-11 items-center justify-center gap-1.5 rounded-lg border border-slate-200 bg-white px-6 py-2.5 text-sm font-extrabold text-slate-700 hover:bg-slate-50 dark:bg-slate-800 dark:border-slate-700 dark:text-white dark:hover:bg-slate-750 transition duration-150 ease-in-out shadow-sm"
+            >
+              View Application Details
+            </button>
+          </div>
+        </section>
+      </div>
+    )
+  }
+
+  if (isAlreadySubmitted) {
+    return (
+      <div className="flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+        <section className="w-full max-w-lg rounded-2xl border border-slate-200 bg-white p-8 text-center shadow-xl dark:border-slate-800 dark:bg-slate-900">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full p-3 shadow-inner bg-blue-50 dark:bg-blue-950/30">
+            <Clock className="h-8 w-8 text-blue-600" />
+          </div>
+          
+          <h2 className="mt-6 text-2xl font-black text-slate-900 dark:text-white">
+            Application Submitted
+          </h2>
+          
+          <p className="mt-4 text-sm font-semibold leading-relaxed text-slate-500 dark:text-slate-400">
+            Your vendor application has already been submitted and is currently awaiting review.
+          </p>
+
+          <div className="mt-6 inline-flex flex-col items-center justify-center gap-2 rounded-xl bg-slate-50 border border-slate-100 p-4 w-full dark:bg-slate-950 dark:border-slate-800">
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-extrabold uppercase tracking-wider text-slate-400">
+                Current Status:
+              </span>
+              <StatusBadge value={app ? app.status : 'Submitted'} />
+            </div>
+            <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 text-center max-w-sm mt-1">
+              The Chapter Director is reviewing your credentials. You will be notified once the decision is finalized.
+            </p>
+          </div>
+
+          <div className="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
+            <button
+              onClick={() => navigate('/member/vendor-application-status')}
+              className="inline-flex h-11 items-center justify-center gap-1.5 rounded-lg bg-[#0d4697] px-6 py-2.5 text-sm font-extrabold text-white hover:bg-blue-800 transition duration-150 ease-in-out shadow-md"
+            >
+              Track Application Status
+              <ArrowRight className="h-4 w-4" />
+            </button>
+            <button
+              onClick={() => navigate('/member/dashboard')}
+              className="inline-flex h-11 items-center justify-center gap-1.5 rounded-lg border border-slate-200 bg-white px-6 py-2.5 text-sm font-extrabold text-slate-700 hover:bg-slate-50 dark:bg-slate-800 dark:border-slate-700 dark:text-white dark:hover:bg-slate-750 transition duration-150 ease-in-out shadow-sm"
+            >
+              Go to Dashboard
+            </button>
+          </div>
+        </section>
+      </div>
+    )
   }
 
   return (

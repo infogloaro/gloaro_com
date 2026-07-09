@@ -43,7 +43,11 @@ export default function ProfilePage() {
 
       // Fetch user's activity logs
       setLoadingActivity(true)
-      adminApi.adminActivity(user._id, { limit: 6 })
+      const fetchActivity = ['admin', 'superadmin'].includes(user.role)
+        ? adminApi.adminActivity(user._id, { limit: 6 })
+        : api.get('/users/activity', { params: { limit: 6 } })
+
+      fetchActivity
         .then((res) => {
           setActivity(res.data?.data || [])
         })

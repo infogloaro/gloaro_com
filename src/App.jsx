@@ -118,6 +118,7 @@ import MembershipDashboard from './pages/membership/MembershipDashboard'
 import MemberDashboard from './pages/membership/MemberDashboard'
 import VendorApplicationForm from './pages/membership/VendorApplicationForm'
 import VendorApplicationStatus from './pages/membership/VendorApplicationStatus'
+import MemberProductsPage from './pages/membership/MemberProductsPage'
 import {
   MembershipBenefitsPage,
   MembershipEventsPage,
@@ -303,6 +304,7 @@ function App() {
             <Route path="/member/dashboard" element={<MemberDashboard />} />
             <Route path="/member/vendor-application" element={<VendorApplicationForm />} />
             <Route path="/member/vendor-application-status" element={<VendorApplicationStatus />} />
+            <Route path="/member/products" element={<MemberProductsPage />} />
             <Route path="/member/profile" element={<MembershipProfilePage />} />
             <Route path="/member/settings" element={<MembershipProfilePage />} />
           </Route>

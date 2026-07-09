@@ -113,8 +113,8 @@ export default function ResourceListPage({
         actions={hasActions ? (row) => (
           <div className="flex gap-2">
             {renderActions?.(row, { reload: load }, { canViewSection, canCreate, canEdit, canDelete, hasOperation })}
-            {updateAction && renderForm && canEdit && <button onClick={() => { setEditing(row); setFormOpen(true) }} className="rounded-md border border-slate-200 px-3 py-1.5 text-xs font-bold">Edit</button>}
-            {deleteAction && canDelete && <button onClick={() => remove(row)} className="rounded-md border border-red-200 px-3 py-1.5 text-xs font-bold text-red-600">Delete</button>}
+            {updateAction && renderForm && canEdit && <button onClick={() => { setEditing(row); setFormOpen(true) }} className="rounded-md border border-[#0d4697] bg-white px-3 py-1.5 text-xs font-bold text-[#0d4697] hover:bg-blue-50 transition duration-150">Edit</button>}
+            {deleteAction && canDelete && <button onClick={() => remove(row)} className="rounded-md border border-red-500 bg-white px-3 py-1.5 text-xs font-bold text-red-500 hover:bg-red-50 transition duration-150">Delete</button>}
           </div>
         ) : undefined}
       />

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useAuth } from '../hooks/useAuth'
 import {
   BriefcaseBusiness,
   CalendarDays,
@@ -51,6 +52,7 @@ const getNetworkLink = (section) => {
 }
 
 export default function Navbar() {
+  const { isAuthenticated, user } = useAuth()
   const [open, setOpen] = useState(false)
   const [networkOpen, setNetworkOpen] = useState(false)
   const [mobileNetworkOpen, setMobileNetworkOpen] = useState(false)
@@ -79,7 +81,11 @@ export default function Navbar() {
           </div>
 
           <div className="ml-auto hidden items-center gap-4 text-[#0b469e] lg:flex">
-            <a href={loginLink('user', '/customer/profile')} aria-label="Account" className="flex items-center gap-1 text-sm font-medium"><img src={loginIcon} alt="" className="h-5 w-5 object-contain" /> Login</a>
+            {isAuthenticated ? (
+              <a href="/member/dashboard" aria-label="Account" className="flex items-center gap-1 text-sm font-medium"><img src={loginIcon} alt="" className="h-5 w-5 object-contain" /> {user?.name || 'Account'}</a>
+            ) : (
+              <a href={loginLink('user', '/member/dashboard')} aria-label="Account" className="flex items-center gap-1 text-sm font-medium"><img src={loginIcon} alt="" className="h-5 w-5 object-contain" /> Login</a>
+            )}
             <div className="relative"><button onClick={() => setOpen(!open)} className="flex h-8 items-center gap-2 rounded-md bg-[#0b469e] px-3 text-xs font-medium text-white"><PinIcon />Kallakurichy <span className="border-l border-white/40 pl-2">⌄</span><SearchIcon /></button>{open && <div className="absolute right-0 top-10 w-52 rounded-b-md bg-white p-3 shadow-xl"><p className="mb-2 flex items-center gap-1 text-xs font-medium text-[#f3a900]"><PinIcon /> Kallakurichy</p><input placeholder="Search City..." className="w-full rounded-md border border-slate-200 px-3 py-2 text-xs text-slate-600 outline-none focus:border-[#0b469e]" /></div>}</div>
           </div>
 
@@ -100,6 +106,17 @@ export default function Navbar() {
               <span className="text-lg leading-none">{mobileNetworkOpen ? '−' : '+'}</span>
             </button>
             {mobileNetworkOpen && <MobileGloaroNetworkMenu onNavigate={() => setOpen(false)} />}
+            {isAuthenticated ? (
+              <a onClick={() => setOpen(false)} href="/member/dashboard" className="flex items-center rounded-lg px-4 py-3 font-medium bg-[#0b469e]/10 text-[#0b469e] sm:col-span-2">
+                <img src={loginIcon} alt="" className="mr-2 h-4 w-4 object-contain brightness-0 filter" />
+                {user?.name || 'Account'}
+              </a>
+            ) : (
+              <a onClick={() => setOpen(false)} href={loginLink('user', '/member/dashboard')} className="flex items-center rounded-lg px-4 py-3 font-medium bg-[#0b469e]/10 text-[#0b469e] sm:col-span-2">
+                <img src={loginIcon} alt="" className="mr-2 h-4 w-4 object-contain brightness-0 filter" />
+                Login
+              </a>
+            )}
             {navItems.map(([icon, label, href, colors, iconClass = '']) => <a onClick={() => setOpen(false)} key={label} href={href} className={`flex items-center rounded-lg px-4 py-3 font-medium ${colors}`}><img src={icon} alt="" className={`mr-2 h-4 w-4 object-contain ${iconClass}`} />{label}</a>)}
           </div>
           <div className="mt-4 rounded-lg border border-slate-200 p-3"><p className="mb-2 flex items-center gap-1 text-xs font-medium text-[#f3a900]"><PinIcon /> Kallakurichy</p><input placeholder="Search City..." className="w-full rounded-md border border-slate-200 px-3 py-2 text-sm outline-none" /></div>
