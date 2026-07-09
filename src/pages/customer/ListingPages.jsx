@@ -9,7 +9,7 @@ import LoadingScreen from '../../components/common/LoadingScreen'
 import StatusBadge from '../../components/common/StatusBadge'
 import FormField from '../../components/forms/FormField'
 import { useApi } from '../../hooks/useApi'
-import { formatCurrency, formatDate, getList } from '../../utils/format'
+import { formatCurrency, formatDate, getList, getPagination } from '../../utils/format'
 import ResourceListPage from '../shared/ResourceListPage'
 import NotificationsPage from '../shared/NotificationsPage'
 import ProfilePage from '../shared/ProfilePage'
@@ -484,11 +484,285 @@ export function VendorsPage() {
 }
 
 export function ProductsPage() {
-  return <div className="mx-auto max-w-7xl px-5 py-8"><ResourceListPage title="Products" fetcher={customerApi.products} columns={[{ key: 'title', header: 'Product' }, { key: 'vendor', header: 'Vendor', render: (row) => row.vendor?.businessName }, { key: 'price', header: 'Price', render: (row) => formatCurrency(row.pricing?.sellingPrice) }]} /></div>
+  const [page, setPage] = useState(1)
+  const [search, setSearch] = useState('')
+  const [category, setCategory] = useState('')
+  const [categories, setCategories] = useState([])
+  const [payload, setPayload] = useState(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    customerApi.categories({ type: 'product', limit: 100 })
+      .then((res) => {
+        setCategories(res.data?.data || res.data || [])
+      })
+      .catch(() => {})
+  }, [])
+
+  useEffect(() => {
+    setLoading(true)
+    customerApi.products({ page, limit: 12, search: search || undefined, category: category || undefined })
+      .then((res) => {
+        setPayload(res.data)
+      })
+      .finally(() => {
+        setLoading(false)
+      })
+  }, [page, search, category])
+
+  const productsList = getList(payload)
+  const pagination = getPagination(payload)
+
+  return (
+    <div className="mx-auto max-w-7xl px-5 py-8">
+      <div className="mb-8 flex flex-col justify-between gap-4 lg:flex-row lg:items-center">
+        <div>
+          <h1 className="font-playfair text-4xl font-bold text-[#0d4697]">Products</h1>
+          <p className="mt-1 text-sm font-semibold text-slate-500">Explore verified items from our trusted local partners.</p>
+        </div>
+        <div className="flex flex-col gap-3 sm:flex-row">
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => { setSearch(e.target.value); setPage(1) }}
+            placeholder="Search products..."
+            className="h-10 w-full rounded-md border border-slate-200 bg-white px-4 text-sm font-bold text-slate-850 outline-none focus:border-[#0d4697] sm:w-64"
+          />
+          <select
+            value={category}
+            onChange={(e) => { setCategory(e.target.value); setPage(1) }}
+            className="h-10 rounded-md border border-slate-200 bg-white px-3 text-sm font-bold text-slate-850 outline-none focus:border-[#0d4697]"
+          >
+            <option value="">All Categories</option>
+            {categories.map((cat) => (
+              <option key={cat._id} value={cat._id}>{cat.name}</option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      {loading ? (
+        <div className="flex h-60 items-center justify-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#0d4697]" />
+        </div>
+      ) : productsList.length === 0 ? (
+        <EmptyState title="No products found" description="Try searching for another product or selecting a different category." />
+      ) : (
+        <>
+          <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+            {productsList.map((product) => {
+              const discount = product.pricing?.mrp > product.pricing?.sellingPrice 
+                ? Math.round(((product.pricing.mrp - product.pricing.sellingPrice) / product.pricing.mrp) * 100) 
+                : 0
+              return (
+                <article key={product._id} className="group overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm hover:shadow-md transition duration-250 ease-in-out flex flex-col justify-between">
+                  <div>
+                    <div className="relative overflow-hidden aspect-video bg-slate-100">
+                      <img 
+                        src={product.images?.[0]?.url || '/logo.png'} 
+                        alt={product.title} 
+                        className="h-full w-full object-cover group-hover:scale-105 transition duration-300" 
+                      />
+                      {discount > 0 && (
+                        <span className="absolute left-3 top-3 rounded-full bg-emerald-500 px-2 py-0.5 text-[10px] font-black uppercase tracking-wider text-white">
+                          {discount}% OFF
+                        </span>
+                      )}
+                    </div>
+                    <div className="p-4">
+                      <span className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-400">
+                        {product.category?.name || 'Product'}
+                      </span>
+                      <h3 className="mt-1 text-sm font-bold text-slate-900 line-clamp-1 group-hover:text-[#0d4697] transition">
+                        {product.title}
+                      </h3>
+                      <p className="mt-0.5 text-[11px] font-semibold text-slate-500">
+                        Seller: {product.vendor?.businessName || 'Merchant'}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="border-t border-slate-100 p-4 pt-3 flex items-center justify-between mt-auto">
+                    <div className="flex flex-col">
+                      {product.pricing?.mrp > product.pricing?.sellingPrice && (
+                        <span className="text-[10px] font-semibold text-slate-400 line-through">
+                          {formatCurrency(product.pricing.mrp)}
+                        </span>
+                      )}
+                      <span className="text-sm font-black text-slate-900">
+                        {formatCurrency(product.pricing?.sellingPrice)}
+                      </span>
+                    </div>
+                    <Link 
+                      to={`/products/${product._id}`} 
+                      className="rounded-md bg-[#0d4697] px-3 py-1.5 text-xs font-extrabold text-white hover:bg-blue-800 transition"
+                    >
+                      View Details
+                    </Link>
+                  </div>
+                </article>
+              )
+            })}
+          </div>
+
+          {pagination.totalPages > 1 && (
+            <div className="mt-10 flex items-center justify-center gap-4">
+              <button
+                disabled={page <= 1}
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                className="h-10 rounded-md border border-slate-200 bg-white px-4 text-sm font-bold text-slate-755 hover:bg-slate-50 disabled:opacity-50"
+              >
+                Previous
+              </button>
+              <span className="text-sm font-bold text-slate-550">
+                Page {pagination.page} of {pagination.totalPages}
+              </span>
+              <button
+                disabled={page >= pagination.totalPages}
+                onClick={() => setPage((p) => Math.min(pagination.totalPages, p + 1))}
+                className="h-10 rounded-md border border-slate-200 bg-white px-4 text-sm font-bold text-slate-755 hover:bg-slate-50 disabled:opacity-50"
+              >
+                Next
+              </button>
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  )
 }
 
 export function ServicesPage() {
-  return <div className="mx-auto max-w-7xl px-5 py-8"><ResourceListPage title="Services" fetcher={customerApi.services} columns={[{ key: 'title', header: 'Service' }, { key: 'vendor', header: 'Vendor', render: (row) => row.vendor?.businessName }, { key: 'status', header: 'Status', render: (row) => <StatusBadge value={row.status} /> }]} /></div>
+  const [page, setPage] = useState(1)
+  const [search, setSearch] = useState('')
+  const [category, setCategory] = useState('')
+  const [categories, setCategories] = useState([])
+  const [payload, setPayload] = useState(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    customerApi.categories({ type: 'service', limit: 100 })
+      .then((res) => {
+        setCategories(res.data?.data || res.data || [])
+      })
+      .catch(() => {})
+  }, [])
+
+  useEffect(() => {
+    setLoading(true)
+    customerApi.services({ page, limit: 12, search: search || undefined, category: category || undefined })
+      .then((res) => {
+        setPayload(res.data)
+      })
+      .finally(() => {
+        setLoading(false)
+      })
+  }, [page, search, category])
+
+  const servicesList = getList(payload)
+  const pagination = getPagination(payload)
+
+  return (
+    <div className="mx-auto max-w-7xl px-5 py-8">
+      <div className="mb-8 flex flex-col justify-between gap-4 lg:flex-row lg:items-center">
+        <div>
+          <h1 className="font-playfair text-4xl font-bold text-[#0d4697]">Services</h1>
+          <p className="mt-1 text-sm font-semibold text-slate-500">Discover premium services offered by certified professionals.</p>
+        </div>
+        <div className="flex flex-col gap-3 sm:flex-row">
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => { setSearch(e.target.value); setPage(1) }}
+            placeholder="Search services..."
+            className="h-10 w-full rounded-md border border-slate-200 bg-white px-4 text-sm font-bold text-slate-855 outline-none focus:border-[#0d4697] sm:w-64"
+          />
+          <select
+            value={category}
+            onChange={(e) => { setCategory(e.target.value); setPage(1) }}
+            className="h-10 rounded-md border border-slate-200 bg-white px-3 text-sm font-bold text-slate-855 outline-none focus:border-[#0d4697]"
+          >
+            <option value="">All Categories</option>
+            {categories.map((cat) => (
+              <option key={cat._id} value={cat._id}>{cat.name}</option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      {loading ? (
+        <div className="flex h-60 items-center justify-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#0d4697]" />
+        </div>
+      ) : servicesList.length === 0 ? (
+        <EmptyState title="No services found" description="Try searching for another service or selecting a different category." />
+      ) : (
+        <>
+          <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+            {servicesList.map((service) => (
+              <article key={service._id} className="group overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm hover:shadow-md transition duration-250 ease-in-out flex flex-col justify-between">
+                <div>
+                  <div className="relative overflow-hidden aspect-video bg-slate-100">
+                    <img 
+                      src={service.gallery?.[0]?.url || '/logo.png'} 
+                      alt={service.title} 
+                      className="h-full w-full object-cover group-hover:scale-105 transition duration-300" 
+                    />
+                  </div>
+                  <div className="p-4">
+                    <span className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-400">
+                      {service.category?.name || 'Service'}
+                    </span>
+                    <h3 className="mt-1 text-sm font-bold text-slate-900 line-clamp-1 group-hover:text-[#0d4697] transition">
+                      {service.title}
+                    </h3>
+                    <p className="mt-0.5 text-[11px] font-semibold text-slate-500">
+                      Provider: {service.vendor?.businessName || 'Professional'}
+                    </p>
+                  </div>
+                </div>
+                <div className="border-t border-slate-100 p-4 pt-3 flex items-center justify-between mt-auto">
+                  <div className="flex flex-col">
+                    <span className="text-[10px] font-semibold text-slate-400">Starting Price</span>
+                    <span className="text-sm font-black text-slate-900">
+                      {formatCurrency(service.pricing?.minPrice)}
+                    </span>
+                  </div>
+                  <Link 
+                    to={`/services/${service._id}`} 
+                    className="rounded-md bg-[#0d4697] px-3 py-1.5 text-xs font-extrabold text-white hover:bg-blue-800 transition"
+                  >
+                    View Details
+                  </Link>
+                </div>
+              </article>
+            ))}
+          </div>
+
+          {pagination.totalPages > 1 && (
+            <div className="mt-10 flex items-center justify-center gap-4">
+              <button
+                disabled={page <= 1}
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                className="h-10 rounded-md border border-slate-200 bg-white px-4 text-sm font-bold text-slate-755 hover:bg-slate-50 disabled:opacity-50"
+              >
+                Previous
+              </button>
+              <span className="text-sm font-bold text-slate-550">
+                Page {pagination.page} of {pagination.totalPages}
+              </span>
+              <button
+                disabled={page >= pagination.totalPages}
+                onClick={() => setPage((p) => Math.min(pagination.totalPages, p + 1))}
+                className="h-10 rounded-md border border-slate-200 bg-white px-4 text-sm font-bold text-slate-755 hover:bg-slate-50 disabled:opacity-50"
+              >
+                Next
+              </button>
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  )
 }
 
 export function DetailPage({ type }) {

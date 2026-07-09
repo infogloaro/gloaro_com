@@ -170,6 +170,7 @@ export const memberNav = [
   ['Dashboard', '/member/dashboard', LayoutDashboard],
   ['Vendor Application', '/member/vendor-application', PlusCircle],
   ['Application Status', '/member/vendor-application-status', ClipboardList],
+  ['Products', '/member/products', Package],
   ['Profile', '/member/profile', Users],
   ['Settings', '/member/settings', Settings],
 ]
