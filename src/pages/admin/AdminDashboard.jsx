@@ -9,6 +9,7 @@ import DataTable from '../../components/tables/DataTable'
 import { useAuth } from '../../hooks/useAuth'
 import { useApi } from '../../hooks/useApi'
 import { formatCurrency } from '../../utils/format'
+import JurisdictionCard from '../../components/common/JurisdictionCard'
 
 const monthLabel = (item) => `${item._id?.month || ''}/${item._id?.year || ''}`
 const statusValue = (value) => Number(value || 0) > 0 ? value : 'Pending'
@@ -46,6 +47,7 @@ export default function AdminDashboard() {
 
   return (
     <div className="space-y-6">
+      <JurisdictionCard />
       {showOverview && <section className="grid gap-4 md:grid-cols-3">
         {overviewCards.slice(0, 3).map(([, label, value, helper, Icon]) => <StatCard key={label} label={label} value={value} helper={helper} icon={Icon} />)}
       </section>}

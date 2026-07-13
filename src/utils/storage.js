@@ -10,6 +10,21 @@ export const storage = {
       return null
     }
   },
+  getPermissions: () => {
+    const raw = localStorage.getItem('gloaro_permissions') || sessionStorage.getItem('gloaro_permissions')
+    if (!raw) return null
+    try {
+      return JSON.parse(raw)
+    } catch {
+      return null
+    }
+  },
+  setPermissions: (permissions, remember = true) => {
+    const primary = remember ? localStorage : sessionStorage
+    const secondary = remember ? sessionStorage : localStorage
+    secondary.removeItem('gloaro_permissions')
+    primary.setItem('gloaro_permissions', JSON.stringify(permissions))
+  },
   setSession: ({ user, accessToken, refreshToken }, remember = true) => {
     const primary = remember ? localStorage : sessionStorage
     const secondary = remember ? sessionStorage : localStorage
@@ -25,6 +40,7 @@ export const storage = {
       store.removeItem('gloaro_user')
       store.removeItem('gloaro_access_token')
       store.removeItem('gloaro_refresh_token')
+      store.removeItem('gloaro_permissions')
     })
   },
 }

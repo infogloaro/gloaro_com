@@ -3,7 +3,7 @@ import toast from 'react-hot-toast'
 import { io } from 'socket.io-client'
 import { adminApi } from '../api/admin'
 import { authApi } from '../api/auth'
-import { API_BASE_URL } from '../api/axios'
+import api, { API_BASE_URL } from '../api/axios'
 import { isAdminRole } from '../constants/adminRoles'
 import { storage } from '../utils/storage'
 import { createPermissionHelpers } from '../utils/permissions'
@@ -14,7 +14,7 @@ const socketUrl = API_BASE_URL.replace('/api/v1', '')
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(() => storage.getUser())
   const [loading, setLoading] = useState(true)
-  const [permissionConfig, setPermissionConfig] = useState(() => (isAdminRole(storage.getUser()?.role) ? undefined : null))
+  const [permissionConfig, setPermissionConfig] = useState(() => storage.getPermissions() || (storage.getUser() ? undefined : null))
   const socketRef = useRef(null)
 
   const login = useCallback(async (payload, remember = true) => {
@@ -22,7 +22,7 @@ export function AuthProvider({ children }) {
     const data = response.data.data
     storage.setSession(data, remember)
     setUser(data.user)
-    setPermissionConfig(isAdminRole(data.user?.role) ? undefined : null)
+    setPermissionConfig(data.user ? undefined : null)
     toast.success('Signed in successfully')
     return data.user
   }, [])
@@ -46,6 +46,18 @@ export function AuthProvider({ children }) {
     toast.success('Logged out')
   }, [])
 
+  const refreshUser = useCallback(async () => {
+    try {
+      const response = await authApi.me()
+      const nextUser = response.data.data?.user || response.data.data
+      setUser(nextUser)
+      setPermissionConfig(nextUser ? undefined : null)
+      return nextUser
+    } catch (err) {
+      console.error('Error refreshing user context:', err)
+    }
+  }, [])
+
   useEffect(() => {
     const hydrate = async () => {
       const initialToken = storage.getAccessToken()
@@ -61,7 +73,7 @@ export function AuthProvider({ children }) {
         }
         const nextUser = response.data.data?.user || response.data.data
         setUser(nextUser)
-        setPermissionConfig(isAdminRole(nextUser?.role) ? undefined : null)
+        setPermissionConfig(nextUser ? undefined : null)
       } catch {
         if (storage.getAccessToken() !== initialToken) {
           return
@@ -80,24 +92,32 @@ export function AuthProvider({ children }) {
   }, [])
 
   useEffect(() => {
-    if (!user || !isAdminRole(user.role)) return
+    if (!user?._id) return
+    if (permissionConfig !== undefined) return
 
     let mounted = true
 
-    adminApi.roleConfiguration(user.role)
+    api.get('/permissions/my')
       .then((response) => {
         if (!mounted) return
-        setPermissionConfig(response.data?.data || null)
+        const data = response.data?.data || null
+        setPermissionConfig(data)
+        storage.setPermissions(data)
       })
       .catch(() => {
         if (!mounted) return
-        setPermissionConfig(null)
+        const cached = storage.getPermissions()
+        if (cached) {
+          setPermissionConfig(cached)
+        } else {
+          setPermissionConfig(null)
+        }
       })
 
     return () => {
       mounted = false
     }
-  }, [user])
+  }, [user?._id, permissionConfig])
 
   useEffect(() => {
     const token = storage.getAccessToken()
@@ -115,7 +135,7 @@ export function AuthProvider({ children }) {
   }, [user])
 
   const permissionHelpers = useMemo(() => createPermissionHelpers(user, permissionConfig), [user, permissionConfig])
-  const permissionsLoading = Boolean(user && isAdminRole(user.role) && permissionConfig === undefined)
+  const permissionsLoading = Boolean(user && permissionConfig === undefined)
 
   const value = useMemo(() => ({
     user,
@@ -127,9 +147,10 @@ export function AuthProvider({ children }) {
     login,
     register,
     logout,
+    refreshUser,
     socket: socketRef.current,
     ...permissionHelpers,
-  }), [user, loading, permissionsLoading, permissionConfig, login, register, logout, permissionHelpers, socketRef.current])
+  }), [user, loading, permissionsLoading, permissionConfig, login, register, logout, refreshUser, permissionHelpers, socketRef.current])
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
