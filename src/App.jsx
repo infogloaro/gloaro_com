@@ -1,6 +1,6 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
-import { adminNav, customerNav, membershipNav, memberNav, vendorNav, secretaryNav, stateDirectorNav, districtDirectorNav, chapterDirectorNav, presidentNav, vicePresidentNav } from './constants/navigation'
+import { adminNav, customerNav, membershipNav, memberNav, vendorNav, secretaryNav, regionDirectorNav, stateDirectorNav, districtDirectorNav, chapterDirectorNav, presidentNav, vicePresidentNav } from './constants/navigation'
 import DashboardLayout from './layouts/DashboardLayout'
 import PublicLayout from './layouts/PublicLayout'
 import ProtectedRoute from './routes/ProtectedRoute'
@@ -346,6 +346,19 @@ function App() {
             <Route path="/secretary/documents" element={<DocumentsPage />} />
             <Route path="/secretary/reports" element={<ReportsPage />} />
             <Route path="/secretary/settings" element={<SettingsPage />} />
+          </Route>
+        </Route>
+
+        <Route element={<ProtectedRoute roles={['region_director']} />}>
+          <Route element={<DashboardLayout navItems={regionDirectorNav} title="Region Director Console" />}>
+            <Route path="/region-director" element={<Navigate to="/region-director/dashboard" replace />} />
+            <Route path="/region-director/dashboard" element={<AdminDashboard />} />
+            <Route path="/region-director/locations" element={<LocationsManagementPage />} />
+            <Route path="/region-director/state-directors" element={<AdminManagementPage />} />
+            <Route path="/region-director/memberships" element={<AdminMembershipsPage />} />
+            <Route path="/region-director/approved-vendors" element={<ApprovedVendorsPage />} />
+            <Route path="/region-director/reports" element={<EnterpriseReportBuilderPage />} />
+            <Route path="/region-director/settings" element={<AdminSettingsPage />} />
           </Route>
         </Route>
 

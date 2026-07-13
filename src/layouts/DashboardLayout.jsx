@@ -70,18 +70,18 @@ export default function DashboardLayout({ navItems = [], title = 'Dashboard' }) 
       ['Settings', '/admin/settings', Settings]
     ],
     region_director: [
-      ['Dashboard', '/admin', LayoutDashboard],
+      ['Dashboard', '/region-director/dashboard', LayoutDashboard],
       {
         label: 'Organization Master',
         icon: Building2,
         children: [
-          ['States', '/admin/locations', MapPinned],
+          ['States', '/region-director/locations', MapPinned],
         ],
       },
-      ['State Directors', '/admin/users', Users],
-      ['Memberships', '/admin/memberships', CreditCard],
-      ['Approved Vendors', '/admin/approved-vendors', Building2],
-      ['Reports', '/admin/reports', FileBarChart]
+      ['State Directors', '/region-director/state-directors', Users],
+      ['Memberships', '/region-director/memberships', CreditCard],
+      ['Approved Vendors', '/region-director/approved-vendors', Building2],
+      ['Reports', '/region-director/reports', FileBarChart]
     ],
     state_director: [
       ['Dashboard', '/state-director/dashboard', LayoutDashboard],

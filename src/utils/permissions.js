@@ -313,6 +313,7 @@ export function createPermissionHelpers(user, permissionConfig = null) {
 
 export function getDashboardRoute(role) {
   const cleanRole = String(role || '').toLowerCase().replace(/\s+/g, '')
+  if (cleanRole === 'region_director') return '/region-director/dashboard'
   if (cleanRole === 'state_director') return '/state-director/dashboard'
   if (cleanRole === 'district_director') return '/district-director/dashboard'
   if (cleanRole === 'executive_director') return '/chapter-director/dashboard'
@@ -323,7 +324,7 @@ export function getDashboardRoute(role) {
   
   const adminRoles = [
     'superadmin', 'admin', 'franchise_admin', 'ecommerce_admin', 'marketplace_admin',
-    'digital_marketing_admin', 'training_admin', 'finance_admin', 'region_director',
+    'digital_marketing_admin', 'training_admin', 'finance_admin',
     'launch_director', 'direct_consultant', 'operation_vice_president',
     'membership_verification_admin', 'custom_admin'
   ]

@@ -311,3 +311,19 @@ export const vicePresidentNav = [
   ['Reports', '/vice-president/reports', FileBarChart],
 ]
 
+export const regionDirectorNav = [
+  ['Dashboard', '/region-director/dashboard', LayoutDashboard],
+  {
+    label: 'Organization Master',
+    icon: Building2,
+    children: [
+      ['States', '/region-director/locations', MapPinned],
+    ],
+  },
+  ['State Directors', '/region-director/state-directors', Users],
+  ['Memberships', '/region-director/memberships', CreditCard],
+  ['Approved Vendors', '/region-director/approved-vendors', Building2],
+  ['Reports', '/region-director/reports', FileBarChart],
+]
+
+
