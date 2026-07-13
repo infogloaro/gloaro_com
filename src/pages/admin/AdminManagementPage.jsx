@@ -4,6 +4,7 @@ import { Copy, Eye, EyeOff, KeyRound, LogIn, Plus, ShieldCheck, UserCog } from '
 import { adminApi } from '../../api/admin'
 import api from '../../api/axios'
 import Modal from '../../components/common/Modal'
+import UserPermissionsModal from '../../components/common/UserPermissionsModal'
 import LoadingScreen from '../../components/common/LoadingScreen'
 import SearchBar from '../../components/common/SearchBar'
 import StatusBadge from '../../components/common/StatusBadge'
@@ -157,6 +158,7 @@ export default function AdminManagementPage({ role: overrideRole }) {
   const [editing, setEditing] = useState(null)
   const [form, setForm] = useState(emptyForm)
   const [saving, setSaving] = useState(false)
+  const [selectedPermUser, setSelectedPermUser] = useState(null)
 
   const CREATOR_CHILD_ROLE = useMemo(() => ({
     superadmin: 'admin',
@@ -437,7 +439,8 @@ const saveAdmin = async () => {
               <button onClick={() => viewAdmin(row)} className="rounded-md border border-slate-200 px-2 py-1.5 text-xs font-bold text-slate-900"><Eye className="h-3.5 w-3.5" /></button>
               <button onClick={() => openEdit(row)} className="rounded-md border border-slate-200 px-3 py-1.5 text-xs font-bold text-slate-900">Edit</button>
               <button onClick={() => cloneAdmin(row)} className="rounded-md border border-slate-200 px-2 py-1.5 text-xs font-bold text-slate-900"><Copy className="h-3.5 w-3.5" /></button>
-              <button onClick={() => setAdminStatus(row, row.isSuspended ? 'activate' : 'suspend')} className="rounded-md border border-slate-200 px-3 py-1.5 text-xs font-bold text-slate-900">{row.isSuspended ? 'Activate' : 'Suspend'}</button>
+               <button onClick={() => setAdminStatus(row, row.isSuspended ? 'activate' : 'suspend')} className="rounded-md border border-slate-200 px-3 py-1.5 text-xs font-bold text-slate-900">{row.isSuspended ? 'Activate' : 'Suspend'}</button>
+              <button onClick={() => setSelectedPermUser(row)} className="rounded-md border border-slate-200 px-3 py-1.5 text-xs font-bold text-[#0d4697]">Permissions</button>
               <button onClick={() => resetPassword(row)} className="rounded-md border border-slate-200 px-2 py-1.5 text-xs font-bold text-slate-900"><KeyRound className="h-3.5 w-3.5" /></button>
               <button onClick={() => loginAs(row)} className="rounded-md border border-blue-200 px-2 py-1.5 text-xs font-bold text-[#0d4697]"><LogIn className="h-3.5 w-3.5" /></button>
               {row.role !== 'superadmin' && <button onClick={() => deleteAdmin(row)} className="rounded-md border border-red-200 px-3 py-1.5 text-xs font-bold text-red-600">Delete</button>}
@@ -453,6 +456,14 @@ const saveAdmin = async () => {
       <Modal open={Boolean(viewing)} title={childRole ? `${roleLabel(childRole)} Details` : 'Admin Details'} onClose={() => setViewing(null)} maxWidth="max-w-4xl">
         {viewing && <AdminDetails admin={viewing} activity={activity} />}
       </Modal>
+
+      {selectedPermUser && (
+        <UserPermissionsModal 
+          userId={selectedPermUser._id} 
+          userName={selectedPermUser.name} 
+          onClose={() => setSelectedPermUser(null)} 
+        />
+      )}
     </section>
   )
 }

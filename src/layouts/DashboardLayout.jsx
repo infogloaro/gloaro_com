@@ -1,6 +1,6 @@
-import { ChevronDown, ChevronLeft, Menu, Moon, Search, Sun, LayoutDashboard, Users, FileBarChart, Settings, CreditCard, Building2, MapPinned, CalendarDays, FileText } from 'lucide-react'
+import { ChevronDown, ChevronLeft, Menu, Moon, Search, Sun, LayoutDashboard, Users, FileBarChart, Settings, CreditCard, Building2, MapPinned, CalendarDays, FileText, Volume2, Handshake, Ticket, Clock, Bell, User, Package, Star, ToggleLeft, ShoppingBag, BriefcaseBusiness, Heart, PlusCircle, TrendingUp, ClipboardList } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { NavLink, Outlet, useLocation } from 'react-router-dom'
+import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import logo from '../assets/signup_logo.png'
 import { useAuth } from '../hooks/useAuth'
 import { storage } from '../utils/storage'
@@ -143,11 +143,21 @@ export default function DashboardLayout({ navItems = [], title = 'Dashboard' }) 
     ],
     vice_president: [
       ['Dashboard', '/vice-president/dashboard', LayoutDashboard],
-      ['Secretaries', '/vice-president/secretaries', Users],
+      ['Chapter', '/member/dashboard', Building2],
       ['Members', '/vice-president/members', Users],
       ['Member Registration', '/vice-president/register-member', Users],
+      ['Secretaries', '/vice-president/secretaries', Users],
+      ['Meetings', '/member/dashboard', CalendarDays],
+      ['Attendance', '/member/dashboard', FileText],
+      ['Business Wall', '/member/dashboard', Volume2],
+      ['Referrals', '/member/dashboard', Handshake],
+      ['Visitors', '/member/dashboard', Ticket],
+      ['One-to-Ones', '/member/dashboard', Clock],
       ['Approved Vendors', '/admin/approved-vendors', Building2],
-      ['Reports', '/vice-president/reports', FileBarChart]
+      ['Announcements', '/member/dashboard', Bell],
+      ['Reports', '/vice-president/reports', FileBarChart],
+      ['Profile', '/profile', User],
+      ['Settings', '/vice-president/settings', Settings]
     ],
     secretary: [
       ['Dashboard', '/secretary/dashboard', LayoutDashboard],
@@ -169,11 +179,51 @@ export default function DashboardLayout({ navItems = [], title = 'Dashboard' }) 
       bypassEnabledCheck = true
     }
 
+    const isApprovedVendor = user?.role === 'vendor' || user?.vendorProfile?.status === 'approved';
+
     const visibleNavItems = activeNavItems
       .map((item) => {
         if (Array.isArray(item)) return (bypassEnabledCheck || isSidebarItemEnabled(item[0])) ? item : null
-        const children = item.children.filter(([label]) => bypassEnabledCheck || isSidebarItemEnabled(label))
-        return children.length ? { ...item, children } : null
+        
+        let children = [...item.children];
+
+        if (item.label === 'Marketplace') {
+          if (isApprovedVendor) {
+            children = [
+              ['Dashboard', '/member/dashboard/vendor-analytics', LayoutDashboard],
+              ['My Business', '/member/dashboard/my-business', Building2],
+              ['Products', '/member/dashboard/products', Package],
+              ['Services', '/member/dashboard/services', BriefcaseBusiness],
+              ['Leads', '/member/dashboard/leads', TrendingUp],
+              ['Orders', '/member/dashboard/orders', ShoppingBag],
+              ['Reviews', '/member/dashboard/reviews', Star],
+              ['Payments', '/member/dashboard/payments', CreditCard],
+              ['Subscription', '/member/dashboard/subscription', ToggleLeft],
+              ['Analytics', '/member/dashboard/vendor-analytics', FileBarChart]
+            ];
+          } else {
+            children = [
+              ['Products', '/products', ShoppingBag],
+              ['Services', '/services', BriefcaseBusiness],
+              ['Vendors', '/vendors', Users],
+              ['Become a Vendor', '/member/vendor-application', PlusCircle],
+              ['My Vendor Application', '/member/vendor-application', FileText],
+              ['Application Status', '/member/vendor-application-status', ClipboardList],
+              ['Wishlist', '/customer/wishlist', Heart],
+              ['Orders', '/customer/wishlist', ShoppingBag],
+            ];
+          }
+        }
+
+        const isMarketplaceGroup = item.label === 'Marketplace';
+        const isMemberConsole = title === 'Member Console' || location.pathname.includes('/member');
+        const filteredChildren = children.filter(([label]) => 
+          bypassEnabledCheck || 
+          (isApprovedVendor && isMarketplaceGroup) || 
+          isMemberConsole ||
+          isSidebarItemEnabled(label)
+        )
+        return filteredChildren.length ? { ...item, children: filteredChildren } : null
       })
       .filter(Boolean)
 
@@ -187,7 +237,7 @@ export default function DashboardLayout({ navItems = [], title = 'Dashboard' }) 
         return null
       })
       .filter(Boolean)
-  }, [isSidebarItemEnabled, navItems, query, user?.role, ROLE_NAV_ITEMS])
+  }, [isSidebarItemEnabled, navItems, query, user?.role, ROLE_NAV_ITEMS, user?.vendorProfile?.status])
 
   const pageTitle = useMemo(() => {
     for (const item of navItems) {
@@ -232,6 +282,7 @@ export default function DashboardLayout({ navItems = [], title = 'Dashboard' }) 
           </label>
         </div>
       )}
+
       <nav className="min-h-0 flex-1 space-y-1 overflow-y-auto p-3">
         {filteredNav.map((item) => {
           if (!Array.isArray(item)) {

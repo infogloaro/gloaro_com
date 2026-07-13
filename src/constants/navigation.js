@@ -30,6 +30,17 @@ import {
   Workflow,
   PlusCircle,
   ClipboardList,
+  Gem,
+  TrendingUp,
+  Volume2,
+  Handshake,
+  Trophy,
+  Calendar,
+  Sparkles,
+  QrCode,
+  MessageSquare,
+  ClipboardCheck,
+  User,
 } from 'lucide-react'
 
 export const adminNav = [
@@ -167,12 +178,75 @@ export const membershipNav = [
 ]
 
 export const memberNav = [
-  ['Dashboard', '/member/dashboard', LayoutDashboard],
-  ['Vendor Application', '/member/vendor-application', PlusCircle],
-  ['Application Status', '/member/vendor-application-status', ClipboardList],
-  ['Products', '/member/products', Package],
-  ['Profile', '/member/profile', Users],
-  ['Settings', '/member/settings', Settings],
+  {
+    label: 'Dashboard',
+    icon: LayoutDashboard,
+    children: [
+      ['Overview', '/member/dashboard', Gem],
+      ['Analytics (BI)', '/member/dashboard/analytics', FileBarChart],
+      ['Chapter Performance', '/member/dashboard/performance', TrendingUp],
+    ],
+  },
+  {
+    label: 'Community',
+    icon: Network,
+    children: [
+      ['Business Wall', '/member/dashboard/wall', Volume2],
+      ['Referrals', '/member/dashboard/referrals', Handshake],
+      ['Business Directory', '/member/dashboard/directory', Users],
+      ['Leaderboard', '/member/dashboard/leaderboard', Trophy],
+      ['Visitors', '/member/dashboard/visitors', Ticket],
+    ],
+  },
+  {
+    label: 'Marketplace',
+    icon: ShoppingBag,
+    children: [
+      ['Products', '/products', ShoppingBag],
+      ['Services', '/services', BriefcaseBusiness],
+      ['Vendors', '/vendors', Users],
+      ['Become a Vendor', '/member/vendor-application', PlusCircle],
+      ['My Vendor Application', '/member/vendor-application', FileText],
+      ['Application Status', '/member/vendor-application-status', ClipboardList],
+      ['Wishlist', '/customer/wishlist', Heart],
+      ['Orders', '/customer/wishlist', ShoppingBag],
+    ],
+  },
+  {
+    label: 'Meetings',
+    icon: CalendarDays,
+    children: [
+      ['Meetings & Attendance', '/member/dashboard/meetings', ClipboardList],
+      ['One-to-Ones', '/member/dashboard/one-to-ones', Users],
+      ['Unified Calendar', '/member/dashboard/calendar', Calendar],
+    ],
+  },
+  {
+    label: 'Chapter',
+    icon: Building2,
+    children: [
+      ['My Chapter', '/member/dashboard/chapter', Building2],
+      ['AI Insights', '/member/dashboard/digital-card', Sparkles],
+      ['Digital Member Card', '/member/dashboard/digital-card', QrCode],
+    ],
+  },
+  {
+    label: 'Collaboration',
+    icon: MessageSquare,
+    children: [
+      ['Lobby Chat', '/member/dashboard/chat', MessageSquare],
+      ['Tasks', '/member/dashboard/tasks', ClipboardCheck],
+      ['Support Tickets', '/customer/support', HelpCircle],
+    ],
+  },
+  {
+    label: 'Account',
+    icon: User,
+    children: [
+      ['Profile', '/member/profile', User],
+      ['Settings', '/member/settings', Settings],
+    ],
+  },
 ]
 
 export const secretaryNav = [

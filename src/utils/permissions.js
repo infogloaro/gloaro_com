@@ -145,24 +145,83 @@ export function getSidebarModuleKey(label = '') {
   return SIDEBAR_ALIASES[key] || key
 }
 
+export function translatePermissionsToConfig(permissionsArray = []) {
+  const modules = new Set()
+  const sidebar = []
+  const widgets = []
+  const features = {}
+  const operations = {}
+  const permissions = {}
+
+  for (const perm of permissionsArray) {
+    const parts = perm.split('.')
+    if (parts.length < 2) continue
+    const [mod, act] = parts
+
+    modules.add(mod)
+
+    if (!features[mod]) {
+      features[mod] = {}
+    }
+    if (!operations[mod]) {
+      operations[mod] = {}
+    }
+    if (!permissions[mod]) {
+      permissions[mod] = {}
+    }
+
+    const canKey = OPERATION_TO_PERMISSION[act] || `can${act.charAt(0).toUpperCase()}${act.slice(1)}`
+    features[mod][canKey] = true
+    permissions[mod][canKey] = true
+    operations[mod][act] = true
+
+    if (act === 'view') {
+      features[mod].enabled = true
+      sidebar.push({
+        id: mod,
+        label: mod.replace(/_/g, ' ').replace(/\b\w/g, char => char.toUpperCase()),
+        enabled: true
+      })
+      widgets.push({
+        id: mod,
+        title: mod.replace(/_/g, ' ').replace(/\b\w/g, char => char.toUpperCase()),
+        enabled: true
+      })
+    }
+  }
+
+  return {
+    modules: Array.from(modules),
+    sidebar,
+    widgets,
+    features,
+    permissions,
+    operations,
+  }
+}
+
 export function createPermissionHelpers(user, permissionConfig = null) {
   const isSuperAdmin = user?.role === 'superadmin'
-  const features = permissionConfig?.features || {}
-  const modules = new Set((permissionConfig?.modules || Object.keys(features || {})).map(normalizeKey))
+  let config = permissionConfig
+  if (Array.isArray(permissionConfig)) {
+    config = translatePermissionsToConfig(permissionConfig)
+  }
+  const features = config?.features || {}
+  const modules = new Set((config?.modules || Object.keys(features || {})).map(normalizeKey))
   const sidebarItems = new Set(
-    (permissionConfig?.sidebar || [])
+    (config?.sidebar || [])
       .map((item) => normalizeKey(typeof item === 'string' ? item : item?.id))
       .filter(Boolean)
   )
   const widgets = new Set(
-    (permissionConfig?.widgets || [])
+    (config?.widgets || [])
       .map((item) => normalizeKey(typeof item === 'string' ? item : item?.id))
       .filter(Boolean)
   )
-  const sections = permissionConfig?.sections || {}
-  const operations = permissionConfig?.operations || {}
-  const permissions = permissionConfig?.permissions || {}
-  const workflowPermissions = permissionConfig?.workflowPermissions || {}
+  const sections = config?.sections || {}
+  const operations = config?.operations || {}
+  const permissions = config?.permissions || {}
+  const workflowPermissions = config?.workflowPermissions || {}
 
   const hasModule = (module) => {
     if (isSuperAdmin) return true
@@ -251,3 +310,25 @@ export function createPermissionHelpers(user, permissionConfig = null) {
     canAccessPath,
   }
 }
+
+export function getDashboardRoute(role) {
+  const cleanRole = String(role || '').toLowerCase().replace(/\s+/g, '')
+  if (cleanRole === 'state_director') return '/state-director/dashboard'
+  if (cleanRole === 'district_director') return '/district-director/dashboard'
+  if (cleanRole === 'executive_director') return '/chapter-director/dashboard'
+  if (cleanRole === 'chapter_president') return '/president/dashboard'
+  if (cleanRole === 'vice_president') return '/vice-president/dashboard'
+  if (cleanRole === 'secretary') return '/secretary/dashboard'
+  if (cleanRole === 'vendor') return '/vendor'
+  
+  const adminRoles = [
+    'superadmin', 'admin', 'franchise_admin', 'ecommerce_admin', 'marketplace_admin',
+    'digital_marketing_admin', 'training_admin', 'finance_admin', 'region_director',
+    'launch_director', 'direct_consultant', 'operation_vice_president',
+    'membership_verification_admin', 'custom_admin'
+  ]
+  if (adminRoles.includes(cleanRole)) return '/admin'
+
+  return '/member/dashboard'
+}
+

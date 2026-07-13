@@ -92,6 +92,7 @@ import {
   VendorReviewsPage,
   VendorServicesPage,
   VendorSupportPage,
+  VendorOrdersPage,
 } from './pages/vendor/VendorPages'
 import {
   CategoriesPage,
@@ -221,8 +222,6 @@ function App() {
   })
   const adminHomePath = allowedAdminRoutes[0]?.path || '/dashboard'
 
-  if (isAdminSession && permissionsLoading) return <LoadingScreen label="Loading access..." />
-
   return (
     <>
       <Routes>
@@ -299,14 +298,41 @@ function App() {
           </Route>
         </Route>
 
-        <Route element={<ProtectedRoute roles={['customer', 'user']} />}>
+        <Route element={<ProtectedRoute roles={['customer', 'user', 'vendor']} />}>
           <Route element={<DashboardLayout navItems={memberNav} title="Member Console" />}>
-            <Route path="/member/dashboard" element={<MemberDashboard />} />
+            <Route path="/member/dashboard" element={<MemberDashboard activeTab="overview" />} />
+            <Route path="/member/dashboard/analytics" element={<MemberDashboard activeTab="analytics" />} />
+            <Route path="/member/dashboard/wall" element={<MemberDashboard activeTab="wall" />} />
+            <Route path="/member/dashboard/referrals" element={<MemberDashboard activeTab="referrals" />} />
+            <Route path="/member/dashboard/meetings" element={<MemberDashboard activeTab="meetings" />} />
+            <Route path="/member/dashboard/one-to-ones" element={<MemberDashboard activeTab="oneToOnes" />} />
+            <Route path="/member/dashboard/visitors" element={<MemberDashboard activeTab="visitors" />} />
+            <Route path="/member/dashboard/chapter" element={<MemberDashboard activeTab="chapter" />} />
+            <Route path="/member/dashboard/directory" element={<MemberDashboard activeTab="directory" />} />
+            <Route path="/member/dashboard/performance" element={<MemberDashboard activeTab="chapterDashboard" />} />
+            <Route path="/member/dashboard/leaderboard" element={<MemberDashboard activeTab="leaderboard" />} />
+            <Route path="/member/dashboard/calendar" element={<MemberDashboard activeTab="calendar" />} />
+            <Route path="/member/dashboard/chat" element={<MemberDashboard activeTab="chat" />} />
+            <Route path="/member/dashboard/tasks" element={<MemberDashboard activeTab="tasks" />} />
+            <Route path="/member/dashboard/digital-card" element={<MemberDashboard activeTab="digitalCard" />} />
             <Route path="/member/vendor-application" element={<VendorApplicationForm />} />
             <Route path="/member/vendor-application-status" element={<VendorApplicationStatus />} />
             <Route path="/member/products" element={<MemberProductsPage />} />
             <Route path="/member/profile" element={<MembershipProfilePage />} />
             <Route path="/member/settings" element={<MembershipProfilePage />} />
+
+            {/* Marketplace Vendor management routes */}
+            <Route path="/member/dashboard/my-business" element={<VendorProfilePage />} />
+            <Route path="/member/dashboard/products" element={<VendorProductsPage />} />
+            <Route path="/member/dashboard/products-mgmt" element={<VendorProductsPage />} />
+            <Route path="/member/dashboard/services" element={<VendorServicesPage />} />
+            <Route path="/member/dashboard/services-mgmt" element={<VendorServicesPage />} />
+            <Route path="/member/dashboard/orders" element={<VendorOrdersPage />} />
+            <Route path="/member/dashboard/leads" element={<VendorLeadsPage />} />
+            <Route path="/member/dashboard/reviews" element={<VendorReviewsPage />} />
+            <Route path="/member/dashboard/payments" element={<VendorPaymentsPage />} />
+            <Route path="/member/dashboard/subscription" element={<VendorMembershipPage />} />
+            <Route path="/member/dashboard/vendor-analytics" element={<VendorDashboard />} />
           </Route>
         </Route>
 

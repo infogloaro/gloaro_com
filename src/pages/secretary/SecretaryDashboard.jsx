@@ -6,6 +6,7 @@ import EmptyState from '../../components/common/EmptyState'
 import StatCard from '../../components/dashboard/StatCard'
 import { formatDate } from '../../utils/format'
 import { Users, FileText, CalendarDays, ShoppingBag, FolderOpen } from 'lucide-react'
+import JurisdictionCard from '../../components/common/JurisdictionCard'
 
 export default function SecretaryDashboard() {
   const { data, loading, error } = useApi(secretaryApi.dashboard)
@@ -38,6 +39,8 @@ export default function SecretaryDashboard() {
           Monitor your chapter metrics, view upcoming meetings, track member lists, and organize documents.
         </p>
       </div>
+
+      <JurisdictionCard />
 
       {/* Summary KPI Cards Grid */}
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
