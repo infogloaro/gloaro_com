@@ -320,12 +320,14 @@ export function getDashboardRoute(role) {
   if (cleanRole === 'chapter_president') return '/president/dashboard'
   if (cleanRole === 'vice_president') return '/vice-president/dashboard'
   if (cleanRole === 'secretary') return '/secretary/dashboard'
+  if (cleanRole === 'launch_director') return '/launch-director/dashboard'
+  if (cleanRole === 'direct_consultant') return '/direct-consultant/dashboard'
   if (cleanRole === 'vendor') return '/vendor'
   
   const adminRoles = [
     'superadmin', 'admin', 'franchise_admin', 'ecommerce_admin', 'marketplace_admin',
     'digital_marketing_admin', 'training_admin', 'finance_admin',
-    'launch_director', 'direct_consultant', 'operation_vice_president',
+    'operation_vice_president',
     'membership_verification_admin', 'custom_admin'
   ]
   if (adminRoles.includes(cleanRole)) return '/admin'

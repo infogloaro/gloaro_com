@@ -16,10 +16,14 @@ export default function Login() {
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm({ defaultValues: { remember: true } })
 
   const onSubmit = async (values) => {
-    await login({ email: values.email, password: values.password }, values.remember)
-    const fromPath = location.state?.from?.pathname
-    const finalDest = fromPath && fromPath !== '/' && fromPath !== '/login' ? fromPath : '/dashboard'
-    navigate(finalDest, { replace: true })
+    try {
+      await login({ email: values.email, password: values.password }, values.remember)
+      const fromPath = location.state?.from?.pathname
+      const finalDest = fromPath && fromPath !== '/' && fromPath !== '/login' ? fromPath : '/dashboard'
+      navigate(finalDest, { replace: true })
+    } catch (error) {
+      // Handled gracefully in context
+    }
   }
 
   return (

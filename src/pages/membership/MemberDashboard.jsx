@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useEffect, useState, useMemo } from 'react'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import {
   Gem,
   CalendarDays,
@@ -49,24 +49,29 @@ import TasksAndHelpDesk from './TasksAndHelpDesk'
 import AIInsightsAndDigitalCard from './AIInsightsAndDigitalCard'
 import JurisdictionCard from '../../components/common/JurisdictionCard'
 
-export default function MemberDashboard({ activeTab: initialActiveTab = 'overview' }) {
+export default function MemberDashboard() {
   const { user, refreshUser } = useAuth()
   const navigate = useNavigate()
+  const { tab } = useParams()
+
+  const activeTab = useMemo(() => {
+    if (!tab) return 'overview';
+    if (tab === 'one-to-ones') return 'oneToOnes';
+    if (tab === 'performance') return 'chapterDashboard';
+    if (tab === 'digital-card') return 'digitalCard';
+    return tab;
+  }, [tab]);
+
   const isApprovedVendor = user?.role === 'vendor' || user?.vendorProfile?.status === 'approved';
   
   const [app, setApp] = useState(null)
   const [loadingApp, setLoadingApp] = useState(true)
-  const [activeTab, setActiveTab] = useState(initialActiveTab)
 
   useEffect(() => {
     if (refreshUser) {
       refreshUser()
     }
   }, [refreshUser])
-
-  useEffect(() => {
-    setActiveTab(initialActiveTab)
-  }, [initialActiveTab])
 
   // Fetch upcoming events using reuse customerApi events
   const events = useApi(() => customerApi.events({ upcoming: true, limit: 3 }))
