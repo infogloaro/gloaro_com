@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import toast from 'react-hot-toast'
-import { CheckCircle2, ExternalLink, Eye, FileText, Loader2, XCircle } from 'lucide-react'
+import { CheckCircle2, ExternalLink, Eye, FileText, Loader2, XCircle, Package, BriefcaseBusiness } from 'lucide-react'
 import { adminApi } from '../../api/admin'
 import Modal from '../../components/common/Modal'
 import StatusBadge from '../../components/common/StatusBadge'
@@ -30,15 +30,229 @@ export function AdminCategoriesPage() {
 }
 
 export function AdminProductsPage() {
-  return <ResourceListPage module="marketplace" section="products" title="Product Management" fetcher={adminApi.products} filters={statusFilters} columns={[
-    { key: 'title', header: 'Product' }, { key: 'vendor', header: 'Vendor', render: (row) => row.vendor?.businessName || 'Vendor' }, { key: 'price', header: 'Price', render: (row) => formatCurrency(row.pricing?.sellingPrice) }, { key: 'status', header: 'Status', render: (row) => <StatusBadge value={row.status} /> },
-  ]} />
+  const [selectedProduct, setSelectedProduct] = useState(null)
+
+  return (
+    <>
+      <ResourceListPage
+        module="marketplace"
+        section="products"
+        title="Product Management"
+        fetcher={adminApi.products}
+        filters={statusFilters}
+        columns={[
+          {
+            key: 'image',
+            header: 'Image',
+            render: (row) => {
+              const url = row.images?.find((img) => img.isMain)?.url || row.images?.[0]?.url
+              return url ? (
+                <img src={url} alt={row.title} className="h-10 w-10 rounded-md object-cover border border-slate-100" />
+              ) : (
+                <div className="grid h-10 w-10 place-items-center rounded-md bg-slate-100 border border-slate-200">
+                  <Package className="h-5 w-5 text-slate-400" />
+                </div>
+              )
+            }
+          },
+          { key: 'title', header: 'Product Name' },
+          { key: 'vendorName', header: 'Vendor Name', render: (row) => row.vendor?.ownerName || row.vendor?.user?.name || '-' },
+          { key: 'businessName', header: 'Business Name', render: (row) => row.vendor?.businessName || '-' },
+          { key: 'category', header: 'Category', render: (row) => row.category?.name || '-' },
+          { key: 'price', header: 'Price', render: (row) => formatCurrency(row.pricing?.sellingPrice) },
+          { key: 'stock', header: 'Stock', render: (row) => row.inventory?.isUnlimited ? 'Unlimited' : (row.inventory?.quantity ?? 0) },
+          { key: 'status', header: 'Status', render: (row) => <StatusBadge value={row.status} /> },
+          { key: 'createdAt', header: 'Created Date', render: (row) => formatDate(row.createdAt) }
+        ]}
+        renderActions={(row) => (
+          <button
+            onClick={() => setSelectedProduct(row)}
+            className="inline-flex items-center gap-1 rounded-md border border-[#0d4697]/25 px-2.5 py-1.5 text-xs font-bold text-[#0d4697] hover:bg-blue-50 transition"
+          >
+            <Eye className="h-3 w-3" />
+            View
+          </button>
+        )}
+      />
+
+      <Modal open={Boolean(selectedProduct)} title="Product Details" onClose={() => setSelectedProduct(null)}>
+        {selectedProduct && (
+          <div className="space-y-4 text-sm font-semibold text-slate-700">
+            <div className="flex items-center gap-4 border-b border-slate-100 pb-4">
+              {(() => {
+                const url = selectedProduct.images?.find((img) => img.isMain)?.url || selectedProduct.images?.[0]?.url
+                return url ? (
+                  <img src={url} alt={selectedProduct.title} className="h-16 w-16 rounded-lg object-cover border border-slate-200" />
+                ) : (
+                  <div className="grid h-16 w-16 place-items-center rounded-lg bg-slate-100 border border-slate-200">
+                    <Package className="h-8 w-8 text-slate-400" />
+                  </div>
+                )
+              })()}
+              <div>
+                <h3 className="text-base font-extrabold text-slate-950">{selectedProduct.title}</h3>
+                <p className="text-xs text-slate-500 mt-0.5">SKU: {selectedProduct.sku || '-'}</p>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-xs font-bold uppercase text-slate-400">Vendor Name</p>
+                <p className="mt-0.5 text-slate-900">{selectedProduct.vendor?.ownerName || selectedProduct.vendor?.user?.name || '-'}</p>
+              </div>
+              <div>
+                <p className="text-xs font-bold uppercase text-slate-400">Business Name</p>
+                <p className="mt-0.5 text-slate-900">{selectedProduct.vendor?.businessName || '-'}</p>
+              </div>
+              <div>
+                <p className="text-xs font-bold uppercase text-slate-400">Category</p>
+                <p className="mt-0.5 text-slate-900">{selectedProduct.category?.name || '-'}</p>
+              </div>
+              <div>
+                <p className="text-xs font-bold uppercase text-slate-400">Price (MRP / Selling)</p>
+                <p className="mt-0.5 text-slate-900">
+                  {formatCurrency(selectedProduct.pricing?.mrp)} / {formatCurrency(selectedProduct.pricing?.sellingPrice)}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs font-bold uppercase text-slate-400">Stock</p>
+                <p className="mt-0.5 text-slate-900">{selectedProduct.inventory?.isUnlimited ? 'Unlimited' : selectedProduct.inventory?.quantity}</p>
+              </div>
+              <div>
+                <p className="text-xs font-bold uppercase text-slate-400">Status</p>
+                <div className="mt-1"><StatusBadge value={selectedProduct.status} /></div>
+              </div>
+            </div>
+            {selectedProduct.description && (
+              <div className="border-t border-slate-100 pt-4">
+                <p className="text-xs font-bold uppercase text-slate-400">Description</p>
+                <p className="mt-1 text-xs font-medium text-slate-600 leading-relaxed max-h-48 overflow-y-auto pr-2">{selectedProduct.description}</p>
+              </div>
+            )}
+            <div className="flex justify-end pt-2 border-t border-slate-100">
+              <button onClick={() => setSelectedProduct(null)} className="h-9 rounded-md bg-slate-100 px-4 text-xs font-bold text-slate-700 hover:bg-slate-200 transition">Close</button>
+            </div>
+          </div>
+        )}
+      </Modal>
+    </>
+  )
 }
 
 export function AdminServicesPage() {
-  return <ResourceListPage module="marketplace" section="services" title="Service Management" fetcher={adminApi.services} filters={statusFilters} columns={[
-    { key: 'title', header: 'Service' }, { key: 'vendor', header: 'Vendor', render: (row) => row.vendor?.businessName || 'Vendor' }, { key: 'status', header: 'Status', render: (row) => <StatusBadge value={row.status} /> },
-  ]} />
+  const [selectedService, setSelectedService] = useState(null)
+
+  return (
+    <>
+      <ResourceListPage
+        module="marketplace"
+        section="services"
+        title="Service Management"
+        fetcher={adminApi.services}
+        filters={statusFilters}
+        columns={[
+          {
+            key: 'image',
+            header: 'Image',
+            render: (row) => {
+              const url = row.gallery?.[0]?.url
+              return url ? (
+                <img src={url} alt={row.title} className="h-10 w-10 rounded-md object-cover border border-slate-100" />
+              ) : (
+                <div className="grid h-10 w-10 place-items-center rounded-md bg-slate-100 border border-slate-200">
+                  <BriefcaseBusiness className="h-5 w-5 text-slate-400" />
+                </div>
+              )
+            }
+          },
+          { key: 'title', header: 'Service Name' },
+          { key: 'vendorName', header: 'Vendor Name', render: (row) => row.vendor?.ownerName || row.vendor?.user?.name || '-' },
+          { key: 'businessName', header: 'Business Name', render: (row) => row.vendor?.businessName || '-' },
+          { key: 'category', header: 'Category', render: (row) => row.category?.name || '-' },
+          {
+            key: 'price',
+            header: 'Price',
+            render: (row) => {
+              const type = row.pricing?.type
+              const min = row.pricing?.minPrice
+              const max = row.pricing?.maxPrice
+              if (type === 'fixed') return formatCurrency(min)
+              if (type === 'range') return `${formatCurrency(min)} - ${formatCurrency(max)}`
+              return String(type).toUpperCase()
+            }
+          },
+          { key: 'status', header: 'Status', render: (row) => <StatusBadge value={row.status} /> },
+          { key: 'createdAt', header: 'Created Date', render: (row) => formatDate(row.createdAt) }
+        ]}
+        renderActions={(row) => (
+          <button
+            onClick={() => setSelectedService(row)}
+            className="inline-flex items-center gap-1 rounded-md border border-[#0d4697]/25 px-2.5 py-1.5 text-xs font-bold text-[#0d4697] hover:bg-blue-50 transition"
+          >
+            <Eye className="h-3 w-3" />
+            View
+          </button>
+        )}
+      />
+
+      <Modal open={Boolean(selectedService)} title="Service Details" onClose={() => setSelectedService(null)}>
+        {selectedService && (
+          <div className="space-y-4 text-sm font-semibold text-slate-700">
+            <div className="flex items-center gap-4 border-b border-slate-100 pb-4">
+              {(() => {
+                const url = selectedService.gallery?.[0]?.url
+                return url ? (
+                  <img src={url} alt={selectedService.title} className="h-16 w-16 rounded-lg object-cover border border-slate-200" />
+                ) : (
+                  <div className="grid h-16 w-16 place-items-center rounded-lg bg-slate-100 border border-slate-200">
+                    <BriefcaseBusiness className="h-8 w-8 text-slate-400" />
+                  </div>
+                )
+              })()}
+              <div>
+                <h3 className="text-base font-extrabold text-slate-950">{selectedService.title}</h3>
+                <p className="text-xs text-slate-500 mt-0.5">ID: {selectedService.serviceId || '-'}</p>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-xs font-bold uppercase text-slate-400">Vendor Name</p>
+                <p className="mt-0.5 text-slate-900">{selectedService.vendor?.ownerName || selectedService.vendor?.user?.name || '-'}</p>
+              </div>
+              <div>
+                <p className="text-xs font-bold uppercase text-slate-400">Business Name</p>
+                <p className="mt-0.5 text-slate-900">{selectedService.vendor?.businessName || '-'}</p>
+              </div>
+              <div>
+                <p className="text-xs font-bold uppercase text-slate-400">Category</p>
+                <p className="mt-0.5 text-slate-900">{selectedService.category?.name || '-'}</p>
+              </div>
+              <div>
+                <p className="text-xs font-bold uppercase text-slate-400">Pricing Type / Cost</p>
+                <p className="mt-0.5 text-slate-900">
+                  {String(selectedService.pricing?.type).toUpperCase()} (
+                  {selectedService.pricing?.type === 'fixed' ? formatCurrency(selectedService.pricing?.minPrice) : selectedService.pricing?.type === 'range' ? `${formatCurrency(selectedService.pricing?.minPrice)} - ${formatCurrency(selectedService.pricing?.maxPrice)}` : 'Custom'}
+                  )
+                </p>
+              </div>
+              <div>
+                <p className="text-xs font-bold uppercase text-slate-400">Status</p>
+                <div className="mt-1"><StatusBadge value={selectedService.status} /></div>
+              </div>
+            </div>
+            {selectedService.description && (
+              <div className="border-t border-slate-100 pt-4">
+                <p className="text-xs font-bold uppercase text-slate-400">Description</p>
+                <p className="mt-1 text-xs font-medium text-slate-600 leading-relaxed max-h-48 overflow-y-auto pr-2">{selectedService.description}</p>
+              </div>
+            )}
+            <div className="flex justify-end pt-2 border-t border-slate-100">
+              <button onClick={() => setSelectedService(null)} className="h-9 rounded-md bg-slate-100 px-4 text-xs font-bold text-slate-700 hover:bg-slate-200 transition">Close</button>
+            </div>
+          </div>
+        )}
+      </Modal>
+    </>
+  )
 }
 
 export function AdminMembershipsPage() {
@@ -86,9 +300,11 @@ export function AdminMembershipApplicationsPage() {
 
   const changeRowStatus = async (row, status, reload) => {
     if (!row?._id || !status || status === row.status) return
-    await adminApi.updateMembershipApplicationStatus(row._id, { status, adminNotes: row.adminNotes || '' })
-    toast.success(`Application marked ${status.replaceAll('_', ' ')}`)
-    reload?.()
+    try {
+      await adminApi.updateMembershipApplicationStatus(row._id, { status, adminNotes: row.adminNotes || '' })
+      toast.success(`Application marked ${status.replaceAll('_', ' ')}`)
+      reload?.()
+    } catch (_) {}
   }
 
   return (
