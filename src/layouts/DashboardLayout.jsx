@@ -187,7 +187,7 @@ export default function DashboardLayout({ navItems = [], title = 'Dashboard' }) 
         
         let children = [...item.children];
 
-        if (item.label === 'Marketplace') {
+        if (item.label === 'Marketplace' && (title === 'Member Console' || location.pathname.includes('/member'))) {
           if (isApprovedVendor) {
             children = [
               ['Dashboard', '/member/dashboard/vendor-analytics', LayoutDashboard],
