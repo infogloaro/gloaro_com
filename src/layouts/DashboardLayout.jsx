@@ -4,6 +4,7 @@ import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import logo from '../assets/signup_logo.png'
 import { useAuth } from '../hooks/useAuth'
 import { storage } from '../utils/storage'
+import { adminNav, vendorNav, customerNav, membershipNav, memberNav, secretaryNav, regionDirectorNav, stateDirectorNav, districtDirectorNav, chapterDirectorNav, presidentNav, vicePresidentNav, getSidebarNav } from '../constants/navigation'
 
 export default function DashboardLayout({ navItems = [], title = 'Dashboard' }) {
   const { user, logout, hasSidebar } = useAuth()
@@ -53,129 +54,19 @@ export default function DashboardLayout({ navItems = [], title = 'Dashboard' }) 
     return hasSidebar(label)
   }, [hasSidebar, isSuperAdmin])
 
-  const ROLE_NAV_ITEMS = useMemo(() => ({
-    admin: [
-      ['Dashboard', '/admin', LayoutDashboard],
-      {
-        label: 'Organization Master',
-        icon: Building2,
-        children: [
-          ['Regions', '/admin/locations', MapPinned],
-        ],
-      },
-      ['Region Directors', '/admin/users', Users],
-      ['Vendor Approvals', '/admin/applications/vendor', CreditCard],
-      ['Approved Vendors', '/admin/approved-vendors', Building2],
-      ['Reports', '/admin/reports', FileBarChart],
-      ['Settings', '/admin/settings', Settings]
-    ],
-    region_director: [
-      ['Dashboard', '/region-director/dashboard', LayoutDashboard],
-      {
-        label: 'Organization Master',
-        icon: Building2,
-        children: [
-          ['States', '/region-director/locations', MapPinned],
-        ],
-      },
-      ['State Directors', '/region-director/state-directors', Users],
-      ['Memberships', '/region-director/memberships', CreditCard],
-      ['Approved Vendors', '/region-director/approved-vendors', Building2],
-      ['Reports', '/region-director/reports', FileBarChart]
-    ],
-    state_director: [
-      ['Dashboard', '/state-director/dashboard', LayoutDashboard],
-      {
-        label: 'Organization Master',
-        icon: Building2,
-        children: [
-          ['Districts', '/state-director/districts', MapPinned],
-        ],
-      },
-      ['District Directors', '/state-director/district-directors', Users],
-      ['Memberships', '/state-director/memberships', CreditCard],
-      ['Approved Vendors', '/admin/approved-vendors', Building2],
-      ['Reports', '/state-director/reports', FileBarChart]
-    ],
-    district_director: [
-      ['Dashboard', '/district-director/dashboard', LayoutDashboard],
-      {
-        label: 'Organization Master',
-        icon: Building2,
-        children: [
-          ['Chapters', '/district-director/chapters', MapPinned],
-        ],
-      },
-      ['Executive Directors', '/district-director/executive-directors', Users],
-      ['Memberships', '/district-director/memberships', CreditCard],
-      ['Approved Vendors', '/admin/approved-vendors', Building2],
-      ['Reports', '/district-director/reports', FileBarChart]
-    ],
-    executive_director: [
-      ['Dashboard', '/chapter-director/dashboard', LayoutDashboard],
-      ['President', '/chapter-director/president', Users],
-      ['Members', '/chapter-director/members', Users],
-      ['Memberships', '/chapter-director/memberships', CreditCard],
-      ['Launch Directors', '/chapter-director/launch-directors', Users],
-      ['Membership Approvals', '/chapter-director/memberships', CreditCard],
-      ['Vendor Approvals', '/admin/applications/vendor', CreditCard],
-      ['Approved Vendors', '/admin/approved-vendors', Building2],
-      ['Reports', '/chapter-director/reports', FileBarChart],
-      ['Settings', '/chapter-director/settings', Settings]
-    ],
-    launch_director: [
-      ['Dashboard', '/admin', LayoutDashboard],
-      ['Direct Consultants', '/admin/users', Users],
-      ['Approved Vendors', '/admin/approved-vendors', Building2],
-      ['Memberships', '/admin/memberships', CreditCard]
-    ],
-    direct_consultant: [
-      ['Dashboard', '/admin', LayoutDashboard],
-      ['Chapter Presidents', '/admin/users', Users],
-      ['Membership Approvals', '/admin/applications/membership', CreditCard],
-      ['Approved Vendors', '/admin/approved-vendors', Building2]
-    ],
-    chapter_president: [
-      ['Dashboard', '/president/dashboard', LayoutDashboard],
-      ['Vice Presidents', '/president/vice-presidents', Users],
-      ['Approved Vendors', '/admin/approved-vendors', Building2],
-      ['Reports', '/president/reports', FileBarChart]
-    ],
-    vice_president: [
-      ['Dashboard', '/vice-president/dashboard', LayoutDashboard],
-      ['Chapter', '/member/dashboard', Building2],
-      ['Members', '/vice-president/members', Users],
-      ['Member Registration', '/vice-president/register-member', Users],
-      ['Secretaries', '/vice-president/secretaries', Users],
-      ['Meetings', '/member/dashboard', CalendarDays],
-      ['Attendance', '/member/dashboard', FileText],
-      ['Business Wall', '/member/dashboard', Volume2],
-      ['Referrals', '/member/dashboard', Handshake],
-      ['Visitors', '/member/dashboard', Ticket],
-      ['One-to-Ones', '/member/dashboard', Clock],
-      ['Approved Vendors', '/admin/approved-vendors', Building2],
-      ['Announcements', '/member/dashboard', Bell],
-      ['Reports', '/vice-president/reports', FileBarChart],
-      ['Profile', '/profile', User],
-      ['Settings', '/vice-president/settings', Settings]
-    ],
-    secretary: [
-      ['Dashboard', '/secretary/dashboard', LayoutDashboard],
-      ['Members', '/secretary/members', Users],
-      ['Attendance', '/secretary/attendance', CalendarDays],
-      ['Meetings', '/secretary/minutes', FileText],
-      ['Approved Vendors', '/admin/approved-vendors', Building2],
-      ['Reports', '/secretary/reports', FileBarChart]
-    ]
-  }), []);
+  const resolvedNavItems = useMemo(() => {
+    if (user?.role) {
+      return getSidebarNav(user.role);
+    }
+    return navItems || [];
+  }, [user?.role, navItems]);
 
   const filteredNav = useMemo(() => {
     const value = query.trim().toLowerCase()
-    let activeNavItems = navItems
+    let activeNavItems = resolvedNavItems
     let bypassEnabledCheck = false
 
-    if (user?.role && ROLE_NAV_ITEMS[user.role]) {
-      activeNavItems = ROLE_NAV_ITEMS[user.role]
+    if (user?.role) {
       bypassEnabledCheck = true
     }
 
@@ -237,10 +128,10 @@ export default function DashboardLayout({ navItems = [], title = 'Dashboard' }) 
         return null
       })
       .filter(Boolean)
-  }, [isSidebarItemEnabled, navItems, query, user?.role, ROLE_NAV_ITEMS, user?.vendorProfile?.status])
+  }, [isSidebarItemEnabled, resolvedNavItems, query, user?.role, user?.vendorProfile?.status])
 
   const pageTitle = useMemo(() => {
-    for (const item of navItems) {
+    for (const item of resolvedNavItems) {
       if (Array.isArray(item) && item[1] === location.pathname) return item[0]
       if (!Array.isArray(item)) {
         const child = item.children.find(([, to]) => to === location.pathname)
@@ -248,7 +139,7 @@ export default function DashboardLayout({ navItems = [], title = 'Dashboard' }) 
       }
     }
     return title
-  }, [location.pathname, navItems, title])
+  }, [location.pathname, resolvedNavItems, title])
 
   const toggleGroup = (label) => {
     setOpenGroups((current) => ({ ...current, [label]: !current[label] }))

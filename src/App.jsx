@@ -140,6 +140,16 @@ import DistrictDirectorDashboard from './pages/district-director/DistrictDirecto
 import ChapterDirectorDashboard from './pages/chapter-director/ChapterDirectorDashboard'
 import PresidentDashboard from './pages/president/PresidentDashboard'
 import VicePresidentDashboard from './pages/vice-president/VicePresidentDashboard'
+import DynamicDashboard from './pages/shared/DynamicDashboard'
+
+import MyChapter from './pages/membership/MyChapter'
+import BusinessWall from './pages/membership/BusinessWall'
+import ReferralsPipeline from './pages/membership/ReferralsPipeline'
+import MeetingsAttendance from './pages/membership/MeetingsAttendance'
+import OneToOnesPage from './pages/membership/OneToOnesPage'
+import VisitorsPage from './pages/membership/VisitorsPage'
+import BusinessDirectory from './pages/membership/BusinessDirectory'
+import Leaderboard from './pages/membership/Leaderboard'
 
 function App() {
   const { role, permissionsLoading, canAccessPath } = useAuth()
@@ -253,173 +263,326 @@ function App() {
           <Route path="/membership-application/track" element={<MembershipApplicationTrack />} />
         </Route>
 
-        <Route element={<ProtectedRoute roles={['admin', 'superadmin']} />}>
-          <Route element={<DashboardLayout navItems={adminNav} title="Admin Console" />}>
-            {allowedAdminRoutes.map((route) => <Route key={route.path} path={route.path} element={route.element} />)}
-            <Route path="/admin/*" element={<Navigate to={adminHomePath} replace />} />
-          </Route>
-        </Route>
+        <Route element={<ProtectedRoute roles={['admin', 'superadmin', 'region_director', 'state_director', 'district_director', 'executive_director', 'launch_director', 'direct_consultant', 'chapter_president', 'vice_president', 'secretary', 'customer', 'user', 'vendor']} />}>
+          <Route element={<DashboardLayout title="Gloaro Portal" />}>
+            
+            {/* Admin Console Route Group */}
+            <Route element={<ProtectedRoute roles={['admin', 'superadmin', 'region_director', 'state_director', 'district_director', 'executive_director', 'launch_director', 'direct_consultant', 'chapter_president', 'vice_president', 'secretary']} />}>
+              {allowedAdminRoutes.map((route) => <Route key={route.path} path={route.path} element={route.element} />)}
+              <Route path="/admin/*" element={<Navigate to={adminHomePath} replace />} />
+            </Route>
 
-        <Route element={<ProtectedRoute roles={['vendor']} />}>
-          <Route element={<DashboardLayout navItems={vendorNav} title="Vendor Console" />}>
-            <Route path="/vendor" element={<VendorDashboard />} />
-            <Route path="/vendor/profile" element={<VendorProfilePage />} />
-            <Route path="/vendor/products" element={<VendorProductsPage />} />
-            <Route path="/vendor/services" element={<VendorServicesPage />} />
-            <Route path="/vendor/leads" element={<VendorLeadsPage />} />
-            <Route path="/vendor/reviews" element={<VendorReviewsPage />} />
-            <Route path="/vendor/membership" element={<VendorMembershipPage />} />
-            <Route path="/vendor/payments" element={<VendorPaymentsPage />} />
-            <Route path="/vendor/notifications" element={<VendorNotificationsPage />} />
-            <Route path="/vendor/support" element={<VendorSupportPage />} />
-          </Route>
-        </Route>
+            {/* Vendor Console Route Group */}
+            <Route element={<ProtectedRoute roles={['vendor']} />}>
+              <Route path="/vendor" element={<VendorDashboard />} />
+              <Route path="/vendor/profile" element={<VendorProfilePage />} />
+              <Route path="/vendor/products" element={<VendorProductsPage />} />
+              <Route path="/vendor/services" element={<VendorServicesPage />} />
+              <Route path="/vendor/leads" element={<VendorLeadsPage />} />
+              <Route path="/vendor/reviews" element={<VendorReviewsPage />} />
+              <Route path="/vendor/membership" element={<VendorMembershipPage />} />
+              <Route path="/vendor/payments" element={<VendorPaymentsPage />} />
+              <Route path="/vendor/notifications" element={<VendorNotificationsPage />} />
+              <Route path="/vendor/support" element={<VendorSupportPage />} />
+            </Route>
 
-        <Route element={<ProtectedRoute roles={['customer', 'user']} />}>
-          <Route element={<DashboardLayout navItems={customerNav} title="Customer Portal" />}>
-            <Route path="/customer/wishlist" element={<WishlistPage />} />
-            <Route path="/customer/referral" element={<ReferralPage />} />
-            <Route path="/customer/notifications" element={<CustomerNotificationsPage />} />
-            <Route path="/customer/profile" element={<CustomerProfilePage />} />
-            <Route path="/customer/support" element={<CustomerSupportPage />} />
-            <Route path="/customer/events" element={<EventsPage />} />
-          </Route>
-        </Route>
+            {/* Customer Portal Route Group */}
+            <Route element={<ProtectedRoute roles={['customer', 'user']} />}>
+              <Route path="/customer/wishlist" element={<WishlistPage />} />
+              <Route path="/customer/referral" element={<ReferralPage />} />
+              <Route path="/customer/notifications" element={<CustomerNotificationsPage />} />
+              <Route path="/customer/profile" element={<CustomerProfilePage />} />
+              <Route path="/customer/support" element={<CustomerSupportPage />} />
+              <Route path="/customer/events" element={<EventsPage />} />
+            </Route>
 
-        <Route element={<ProtectedRoute roles={['customer', 'user', 'vendor']} />}>
-          <Route element={<DashboardLayout navItems={membershipNav} title="Membership Console" />}>
-            <Route path="/membership/dashboard" element={<MembershipDashboard />} />
-            <Route path="/membership/benefits" element={<MembershipBenefitsPage />} />
-            <Route path="/membership/events" element={<MembershipEventsPage />} />
-            <Route path="/membership/referral" element={<MembershipReferralPage />} />
-            <Route path="/membership/notifications" element={<MembershipNotificationsPage />} />
-            <Route path="/membership/profile" element={<MembershipProfilePage />} />
-            <Route path="/membership/support" element={<MembershipSupportPage />} />
-          </Route>
-        </Route>
+            {/* Membership Console Route Group */}
+            <Route element={<ProtectedRoute roles={['customer', 'user', 'vendor', 'secretary', 'chapter_president', 'vice_president']} />}>
+              <Route path="/membership/dashboard" element={<MembershipDashboard />} />
+              <Route path="/membership/benefits" element={<MembershipBenefitsPage />} />
+              <Route path="/membership/events" element={<MembershipEventsPage />} />
+              <Route path="/membership/referral" element={<MembershipReferralPage />} />
+              <Route path="/membership/notifications" element={<MembershipNotificationsPage />} />
+              <Route path="/membership/profile" element={<MembershipProfilePage />} />
+              <Route path="/membership/support" element={<MembershipSupportPage />} />
+            </Route>
 
-        <Route element={<ProtectedRoute roles={['customer', 'user', 'vendor']} />}>
-          <Route element={<DashboardLayout navItems={memberNav} title="Member Console" />}>
-            <Route path="/member/dashboard" element={<MemberDashboard activeTab="overview" />} />
-            <Route path="/member/dashboard/analytics" element={<MemberDashboard activeTab="analytics" />} />
-            <Route path="/member/dashboard/wall" element={<MemberDashboard activeTab="wall" />} />
-            <Route path="/member/dashboard/referrals" element={<MemberDashboard activeTab="referrals" />} />
-            <Route path="/member/dashboard/meetings" element={<MemberDashboard activeTab="meetings" />} />
-            <Route path="/member/dashboard/one-to-ones" element={<MemberDashboard activeTab="oneToOnes" />} />
-            <Route path="/member/dashboard/visitors" element={<MemberDashboard activeTab="visitors" />} />
-            <Route path="/member/dashboard/chapter" element={<MemberDashboard activeTab="chapter" />} />
-            <Route path="/member/dashboard/directory" element={<MemberDashboard activeTab="directory" />} />
-            <Route path="/member/dashboard/performance" element={<MemberDashboard activeTab="chapterDashboard" />} />
-            <Route path="/member/dashboard/leaderboard" element={<MemberDashboard activeTab="leaderboard" />} />
-            <Route path="/member/dashboard/calendar" element={<MemberDashboard activeTab="calendar" />} />
-            <Route path="/member/dashboard/chat" element={<MemberDashboard activeTab="chat" />} />
-            <Route path="/member/dashboard/tasks" element={<MemberDashboard activeTab="tasks" />} />
-            <Route path="/member/dashboard/digital-card" element={<MemberDashboard activeTab="digitalCard" />} />
-            <Route path="/member/vendor-application" element={<VendorApplicationForm />} />
-            <Route path="/member/vendor-application-status" element={<VendorApplicationStatus />} />
-            <Route path="/member/products" element={<MemberProductsPage />} />
-            <Route path="/member/profile" element={<MembershipProfilePage />} />
-            <Route path="/member/settings" element={<MembershipProfilePage />} />
+            {/* Member Console Route Group */}
+            <Route element={<ProtectedRoute roles={['customer', 'user', 'vendor', 'secretary', 'chapter_president', 'vice_president']} />}>
+              <Route path="/member/vendor-application" element={<VendorApplicationForm />} />
+              <Route path="/member/vendor-application-status" element={<VendorApplicationStatus />} />
+              <Route path="/member/products" element={<MemberProductsPage />} />
+              <Route path="/member/profile" element={<MembershipProfilePage />} />
+              <Route path="/member/settings" element={<MembershipProfilePage />} />
 
-            {/* Marketplace Vendor management routes */}
-            <Route path="/member/dashboard/my-business" element={<VendorProfilePage />} />
-            <Route path="/member/dashboard/products" element={<VendorProductsPage />} />
-            <Route path="/member/dashboard/products-mgmt" element={<VendorProductsPage />} />
-            <Route path="/member/dashboard/services" element={<VendorServicesPage />} />
-            <Route path="/member/dashboard/services-mgmt" element={<VendorServicesPage />} />
-            <Route path="/member/dashboard/orders" element={<VendorOrdersPage />} />
-            <Route path="/member/dashboard/leads" element={<VendorLeadsPage />} />
-            <Route path="/member/dashboard/reviews" element={<VendorReviewsPage />} />
-            <Route path="/member/dashboard/payments" element={<VendorPaymentsPage />} />
-            <Route path="/member/dashboard/subscription" element={<VendorMembershipPage />} />
-            <Route path="/member/dashboard/vendor-analytics" element={<VendorDashboard />} />
-          </Route>
-        </Route>
+              {/* Marketplace Vendor management routes */}
+              <Route path="/member/dashboard/my-business" element={<VendorProfilePage />} />
+              <Route path="/member/dashboard/products" element={<VendorProductsPage />} />
+              <Route path="/member/dashboard/products-mgmt" element={<VendorProductsPage />} />
+              <Route path="/member/dashboard/services" element={<VendorServicesPage />} />
+              <Route path="/member/dashboard/services-mgmt" element={<VendorServicesPage />} />
+              <Route path="/member/dashboard/orders" element={<VendorOrdersPage />} />
+              <Route path="/member/dashboard/leads" element={<VendorLeadsPage />} />
+              <Route path="/member/dashboard/reviews" element={<VendorReviewsPage />} />
+              <Route path="/member/dashboard/payments" element={<VendorPaymentsPage />} />
+              <Route path="/member/dashboard/subscription" element={<VendorMembershipPage />} />
+              <Route path="/member/dashboard/vendor-analytics" element={<VendorDashboard />} />
 
-        <Route element={<ProtectedRoute roles={['secretary']} />}>
-          <Route element={<DashboardLayout navItems={secretaryNav} title="Secretary Console" />}>
-            <Route path="/secretary" element={<Navigate to="/secretary/dashboard" replace />} />
-            <Route path="/secretary/dashboard" element={<SecretaryDashboard />} />
-            <Route path="/secretary/members" element={<MembersPage />} />
-            <Route path="/secretary/minutes" element={<MinutesPage />} />
-            <Route path="/secretary/attendance" element={<AttendancePage />} />
-            <Route path="/secretary/documents" element={<DocumentsPage />} />
-            <Route path="/secretary/reports" element={<ReportsPage />} />
-            <Route path="/secretary/settings" element={<SettingsPage />} />
-          </Route>
-        </Route>
+              {/* Parameterized main dashboard sub-views */}
+              <Route path="/member/dashboard" element={<MemberDashboard />} />
+              <Route path="/member/dashboard/:tab" element={<MemberDashboard />} />
+            </Route>
 
-        <Route element={<ProtectedRoute roles={['region_director']} />}>
-          <Route element={<DashboardLayout navItems={regionDirectorNav} title="Region Director Console" />}>
-            <Route path="/region-director" element={<Navigate to="/region-director/dashboard" replace />} />
-            <Route path="/region-director/dashboard" element={<AdminDashboard />} />
-            <Route path="/region-director/locations" element={<LocationsManagementPage />} />
-            <Route path="/region-director/state-directors" element={<AdminManagementPage />} />
-            <Route path="/region-director/memberships" element={<AdminMembershipsPage />} />
-            <Route path="/region-director/approved-vendors" element={<ApprovedVendorsPage />} />
-            <Route path="/region-director/reports" element={<EnterpriseReportBuilderPage />} />
-            <Route path="/region-director/settings" element={<AdminSettingsPage />} />
-          </Route>
-        </Route>
+            {/* Secretary Console Route Group */}
+            <Route element={<ProtectedRoute roles={['secretary']} />}>
+              <Route path="/secretary" element={<Navigate to="/secretary/dashboard" replace />} />
+              <Route path="/secretary/dashboard" element={<SecretaryDashboard />} />
+              <Route path="/secretary/members" element={<MembersPage />} />
+              <Route path="/secretary/minutes" element={<MinutesPage />} />
+              <Route path="/secretary/attendance" element={<AttendancePage />} />
+              <Route path="/secretary/documents" element={<DocumentsPage />} />
+              <Route path="/secretary/reports" element={<ReportsPage />} />
+              <Route path="/secretary/settings" element={<SettingsPage />} />
+              {/* Inherited Base Member Modules */}
+              <Route path="/secretary/chapter" element={<MyChapter />} />
+              <Route path="/secretary/wall" element={<BusinessWall />} />
+              <Route path="/secretary/referrals" element={<ReferralsPipeline />} />
+              <Route path="/secretary/meetings" element={<MeetingsAttendance />} />
+              <Route path="/secretary/one-to-ones" element={<OneToOnesPage />} />
+              <Route path="/secretary/visitors" element={<VisitorsPage />} />
+              <Route path="/secretary/directory" element={<BusinessDirectory />} />
+              <Route path="/secretary/leaderboard" element={<Leaderboard />} />
+              <Route path="/secretary/products" element={<MemberProductsPage />} />
+              <Route path="/secretary/services" element={<ServicesPage />} />
+              <Route path="/secretary/vendors" element={<VendorsPage />} />
+              <Route path="/secretary/profile" element={<MembershipProfilePage />} />
+            </Route>
 
-        <Route element={<ProtectedRoute roles={['state_director']} />}>
-          <Route element={<DashboardLayout navItems={stateDirectorNav} title="State Director Console" />}>
-            <Route path="/state-director" element={<Navigate to="/state-director/dashboard" replace />} />
-            <Route path="/state-director/dashboard" element={<StateDirectorDashboard />} />
-            <Route path="/state-director/districts" element={<LocationsManagementPage />} />
-            <Route path="/state-director/district-directors" element={<AdminManagementPage />} />
-            <Route path="/state-director/memberships" element={<AdminMembershipsPage />} />
-            <Route path="/state-director/reports" element={<EnterpriseReportBuilderPage />} />
-            <Route path="/state-director/settings" element={<AdminSettingsPage />} />
-          </Route>
-        </Route>
+            {/* Region Director Console */}
+            <Route element={<ProtectedRoute roles={['region_director']} />}>
+              <Route path="/region-director" element={<Navigate to="/region-director/dashboard" replace />} />
+              <Route path="/region-director/dashboard" element={<AdminDashboard />} />
+              <Route path="/region-director/locations" element={<LocationsManagementPage />} />
+              <Route path="/region-director/state-directors" element={<AdminManagementPage />} />
+              <Route path="/region-director/memberships" element={<AdminMembershipsPage />} />
+              <Route path="/region-director/approved-vendors" element={<ApprovedVendorsPage />} />
+              <Route path="/region-director/reports" element={<EnterpriseReportBuilderPage />} />
+              <Route path="/region-director/settings" element={<AdminSettingsPage />} />
+              {/* Inherited Base Member Modules */}
+              <Route path="/region-director/chapter" element={<MyChapter />} />
+              <Route path="/region-director/wall" element={<BusinessWall />} />
+              <Route path="/region-director/referrals" element={<ReferralsPipeline />} />
+              <Route path="/region-director/meetings" element={<MeetingsAttendance />} />
+              <Route path="/region-director/one-to-ones" element={<OneToOnesPage />} />
+              <Route path="/region-director/visitors" element={<VisitorsPage />} />
+              <Route path="/region-director/directory" element={<BusinessDirectory />} />
+              <Route path="/region-director/leaderboard" element={<Leaderboard />} />
+              <Route path="/region-director/products" element={<MemberProductsPage />} />
+              <Route path="/region-director/services" element={<ServicesPage />} />
+              <Route path="/region-director/vendors" element={<VendorsPage />} />
+              <Route path="/region-director/profile" element={<MembershipProfilePage />} />
+            </Route>
 
-        <Route element={<ProtectedRoute roles={['district_director']} />}>
-          <Route element={<DashboardLayout navItems={districtDirectorNav} title="District Director Console" />}>
-            <Route path="/district-director" element={<Navigate to="/district-director/dashboard" replace />} />
-            <Route path="/district-director/dashboard" element={<DistrictDirectorDashboard />} />
-            <Route path="/district-director/chapters" element={<LocationsManagementPage />} />
-            <Route path="/district-director/executive-directors" element={<AdminManagementPage />} />
-            <Route path="/district-director/memberships" element={<AdminMembershipsPage />} />
-            <Route path="/district-director/reports" element={<EnterpriseReportBuilderPage />} />
-            <Route path="/district-director/settings" element={<AdminSettingsPage />} />
-          </Route>
-        </Route>
+            {/* State Director Console */}
+            <Route element={<ProtectedRoute roles={['state_director']} />}>
+              <Route path="/state-director" element={<Navigate to="/state-director/dashboard" replace />} />
+              <Route path="/state-director/dashboard" element={<StateDirectorDashboard />} />
+              <Route path="/state-director/districts" element={<LocationsManagementPage />} />
+              <Route path="/state-director/district-directors" element={<AdminManagementPage />} />
+              <Route path="/state-director/memberships" element={<AdminMembershipsPage />} />
+              <Route path="/state-director/reports" element={<EnterpriseReportBuilderPage />} />
+              <Route path="/state-director/settings" element={<AdminSettingsPage />} />
+              {/* Inherited Base Member Modules */}
+              <Route path="/state-director/chapter" element={<MyChapter />} />
+              <Route path="/state-director/wall" element={<BusinessWall />} />
+              <Route path="/state-director/referrals" element={<ReferralsPipeline />} />
+              <Route path="/state-director/meetings" element={<MeetingsAttendance />} />
+              <Route path="/state-director/one-to-ones" element={<OneToOnesPage />} />
+              <Route path="/state-director/visitors" element={<VisitorsPage />} />
+              <Route path="/state-director/directory" element={<BusinessDirectory />} />
+              <Route path="/state-director/leaderboard" element={<Leaderboard />} />
+              <Route path="/state-director/products" element={<MemberProductsPage />} />
+              <Route path="/state-director/services" element={<ServicesPage />} />
+              <Route path="/state-director/vendors" element={<VendorsPage />} />
+              <Route path="/state-director/profile" element={<MembershipProfilePage />} />
+            </Route>
 
-        <Route element={<ProtectedRoute roles={['executive_director']} />}>
-          <Route element={<DashboardLayout navItems={chapterDirectorNav} title="Chapter Director Console" />}>
-            <Route path="/chapter-director" element={<Navigate to="/chapter-director/dashboard" replace />} />
-            <Route path="/chapter-director/dashboard" element={<ChapterDirectorDashboard />} />
-            <Route path="/chapter-director/president" element={<AdminManagementPage />} />
-            <Route path="/chapter-director/members" element={<AdminManagementPage role="customer" />} />
-            <Route path="/chapter-director/launch-directors" element={<AdminManagementPage />} />
-            <Route path="/chapter-director/memberships" element={<AdminMembershipsPage />} />
-            <Route path="/chapter-director/reports" element={<EnterpriseReportBuilderPage />} />
-            <Route path="/chapter-director/settings" element={<AdminSettingsPage />} />
-          </Route>
-        </Route>
+            {/* District Director Console */}
+            <Route element={<ProtectedRoute roles={['district_director']} />}>
+              <Route path="/district-director" element={<Navigate to="/district-director/dashboard" replace />} />
+              <Route path="/district-director/dashboard" element={<DynamicDashboard />} />
+              <Route path="/district-director/chapters" element={<LocationsManagementPage />} />
+              <Route path="/district-director/chapter-directors" element={<AdminManagementPage role="chapter_director" />} />
+              <Route path="/district-director/executive-directors" element={<AdminManagementPage role="executive_director" />} />
+              <Route path="/district-director/memberships" element={<AdminMembershipsPage />} />
+              <Route path="/district-director/reports" element={<EnterpriseReportBuilderPage />} />
+              <Route path="/district-director/settings" element={<AdminSettingsPage />} />
+              
+              {/* Inherited Base Member Modules */}
+              <Route path="/district-director/chapter" element={<MyChapter />} />
+              <Route path="/district-director/wall" element={<BusinessWall />} />
+              <Route path="/district-director/referrals" element={<ReferralsPipeline />} />
+              <Route path="/district-director/meetings" element={<MeetingsAttendance />} />
+              <Route path="/district-director/one-to-ones" element={<OneToOnesPage />} />
+              <Route path="/district-director/visitors" element={<VisitorsPage />} />
+              <Route path="/district-director/directory" element={<BusinessDirectory />} />
+              <Route path="/district-director/leaderboard" element={<Leaderboard />} />
+              <Route path="/district-director/products" element={<MemberProductsPage />} />
+              <Route path="/district-director/services" element={<ServicesPage />} />
+              <Route path="/district-director/vendors" element={<VendorsPage />} />
+              <Route path="/district-director/profile" element={<MembershipProfilePage />} />
 
-        <Route element={<ProtectedRoute roles={['chapter_president']} />}>
-          <Route element={<DashboardLayout navItems={presidentNav} title="President Console" />}>
-            <Route path="/president" element={<Navigate to="/president/dashboard" replace />} />
-            <Route path="/president/dashboard" element={<PresidentDashboard />} />
-            <Route path="/president/vice-presidents" element={<AdminManagementPage />} />
-            <Route path="/president/memberships" element={<AdminMembershipsPage />} />
-            <Route path="/president/reports" element={<EnterpriseReportBuilderPage />} />
-            <Route path="/president/settings" element={<AdminSettingsPage />} />
-          </Route>
-        </Route>
+              {/* District Director Custom Operations */}
+              <Route path="/district-director/district-management" element={<LocationsManagementPage />} />
+              <Route path="/district-director/members" element={<AdminManagementPage role="customer" />} />
+              <Route path="/district-director/vendor-applications" element={<AdminVendorApplicationsPage />} />
+              <Route path="/district-director/approved-vendors" element={<ApprovedVendorsPage />} />
+            </Route>
 
-        <Route element={<ProtectedRoute roles={['vice_president']} />}>
-          <Route element={<DashboardLayout navItems={vicePresidentNav} title="Vice President Console" />}>
-            <Route path="/vice-president" element={<Navigate to="/vice-president/dashboard" replace />} />
-            <Route path="/vice-president/dashboard" element={<VicePresidentDashboard />} />
-            <Route path="/vice-president/secretaries" element={<AdminManagementPage />} />
-            <Route path="/vice-president/members" element={<AdminManagementPage role="customer" />} />
-            <Route path="/vice-president/register-member" element={<AdminManagementPage role="customer" />} />
-            <Route path="/vice-president/memberships" element={<AdminMembershipsPage />} />
-            <Route path="/vice-president/reports" element={<EnterpriseReportBuilderPage />} />
-            <Route path="/vice-president/settings" element={<AdminSettingsPage />} />
+            {/* Chapter Director Console */}
+            <Route element={<ProtectedRoute roles={['executive_director']} />}>
+              <Route path="/chapter-director" element={<Navigate to="/chapter-director/dashboard" replace />} />
+              <Route path="/chapter-director/dashboard" element={<DynamicDashboard />} />
+              <Route path="/chapter-director/president" element={<AdminManagementPage />} />
+              <Route path="/chapter-director/members" element={<AdminManagementPage role="customer" />} />
+              <Route path="/chapter-director/launch-directors" element={<AdminManagementPage />} />
+              <Route path="/chapter-director/memberships" element={<AdminMembershipsPage />} />
+              <Route path="/chapter-director/reports" element={<EnterpriseReportBuilderPage />} />
+              <Route path="/chapter-director/settings" element={<AdminSettingsPage />} />
+              {/* Inherited Base Member Modules */}
+              <Route path="/chapter-director/chapter" element={<MyChapter />} />
+              <Route path="/chapter-director/wall" element={<BusinessWall />} />
+              <Route path="/chapter-director/business-wall" element={<BusinessWall />} />
+              <Route path="/chapter-director/referrals" element={<ReferralsPipeline />} />
+              <Route path="/chapter-director/meetings" element={<MeetingsAttendance />} />
+              <Route path="/chapter-director/attendance" element={<MeetingsAttendance />} />
+              <Route path="/chapter-director/one-to-ones" element={<OneToOnesPage />} />
+              <Route path="/chapter-director/visitors" element={<VisitorsPage />} />
+              <Route path="/chapter-director/directory" element={<BusinessDirectory />} />
+              <Route path="/chapter-director/leaderboard" element={<Leaderboard />} />
+              <Route path="/chapter-director/products" element={<MemberProductsPage />} />
+              <Route path="/chapter-director/services" element={<ServicesPage />} />
+              <Route path="/chapter-director/vendors" element={<VendorsPage />} />
+              <Route path="/chapter-director/profile" element={<MembershipProfilePage />} />
+
+              {/* Chapter Director specific sub-routes */}
+              <Route path="/chapter-director/presidents" element={<AdminManagementPage role="chapter_president" />} />
+              <Route path="/chapter-director/vice-presidents" element={<AdminManagementPage role="vice_president" />} />
+              <Route path="/chapter-director/secretaries" element={<AdminManagementPage role="secretary" />} />
+              <Route path="/chapter-director/vendor-applications" element={<AdminVendorApplicationsPage />} />
+              <Route path="/chapter-director/approved-vendors" element={<ApprovedVendorsPage />} />
+            </Route>
+
+            {/* President Console */}
+            <Route element={<ProtectedRoute roles={['chapter_president']} />}>
+              <Route path="/president" element={<Navigate to="/president/dashboard" replace />} />
+              <Route path="/president/dashboard" element={<PresidentDashboard />} />
+              <Route path="/president/vice-presidents" element={<AdminManagementPage />} />
+              <Route path="/president/memberships" element={<AdminMembershipsPage />} />
+              <Route path="/president/reports" element={<EnterpriseReportBuilderPage />} />
+              <Route path="/president/settings" element={<AdminSettingsPage />} />
+              {/* Inherited Base Member Modules */}
+              <Route path="/president/chapter" element={<MyChapter />} />
+              <Route path="/president/wall" element={<BusinessWall />} />
+              <Route path="/president/referrals" element={<ReferralsPipeline />} />
+              <Route path="/president/meetings" element={<MeetingsAttendance />} />
+              <Route path="/president/one-to-ones" element={<OneToOnesPage />} />
+              <Route path="/president/visitors" element={<VisitorsPage />} />
+              <Route path="/president/directory" element={<BusinessDirectory />} />
+              <Route path="/president/leaderboard" element={<Leaderboard />} />
+              <Route path="/president/products" element={<MemberProductsPage />} />
+              <Route path="/president/services" element={<ServicesPage />} />
+              <Route path="/president/vendors" element={<VendorsPage />} />
+              <Route path="/president/profile" element={<MembershipProfilePage />} />
+            </Route>
+
+            {/* Vice President Console */}
+            <Route element={<ProtectedRoute roles={['vice_president']} />}>
+              <Route path="/vice-president" element={<Navigate to="/vice-president/dashboard" replace />} />
+              <Route path="/vice-president/dashboard" element={<VicePresidentDashboard />} />
+              <Route path="/vice-president/secretaries" element={<AdminManagementPage />} />
+              <Route path="/vice-president/members" element={<AdminManagementPage role="customer" />} />
+              <Route path="/vice-president/register-member" element={<AdminManagementPage role="customer" />} />
+              <Route path="/vice-president/memberships" element={<AdminMembershipsPage />} />
+              <Route path="/vice-president/reports" element={<EnterpriseReportBuilderPage />} />
+              <Route path="/vice-president/settings" element={<AdminSettingsPage />} />
+              {/* Inherited Base Member Modules */}
+              <Route path="/vice-president/chapter" element={<MyChapter />} />
+              <Route path="/vice-president/wall" element={<BusinessWall />} />
+              <Route path="/vice-president/referrals" element={<ReferralsPipeline />} />
+              <Route path="/vice-president/meetings" element={<MeetingsAttendance />} />
+              <Route path="/vice-president/one-to-ones" element={<OneToOnesPage />} />
+              <Route path="/vice-president/visitors" element={<VisitorsPage />} />
+              <Route path="/vice-president/directory" element={<BusinessDirectory />} />
+              <Route path="/vice-president/leaderboard" element={<Leaderboard />} />
+              <Route path="/vice-president/products" element={<MemberProductsPage />} />
+              <Route path="/vice-president/services" element={<ServicesPage />} />
+              <Route path="/vice-president/vendors" element={<VendorsPage />} />
+              <Route path="/vice-president/profile" element={<MembershipProfilePage />} />
+            </Route>
+
+            {/* Launch Director Console */}
+            <Route element={<ProtectedRoute roles={['launch_director']} />}>
+              <Route path="/launch-director" element={<Navigate to="/launch-director/dashboard" replace />} />
+              <Route path="/launch-director/dashboard" element={<DynamicDashboard />} />
+              
+              {/* Inherited Base Member Modules */}
+              <Route path="/launch-director/chapter" element={<MyChapter />} />
+              <Route path="/launch-director/wall" element={<BusinessWall />} />
+              <Route path="/launch-director/referrals" element={<ReferralsPipeline />} />
+              <Route path="/launch-director/meetings" element={<MeetingsAttendance />} />
+              <Route path="/launch-director/one-to-ones" element={<OneToOnesPage />} />
+              <Route path="/launch-director/visitors" element={<VisitorsPage />} />
+              <Route path="/launch-director/directory" element={<BusinessDirectory />} />
+              <Route path="/launch-director/leaderboard" element={<Leaderboard />} />
+              <Route path="/launch-director/products" element={<MemberProductsPage />} />
+              <Route path="/launch-director/services" element={<ServicesPage />} />
+              <Route path="/launch-director/vendors" element={<VendorsPage />} />
+              <Route path="/launch-director/profile" element={<MembershipProfilePage />} />
+              <Route path="/launch-director/settings" element={<MembershipProfilePage />} />
+
+              {/* Launch Director Specific Modules */}
+              <Route path="/launch-director/chapters" element={<LocationsManagementPage />} />
+              <Route path="/launch-director/chapter-launch" element={<LocationsManagementPage />} />
+              <Route path="/launch-director/membership-applications" element={<AdminMembershipApplicationsPage />} />
+              <Route path="/launch-director/membership-verification" element={<AdminMembershipApplicationsPage />} />
+              <Route path="/launch-director/presidents" element={<AdminManagementPage role="chapter_president" />} />
+              <Route path="/launch-director/vice-presidents" element={<AdminManagementPage role="vice_president" />} />
+              <Route path="/launch-director/vendor-applications" element={<AdminVendorApplicationsPage />} />
+              <Route path="/launch-director/launch-reports" element={<EnterpriseReportBuilderPage />} />
+              <Route path="/launch-director/membership-reports" element={<EnterpriseReportBuilderPage />} />
+              <Route path="/launch-director/vendor-reports" element={<EnterpriseReportBuilderPage />} />
+            </Route>
+
+            {/* Direct Consultant Console */}
+            <Route element={<ProtectedRoute roles={['direct_consultant']} />}>
+              <Route path="/direct-consultant" element={<Navigate to="/direct-consultant/dashboard" replace />} />
+              <Route path="/direct-consultant/dashboard" element={<DynamicDashboard />} />
+              
+              {/* Inherited Base Member Modules */}
+              <Route path="/direct-consultant/chapter" element={<MyChapter />} />
+              <Route path="/direct-consultant/wall" element={<BusinessWall />} />
+              <Route path="/direct-consultant/referrals" element={<ReferralsPipeline />} />
+              <Route path="/direct-consultant/meetings" element={<MeetingsAttendance />} />
+              <Route path="/direct-consultant/one-to-ones" element={<OneToOnesPage />} />
+              <Route path="/direct-consultant/visitors" element={<VisitorsPage />} />
+              <Route path="/direct-consultant/directory" element={<BusinessDirectory />} />
+              <Route path="/direct-consultant/leaderboard" element={<Leaderboard />} />
+              <Route path="/direct-consultant/products" element={<MemberProductsPage />} />
+              <Route path="/direct-consultant/services" element={<ServicesPage />} />
+              <Route path="/direct-consultant/vendors" element={<VendorsPage />} />
+              <Route path="/direct-consultant/profile" element={<MembershipProfilePage />} />
+              <Route path="/direct-consultant/settings" element={<MembershipProfilePage />} />
+
+              {/* Direct Consultant Specific Modules */}
+              <Route path="/direct-consultant/vendor-applications" element={<AdminVendorApplicationsPage />} />
+              <Route path="/direct-consultant/approved-vendors" element={<ApprovedVendorsPage />} />
+              <Route path="/direct-consultant/members" element={<AdminManagementPage role="customer" />} />
+              <Route path="/direct-consultant/membership-applications" element={<AdminMembershipApplicationsPage />} />
+              <Route path="/direct-consultant/register-member" element={<AdminManagementPage role="customer" />} />
+              <Route path="/direct-consultant/reports" element={<EnterpriseReportBuilderPage />} />
+            </Route>
+
           </Route>
         </Route>
 

@@ -42,20 +42,55 @@ function GlassStat({ label, value, helper, icon: Icon }) {
   )
 }
 
+function formatTimeAgo(dateString) {
+  const diff = Date.now() - new Date(dateString).getTime();
+  const minutes = Math.floor(diff / 60000);
+  if (minutes < 1) return 'Just now';
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  return `${days}d ago`;
+}
+
 function ActivityTimeline() {
-  const items = [
-    ['Membership application reviewed', 'Membership', '2 min ago'],
-    ['District Director assignment updated', 'Hierarchy', '18 min ago'],
-    ['District location status configured', 'Districts', '42 min ago'],
-    ['District membership report exported', 'Reports', '1 hr ago'],
-  ]
+  const [logs, setLogs] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    adminApi.auditLogs({ limit: 4 })
+      .then(res => {
+        setLogs(res.data?.data || res.data || []);
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading) {
+    return (
+      <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-850 dark:bg-slate-950">
+        <h2 className="text-lg font-extrabold text-slate-950 dark:text-white">Activity Timeline</h2>
+        <div className="mt-5 text-sm font-semibold text-slate-400">Loading activity...</div>
+      </section>
+    );
+  }
+
+  const items = logs.map(log => [
+    log.description || `${log.action?.replaceAll('_', ' ').toUpperCase()} by ${log.user?.name || log.user?.email || 'System'}`,
+    log.module || 'System',
+    formatTimeAgo(log.createdAt)
+  ]);
+
+  const displayItems = items.length ? items : [
+    ['No recent actions logged', 'System', 'Just now']
+  ];
 
   return (
     <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-850 dark:bg-slate-950">
       <h2 className="text-lg font-extrabold text-slate-950 dark:text-white">Activity Timeline</h2>
       <div className="mt-5 space-y-4">
-        {items.map(([title, module, time]) => (
-          <div key={title} className="flex gap-3">
+        {displayItems.map(([title, module, time], idx) => (
+          <div key={idx} className="flex gap-3">
             <span className="mt-1 h-2.5 w-2.5 rounded-full bg-[#0d4697]" />
             <div>
               <p className="text-sm font-extrabold text-slate-800 dark:text-slate-200">{title}</p>
@@ -65,7 +100,7 @@ function ActivityTimeline() {
         ))}
       </div>
     </section>
-  )
+  );
 }
 
 function monthLabel(item) {

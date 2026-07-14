@@ -18,13 +18,18 @@ export function AuthProvider({ children }) {
   const socketRef = useRef(null)
 
   const login = useCallback(async (payload, remember = true) => {
-    const response = await authApi.login(payload)
-    const data = response.data.data
-    storage.setSession(data, remember)
-    setUser(data.user)
-    setPermissionConfig(data.user ? undefined : null)
-    toast.success('Signed in successfully')
-    return data.user
+    try {
+      const response = await authApi.login(payload)
+      const data = response.data.data
+      storage.setSession(data, remember)
+      setUser(data.user)
+      setPermissionConfig(data.user ? undefined : null)
+      toast.success('Signed in successfully')
+      return data.user
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Invalid email or password')
+      throw error
+    }
   }, [])
 
   const register = useCallback(async (payload) => {

@@ -1,13 +1,16 @@
 import {
   Activity,
+  Award,
   BarChart3,
   Bell,
   BriefcaseBusiness,
   Building2,
   CalendarDays,
+  Clock,
   CreditCard,
   FileBarChart,
   FileText,
+  Folder,
   Heart,
   HelpCircle,
   Home,
@@ -177,153 +180,198 @@ export const membershipNav = [
   ['Support', '/membership/support', HelpCircle],
 ]
 
-export const memberNav = [
-  {
-    label: 'Dashboard',
-    icon: LayoutDashboard,
-    children: [
-      ['Overview', '/member/dashboard', Gem],
-      ['Analytics (BI)', '/member/dashboard/analytics', FileBarChart],
-      ['Chapter Performance', '/member/dashboard/performance', TrendingUp],
-    ],
-  },
+export const memberNav = [];
+export const secretaryNav = [];
+export const stateDirectorNav = [];
+export const districtDirectorNav = [];
+export const chapterDirectorNav = [];
+export const presidentNav = [];
+export const vicePresidentNav = [];
+export const regionDirectorNav = [];
+
+export const rolePrefixes = {
+  superadmin: '/admin',
+  admin: '/admin',
+  customer: '/member/dashboard',
+  user: '/member/dashboard',
+  vendor: '/member/dashboard',
+  secretary: '/secretary',
+  vice_president: '/vice-president',
+  chapter_president: '/president',
+  executive_director: '/chapter-director',
+  district_director: '/district-director',
+  state_director: '/state-director',
+  region_director: '/region-director',
+  launch_director: '/launch-director',
+  direct_consultant: '/direct-consultant'
+};
+
+const commonModules = [
+  ['Dashboard', '', LayoutDashboard],
   {
     label: 'Community',
     icon: Network,
     children: [
-      ['Business Wall', '/member/dashboard/wall', Volume2],
-      ['Referrals', '/member/dashboard/referrals', Handshake],
-      ['Business Directory', '/member/dashboard/directory', Users],
-      ['Leaderboard', '/member/dashboard/leaderboard', Trophy],
-      ['Visitors', '/member/dashboard/visitors', Ticket],
-    ],
+      ['Business Wall', '/wall', Volume2],
+      ['Referrals', '/referrals', Handshake],
+      ['Business Directory', '/directory', Users],
+      ['Leaderboard', '/leaderboard', Trophy],
+      ['Visitors', '/visitors', Ticket]
+    ]
   },
   {
     label: 'Marketplace',
     icon: ShoppingBag,
     children: [
-      ['Products', '/products', ShoppingBag],
+      ['Products', '/products', Package],
       ['Services', '/services', BriefcaseBusiness],
       ['Vendors', '/vendors', Users],
-      ['Become a Vendor', '/member/vendor-application', PlusCircle],
-      ['My Vendor Application', '/member/vendor-application', FileText],
-      ['Application Status', '/member/vendor-application-status', ClipboardList],
-      ['Wishlist', '/customer/wishlist', Heart],
-      ['Orders', '/customer/wishlist', ShoppingBag],
-    ],
+      ['Orders', '/orders', ShoppingBag],
+      ['Payments', '/payments', CreditCard],
+      ['Subscription', '/subscription', ToggleLeft]
+    ]
   },
   {
     label: 'Meetings',
     icon: CalendarDays,
     children: [
-      ['Meetings & Attendance', '/member/dashboard/meetings', ClipboardList],
-      ['One-to-Ones', '/member/dashboard/one-to-ones', Users],
-      ['Unified Calendar', '/member/dashboard/calendar', Calendar],
-    ],
+      ['Meetings', '/meetings', CalendarDays],
+      ['Attendance', '/attendance', ClipboardList],
+      ['One-to-Ones', '/one-to-ones', Clock]
+    ]
   },
   {
     label: 'Chapter',
     icon: Building2,
     children: [
-      ['My Chapter', '/member/dashboard/chapter', Building2],
-      ['AI Insights', '/member/dashboard/digital-card', Sparkles],
-      ['Digital Member Card', '/member/dashboard/digital-card', QrCode],
-    ],
+      ['My Chapter', '/chapter', Building2],
+      ['AI Insights', '/ai-insights', Sparkles],
+      ['Digital Member Card', '/digital-card', QrCode]
+    ]
   },
   {
     label: 'Collaboration',
     icon: MessageSquare,
     children: [
-      ['Lobby Chat', '/member/dashboard/chat', MessageSquare],
-      ['Tasks', '/member/dashboard/tasks', ClipboardCheck],
-      ['Support Tickets', '/customer/support', HelpCircle],
-    ],
+      ['Tasks', '/tasks', ClipboardCheck],
+      ['Chat', '/chat', MessageSquare],
+      ['Help Desk', '/help-desk', HelpCircle]
+    ]
   },
   {
     label: 'Account',
     icon: User,
     children: [
-      ['Profile', '/member/profile', User],
-      ['Settings', '/member/settings', Settings],
-    ],
-  },
-]
+      ['Profile', '/profile', User],
+      ['Settings', '/settings', Settings]
+    ]
+  }
+];
 
-export const secretaryNav = [
-  ['Dashboard', '/secretary/dashboard', LayoutDashboard],
-  ['Members', '/secretary/members', Users],
-  ['Minutes', '/secretary/minutes', FileText],
-  ['Attendance', '/secretary/attendance', CalendarDays],
-  ['Documents', '/secretary/documents', ShoppingBag],
-  ['Reports', '/secretary/reports', BarChart3],
-  ['Settings', '/secretary/settings', Settings],
-]
+const roleModules = {
+  secretary: [
+    ['Members', '/members', Users],
+    ['Minutes', '/minutes', FileText],
+    ['Documents', '/documents', Folder],
+    ['Reports', '/reports', FileBarChart],
+    ['Meeting Records', '/meeting-records', ClipboardList]
+  ],
+  vice_president: [
+    ['Member Registration', '/register-member', Users],
+    ['Secretaries', '/secretaries', Users],
+    ['Approved Vendors', '/admin/approved-vendors', Building2],
+    ['Reports', '/reports', FileBarChart],
+    ['Announcements', '/announcements', Bell]
+  ],
+  chapter_president: [
+    ['Vice Presidents', '/vice-presidents', Users],
+    ['Chapter Reports', '/reports', FileBarChart],
+    ['Vendor Approvals', '/admin/applications/vendor', Building2],
+    ['Leadership', '/leadership', Award]
+  ],
+  executive_director: [
+    ['Chapter Management', '/chapter-management', Settings],
+    ['Chapter Presidents', '/presidents', Users],
+    ['Vice Presidents', '/vice-presidents', Users],
+    ['Secretaries', '/secretaries', Users],
+    ['Assigned Members', '/members', Users],
+    ['Membership Status', '/memberships', CreditCard],
+    ['Vendor Applications', '/vendor-applications', BriefcaseBusiness],
+    ['Approved Vendors', '/approved-vendors', Building2]
+  ],
+  chapter_director: [
+    ['Chapter Management', '/chapter-management', Settings],
+    ['Chapter Presidents', '/presidents', Users],
+    ['Vice Presidents', '/vice-presidents', Users],
+    ['Secretaries', '/secretaries', Users],
+    ['Assigned Members', '/members', Users],
+    ['Membership Status', '/memberships', CreditCard],
+    ['Vendor Applications', '/vendor-applications', BriefcaseBusiness],
+    ['Approved Vendors', '/approved-vendors', Building2]
+  ],
+  district_director: [
+    ['District Overview', '/district-management', Settings],
+    ['Chapters', '/chapters', Building2],
+    ['Chapter Directors', '/chapter-directors', Users],
+    ['Executive Directors', '/executive-directors', Users],
+    ['Membership Requests', '/memberships', CreditCard],
+    ['Active Members', '/members', Users],
+    ['Pending Members', '/memberships', CreditCard],
+    ['Vendor Applications', '/vendor-applications', BriefcaseBusiness],
+    ['Approved Vendors', '/approved-vendors', Building2]
+  ],
+  state_director: [
+    ['District Directors', '/district-directors', Users],
+    ['State Analytics', '/analytics', FileBarChart]
+  ],
+  region_director: [
+    ['State Directors', '/state-directors', Users],
+    ['Regional Analytics', '/analytics', FileBarChart]
+  ],
+  launch_director: [
+    ['Assigned Chapters', '/chapters', Building2],
+    ['Chapter Launch Status', '/chapter-launch', Settings],
+    ['Membership Applications', '/membership-applications', CreditCard],
+    ['Membership Verification', '/membership-verification', ShieldCheck],
+    ['Chapter Presidents', '/presidents', Users],
+    ['Vice Presidents', '/vice-presidents', Users],
+    ['Approved Vendors', '/admin/approved-vendors', Building2],
+    ['Vendor Applications', '/vendor-applications', BriefcaseBusiness],
+    ['Launch Reports', '/launch-reports', FileBarChart],
+    ['Membership Reports', '/membership-reports', FileBarChart],
+    ['Vendor Reports', '/vendor-reports', FileBarChart]
+  ],
+  direct_consultant: [
+    ['Vendor Applications', '/vendor-applications', BriefcaseBusiness],
+    ['Approved Vendors', '/approved-vendors', Building2],
+    ['Assigned Members', '/members', Users],
+    ['Membership Status', '/membership-applications', CreditCard]
+  ]
+};
 
-export const stateDirectorNav = [
-  ['Dashboard', '/state-director/dashboard', LayoutDashboard],
-  {
-    label: 'Organization Master',
-    icon: Building2,
-    children: [
-      ['Districts', '/state-director/districts', MapPinned],
-    ],
-  },
-  ['District Directors', '/state-director/district-directors', Users],
-  ['Memberships', '/state-director/memberships', CreditCard],
-  ['Reports', '/state-director/reports', FileBarChart],
-]
+export function getSidebarNav(role) {
+  if (['superadmin', 'admin'].includes(role)) {
+    return adminNav;
+  }
 
-export const districtDirectorNav = [
-  ['Dashboard', '/district-director/dashboard', LayoutDashboard],
-  {
-    label: 'Organization Master',
-    icon: Building2,
-    children: [
-      ['Chapters', '/district-director/chapters', MapPinned],
-    ],
-  },
-  ['Executive Directors', '/district-director/executive-directors', Users],
-  ['Memberships', '/district-director/memberships', CreditCard],
-  ['Reports', '/district-director/reports', FileBarChart],
-]
+  const prefix = rolePrefixes[role] || '/member/dashboard';
 
-export const chapterDirectorNav = [
-  ['Dashboard', '/chapter-director/dashboard', LayoutDashboard],
-  ['President', '/chapter-director/president', Users],
-  ['Members', '/chapter-director/members', Users],
-  ['Memberships', '/chapter-director/memberships', CreditCard],
-  ['Launch Directors', '/chapter-director/launch-directors', Users],
-  ['Membership Approvals', '/chapter-director/memberships', CreditCard],
-  ['Reports', '/chapter-director/reports', FileBarChart],
-]
+  const prefixItem = (item) => {
+    if (Array.isArray(item)) {
+      const [label, to, icon] = item;
+      const finalPath = to.startsWith('/admin') ? to : `${prefix}${to}`;
+      return [label, finalPath, icon];
+    }
+    return {
+      ...item,
+      children: item.children.map(prefixItem)
+    };
+  };
 
-export const presidentNav = [
-  ['Dashboard', '/president/dashboard', LayoutDashboard],
-  ['Vice Presidents', '/president/vice-presidents', Users],
-  ['Reports', '/president/reports', FileBarChart],
-]
+  const base = commonModules.map(prefixItem);
+  const extra = (roleModules[role] || []).map(prefixItem);
 
-export const vicePresidentNav = [
-  ['Dashboard', '/vice-president/dashboard', LayoutDashboard],
-  ['Secretaries', '/vice-president/secretaries', Users],
-  ['Members', '/vice-president/members', Users],
-  ['Member Registration', '/vice-president/register-member', Users],
-  ['Reports', '/vice-president/reports', FileBarChart],
-]
-
-export const regionDirectorNav = [
-  ['Dashboard', '/region-director/dashboard', LayoutDashboard],
-  {
-    label: 'Organization Master',
-    icon: Building2,
-    children: [
-      ['States', '/region-director/locations', MapPinned],
-    ],
-  },
-  ['State Directors', '/region-director/state-directors', Users],
-  ['Memberships', '/region-director/memberships', CreditCard],
-  ['Approved Vendors', '/region-director/approved-vendors', Building2],
-  ['Reports', '/region-director/reports', FileBarChart],
-]
+  return [...base, ...extra];
+}
 
 
