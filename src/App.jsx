@@ -69,6 +69,7 @@ import {
   AdminModuleApplicationsPage,
   AdminMembershipApplicationsPage,
   AdminMembershipsPage,
+  AdminMembersPage,
   AdminPaymentsPage,
   AdminPlansPage,
   AdminProductsPage,
@@ -182,6 +183,7 @@ function App() {
     { path: '/admin/marketplace-settings', element: <SuperAdminModulePage {...superAdminModuleConfigs.marketplace} /> },
     { path: '/admin/marketplace-approval', element: <MarketplaceApprovalPage /> },
     { path: '/admin/memberships', element: <AdminMembershipsPage /> },
+    { path: '/admin/members', element: <AdminMembersPage /> },
     { path: '/admin/visitors', element: <VisitorManagementPage /> },
     { path: '/admin/visitor-conversion', element: <VisitorConversionEnginePage /> },
     { path: '/admin/attendance', element: <AttendanceEnginePage /> },
@@ -447,6 +449,7 @@ function App() {
               <Route path="/chapter-director/members" element={<AdminManagementPage role="customer" />} />
               <Route path="/chapter-director/launch-directors" element={<AdminManagementPage />} />
               <Route path="/chapter-director/memberships" element={<AdminMembershipsPage />} />
+              <Route path="/chapter-director/membership-applications" element={<AdminMembershipApplicationsPage />} />
               <Route path="/chapter-director/reports" element={<EnterpriseReportBuilderPage />} />
               <Route path="/chapter-director/settings" element={<AdminSettingsPage />} />
               {/* Inherited Base Member Modules */}

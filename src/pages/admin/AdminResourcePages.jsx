@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import toast from 'react-hot-toast'
 import { CheckCircle2, ExternalLink, Eye, FileText, Loader2, XCircle, Package, BriefcaseBusiness } from 'lucide-react'
+import api from '../../api/axios'
 import { adminApi } from '../../api/admin'
 import Modal from '../../components/common/Modal'
 import StatusBadge from '../../components/common/StatusBadge'
@@ -310,15 +311,21 @@ export function AdminMembershipApplicationsPage() {
   return (
     <>
       <ResourceListPage module="members" section="applications" title="Membership Applications" fetcher={adminApi.membershipApplications} filters={[{ key: 'status', label: 'Status', options: ['submitted', 'documents_verified', 'under_review', 'approved', 'rejected'].map((value) => ({ value, label: value.replaceAll('_', ' ') })) }]} columns={[
-        { key: 'fullName', header: 'Applicant', render: (row) => row.personal?.fullName || 'Applicant' },
-        { key: 'company', header: 'Company', render: (row) => row.professional?.companyName || 'Not added' },
-        { key: 'email', header: 'Email', render: (row) => row.personal?.emailAddress || row.professional?.businessEmail || 'Not added' },
-        { key: 'documents', header: 'Documents', render: (row) => Object.values(row.documents || {}).filter(Boolean).length },
-        { key: 'createdAt', header: 'Submitted', render: (row) => formatDate(row.createdAt) },
+        { key: 'applicationNumber', header: 'Member ID/App ID', render: (row) => row.submittedBy?.memberId || row.applicationNumber },
+        { key: 'fullName', header: 'Name', render: (row) => row.personal?.fullName || row.submittedBy?.name },
+        { key: 'email', header: 'Email', render: (row) => row.personal?.emailAddress || row.submittedBy?.email || 'Not added' },
+        { key: 'mobile', header: 'Mobile', render: (row) => row.personal?.mobileNumber || row.submittedBy?.phone || 'Not added' },
+        { key: 'plan', header: 'Membership Plan', render: (row) => row.professional?.membershipPlan || row.membership?.plan || 'Silver' },
+        { key: 'region', header: 'Region', render: (row) => row.regionId?.name || 'Not assigned' },
+        { key: 'state', header: 'State', render: (row) => row.stateId?.name || 'Not assigned' },
+        { key: 'district', header: 'District', render: (row) => row.districtId?.name || 'Not assigned' },
+        { key: 'chapter', header: 'Chapter', render: (row) => row.chapterId?.name || 'Not assigned' },
+        { key: 'submittedBy', header: 'Submitted By (VP)', render: (row) => row.vicePresidentId?.name || row.vicePresidentId?.email || 'Self' },
+        { key: 'createdAt', header: 'Submitted Date', render: (row) => formatDate(row.createdAt) },
         { key: 'status', header: 'Status', render: (row) => <StatusBadge value={row.status} /> },
       ]} renderActions={(row, { reload }, permissions) => {
         const userRole = user?.role || ''
-        const showDropdownStatus = ['superadmin', 'admin'].includes(userRole)
+        const showDropdownStatus = ['superadmin', 'admin'].includes(userRole) && !['approved', 'rejected'].includes(row.status)
         return (
           <>
             {permissions.hasOperation('members', 'view') && <button onClick={() => openDetails(row, reload)} className="inline-flex items-center gap-1.5 rounded-md border border-[#0d4697]/20 px-3 py-1.5 text-xs font-extrabold text-[#0d4697] hover:bg-blue-50">
@@ -384,17 +391,21 @@ function MembershipApplicationDetails({ application, adminNotes, onNotesChange, 
   let showApproveBtn = false
   let showRejectBtn = false
 
-  if (['superadmin', 'admin'].includes(userRole)) {
-    showVerifyBtn = true
-    showApproveBtn = true
-    showRejectBtn = true
-  } else if (userRole === 'direct_consultant') {
-    showVerifyBtn = true
-    showApproveBtn = true
-    showRejectBtn = true
-  } else if (userRole === 'executive_director') {
-    showApproveBtn = true
-    showRejectBtn = true
+  const isFinalDecision = ['approved', 'rejected'].includes(application.status)
+
+  if (!isFinalDecision) {
+    if (['superadmin', 'admin'].includes(userRole)) {
+      showVerifyBtn = true
+      showApproveBtn = true
+      showRejectBtn = true
+    } else if (userRole === 'direct_consultant') {
+      showVerifyBtn = true
+      showApproveBtn = true
+      showRejectBtn = true
+    } else if (userRole === 'executive_director') {
+      showApproveBtn = true
+      showRejectBtn = true
+    }
   }
 
   const documents = [
@@ -660,4 +671,104 @@ export function AdminFaqsPage() {
 
 export function AdminSettingsPage() {
   return <ResourceListPage module="settings" section="settings" title="Settings" fetcher={adminApi.settings} columns={[{ key: 'key', header: 'Key' }, { key: 'group', header: 'Group' }, { key: 'value', header: 'Value', render: (row) => typeof row.value === 'object' ? JSON.stringify(row.value) : String(row.value) }]} />
+}
+
+export function AdminMembersPage() {
+  const [regions, setRegions] = useState([])
+  const [states, setStates] = useState([])
+  const [districts, setDistricts] = useState([])
+  const [chapters, setChapters] = useState([])
+
+  useEffect(() => {
+    api.get('/organization/regions')
+      .then(res => setRegions(res.data?.data?.regions || []))
+      .catch(err => console.error("Error loading regions", err))
+
+    api.get('/organization/states')
+      .then(res => setStates(res.data?.data?.states || []))
+      .catch(err => console.error("Error loading states", err))
+
+    api.get('/organization/districts')
+      .then(res => setDistricts(res.data?.data?.districts || []))
+      .catch(err => console.error("Error loading districts", err))
+
+    api.get('/organization/chapters')
+      .then(res => setChapters(res.data?.data?.chapters || []))
+      .catch(err => console.error("Error loading chapters", err))
+  }, [])
+
+  const filters = useMemo(() => [
+    {
+      key: 'region',
+      label: 'Region',
+      options: regions.map(r => ({ value: r._id, label: r.name }))
+    },
+    {
+      key: 'state',
+      label: 'State',
+      options: states.map(s => ({ value: s._id, label: s.name }))
+    },
+    {
+      key: 'district',
+      label: 'District',
+      options: districts.map(d => ({ value: d._id, label: d.name }))
+    },
+    {
+      key: 'chapter',
+      label: 'Chapter',
+      options: chapters.map(c => ({ value: c._id, label: c.name }))
+    },
+    {
+      key: 'plan',
+      label: 'Membership Plan',
+      options: [
+        { value: 'free', label: 'Free' },
+        { value: 'silver', label: 'Silver' },
+        { value: 'gold', label: 'Gold' },
+        { value: 'platinum', label: 'Platinum' }
+      ]
+    },
+    {
+      key: 'status',
+      label: 'Status',
+      options: [
+        { value: 'active', label: 'Active' },
+        { value: 'suspended', label: 'Suspended' },
+        { value: 'blocked', label: 'Blocked' }
+      ]
+    }
+  ], [regions, states, districts, chapters])
+
+  const columns = useMemo(() => [
+    { key: 'memberId', header: 'Member ID', render: (row) => row.memberId || 'N/A' },
+    { key: 'name', header: 'Name', render: (row) => row.name },
+    { key: 'email', header: 'Email', render: (row) => row.email },
+    { key: 'phone', header: 'Mobile', render: (row) => row.phone || 'N/A' },
+    { key: 'membershipPlan', header: 'Membership Plan', render: (row) => <span className="uppercase font-bold text-xs bg-slate-100 text-slate-700 px-2 py-0.5 rounded">{row.membershipPlan}</span> },
+    { key: 'region', header: 'Region', render: (row) => row.region || 'N/A' },
+    { key: 'state', header: 'State', render: (row) => row.state || 'N/A' },
+    { key: 'district', header: 'District', render: (row) => row.district || 'N/A' },
+    { key: 'chapter', header: 'Chapter', render: (row) => row.chapter || 'N/A' },
+    { key: 'approvedBy', header: 'Approved By', render: (row) => row.approvedBy || 'N/A' },
+    { key: 'approvedRole', header: 'Approver Role', render: (row) => <span className="capitalize font-semibold text-xs text-slate-500">{row.approvedRole?.replaceAll('_', ' ')}</span> },
+    { key: 'approvedAt', header: 'Approved Date', render: (row) => formatDate(row.approvedAt) },
+    { key: 'status', header: 'Status', render: (row) => {
+      let statusVal = 'active'
+      if (row.isSuspended) statusVal = 'suspended'
+      else if (row.isBlocked) statusVal = 'blocked'
+      return <StatusBadge value={statusVal} />
+    }},
+  ], [])
+
+  return (
+    <ResourceListPage
+      module="members"
+      section="list"
+      title="Members"
+      description="View and filter all approved members across regions, states, districts, and chapters."
+      fetcher={adminApi.members}
+      columns={columns}
+      filters={filters}
+    />
+  )
 }

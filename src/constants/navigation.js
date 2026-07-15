@@ -76,8 +76,10 @@ export const adminNav = [
     label: 'Membership',
     icon: CreditCard,
     children: [
+      ['Membership Applications', '/admin/applications/membership', ClipboardList],
       ['Memberships', '/admin/memberships', CreditCard],
       ['Membership Plans', '/admin/plans', CreditCard],
+      ['Members', '/admin/members', Users],
       ['Visitors', '/admin/visitors', Users],
       ['Visitor Conversion', '/admin/visitor-conversion', Workflow],
       ['Attendance', '/admin/attendance', Activity],
@@ -295,6 +297,7 @@ const roleModules = {
     ['Vice Presidents', '/vice-presidents', Users],
     ['Secretaries', '/secretaries', Users],
     ['Assigned Members', '/members', Users],
+    ['Membership Applications', '/membership-applications', ClipboardList],
     ['Membership Status', '/memberships', CreditCard],
     ['Vendor Applications', '/vendor-applications', BriefcaseBusiness],
     ['Approved Vendors', '/approved-vendors', Building2]
@@ -305,6 +308,7 @@ const roleModules = {
     ['Vice Presidents', '/vice-presidents', Users],
     ['Secretaries', '/secretaries', Users],
     ['Assigned Members', '/members', Users],
+    ['Membership Applications', '/membership-applications', ClipboardList],
     ['Membership Status', '/memberships', CreditCard],
     ['Vendor Applications', '/vendor-applications', BriefcaseBusiness],
     ['Approved Vendors', '/approved-vendors', Building2]
