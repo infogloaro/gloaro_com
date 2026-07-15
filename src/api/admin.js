@@ -51,6 +51,7 @@ export const adminApi = {
   createPlan: (data) => api.post('/memberships/plans', data),
   updatePlan: (id, data) => api.patch(`/memberships/plans/${id}`, data),
   memberships: (params) => api.get('/memberships', { params }),
+  members: (params) => api.get('/admin/members', { params }),
   membershipApplications: (params) => api.get('/membership-applications', { params }),
   membershipApplication: (id) => api.get(`/membership-applications/${id}`),
   membershipApplicationDocumentUrl: (id, field) => api.get(`/membership-applications/${id}/documents/${field}/url`),
