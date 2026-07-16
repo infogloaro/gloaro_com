@@ -120,6 +120,7 @@ import MembershipDashboard from './pages/membership/MembershipDashboard'
 import MemberDashboard from './pages/membership/MemberDashboard'
 import VendorApplicationForm from './pages/membership/VendorApplicationForm'
 import VendorApplicationStatus from './pages/membership/VendorApplicationStatus'
+import MembershipApplicationStatus from './pages/membership/MembershipApplicationStatus'
 import MemberProductsPage from './pages/membership/MemberProductsPage'
 import {
   MembershipBenefitsPage,
@@ -261,6 +262,7 @@ function App() {
           <Route path="/reviews" element={<ReviewsPage />} />
           <Route path="/membership-agreement" element={<MembershipAgreement />} />
           <Route path="/membership-application" element={<MembershipApplication />} />
+          <Route path="/membership-applications" element={<Navigate to="/membership-application" replace />} />
           <Route path="/membership-qualification" element={<MembershipQualification />} />
           <Route path="/membership-application/track" element={<MembershipApplicationTrack />} />
         </Route>
@@ -334,6 +336,8 @@ function App() {
               <Route path="/member/dashboard" element={<MemberDashboard />} />
               <Route path="/member/dashboard/:tab" element={<MemberDashboard />} />
             </Route>
+
+            <Route path="/member/membership-application-status" element={<MembershipApplicationStatus />} />
 
             {/* Secretary Console Route Group */}
             <Route element={<ProtectedRoute roles={['secretary']} />}>
@@ -506,6 +510,7 @@ function App() {
               <Route path="/vice-president/secretaries" element={<AdminManagementPage />} />
               <Route path="/vice-president/members" element={<AdminManagementPage role="customer" />} />
               <Route path="/vice-president/register-member" element={<AdminManagementPage role="customer" />} />
+              <Route path="/vice-president/membership-applications" element={<AdminMembershipApplicationsPage />} />
               <Route path="/vice-president/memberships" element={<AdminMembershipsPage />} />
               <Route path="/vice-president/reports" element={<EnterpriseReportBuilderPage />} />
               <Route path="/vice-president/settings" element={<AdminSettingsPage />} />

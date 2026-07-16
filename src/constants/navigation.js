@@ -280,6 +280,7 @@ const roleModules = {
   ],
   vice_president: [
     ['Member Registration', '/register-member', Users],
+    ['Membership Applications', '/membership-applications', FileText],
     ['Secretaries', '/secretaries', Users],
     ['Approved Vendors', '/admin/approved-vendors', Building2],
     ['Reports', '/reports', FileBarChart],
@@ -363,7 +364,7 @@ export function getSidebarNav(role) {
   const prefixItem = (item) => {
     if (Array.isArray(item)) {
       const [label, to, icon] = item;
-      const finalPath = to.startsWith('/admin') ? to : `${prefix}${to}`;
+      const finalPath = (to.startsWith('/admin/') || to === '/admin' || to.startsWith('/member/') || to === '/member') ? to : `${prefix}${to}`;
       return [label, finalPath, icon];
     }
     return {
@@ -372,7 +373,20 @@ export function getSidebarNav(role) {
     };
   };
 
-  const base = commonModules.map(prefixItem);
+  const base = commonModules.map(item => {
+    if (item.label === 'Account') {
+      const children = [...item.children];
+      if (['customer', 'user', 'vendor'].includes(role)) {
+        children.splice(1, 0, ['Membership Application Status', '/member/membership-application-status', ClipboardCheck]);
+      }
+      return prefixItem({
+        ...item,
+        children
+      });
+    }
+    return prefixItem(item);
+  });
+
   const extra = (roleModules[role] || []).map(prefixItem);
 
   return [...base, ...extra];

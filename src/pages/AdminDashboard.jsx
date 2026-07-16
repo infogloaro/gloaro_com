@@ -49,6 +49,8 @@ const Card = ({ children, className = '' }) => (
 export default function AdminDashboard() {
   const [dashboard, setDashboard] = useState(fallbackDashboard)
   const [approvals, setApprovals] = useState(fallbackApprovals)
+  const [membershipApps, setMembershipApps] = useState([])
+  const [activeApprovalTab, setActiveApprovalTab] = useState('vendors')
   const [apiState, setApiState] = useState('demo')
 
   const token = useMemo(() => (
@@ -62,9 +64,10 @@ export default function AdminDashboard() {
 
     const loadAdminData = async () => {
       try {
-        const [dashboardResponse, approvalResponse] = await Promise.all([
+        const [dashboardResponse, approvalResponse, membershipResponse] = await Promise.all([
           fetch(`${API_BASE_URL}/admin/dashboard`, { headers, credentials: 'include' }),
           fetch(`${API_BASE_URL}/admin/pending-approvals?type=vendor&limit=5`, { headers, credentials: 'include' }),
+          fetch(`${API_BASE_URL}/membership-applications?status=submitted&limit=5`, { headers, credentials: 'include' }),
         ])
 
         if (!dashboardResponse.ok || !approvalResponse.ok) {
@@ -74,11 +77,19 @@ export default function AdminDashboard() {
         const dashboardResult = await dashboardResponse.json()
         const approvalResult = await approvalResponse.json()
 
+        let membershipData = []
+        if (membershipResponse.ok) {
+          const membershipResult = await membershipResponse.json()
+          membershipData = membershipResult.data?.data || membershipResult.data || []
+        }
+
         setDashboard({ ...fallbackDashboard, ...dashboardResult.data })
         setApprovals(approvalResult.data || fallbackApprovals)
+        setMembershipApps(membershipData)
         setApiState('live')
       } catch {
         setApiState('demo')
+        setMembershipApps([])
       }
     }
 
@@ -194,35 +205,84 @@ export default function AdminDashboard() {
             <Card id="approvals" className="overflow-hidden">
               <div className="flex items-center justify-between gap-4 border-b border-slate-200 p-5">
                 <div>
-                  <h2 className="text-lg font-extrabold text-[#101827]">Pending Vendor Approvals</h2>
-                  <p className="text-sm font-semibold text-slate-500">Review new business listings before publishing</p>
+                  <h2 className="text-lg font-extrabold text-[#101827]">Pending Approvals Dashboard</h2>
+                  <p className="text-sm font-semibold text-slate-500">Review and verify new system submissions</p>
                 </div>
-                <a href="#approvals" className="rounded-md bg-[#fff8e7] px-3 py-2 text-sm font-extrabold text-[#9a6b00]">View Queue</a>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setActiveApprovalTab('vendors')}
+                    className={`rounded-md px-3 py-1.5 text-xs font-extrabold transition ${activeApprovalTab === 'vendors' ? 'bg-[#0d4697] text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
+                  >
+                    Vendors ({approvals.length})
+                  </button>
+                  <button
+                    onClick={() => setActiveApprovalTab('membership')}
+                    className={`rounded-md px-3 py-1.5 text-xs font-extrabold transition ${activeApprovalTab === 'membership' ? 'bg-[#0d4697] text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
+                  >
+                    Memberships ({membershipApps.length})
+                  </button>
+                </div>
               </div>
-              <div className="overflow-x-auto">
-                <table className="w-full min-w-[620px] text-left text-sm">
-                  <thead className="bg-slate-50 text-xs uppercase text-slate-500">
-                    <tr>
-                      <th className="px-5 py-3">Business</th>
-                      <th className="px-5 py-3">Owner</th>
-                      <th className="px-5 py-3">City</th>
-                      <th className="px-5 py-3">Status</th>
-                      <th className="px-5 py-3">Action</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100">
-                    {approvals.map((approval) => (
-                      <tr key={approval._id} className="bg-white">
-                        <td className="px-5 py-4 font-extrabold text-[#101827]">{approval.businessName || approval.name || 'New Listing'}</td>
-                        <td className="px-5 py-4 font-semibold text-slate-600">{approval.ownerName || approval.user?.name || 'Vendor owner'}</td>
-                        <td className="px-5 py-4 font-semibold text-slate-600">{approval.address?.city || 'Not added'}</td>
-                        <td className="px-5 py-4"><span className="rounded bg-amber-50 px-2 py-1 text-xs font-extrabold text-amber-700">{approval.status || 'pending'}</span></td>
-                        <td className="px-5 py-4"><button className="rounded-md border border-slate-200 px-3 py-1.5 text-xs font-extrabold text-[#0d4697]">Review</button></td>
+
+              {activeApprovalTab === 'vendors' ? (
+                <div className="overflow-x-auto">
+                  <table className="w-full min-w-[620px] text-left text-sm">
+                    <thead className="bg-slate-50 text-xs uppercase text-slate-500">
+                      <tr>
+                        <th className="px-5 py-3">Business</th>
+                        <th className="px-5 py-3">Owner</th>
+                        <th className="px-5 py-3">City</th>
+                        <th className="px-5 py-3">Status</th>
+                        <th className="px-5 py-3">Action</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {approvals.map((approval) => (
+                        <tr key={approval._id} className="bg-white">
+                          <td className="px-5 py-4 font-extrabold text-[#101827]">{approval.businessName || approval.name || 'New Listing'}</td>
+                          <td className="px-5 py-4 font-semibold text-slate-600">{approval.ownerName || approval.user?.name || 'Vendor owner'}</td>
+                          <td className="px-5 py-4 font-semibold text-slate-600">{approval.address?.city || 'Not added'}</td>
+                          <td className="px-5 py-4"><span className="rounded bg-amber-50 px-2 py-1 text-xs font-extrabold text-amber-700">{approval.status || 'pending'}</span></td>
+                          <td className="px-5 py-4"><a href="/admin/vendor-approval-workflow" className="rounded-md border border-slate-200 px-3 py-1.5 text-xs font-extrabold text-[#0d4697] hover:bg-blue-50 transition">Review</a></td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full min-w-[620px] text-left text-sm">
+                    <thead className="bg-slate-50 text-xs uppercase text-slate-500">
+                      <tr>
+                        <th className="px-5 py-3">Applicant</th>
+                        <th className="px-5 py-3">Company</th>
+                        <th className="px-5 py-3">Plan</th>
+                        <th className="px-5 py-3">Status</th>
+                        <th className="px-5 py-3">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {membershipApps.length > 0 ? (
+                        membershipApps.map((app) => (
+                          <tr key={app._id} className="bg-white">
+                            <td className="px-5 py-4 font-extrabold text-[#101827]">{app.personal?.fullName || app.submittedBy?.name || 'New Applicant'}</td>
+                            <td className="px-5 py-4 font-semibold text-slate-600">{app.professional?.companyName || 'Not specified'}</td>
+                            <td className="px-5 py-4 font-semibold text-slate-600">{app.professional?.membershipPlan || app.membership?.plan || 'Silver'}</td>
+                            <td className="px-5 py-4"><span className="rounded bg-blue-50 px-2 py-1 text-xs font-extrabold text-blue-700">{app.status || 'submitted'}</span></td>
+                            <td className="px-5 py-4"><a href="/admin/applications/membership" className="rounded-md border border-slate-200 px-3 py-1.5 text-xs font-extrabold text-[#0d4697] hover:bg-blue-50 transition">Review</a></td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan="5" className="px-5 py-8 text-center text-xs font-semibold text-slate-400">
+                            No pending membership applications found.
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </Card>
 
             <Card className="p-5">

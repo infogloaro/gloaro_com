@@ -1,9 +1,12 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { BriefcaseBusiness, FileUp, ShieldCheck, UsersRound } from 'lucide-react'
+import api from '../../api/axios'
 import { membershipApplicationApi } from '../../api/membershipApplication'
 import { clearMembershipDraft, getMembershipDraft, getMembershipFiles, saveMembershipDraft, setMembershipFile } from '../../utils/membershipOnboarding'
+import LoadingScreen from '../../components/common/LoadingScreen'
+import { useAuth } from '../../hooks/useAuth'
 
 const expectations = [
   ['Professional Conduct', 'Gloaro Network members are expected to maintain the highest levels of professional decorum during all interactions. This includes punctuality for network meetings, respectful communication across all digital channels, and upholding the brand’s prestige in public forums.'],
@@ -17,11 +20,126 @@ const companyTypes = ['Private Limited', 'Public Limited', 'LLP', 'Partnership',
 
 export default function MembershipQualification() {
   const navigate = useNavigate()
+  const { user } = useAuth()
   const draft = getMembershipDraft()
   const [credentials, setCredentials] = useState(draft.credentials || {})
   const [references, setReferences] = useState(draft.references || [{}, {}])
   const [selectedFiles, setSelectedFiles] = useState({})
   const [submitting, setSubmitting] = useState(false)
+  const [referralCode, setReferralCode] = useState(draft.referralCode || '')
+  const [validatingCode, setValidatingCode] = useState(false)
+  const [referralInfo, setReferralInfo] = useState(null)
+  const [referralError, setReferralError] = useState(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    // Redirect official roles who shouldn't apply
+    if (user && !['customer', 'user', 'vendor'].includes(user.role)) {
+      const roleDashboardMap = {
+        vice_president: '/vice-president/dashboard',
+        secretary: '/secretary/dashboard',
+        chapter_president: '/president/dashboard',
+        admin: '/admin',
+        superadmin: '/admin',
+      }
+      navigate(roleDashboardMap[user.role] || '/')
+      return
+    }
+
+    const token = localStorage.getItem('gloaro_access_token') || sessionStorage.getItem('gloaro_access_token')
+    if (!token) {
+      setLoading(false)
+      return
+    }
+
+    api.get('/membership-applications/my-application', { silent: true })
+      .then(res => {
+        const app = res.data?.data
+        if (app) {
+          if (app.status !== 'draft') {
+            navigate('/member/membership-application-status')
+            return
+          }
+          setCredentials(app.credentials || {})
+          setReferences(app.references || [{}, {}])
+          setReferralCode(app.referralCode || '')
+          
+          if (app.referralCode) {
+            api.get(`/auth/validate-referral/${app.referralCode}`)
+              .then(refRes => {
+                setReferralInfo(refRes.data?.data || null)
+              })
+              .catch(() => {})
+          }
+        }
+      })
+      .catch(() => {})
+      .finally(() => {
+        setLoading(false)
+      })
+  }, [])
+
+  const handleSaveCompleteLater = async () => {
+    setSubmitting(true)
+    try {
+      const draftData = getMembershipDraft()
+      const payload = {
+        ...draftData,
+        credentials,
+        references,
+        referralCode: referralCode.trim() || undefined,
+        status: 'draft'
+      }
+      const formData = new FormData()
+      formData.append('data', JSON.stringify(payload))
+      Object.entries(getMembershipFiles()).forEach(([field, file]) => {
+        if (file) formData.append(field, file)
+      })
+      await api.post('/membership-applications', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      })
+
+      // Update local storage too
+      const current = getMembershipDraft()
+      localStorage.setItem('gloaro_membership_onboarding', JSON.stringify({
+        ...current,
+        credentials,
+        references,
+        referralCode: referralCode.trim()
+      }))
+
+      toast.success('Application draft saved successfully!')
+      navigate('/')
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to save progress')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  const handleValidateReferral = () => {
+    if (!referralCode.trim()) {
+      setReferralError('Please enter a referral code')
+      return
+    }
+    setValidatingCode(true)
+    setReferralError(null)
+    setReferralInfo(null)
+
+    api.get(`/auth/validate-referral/${referralCode.trim()}`)
+      .then(res => {
+        setReferralInfo(res.data?.data || null)
+        const draftData = getMembershipDraft()
+        localStorage.setItem('gloaro_membership_onboarding', JSON.stringify({ ...draftData, referralCode: referralCode.trim() }))
+        toast.success('Referral code verified!')
+      })
+      .catch((err) => {
+        setReferralError(err.response?.data?.message || 'Invalid Referral Code')
+      })
+      .finally(() => {
+        setValidatingCode(false)
+      })
+  }
 
   const updateCredentials = (field, value) => {
     setCredentials((current) => {
@@ -42,9 +160,14 @@ export default function MembershipQualification() {
   }
 
   const submitApplication = async () => {
+    const draftData = getMembershipDraft()
+    if (!draftData.chapterId) {
+      toast.error('Chapter selection is required')
+      return
+    }
     setSubmitting(true)
     try {
-      const payload = { ...getMembershipDraft(), credentials, references, step: 3 }
+      const payload = { ...draftData, credentials, references, referralCode: referralCode.trim() || undefined, step: 3 }
       const formData = new FormData()
       formData.append('data', JSON.stringify(payload))
       Object.entries(getMembershipFiles()).forEach(([field, file]) => {
@@ -53,13 +176,17 @@ export default function MembershipQualification() {
       const response = await membershipApplicationApi.submit(formData)
       const application = response.data?.data
       clearMembershipDraft()
-      toast.success('Membership application submitted')
-      navigate('/membership-application/track', { state: { application } })
+      toast.success('Membership application submitted successfully!')
+      navigate('/member/membership-application-status', { state: { application } })
     } catch (error) {
       toast.error(error.response?.data?.message || 'Unable to submit application')
     } finally {
       setSubmitting(false)
     }
+  }
+
+  if (loading) {
+    return <LoadingScreen label="Resuming your application..." />
   }
 
   return (
@@ -101,6 +228,37 @@ export default function MembershipQualification() {
               <ReferenceFields title="Reference Contact 1" value={references[0] || {}} onChange={(field, value) => updateReference(0, field, value)} />
               <ReferenceFields title="Reference Contact 2" value={references[1] || {}} onChange={(field, value) => updateReference(1, field, value)} />
             </div>
+            <div className="mt-6 pt-6 border-t border-slate-100">
+              <h3 className="mb-3 text-xs font-black uppercase tracking-[0.08em] text-[#0b469e]">Referral Code Verification (Optional)</h3>
+              <div className="flex gap-2 max-w-md">
+                <input
+                  type="text"
+                  value={referralCode}
+                  onChange={(e) => setReferralCode(e.target.value)}
+                  placeholder="e.g. GLR-000245"
+                  className="h-9 flex-1 rounded-md border border-slate-300 px-3 text-xs font-medium outline-none focus:border-[#0b469e] font-bold text-slate-800"
+                />
+                <button
+                  type="button"
+                  onClick={handleValidateReferral}
+                  disabled={validatingCode}
+                  className="h-9 px-4 rounded-md bg-[#0b469e] text-white text-xs font-extrabold hover:bg-blue-800 disabled:opacity-60 transition shrink-0"
+                >
+                  {validatingCode ? 'Verifying...' : 'Verify Code'}
+                </button>
+              </div>
+              {referralError && (
+                <p className="mt-1 text-xs font-semibold text-red-600">{referralError}</p>
+              )}
+              {referralInfo && (
+                <div className="mt-2 rounded-lg bg-emerald-50 border border-emerald-200 p-3.5 text-xs text-emerald-800 space-y-1 max-w-md">
+                  <p className="font-extrabold flex items-center gap-1">
+                    <span className="text-emerald-600">✓</span> Verified Referral: <span className="font-black text-slate-800">{referralInfo.referredBy}</span>
+                  </p>
+                  <p className="font-semibold text-slate-600">Chapter: <span className="font-bold text-slate-800">{referralInfo.chapter}</span></p>
+                </div>
+              )}
+            </div>
           </section>
 
           <section className="rounded-md border border-slate-200 bg-white px-5 py-5 shadow-sm">
@@ -117,7 +275,9 @@ export default function MembershipQualification() {
         </form>
 
         <div className="mt-7 flex justify-center gap-3">
-          <button type="button" onClick={() => toast.success('Application saved')} className="rounded-md bg-[#ffbf1a] px-6 py-3 text-xs font-extrabold text-[#0b1f3d]">Save & Complete Later</button>
+          <button type="button" onClick={handleSaveCompleteLater} disabled={submitting} className="rounded-md bg-[#ffbf1a] px-6 py-3 text-xs font-extrabold text-[#0b1f3d] disabled:opacity-60">
+            {submitting ? 'Saving Progress...' : 'Save & Complete Later'}
+          </button>
           <Link to="/membership-application" className="rounded-md border border-slate-300 bg-white px-6 py-3 text-xs font-extrabold text-slate-700">Step Back</Link>
           <button type="button" onClick={submitApplication} disabled={submitting} className="rounded-md bg-[#0b469e] px-7 py-3 text-xs font-extrabold text-white disabled:opacity-60">{submitting ? 'Submitting...' : 'Submit Membership Application'}</button>
         </div>

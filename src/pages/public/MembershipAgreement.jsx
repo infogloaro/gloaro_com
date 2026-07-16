@@ -1,7 +1,10 @@
-import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+import toast from 'react-hot-toast'
 import { Briefcase, Check, CheckCircle2, ChevronDown, Clock3, FileText, RefreshCw, ShieldCheck } from 'lucide-react'
 import { getMembershipDraft, saveMembershipDraft } from '../../utils/membershipOnboarding'
+import { useAuth } from '../../hooks/useAuth'
+import api from '../../api/axios'
 
 const principles = [
   ['Professional Integrity', 'Members shall conduct all business affairs with the highest level of professional integrity. This includes honesty in representation of credentials, transparency in venture insights, and upholding the reputation of the Gloaro ecosystem in all public and private interactions.'],
@@ -42,7 +45,37 @@ const detailedTerms = [
 const steps = ['Personal Info', 'Business Info', 'Documents', 'References', 'Policies']
 
 export default function MembershipAgreement() {
+  const navigate = useNavigate()
+  const { user } = useAuth()
   const [showTermsDetails, setShowTermsDetails] = useState(false)
+
+  // Redirect official roles who shouldn't apply, and redirect submitted applicants
+  useEffect(() => {
+    if (user && !['customer', 'user', 'vendor'].includes(user.role)) {
+      const roleDashboardMap = {
+        vice_president: '/vice-president/dashboard',
+        secretary: '/secretary/dashboard',
+        chapter_president: '/president/dashboard',
+        admin: '/admin',
+        superadmin: '/admin',
+      }
+      navigate(roleDashboardMap[user.role] || '/')
+      return
+    }
+
+    const token = localStorage.getItem('gloaro_access_token') || sessionStorage.getItem('gloaro_access_token')
+    if (token) {
+      api.get('/membership-applications/my-application', { silent: true })
+        .then(res => {
+          const app = res.data?.data
+          if (app && app.status !== 'draft') {
+            navigate('/member/membership-application-status')
+          }
+        })
+        .catch(() => {})
+    }
+  }, [user, navigate])
+
   const draft = getMembershipDraft()
   const initialAgreement = { ...(draft.agreement || {}) }
   if (initialAgreement.legalName === 'John D. Executive') initialAgreement.legalName = ''
@@ -57,6 +90,14 @@ export default function MembershipAgreement() {
     ...initialAgreement,
   })
 
+  const [acceptedDeclarations, setAcceptedDeclarations] = useState(draft.agreement?.declarationsAccepted || [])
+
+  const policiesComplete = acceptedDeclarations.length === 5 && 
+    agreement.legalName?.trim() && 
+    agreement.digitalSignature?.trim() && 
+    agreement.signatureDate && 
+    agreement.signatureLocation?.trim();
+
   const updateAgreement = (field, value) => {
     setAgreement((current) => {
       const next = { ...current, [field]: value }
@@ -68,15 +109,19 @@ export default function MembershipAgreement() {
   const saveAgreementStep = () => {
     saveMembershipDraft('agreement', {
       ...agreement,
-      declarationsAccepted: [
-        'information_true',
-        'code_of_ethics',
-        'confidentiality',
-        'terms_and_fee',
-        'termination',
-      ],
+      declarationsAccepted: acceptedDeclarations,
       acceptedTermsAt: new Date().toISOString(),
     })
+  }
+
+  const handleNextStep = (e) => {
+    e?.preventDefault()
+    try {
+      saveAgreementStep()
+    } catch (err) {
+      console.error('Save agreement draft error:', err)
+    }
+    navigate('/membership-application')
   }
 
   if (showTermsDetails) return <TermsDetailPage onBack={() => setShowTermsDetails(false)} />
@@ -107,16 +152,16 @@ export default function MembershipAgreement() {
 
           <TermsConditionsCard onViewMore={() => setShowTermsDetails(true)} />
 
-          <FinalDeclarationCard />
+          <FinalDeclarationCard acceptedDeclarations={acceptedDeclarations} onToggle={setAcceptedDeclarations} updateAgreement={updateAgreement} />
 
-          <ElectronicSignatureCard agreement={agreement} onChange={updateAgreement} />
+          <ElectronicSignatureCard agreement={agreement} onChange={updateAgreement} policiesComplete={policiesComplete} />
         </div>
 
         <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
           <a href="/" className="rounded-md border border-slate-300 bg-white px-5 py-2.5 text-xs font-extrabold text-slate-700">Save Draft</a>
           <div className="flex gap-3">
             <a href="#top" className="rounded-md bg-[#ffbf1a] px-5 py-2.5 text-xs font-extrabold text-[#0b1f3d]">Step Back</a>
-            <Link to="/membership-application" onClick={saveAgreementStep} className="rounded-md bg-[#0b469e] px-5 py-2.5 text-xs font-extrabold text-white">Next Step →</Link>
+            <button type="button" onClick={handleNextStep} className="rounded-md bg-[#0b469e] px-5 py-2.5 text-xs font-extrabold text-white">Next Step →</button>
           </div>
         </div>
       </section>
@@ -243,7 +288,7 @@ function TermsDetailPage({ onBack }) {
   )
 }
 
-function FinalDeclarationCard() {
+function FinalDeclarationCard({ acceptedDeclarations, onToggle, updateAgreement }) {
   const declarations = [
     'I declare that all information provided in my membership application is true and correct to the best of my knowledge.',
     'I have read, understood, and agree to abide by the Gloaro Code of Ethics in all professional conduct.',
@@ -251,6 +296,22 @@ function FinalDeclarationCard() {
     'I agree to the Terms & Conditions and the annual membership fee schedule as outlined.',
     'I understand that any breach of these standards may lead to immediate termination of my membership.',
   ]
+
+  const keys = [
+    'information_true',
+    'code_of_ethics',
+    'confidentiality',
+    'terms_and_fee',
+    'termination',
+  ]
+
+  const handleToggle = (key) => {
+    onToggle((prev) => {
+      const next = prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]
+      updateAgreement('declarationsAccepted', next)
+      return next
+    })
+  }
 
   return (
     <section className="rounded-lg bg-[#fff9e8] p-3">
@@ -262,18 +323,26 @@ function FinalDeclarationCard() {
       </div>
 
       <div className="mt-5 space-y-3">
-        {declarations.map((text) => (
-          <label key={text} className="flex items-center gap-3 rounded-md border border-[#eee6cf] bg-white px-3 py-3 text-xs font-medium text-slate-800 shadow-sm">
-            <input type="checkbox" className="h-4 w-4 rounded border-slate-300 accent-[#0b469e]" />
-            <span>{text}</span>
-          </label>
-        ))}
+        {declarations.map((text, idx) => {
+          const key = keys[idx]
+          return (
+            <label key={text} className="flex items-center gap-3 rounded-md border border-[#eee6cf] bg-white px-3 py-3 text-xs font-medium text-slate-800 shadow-sm cursor-pointer">
+              <input
+                type="checkbox"
+                checked={acceptedDeclarations.includes(key)}
+                onChange={() => handleToggle(key)}
+                className="h-4 w-4 rounded border-slate-300 accent-[#0b469e]"
+              />
+              <span>{text}</span>
+            </label>
+          )
+        })}
       </div>
     </section>
   )
 }
 
-function ElectronicSignatureCard({ agreement, onChange }) {
+function ElectronicSignatureCard({ agreement, onChange, policiesComplete }) {
   return (
     <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-lg shadow-slate-900/10 sm:p-8">
       <h2 className="font-playfair text-2xl font-black text-slate-950">Electronic Signature</h2>
@@ -292,12 +361,14 @@ function ElectronicSignatureCard({ agreement, onChange }) {
       <div className="mt-8 rounded-lg bg-[#ececfa] px-6 py-7">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h3 className="text-base font-black uppercase tracking-[0.08em] text-slate-950">Application Review Summary</h3>
-          <div className="rounded-full bg-[#0755d5] px-8 py-1 text-sm font-black text-white">85% Complete</div>
+          <div className="rounded-full bg-[#0755d5] px-8 py-1 text-sm font-black text-white">
+            {policiesComplete ? '100% Ready' : '85% Complete'}
+          </div>
         </div>
 
         <div className="mt-6 grid grid-cols-5 gap-3">
           {steps.map((step, index) => {
-            const complete = index < 4
+            const complete = index < 4 || (index === 4 && policiesComplete)
             return (
               <div key={step} className="text-center">
                 <div className={`mx-auto grid h-9 w-9 place-items-center rounded-full ${complete ? 'bg-[#084aa7] text-white' : 'bg-[#ffd319] text-slate-950'}`}>
