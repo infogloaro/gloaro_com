@@ -29,6 +29,7 @@ import LoadingScreen from '../../components/common/LoadingScreen'
 import { useAuth } from '../../hooks/useAuth'
 import SimpleJsonForm from '../shared/SimpleJsonForm'
 import { formatCurrency, formatDate, getList, getPagination } from '../../utils/format'
+import AdminVendorApplicationsApproval from './AdminVendorApplicationsApproval'
 
 const statusOptions = ['draft', 'pending', 'under_review', 'active', 'inactive', 'approved', 'rejected', 'cancelled', 'archived', 'won', 'lost', 'closed', 'converted', 'completed']
 
@@ -512,7 +513,32 @@ export function VendorApprovalWorkflowPage() {
 }
 
 export function MarketplaceApprovalPage() {
-  return <PipelinePage module="marketplace_approval" stages={moduleConfig.marketplace_approval.types} />
+  const [activeTab, setActiveTab] = useState('vendor_applications')
+
+  return (
+    <div className="space-y-6">
+      <div className="flex border-b border-slate-200 dark:border-slate-800 print:hidden">
+        <button
+          onClick={() => setActiveTab('vendor_applications')}
+          className={`px-4 py-2 text-sm font-bold border-b-2 transition ${activeTab === 'vendor_applications' ? 'border-[#0d4697] text-[#0d4697]' : 'border-transparent text-slate-500 hover:text-slate-800'}`}
+        >
+          Vendor Applications
+        </button>
+        <button
+          onClick={() => setActiveTab('products_services')}
+          className={`px-4 py-2 text-sm font-bold border-b-2 transition ${activeTab === 'products_services' ? 'border-[#0d4697] text-[#0d4697]' : 'border-transparent text-slate-500 hover:text-slate-800'}`}
+        >
+          Products & Services
+        </button>
+      </div>
+
+      {activeTab === 'vendor_applications' ? (
+        <AdminVendorApplicationsApproval />
+      ) : (
+        <PipelinePage module="marketplace_approval" stages={moduleConfig.marketplace_approval.types} />
+      )}
+    </div>
+  )
 }
 
 export function NotificationAutomationPage() {

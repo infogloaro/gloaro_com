@@ -31,15 +31,14 @@ const SIDEBAR_ALIASES = {
   chapters: 'members',
   referrals: 'referrals',
   users: 'members',
-  vendors: 'vendors',
-  vendor_settings: 'vendors',
-  vendor_approval: 'vendors',
+  vendors: 'marketplace',
+  vendor_settings: 'marketplace',
+  vendor_approval: 'marketplace',
   business: 'business_wall',
   business_wall: 'business_wall',
   categories: 'settings',
   products: 'marketplace',
   services: 'marketplace',
-  marketplace_settings: 'marketplace',
   marketplace_approval: 'marketplace',
   events: 'events',
   training: 'training',
@@ -63,72 +62,71 @@ const SIDEBAR_ALIASES = {
 }
 
 const ADMIN_ROUTE_RULES = [
-  { path: '/admin', module: 'dashboard', section: 'dashboard' },
-  { path: '/admin/legacy-dashboard', module: 'dashboard', section: 'dashboard' },
-  { path: '/admin/admin-management', module: 'settings', section: 'admin_management', superadminOnly: true },
-  { path: '/admin/organization', module: 'settings', section: 'organization', superadminOnly: true },
-  { path: '/admin/assignments', module: 'settings', section: 'assignments', superadminOnly: true },
-  { path: '/admin/roles', module: 'settings', section: 'roles', superadminOnly: true },
-  { path: '/admin/permissions', module: 'settings', section: 'permissions', superadminOnly: true },
-  { path: '/admin/features', module: 'settings', section: 'features', superadminOnly: true },
-  { path: '/admin/dashboard-config', module: 'dashboard', section: 'dashboard_config', superadminOnly: true },
-  { path: '/admin/module-config', module: 'settings', section: 'module_config', superadminOnly: true },
-  { path: '/admin/membership-workflow', module: 'settings', section: 'workflow_settings', superadminOnly: true },
-  { path: '/admin/workflow-engine', module: 'settings', section: 'workflow_engine', superadminOnly: true },
-  { path: '/admin/users', module: 'members', section: 'users' },
-  { path: '/admin/vendors', module: 'vendors', section: 'vendors' },
-  { path: '/admin/vendor-settings', module: 'vendors', section: 'vendor_settings' },
-  { path: '/admin/vendor-approval-workflow', module: 'vendors', section: 'vendor_approval' },
-  { path: '/admin/categories', module: 'settings', section: 'categories' },
-  { path: '/admin/business', module: 'business_wall', section: 'business' },
-  { path: '/admin/business-wall', module: 'business_wall', section: 'business_wall' },
-  { path: '/admin/products', module: 'marketplace', section: 'products' },
-  { path: '/admin/services', module: 'marketplace', section: 'services' },
-  { path: '/admin/marketplace-settings', module: 'marketplace', section: 'marketplace_settings' },
-  { path: '/admin/marketplace-approval', module: 'marketplace', section: 'marketplace_approval' },
-  { path: '/admin/memberships', module: 'members', section: 'memberships' },
-  { path: '/admin/visitors', module: 'visitors', section: 'visitors' },
-  { path: '/admin/visitor-conversion', module: 'visitors', section: 'visitor_conversion' },
-  { path: '/admin/attendance', module: 'attendance', section: 'attendance' },
-  { path: '/admin/meetings', module: 'meetings', section: 'meetings' },
-  { path: '/admin/chapters', module: 'members', section: 'chapters' },
-  { path: '/admin/chapter-dashboard', module: 'members', section: 'chapter_dashboard' },
-  { path: '/admin/applications', module: 'members', section: 'applications' },
-  { path: '/admin/applications/membership', module: 'members', section: 'applications' },
-  { path: '/admin/applications/franchise', module: 'members', section: 'applications' },
-  { path: '/admin/applications/business-network', module: 'members', section: 'applications' },
-  { path: '/admin/applications/vendor', module: 'members', section: 'applications' },
-  { path: '/admin/membership-applications', module: 'members', section: 'applications' },
-  { path: '/admin/plans', module: 'members', section: 'plans' },
-  { path: '/admin/meeting-settings', module: 'meetings', section: 'meetings' },
-  { path: '/admin/events', module: 'events', section: 'events' },
-  { path: '/admin/training', module: 'training', section: 'training' },
-  { path: '/admin/testimonials', module: 'reports', section: 'testimonials' },
-  { path: '/admin/referrals', module: 'referrals', section: 'referrals' },
-  { path: '/admin/referrals-table', module: 'referrals', section: 'referrals' },
-  { path: '/admin/payments', module: 'reports', section: 'payments' },
-  { path: '/admin/reviews', module: 'marketplace', section: 'reviews' },
-  { path: '/admin/banners', module: 'settings', section: 'banners' },
-  { path: '/admin/faqs', module: 'settings', section: 'faqs' },
-  { path: '/admin/settings', module: 'settings', section: 'settings' },
-  { path: '/admin/support', module: 'settings', section: 'support' },
-  { path: '/admin/reports', module: 'reports', section: 'reports' },
-  { path: '/admin/reports-center', module: 'reports', section: 'reports_center' },
-  { path: '/admin/analytics', module: 'reports', section: 'analytics' },
-  { path: '/admin/legacy-analytics', module: 'reports', section: 'analytics' },
-  { path: '/admin/scorecards', module: 'reports', section: 'scorecards' },
-  { path: '/admin/executive-dashboard', module: 'reports', section: 'executive_dashboard' },
-  { path: '/admin/activity', module: 'reports', section: 'activity_center' },
-  { path: '/admin/global-search', module: 'settings', section: 'global_search' },
-  { path: '/admin/notifications', module: 'settings', section: 'notifications' },
-  { path: '/admin/notification-automation', module: 'settings', section: 'notification_automation' },
-  { path: '/admin/tasks', module: 'settings', section: 'tasks' },
-  { path: '/admin/calendar', module: 'events', section: 'calendar' },
-  { path: '/admin/member-journey', module: 'members', section: 'member_journey' },
-  { path: '/admin/ai-insights', module: 'reports', section: 'ai_insights' },
-  { path: '/admin/broadcast-notifications', module: 'settings', section: 'notifications' },
-  { path: '/admin/audit-logs', module: 'reports', section: 'audit_logs' },
-  { path: '/admin/system-logs', module: 'settings', section: 'system_logs', superadminOnly: true },
+  { path: '/dashboard', module: 'dashboard', section: 'dashboard' },
+  { path: '/legacy-dashboard', module: 'dashboard', section: 'dashboard' },
+  { path: '/admin-management', module: 'settings', section: 'admin_management', superadminOnly: true },
+  { path: '/organization', module: 'settings', section: 'organization', superadminOnly: true },
+  { path: '/assignments', module: 'settings', section: 'assignments', superadminOnly: true },
+  { path: '/roles', module: 'settings', section: 'roles', superadminOnly: true },
+  { path: '/permissions', module: 'settings', section: 'permissions', superadminOnly: true },
+  { path: '/features', module: 'settings', section: 'features', superadminOnly: true },
+  { path: '/dashboard-config', module: 'dashboard', section: 'dashboard_config', superadminOnly: true },
+  { path: '/module-config', module: 'settings', section: 'module_config', superadminOnly: true },
+  { path: '/membership-workflow', module: 'settings', section: 'workflow_settings', superadminOnly: true },
+  { path: '/workflow-engine', module: 'settings', section: 'workflow_engine', superadminOnly: true },
+  { path: '/users', module: 'members', section: 'users' },
+  { path: '/vendors', module: 'marketplace', section: 'vendors' },
+  { path: '/vendor-settings', module: 'marketplace', section: 'vendor_settings' },
+  { path: '/vendor-approval-workflow', module: 'marketplace', section: 'vendor_approval' },
+  { path: '/categories', module: 'settings', section: 'categories' },
+  { path: '/business', module: 'business_wall', section: 'business' },
+  { path: '/business-wall', module: 'business_wall', section: 'business_wall' },
+  { path: '/products', module: 'marketplace', section: 'products' },
+  { path: '/services', module: 'marketplace', section: 'services' },
+  { path: '/marketplace-approval', module: 'marketplace', section: 'marketplace_approval' },
+  { path: '/memberships', module: 'members', section: 'memberships' },
+  { path: '/visitors', module: 'visitors', section: 'visitors' },
+  { path: '/visitor-conversion', module: 'visitors', section: 'visitor_conversion' },
+  { path: '/attendance', module: 'attendance', section: 'attendance' },
+  { path: '/meetings', module: 'meetings', section: 'meetings' },
+  { path: '/chapters', module: 'members', section: 'chapters' },
+  { path: '/chapter-dashboard', module: 'members', section: 'chapter_dashboard' },
+  { path: '/applications', module: 'members', section: 'applications' },
+  { path: '/applications/membership', module: 'members', section: 'applications' },
+  { path: '/applications/franchise', module: 'members', section: 'applications' },
+  { path: '/applications/business-network', module: 'members', section: 'applications' },
+  { path: '/applications/vendor', module: 'members', section: 'applications' },
+  { path: '/membership-applications', module: 'members', section: 'applications' },
+  { path: '/plans', module: 'members', section: 'plans' },
+  { path: '/meeting-settings', module: 'meetings', section: 'meetings' },
+  { path: '/events', module: 'events', section: 'events' },
+  { path: '/training', module: 'training', section: 'training' },
+  { path: '/testimonials', module: 'reports', section: 'testimonials' },
+  { path: '/referrals', module: 'referrals', section: 'referrals' },
+  { path: '/referrals-table', module: 'referrals', section: 'referrals' },
+  { path: '/payments', module: 'reports', section: 'payments' },
+  { path: '/reviews', module: 'marketplace', section: 'reviews' },
+  { path: '/banners', module: 'settings', section: 'banners' },
+  { path: '/faqs', module: 'settings', section: 'faqs' },
+  { path: '/settings', module: 'settings', section: 'settings' },
+  { path: '/support', module: 'settings', section: 'support' },
+  { path: '/reports', module: 'reports', section: 'reports' },
+  { path: '/reports-center', module: 'reports', section: 'reports_center' },
+  { path: '/analytics', module: 'reports', section: 'analytics' },
+  { path: '/legacy-analytics', module: 'reports', section: 'analytics' },
+  { path: '/scorecards', module: 'reports', section: 'scorecards' },
+  { path: '/executive-dashboard', module: 'reports', section: 'executive_dashboard' },
+  { path: '/activity', module: 'reports', section: 'activity_center' },
+  { path: '/global-search', module: 'settings', section: 'global_search' },
+  { path: '/notifications', module: 'settings', section: 'notifications' },
+  { path: '/notification-automation', module: 'settings', section: 'notification_automation' },
+  { path: '/tasks', module: 'settings', section: 'tasks' },
+  { path: '/calendar', module: 'events', section: 'calendar' },
+  { path: '/member-journey', module: 'members', section: 'member_journey' },
+  { path: '/ai-insights', module: 'reports', section: 'ai_insights' },
+  { path: '/broadcast-notifications', module: 'settings', section: 'notifications' },
+  { path: '/audit-logs', module: 'reports', section: 'audit_logs' },
+  { path: '/system-logs', module: 'settings', section: 'system_logs', superadminOnly: true },
 ]
 
 const normalizeKey = (value = '') => String(value).trim().toLowerCase().replace(/&/g, '').replace(/\s+/g, '_').replace(/[^a-z0-9_/-]/g, '')
@@ -136,7 +134,13 @@ const normalizeKey = (value = '') => String(value).trim().toLowerCase().replace(
 const normalizePath = (pathname = '') => String(pathname).replace(/\/+$/, '') || '/'
 
 export function getRouteRule(pathname = '') {
-  const path = normalizePath(pathname)
+  let path = normalizePath(pathname)
+  if (path.startsWith('/super-admin')) {
+    path = path.replace(/^\/super-admin/, '')
+  } else if (path.startsWith('/admin')) {
+    path = path.replace(/^\/admin/, '')
+  }
+  if (path === '') path = '/dashboard'
   return ADMIN_ROUTE_RULES.find((rule) => rule.path === path) || null
 }
 
@@ -288,7 +292,7 @@ export function createPermissionHelpers(user, permissionConfig = null) {
 
   const canAccessPath = (pathname) => {
     if (isSuperAdmin) return true
-    if (!pathname?.startsWith('/admin')) return true
+    if (!pathname?.startsWith('/admin') && !pathname?.startsWith('/super-admin')) return true
 
     const rule = getRouteRule(pathname)
     if (!rule) return true
@@ -311,6 +315,18 @@ export function createPermissionHelpers(user, permissionConfig = null) {
   }
 }
 
+export function getAdminBasePath(role) {
+  const cleanRole = String(role || '').toLowerCase().replace(/\s+/g, '')
+  if (cleanRole === 'superadmin') return '/super-admin'
+  return '/admin'
+}
+
+export function buildAdminRoute(role, relativePath) {
+  const basePath = getAdminBasePath(role)
+  const normalizedRel = relativePath.startsWith('/') ? relativePath : `/${relativePath}`
+  return `${basePath}${normalizedRel}`
+}
+
 export function getDashboardRoute(role) {
   const cleanRole = String(role || '').toLowerCase().replace(/\s+/g, '')
   if (cleanRole === 'region_director') return '/region-director/dashboard'
@@ -330,7 +346,9 @@ export function getDashboardRoute(role) {
     'operation_vice_president',
     'membership_verification_admin', 'custom_admin'
   ]
-  if (adminRoles.includes(cleanRole)) return '/admin'
+  if (adminRoles.includes(cleanRole)) {
+    return buildAdminRoute(cleanRole, '/dashboard')
+  }
 
   return '/member/dashboard'
 }

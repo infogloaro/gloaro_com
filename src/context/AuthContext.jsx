@@ -8,6 +8,7 @@ import { isAdminRole } from '../constants/adminRoles'
 import { storage } from '../utils/storage'
 import { createPermissionHelpers } from '../utils/permissions'
 import { AuthContext } from './AuthContextObject'
+import { getMarketplaceAccess } from '../utils/marketplaceAccess'
 
 const socketUrl = API_BASE_URL.replace('/api/v1', '')
 
@@ -16,6 +17,36 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true)
   const [permissionConfig, setPermissionConfig] = useState(() => storage.getPermissions() || (storage.getUser() ? undefined : null))
   const socketRef = useRef(null)
+
+  const [vendorApplication, setVendorApplication] = useState(null)
+  const [loadingVendorApp, setLoadingVendorApp] = useState(false)
+
+  const fetchVendorApplication = useCallback(async () => {
+    if (!user || !['customer', 'user', 'vendor'].includes(user.role)) {
+      setVendorApplication(null)
+      return null
+    }
+    setLoadingVendorApp(true)
+    try {
+      const res = await api.get('/vendor-applications/my-application')
+      const appData = res.data?.data || null
+      setVendorApplication(appData)
+      return appData
+    } catch {
+      setVendorApplication(null)
+      return null
+    } finally {
+      setLoadingVendorApp(false)
+    }
+  }, [user])
+
+  useEffect(() => {
+    fetchVendorApplication()
+  }, [user, fetchVendorApplication])
+
+  const marketplaceAccess = useMemo(() => {
+    return getMarketplaceAccess(user, vendorApplication)
+  }, [user, vendorApplication])
 
   const login = useCallback(async (payload, remember = true) => {
     try {
@@ -154,8 +185,12 @@ export function AuthProvider({ children }) {
     logout,
     refreshUser,
     socket: socketRef.current,
+    vendorApplication,
+    loadingVendorApp,
+    marketplaceAccess,
+    refreshVendorApplication: fetchVendorApplication,
     ...permissionHelpers,
-  }), [user, loading, permissionsLoading, permissionConfig, login, register, logout, refreshUser, permissionHelpers, socketRef.current])
+  }), [user, loading, permissionsLoading, permissionConfig, login, register, logout, refreshUser, permissionHelpers, socketRef.current, vendorApplication, loadingVendorApp, marketplaceAccess, fetchVendorApplication])
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }

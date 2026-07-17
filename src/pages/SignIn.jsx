@@ -5,6 +5,7 @@ import signupLogo from '../assets/signup_logo.png'
 const EyeIcon = () => <svg viewBox="0 0 24 24" className="h-4 w-4 fill-none stroke-current stroke-2"><path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z" /><circle cx="12" cy="12" r="3" /></svg>
 const AppleIcon = () => <svg viewBox="0 0 24 24" className="h-4 w-4 fill-current"><path d="M16.7 12.7c0-2.1 1.7-3.1 1.8-3.2-1-1.5-2.6-1.7-3.1-1.7-1.3-.1-2.5.8-3.2.8s-1.7-.8-2.8-.8c-1.4 0-2.7.8-3.5 2.1-1.5 2.7-.4 6.7 1.1 8.8.7 1 1.6 2.2 2.8 2.1 1.1 0 1.5-.7 2.8-.7s1.7.7 2.8.7c1.2 0 1.9-1 2.7-2.1.8-1.2 1.1-2.3 1.1-2.4 0 0-2.4-.9-2.5-3.6ZM14.6 6.4c.6-.8 1-1.8.9-2.8-.9 0-1.9.6-2.6 1.3-.6.7-1 1.7-.9 2.7 1 0 2-.5 2.6-1.2Z" /></svg>
 const GoogleIcon = () => <span className="font-inter text-base font-bold text-[#4285f4]">G</span>
+import { getDashboardRoute } from '../utils/permissions'
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api/v1'
 
 export default function SignIn() {
@@ -47,7 +48,7 @@ export default function SignIn() {
       setStatus({ type: 'success', message: 'Signed in successfully. Redirecting...' })
       window.setTimeout(() => {
         const role = result.data.user?.role
-        window.location.href = role === 'admin' || role === 'superadmin' ? '/admin' : '/'
+        window.location.href = role === 'admin' || role === 'superadmin' ? getDashboardRoute(role) : '/'
       }, 700)
     } catch (error) {
       setStatus({ type: 'error', message: error.message || 'Sign in failed. Please try again.' })
