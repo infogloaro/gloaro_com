@@ -62,17 +62,7 @@ export const superAdminModuleConfigs = {
       ['Service Listing', 'Allow service listings, ratings, and reviews.', MessageSquare],
     ],
   },
-  marketplace: {
-    title: 'Marketplace Settings',
-    description: 'Enable marketplace, products, services, vendor stores, enquiries, and categories.',
-    icon: Store,
-    sections: [
-      ['Marketplace', 'Global marketplace access control.', Store],
-      ['Products', 'Product visibility, enquiry, and approval settings.', Store],
-      ['Services', 'Service visibility, booking, and approval settings.', Workflow],
-      ['Categories', 'Business, product, service, and vendor categories.', LayoutGrid],
-    ],
-  },
+
   settings: {
     title: 'System Settings',
     description: 'Manage module-level settings, admin visibility, notifications, exports, reports, and read-only mode.',

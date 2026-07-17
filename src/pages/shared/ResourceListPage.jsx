@@ -21,6 +21,7 @@ export default function ResourceListPage({
   renderActions,
   renderForm,
   defaultParams = {},
+  readOnly = false,
 }) {
   const { hasSection, hasOperation } = useAuth()
   const [payload, setPayload] = useState(null)
@@ -30,10 +31,10 @@ export default function ResourceListPage({
   const [filterValues, setFilterValues] = useState(defaultParams)
   const [editing, setEditing] = useState(null)
   const [formOpen, setFormOpen] = useState(false)
-  const canViewSection = module ? hasSection(module, section) && hasOperation(module, 'view') : true
-  const canCreate = module ? hasOperation(module, 'create') : true
-  const canEdit = module ? hasOperation(module, 'edit') : true
-  const canDelete = module ? hasOperation(module, 'delete') : true
+  const canViewSection = readOnly ? true : (module ? hasSection(module, section) && hasOperation(module, 'view') : true)
+  const canCreate = readOnly ? false : (module ? hasOperation(module, 'create') : true)
+  const canEdit = readOnly ? false : (module ? hasOperation(module, 'edit') : true)
+  const canDelete = readOnly ? false : (module ? hasOperation(module, 'delete') : true)
 
   const params = useMemo(() => ({ page, limit: 10, search: search || undefined, ...filterValues }), [page, search, filterValues])
 

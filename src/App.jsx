@@ -1,4 +1,4 @@
-import { Navigate, Route, Routes } from 'react-router-dom'
+import { Navigate, Route, Routes, Outlet } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
 import { adminNav, customerNav, membershipNav, memberNav, vendorNav, secretaryNav, regionDirectorNav, stateDirectorNav, districtDirectorNav, chapterDirectorNav, presidentNav, vicePresidentNav } from './constants/navigation'
 import DashboardLayout from './layouts/DashboardLayout'
@@ -32,6 +32,7 @@ import {
   SystemLogsPage,
 } from './pages/admin/SuperAdminPages'
 import { superAdminModuleConfigs } from './constants/superAdminModuleConfigs'
+import { buildAdminRoute } from './utils/permissions'
 import {
   ActivityCenterPage,
   AIInsightsPage,
@@ -121,6 +122,14 @@ import MemberDashboard from './pages/membership/MemberDashboard'
 import VendorApplicationForm from './pages/membership/VendorApplicationForm'
 import VendorApplicationStatus from './pages/membership/VendorApplicationStatus'
 import MemberProductsPage from './pages/membership/MemberProductsPage'
+import { RegionDirectorProductsPage, RegionDirectorServicesPage, RegionDirectorVendorsPage } from './pages/region-director/RegionDirectorPages'
+import { StateDirectorProductsPage, StateDirectorServicesPage, StateDirectorVendorsPage } from './pages/state-director/StateDirectorPages'
+import { DistrictDirectorProductsPage, DistrictDirectorServicesPage, DistrictDirectorVendorsPage } from './pages/district-director/DistrictDirectorPages'
+import { LaunchDirectorProductsPage, LaunchDirectorServicesPage, LaunchDirectorVendorsPage } from './pages/launch-director/LaunchDirectorPages'
+import { DirectConsultantProductsPage, DirectConsultantServicesPage, DirectConsultantVendorsPage } from './pages/direct-consultant/DirectConsultantPages'
+import { PresidentProductsPage, PresidentServicesPage, PresidentVendorsPage } from './pages/president/PresidentPages'
+import { VicePresidentProductsPage, VicePresidentServicesPage, VicePresidentVendorsPage } from './pages/vice-president/VicePresidentPages'
+import { SecretaryProductsPage, SecretaryServicesPage, SecretaryVendorsPage } from './pages/secretary/SecretaryPages'
 import {
   MembershipBenefitsPage,
   MembershipEventsPage,
@@ -157,82 +166,92 @@ function App() {
   const isAdminSession = ['superadmin', 'admin', 'franchise_admin', 'ecommerce_admin', 'marketplace_admin', 'digital_marketing_admin', 'training_admin', 'finance_admin', 'region_director', 'state_director', 'district_director', 'executive_director', 'launch_director', 'direct_consultant', 'chapter_president', 'vice_president', 'secretary', 'operation_vice_president', 'membership_verification_admin', 'custom_admin'].includes(role)
 
   const adminRouteDefs = [
-    { path: '/admin', element: <SuperAdminDashboardPage /> },
-    { path: '/admin/legacy-dashboard', element: <AdminDashboard /> },
-    { path: '/admin/admin-management', element: <AdminManagementPage />, roles: ['superadmin'] },
-    { path: '/admin/organization', element: <OrganizationManagementPage />, roles: ['superadmin'] },
-    { path: '/admin/assignments', element: <HierarchyAssignmentPage />, roles: ['superadmin'] },
-    { path: '/admin/roles', element: <SuperAdminModulePage {...superAdminModuleConfigs.roles} />, roles: ['superadmin'] },
-    { path: '/admin/permissions', element: <PermissionMatrixPage />, roles: ['superadmin'] },
-    { path: '/admin/features', element: <FeatureManagementPage />, roles: ['superadmin'] },
-    { path: '/admin/dashboard-config', element: <DashboardConfigurationPage />, roles: ['superadmin'] },
-    { path: '/admin/module-config', element: <ModuleConfigurationPage />, roles: ['superadmin'] },
-    { path: '/admin/membership-workflow', element: <WorkflowEnginePage />, roles: ['superadmin'] },
-    { path: '/admin/workflow-engine', element: <WorkflowEnginePage />, roles: ['superadmin'] },
-    { path: '/admin/users', element: <AdminManagementPage /> },
-    { path: '/admin/vendors', element: <AdminVendorsPage /> },
-    { path: '/admin/approved-vendors', element: <ApprovedVendorsPage /> },
-    { path: '/admin/vendor-settings', element: <SuperAdminModulePage {...superAdminModuleConfigs.vendor} /> },
-    { path: '/admin/vendor-approval-workflow', element: <VendorApprovalWorkflowPage /> },
-    { path: '/admin/locations', element: <LocationsManagementPage /> },
-    { path: '/admin/categories', element: <AdminCategoriesPage /> },
-    { path: '/admin/business', element: <BusinessNetworkingPage /> },
-    { path: '/admin/business-wall', element: <BusinessWallManagementPage /> },
-    { path: '/admin/products', element: <AdminProductsPage /> },
-    { path: '/admin/services', element: <AdminServicesPage /> },
-    { path: '/admin/marketplace-settings', element: <SuperAdminModulePage {...superAdminModuleConfigs.marketplace} /> },
-    { path: '/admin/marketplace-approval', element: <MarketplaceApprovalPage /> },
-    { path: '/admin/memberships', element: <AdminMembershipsPage /> },
-    { path: '/admin/members', element: <AdminMembersPage /> },
-    { path: '/admin/visitors', element: <VisitorManagementPage /> },
-    { path: '/admin/visitor-conversion', element: <VisitorConversionEnginePage /> },
-    { path: '/admin/attendance', element: <AttendanceEnginePage /> },
-    { path: '/admin/meetings', element: <MeetingManagementPage /> },
-    { path: '/admin/chapters', element: <ChapterManagementPage /> },
-    { path: '/admin/chapter-dashboard', element: <ChapterDashboardPage /> },
-    { path: '/admin/applications', element: <AdminMembershipApplicationsPage /> },
-    { path: '/admin/applications/membership', element: <AdminMembershipApplicationsPage /> },
-    { path: '/admin/applications/franchise', element: <AdminModuleApplicationsPage title="Franchise Applications" /> },
-    { path: '/admin/applications/business-network', element: <AdminModuleApplicationsPage title="Business Network Applications" /> },
-    { path: '/admin/applications/vendor', element: <AdminVendorApplicationsPage /> },
-    { path: '/admin/membership-applications', element: <AdminMembershipApplicationsPage /> },
-    { path: '/admin/plans', element: <AdminPlansPage /> },
-    { path: '/admin/meeting-settings', element: <MeetingManagementPage /> },
-    { path: '/admin/events', element: <AdminEventsPage /> },
-    { path: '/admin/training', element: <TrainingManagementPage /> },
-    { path: '/admin/testimonials', element: <TestimonialsManagementPage /> },
-    { path: '/admin/referrals', element: <ReferralPipelinePage /> },
-    { path: '/admin/referrals-table', element: <AdminReferralsPage /> },
-    { path: '/admin/payments', element: <AdminPaymentsPage /> },
-    { path: '/admin/reviews', element: <AdminReviewsPage /> },
-    { path: '/admin/banners', element: <AdminBannersPage /> },
-    { path: '/admin/faqs', element: <AdminFaqsPage /> },
-    { path: '/admin/settings', element: <AdminSettingsPage /> },
-    { path: '/admin/support', element: <AdminSupportPage /> },
-    { path: '/admin/reports', element: <EnterpriseReportBuilderPage /> },
-    { path: '/admin/reports-center', element: <ReportsCenterPage /> },
-    { path: '/admin/analytics', element: <EnterpriseAnalyticsPage /> },
-    { path: '/admin/legacy-analytics', element: <AdminAnalytics /> },
-    { path: '/admin/scorecards', element: <PerformanceScorecardPage /> },
-    { path: '/admin/executive-dashboard', element: <ExecutiveDashboardPage /> },
-    { path: '/admin/activity', element: <ActivityCenterPage /> },
-    { path: '/admin/global-search', element: <GlobalSearchPage /> },
-    { path: '/admin/notifications', element: <NotificationsConfigPage /> },
-    { path: '/admin/notification-automation', element: <NotificationAutomationPage /> },
-    { path: '/admin/tasks', element: <TaskManagementPage /> },
-    { path: '/admin/calendar', element: <EnterpriseCalendarPage /> },
-    { path: '/admin/member-journey', element: <MemberJourneyPage /> },
-    { path: '/admin/ai-insights', element: <AIInsightsPage /> },
-    { path: '/admin/broadcast-notifications', element: <AdminNotifications /> },
-    { path: '/admin/audit-logs', element: <AuditLogsPage /> },
-    { path: '/admin/system-logs', element: <SystemLogsPage />, roles: ['superadmin'] },
+    { path: '/dashboard', element: <SuperAdminDashboardPage /> },
+    { path: '/legacy-dashboard', element: <AdminDashboard /> },
+    { path: '/admin-management', element: <AdminManagementPage />, roles: ['superadmin'] },
+    { path: '/organization', element: <OrganizationManagementPage />, roles: ['superadmin'] },
+    { path: '/assignments', element: <HierarchyAssignmentPage />, roles: ['superadmin'] },
+    { path: '/roles', element: <SuperAdminModulePage {...superAdminModuleConfigs.roles} />, roles: ['superadmin'] },
+    { path: '/permissions', element: <PermissionMatrixPage />, roles: ['superadmin'] },
+    { path: '/features', element: <FeatureManagementPage />, roles: ['superadmin'] },
+    { path: '/dashboard-config', element: <DashboardConfigurationPage />, roles: ['superadmin'] },
+    { path: '/module-config', element: <ModuleConfigurationPage />, roles: ['superadmin'] },
+    { path: '/membership-workflow', element: <WorkflowEnginePage />, roles: ['superadmin'] },
+    { path: '/workflow-engine', element: <WorkflowEnginePage />, roles: ['superadmin'] },
+    { path: '/users', element: <AdminManagementPage /> },
+    { path: '/vendors', element: <ApprovedVendorsPage /> },
+    { path: '/approved-vendors', element: <ApprovedVendorsPage /> },
+    { path: '/vendor-settings', element: <SuperAdminModulePage {...superAdminModuleConfigs.vendor} /> },
+    { path: '/vendor-approval-workflow', element: <VendorApprovalWorkflowPage /> },
+    { path: '/locations', element: <LocationsManagementPage /> },
+    { path: '/categories', element: <AdminCategoriesPage /> },
+    { path: '/business', element: <BusinessNetworkingPage /> },
+    { path: '/business-wall', element: <BusinessWallManagementPage /> },
+    { path: '/products', element: <AdminProductsPage /> },
+    { path: '/services', element: <AdminServicesPage /> },
+    { path: '/marketplace-approval', element: <MarketplaceApprovalPage /> },
+    { path: '/members', element: <AdminMembersPage /> },
+    { path: '/visitors', element: <VisitorManagementPage /> },
+    { path: '/visitor-conversion', element: <VisitorConversionEnginePage /> },
+    { path: '/attendance', element: <AttendanceEnginePage /> },
+    { path: '/meetings', element: <MeetingManagementPage /> },
+    { path: '/chapters', element: <ChapterManagementPage /> },
+    { path: '/chapter-dashboard', element: <ChapterDashboardPage /> },
+    { path: '/applications', element: <AdminMembershipApplicationsPage /> },
+    { path: '/applications/membership', element: <AdminMembershipApplicationsPage /> },
+    { path: '/applications/franchise', element: <AdminModuleApplicationsPage title="Franchise Applications" /> },
+    { path: '/applications/business-network', element: <AdminModuleApplicationsPage title="Business Network Applications" /> },
+    { path: '/applications/vendor', element: <AdminVendorApplicationsPage /> },
+    { path: '/membership-applications', element: <AdminMembershipApplicationsPage /> },
+    { path: '/plans', element: <AdminPlansPage /> },
+    { path: '/meeting-settings', element: <MeetingManagementPage /> },
+    { path: '/events', element: <AdminEventsPage /> },
+    { path: '/training', element: <TrainingManagementPage /> },
+    { path: '/testimonials', element: <TestimonialsManagementPage /> },
+    { path: '/referrals', element: <ReferralPipelinePage /> },
+    { path: '/referrals-table', element: <AdminReferralsPage /> },
+    { path: '/payments', element: <AdminPaymentsPage /> },
+    { path: '/reviews', element: <AdminReviewsPage /> },
+    { path: '/banners', element: <AdminBannersPage /> },
+    { path: '/faqs', element: <AdminFaqsPage /> },
+    { path: '/settings', element: <AdminSettingsPage /> },
+    { path: '/support', element: <AdminSupportPage /> },
+    { path: '/reports', element: <EnterpriseReportBuilderPage /> },
+    { path: '/reports-center', element: <ReportsCenterPage /> },
+    { path: '/analytics', element: <EnterpriseAnalyticsPage /> },
+    { path: '/legacy-analytics', element: <AdminAnalytics /> },
+    { path: '/scorecards', element: <PerformanceScorecardPage /> },
+    { path: '/executive-dashboard', element: <ExecutiveDashboardPage /> },
+    { path: '/activity', element: <ActivityCenterPage /> },
+    { path: '/global-search', element: <GlobalSearchPage /> },
+    { path: '/notifications', element: <NotificationsConfigPage /> },
+    { path: '/notification-automation', element: <NotificationAutomationPage /> },
+    { path: '/tasks', element: <TaskManagementPage /> },
+    { path: '/calendar', element: <EnterpriseCalendarPage /> },
+    { path: '/member-journey', element: <MemberJourneyPage /> },
+    { path: '/ai-insights', element: <AIInsightsPage /> },
+    { path: '/broadcast-notifications', element: <AdminNotifications /> },
+    { path: '/audit-logs', element: <AuditLogsPage /> },
+    { path: '/system-logs', element: <SystemLogsPage />, roles: ['superadmin'] },
   ]
 
-  const allowedAdminRoutes = adminRouteDefs.filter((route) => {
+  const superAdminRoutes = adminRouteDefs.filter((route) => {
     if (route.roles?.length && !route.roles.includes(role)) return false
-    return canAccessPath(route.path)
-  })
-  const adminHomePath = allowedAdminRoutes[0]?.path || '/dashboard'
+    return canAccessPath(buildAdminRoute('superadmin', route.path))
+  }).map((route) => ({
+    ...route,
+    path: buildAdminRoute('superadmin', route.path)
+  }))
+
+  const regularAdminRoutes = adminRouteDefs.filter((route) => {
+    if (route.roles?.length && !route.roles.includes(role)) return false
+    return canAccessPath(buildAdminRoute('admin', route.path))
+  }).map((route) => ({
+    ...route,
+    path: buildAdminRoute('admin', route.path)
+  }))
+
+  const adminHomePath = regularAdminRoutes[0]?.path || '/dashboard'
 
   return (
     <>
@@ -268,9 +287,15 @@ function App() {
         <Route element={<ProtectedRoute roles={['admin', 'superadmin', 'region_director', 'state_director', 'district_director', 'executive_director', 'launch_director', 'direct_consultant', 'chapter_president', 'vice_president', 'secretary', 'customer', 'user', 'vendor']} />}>
           <Route element={<DashboardLayout title="Gloaro Portal" />}>
             
+            {/* Super Admin Console Route Group */}
+            <Route element={<ProtectedRoute roles={['superadmin']} />}>
+              {superAdminRoutes.map((route) => <Route key={route.path} path={route.path} element={route.element} />)}
+              <Route path="/super-admin/*" element={<Navigate to="/super-admin/dashboard" replace />} />
+            </Route>
+
             {/* Admin Console Route Group */}
-            <Route element={<ProtectedRoute roles={['admin', 'superadmin', 'region_director', 'state_director', 'district_director', 'executive_director', 'launch_director', 'direct_consultant', 'chapter_president', 'vice_president', 'secretary']} />}>
-              {allowedAdminRoutes.map((route) => <Route key={route.path} path={route.path} element={route.element} />)}
+            <Route element={<ProtectedRoute roles={['admin', 'region_director', 'state_director', 'district_director', 'executive_director', 'launch_director', 'direct_consultant', 'chapter_president', 'vice_president', 'secretary']} />}>
+              {regularAdminRoutes.map((route) => <Route key={route.path} path={route.path} element={route.element} />)}
               <Route path="/admin/*" element={<Navigate to={adminHomePath} replace />} />
             </Route>
 
@@ -313,26 +338,28 @@ function App() {
             <Route element={<ProtectedRoute roles={['customer', 'user', 'vendor', 'secretary', 'chapter_president', 'vice_president']} />}>
               <Route path="/member/vendor-application" element={<VendorApplicationForm />} />
               <Route path="/member/vendor-application-status" element={<VendorApplicationStatus />} />
-              <Route path="/member/products" element={<MemberProductsPage />} />
               <Route path="/member/profile" element={<MembershipProfilePage />} />
               <Route path="/member/settings" element={<MembershipProfilePage />} />
-
-              {/* Marketplace Vendor management routes */}
-              <Route path="/member/dashboard/my-business" element={<VendorProfilePage />} />
-              <Route path="/member/dashboard/products" element={<VendorProductsPage />} />
-              <Route path="/member/dashboard/products-mgmt" element={<VendorProductsPage />} />
-              <Route path="/member/dashboard/services" element={<VendorServicesPage />} />
-              <Route path="/member/dashboard/services-mgmt" element={<VendorServicesPage />} />
-              <Route path="/member/dashboard/orders" element={<VendorOrdersPage />} />
-              <Route path="/member/dashboard/leads" element={<VendorLeadsPage />} />
-              <Route path="/member/dashboard/reviews" element={<VendorReviewsPage />} />
-              <Route path="/member/dashboard/payments" element={<VendorPaymentsPage />} />
-              <Route path="/member/dashboard/subscription" element={<VendorMembershipPage />} />
-              <Route path="/member/dashboard/vendor-analytics" element={<VendorDashboard />} />
-
+              
               {/* Parameterized main dashboard sub-views */}
               <Route path="/member/dashboard" element={<MemberDashboard />} />
               <Route path="/member/dashboard/:tab" element={<MemberDashboard />} />
+
+              {/* Protected Marketplace routes */}
+              <Route element={<MarketplaceRoute />}>
+                <Route path="/member/products" element={<MemberProductsPage />} />
+                <Route path="/member/dashboard/my-business" element={<VendorProfilePage />} />
+                <Route path="/member/dashboard/products" element={<VendorProductsPage />} />
+                <Route path="/member/dashboard/products-mgmt" element={<VendorProductsPage />} />
+                <Route path="/member/dashboard/services" element={<VendorServicesPage />} />
+                <Route path="/member/dashboard/services-mgmt" element={<VendorServicesPage />} />
+                <Route path="/member/dashboard/orders" element={<VendorOrdersPage />} />
+                <Route path="/member/dashboard/leads" element={<VendorLeadsPage />} />
+                <Route path="/member/dashboard/reviews" element={<VendorReviewsPage />} />
+                <Route path="/member/dashboard/payments" element={<VendorPaymentsPage />} />
+                <Route path="/member/dashboard/subscription" element={<VendorMembershipPage />} />
+                <Route path="/member/dashboard/vendor-analytics" element={<VendorDashboard />} />
+              </Route>
             </Route>
 
             {/* Secretary Console Route Group */}
@@ -354,9 +381,9 @@ function App() {
               <Route path="/secretary/visitors" element={<VisitorsPage />} />
               <Route path="/secretary/directory" element={<BusinessDirectory />} />
               <Route path="/secretary/leaderboard" element={<Leaderboard />} />
-              <Route path="/secretary/products" element={<MemberProductsPage />} />
-              <Route path="/secretary/services" element={<ServicesPage />} />
-              <Route path="/secretary/vendors" element={<VendorsPage />} />
+              <Route path="/secretary/products" element={<SecretaryProductsPage />} />
+              <Route path="/secretary/services" element={<SecretaryServicesPage />} />
+              <Route path="/secretary/vendors" element={<SecretaryVendorsPage />} />
               <Route path="/secretary/profile" element={<MembershipProfilePage />} />
             </Route>
 
@@ -379,9 +406,9 @@ function App() {
               <Route path="/region-director/visitors" element={<VisitorsPage />} />
               <Route path="/region-director/directory" element={<BusinessDirectory />} />
               <Route path="/region-director/leaderboard" element={<Leaderboard />} />
-              <Route path="/region-director/products" element={<MemberProductsPage />} />
-              <Route path="/region-director/services" element={<ServicesPage />} />
-              <Route path="/region-director/vendors" element={<VendorsPage />} />
+              <Route path="/region-director/products" element={<RegionDirectorProductsPage />} />
+              <Route path="/region-director/services" element={<RegionDirectorServicesPage />} />
+              <Route path="/region-director/vendors" element={<RegionDirectorVendorsPage />} />
               <Route path="/region-director/profile" element={<MembershipProfilePage />} />
             </Route>
 
@@ -390,6 +417,7 @@ function App() {
               <Route path="/state-director" element={<Navigate to="/state-director/dashboard" replace />} />
               <Route path="/state-director/dashboard" element={<StateDirectorDashboard />} />
               <Route path="/state-director/districts" element={<LocationsManagementPage />} />
+              <Route path="/state-director/locations" element={<LocationsManagementPage />} />
               <Route path="/state-director/district-directors" element={<AdminManagementPage />} />
               <Route path="/state-director/memberships" element={<AdminMembershipsPage />} />
               <Route path="/state-director/reports" element={<EnterpriseReportBuilderPage />} />
@@ -403,9 +431,9 @@ function App() {
               <Route path="/state-director/visitors" element={<VisitorsPage />} />
               <Route path="/state-director/directory" element={<BusinessDirectory />} />
               <Route path="/state-director/leaderboard" element={<Leaderboard />} />
-              <Route path="/state-director/products" element={<MemberProductsPage />} />
-              <Route path="/state-director/services" element={<ServicesPage />} />
-              <Route path="/state-director/vendors" element={<VendorsPage />} />
+              <Route path="/state-director/products" element={<StateDirectorProductsPage />} />
+              <Route path="/state-director/services" element={<StateDirectorServicesPage />} />
+              <Route path="/state-director/vendors" element={<StateDirectorVendorsPage />} />
               <Route path="/state-director/profile" element={<MembershipProfilePage />} />
             </Route>
 
@@ -414,14 +442,12 @@ function App() {
               <Route path="/district-director" element={<Navigate to="/district-director/dashboard" replace />} />
               <Route path="/district-director/dashboard" element={<DynamicDashboard />} />
               <Route path="/district-director/chapters" element={<LocationsManagementPage />} />
-              <Route path="/district-director/chapter-directors" element={<AdminManagementPage role="chapter_director" />} />
+              <Route path="/district-director/locations" element={<LocationsManagementPage />} />
               <Route path="/district-director/executive-directors" element={<AdminManagementPage role="executive_director" />} />
-              <Route path="/district-director/memberships" element={<AdminMembershipsPage />} />
               <Route path="/district-director/reports" element={<EnterpriseReportBuilderPage />} />
               <Route path="/district-director/settings" element={<AdminSettingsPage />} />
               
               {/* Inherited Base Member Modules */}
-              <Route path="/district-director/chapter" element={<MyChapter />} />
               <Route path="/district-director/wall" element={<BusinessWall />} />
               <Route path="/district-director/referrals" element={<ReferralsPipeline />} />
               <Route path="/district-director/meetings" element={<MeetingsAttendance />} />
@@ -429,16 +455,13 @@ function App() {
               <Route path="/district-director/visitors" element={<VisitorsPage />} />
               <Route path="/district-director/directory" element={<BusinessDirectory />} />
               <Route path="/district-director/leaderboard" element={<Leaderboard />} />
-              <Route path="/district-director/products" element={<MemberProductsPage />} />
-              <Route path="/district-director/services" element={<ServicesPage />} />
-              <Route path="/district-director/vendors" element={<VendorsPage />} />
+              <Route path="/district-director/products" element={<DistrictDirectorProductsPage />} />
+              <Route path="/district-director/services" element={<DistrictDirectorServicesPage />} />
+              <Route path="/district-director/vendors" element={<DistrictDirectorVendorsPage />} />
               <Route path="/district-director/profile" element={<MembershipProfilePage />} />
 
               {/* District Director Custom Operations */}
-              <Route path="/district-director/district-management" element={<LocationsManagementPage />} />
               <Route path="/district-director/members" element={<AdminManagementPage role="customer" />} />
-              <Route path="/district-director/vendor-applications" element={<AdminVendorApplicationsPage />} />
-              <Route path="/district-director/approved-vendors" element={<ApprovedVendorsPage />} />
             </Route>
 
             {/* Chapter Director Console */}
@@ -481,7 +504,7 @@ function App() {
               <Route path="/president" element={<Navigate to="/president/dashboard" replace />} />
               <Route path="/president/dashboard" element={<PresidentDashboard />} />
               <Route path="/president/vice-presidents" element={<AdminManagementPage />} />
-              <Route path="/president/memberships" element={<AdminMembershipsPage />} />
+              <Route path="/president/members" element={<AdminManagementPage role="customer" />} />
               <Route path="/president/reports" element={<EnterpriseReportBuilderPage />} />
               <Route path="/president/settings" element={<AdminSettingsPage />} />
               {/* Inherited Base Member Modules */}
@@ -493,9 +516,9 @@ function App() {
               <Route path="/president/visitors" element={<VisitorsPage />} />
               <Route path="/president/directory" element={<BusinessDirectory />} />
               <Route path="/president/leaderboard" element={<Leaderboard />} />
-              <Route path="/president/products" element={<MemberProductsPage />} />
-              <Route path="/president/services" element={<ServicesPage />} />
-              <Route path="/president/vendors" element={<VendorsPage />} />
+              <Route path="/president/products" element={<PresidentProductsPage />} />
+              <Route path="/president/services" element={<PresidentServicesPage />} />
+              <Route path="/president/vendors" element={<PresidentVendorsPage />} />
               <Route path="/president/profile" element={<MembershipProfilePage />} />
             </Route>
 
@@ -518,9 +541,9 @@ function App() {
               <Route path="/vice-president/visitors" element={<VisitorsPage />} />
               <Route path="/vice-president/directory" element={<BusinessDirectory />} />
               <Route path="/vice-president/leaderboard" element={<Leaderboard />} />
-              <Route path="/vice-president/products" element={<MemberProductsPage />} />
-              <Route path="/vice-president/services" element={<ServicesPage />} />
-              <Route path="/vice-president/vendors" element={<VendorsPage />} />
+              <Route path="/vice-president/products" element={<VicePresidentProductsPage />} />
+              <Route path="/vice-president/services" element={<VicePresidentServicesPage />} />
+              <Route path="/vice-president/vendors" element={<VicePresidentVendorsPage />} />
               <Route path="/vice-president/profile" element={<MembershipProfilePage />} />
             </Route>
 
@@ -538,23 +561,17 @@ function App() {
               <Route path="/launch-director/visitors" element={<VisitorsPage />} />
               <Route path="/launch-director/directory" element={<BusinessDirectory />} />
               <Route path="/launch-director/leaderboard" element={<Leaderboard />} />
-              <Route path="/launch-director/products" element={<MemberProductsPage />} />
-              <Route path="/launch-director/services" element={<ServicesPage />} />
-              <Route path="/launch-director/vendors" element={<VendorsPage />} />
+              <Route path="/launch-director/products" element={<LaunchDirectorProductsPage />} />
+              <Route path="/launch-director/services" element={<LaunchDirectorServicesPage />} />
+              <Route path="/launch-director/vendors" element={<LaunchDirectorVendorsPage />} />
               <Route path="/launch-director/profile" element={<MembershipProfilePage />} />
               <Route path="/launch-director/settings" element={<MembershipProfilePage />} />
 
               {/* Launch Director Specific Modules */}
-              <Route path="/launch-director/chapters" element={<LocationsManagementPage />} />
-              <Route path="/launch-director/chapter-launch" element={<LocationsManagementPage />} />
-              <Route path="/launch-director/membership-applications" element={<AdminMembershipApplicationsPage />} />
-              <Route path="/launch-director/membership-verification" element={<AdminMembershipApplicationsPage />} />
-              <Route path="/launch-director/presidents" element={<AdminManagementPage role="chapter_president" />} />
-              <Route path="/launch-director/vice-presidents" element={<AdminManagementPage role="vice_president" />} />
-              <Route path="/launch-director/vendor-applications" element={<AdminVendorApplicationsPage />} />
+              <Route path="/launch-director/members" element={<AdminManagementPage role="customer" />} />
+              <Route path="/launch-director/direct-consultants" element={<AdminManagementPage role="direct_consultant" />} />
               <Route path="/launch-director/launch-reports" element={<EnterpriseReportBuilderPage />} />
               <Route path="/launch-director/membership-reports" element={<EnterpriseReportBuilderPage />} />
-              <Route path="/launch-director/vendor-reports" element={<EnterpriseReportBuilderPage />} />
             </Route>
 
             {/* Direct Consultant Console */}
@@ -571,19 +588,15 @@ function App() {
               <Route path="/direct-consultant/visitors" element={<VisitorsPage />} />
               <Route path="/direct-consultant/directory" element={<BusinessDirectory />} />
               <Route path="/direct-consultant/leaderboard" element={<Leaderboard />} />
-              <Route path="/direct-consultant/products" element={<MemberProductsPage />} />
-              <Route path="/direct-consultant/services" element={<ServicesPage />} />
-              <Route path="/direct-consultant/vendors" element={<VendorsPage />} />
+              <Route path="/direct-consultant/products" element={<DirectConsultantProductsPage />} />
+              <Route path="/direct-consultant/services" element={<DirectConsultantServicesPage />} />
+              <Route path="/direct-consultant/vendors" element={<DirectConsultantVendorsPage />} />
               <Route path="/direct-consultant/profile" element={<MembershipProfilePage />} />
               <Route path="/direct-consultant/settings" element={<MembershipProfilePage />} />
 
               {/* Direct Consultant Specific Modules */}
-              <Route path="/direct-consultant/vendor-applications" element={<AdminVendorApplicationsPage />} />
-              <Route path="/direct-consultant/approved-vendors" element={<ApprovedVendorsPage />} />
               <Route path="/direct-consultant/members" element={<AdminManagementPage role="customer" />} />
-              <Route path="/direct-consultant/membership-applications" element={<AdminMembershipApplicationsPage />} />
-              <Route path="/direct-consultant/register-member" element={<AdminManagementPage role="customer" />} />
-              <Route path="/direct-consultant/reports" element={<EnterpriseReportBuilderPage />} />
+              <Route path="/direct-consultant/presidents" element={<AdminManagementPage role="chapter_president" />} />
             </Route>
 
           </Route>
@@ -595,6 +608,23 @@ function App() {
       <Toaster position="top-right" />
     </>
   )
+}
+
+function MarketplaceRoute() {
+  const { marketplaceAccess, vendorApplication } = useAuth()
+
+  if (marketplaceAccess === 'NOT_APPLIED') {
+    return <Navigate to="/member/dashboard" replace />
+  }
+
+  if (marketplaceAccess === 'PENDING') {
+    if (vendorApplication?.status === 'draft') {
+      return <Navigate to="/member/vendor-application" replace />
+    }
+    return <Navigate to="/member/vendor-application-status" replace />
+  }
+
+  return <Outlet />
 }
 
 export default App
