@@ -12,6 +12,7 @@ import DataTable from '../../components/tables/DataTable'
 import { useAuth } from '../../hooks/useAuth'
 import { ADMIN_ROLE_OPTIONS, roleLabel as originalRoleLabel } from '../../constants/adminRoles'
 import { storage } from '../../utils/storage'
+import { getDashboardRoute } from '../../utils/permissions'
 import { formatDate, getList, getPagination } from '../../utils/format'
 
 const roleLabel = (role = '') => {
@@ -332,7 +333,7 @@ const saveAdmin = async () => {
     sessionStorage.setItem('gloaro_superadmin_session', JSON.stringify({ user: storage.getUser(), accessToken: storage.getAccessToken(), refreshToken: storage.getRefreshToken() }))
     storage.setSession(data, false)
     toast.success(`Logged in as ${admin.name}`)
-    window.location.href = '/admin'
+    window.location.href = getDashboardRoute(admin.role)
   }
 
   const viewAdmin = async (admin) => {
@@ -345,10 +346,12 @@ const saveAdmin = async () => {
   const isCreateDisabled = (
     (user?.role === 'executive_director' && listData.length >= 1) ||
     (user?.role === 'chapter_president' && listData.length >= 1) ||
-    (user?.role === 'vice_president' && childRole === 'secretary' && listData.length >= 1)
+    (user?.role === 'vice_president' && childRole === 'secretary' && listData.length >= 1) ||
+    (user?.role === 'launch_director' && childRole === 'direct_consultant' && listData.length >= 1) ||
+    (user?.role === 'direct_consultant' && childRole === 'chapter_president' && listData.length >= 1)
   )
 
-  const showCreateButton = canCreateAdmin && !(user?.role === 'executive_director' && childRole === 'customer')
+  const showCreateButton = canCreateAdmin && !(user?.role === 'executive_director' && childRole === 'customer') && !(user?.role === 'district_director' && childRole === 'customer') && !(user?.role === 'launch_director' && childRole === 'customer') && !(user?.role === 'direct_consultant' && childRole === 'customer') && !(user?.role === 'chapter_president' && childRole === 'customer') && !(user?.role === 'vice_president' && childRole === 'customer') && !isCreateDisabled
 
   const getDisabledTitle = () => {
     if (!isCreateDisabled) return ""
@@ -411,6 +414,13 @@ const saveAdmin = async () => {
         pagination={pagination}
         onPageChange={setPage}
         actions={(row) => {
+          if ((user?.role === 'district_director' || user?.role === 'launch_director' || user?.role === 'direct_consultant' || user?.role === 'chapter_president' || user?.role === 'vice_president') && childRole === 'customer') {
+            return (
+              <div className="flex flex-wrap gap-2">
+                <button onClick={() => viewAdmin(row)} className="rounded-md border border-slate-200 px-2 py-1.5 text-xs font-bold text-slate-900" title="View Details"><Eye className="h-3.5 w-3.5" /></button>
+              </div>
+            )
+          }
           if (user?.role === 'executive_director' && childRole === 'customer') {
             return (
               <div className="flex flex-wrap gap-2">

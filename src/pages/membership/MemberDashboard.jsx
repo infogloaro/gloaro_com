@@ -51,7 +51,7 @@ import MembershipApplicationStatus from './MembershipApplicationStatus'
 import JurisdictionCard from '../../components/common/JurisdictionCard'
 
 export default function MemberDashboard() {
-  const { user, refreshUser } = useAuth()
+  const { user, refreshUser, vendorApplication, loadingVendorApp, marketplaceAccess } = useAuth()
   const navigate = useNavigate()
   const { tab } = useParams()
 
@@ -63,10 +63,8 @@ export default function MemberDashboard() {
     return tab;
   }, [tab]);
 
-  const isApprovedVendor = user?.role === 'vendor' || user?.vendorProfile?.status === 'approved';
-  
-  const [app, setApp] = useState(null)
-  const [loadingApp, setLoadingApp] = useState(true)
+  const isApprovedVendor = marketplaceAccess === 'APPROVED';
+  const app = vendorApplication;
 
   useEffect(() => {
     if (refreshUser) {
@@ -76,20 +74,6 @@ export default function MemberDashboard() {
 
   // Fetch upcoming events using reuse customerApi events
   const events = useApi(() => customerApi.events({ upcoming: true, limit: 3 }))
-
-  useEffect(() => {
-    setLoadingApp(true)
-    api.get('/vendor-applications/my-application')
-      .then((res) => {
-        setApp(res.data?.data || null)
-      })
-      .catch(() => {
-        setApp(null)
-      })
-      .finally(() => {
-        setLoadingApp(false)
-      })
-  }, [])
 
   const [vendorDashboardData, setVendorDashboardData] = useState(null)
 
@@ -103,7 +87,7 @@ export default function MemberDashboard() {
     }
   }, [isApprovedVendor])
 
-  if (loadingApp || events.loading) {
+  if (loadingVendorApp || events.loading) {
     return <LoadingScreen label="Loading member command center..." />
   }
 
@@ -180,7 +164,7 @@ export default function MemberDashboard() {
       {activeTab === 'overview' && (
         <div className="space-y-6">
           {/* KPI Info Grid */}
-          <div className="grid gap-4 md:grid-cols-3">
+          <div className={`grid gap-4 ${marketplaceAccess === 'NOT_APPLIED' ? 'md:grid-cols-2' : 'md:grid-cols-3'}`}>
             {/* Membership Status */}
             <article className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
               <p className="text-xs font-extrabold uppercase tracking-wider text-slate-400">Membership Status</p>
@@ -194,32 +178,34 @@ export default function MemberDashboard() {
             </article>
 
             {/* Vendor Application Status / Business Account */}
-            {isApprovedVendor ? (
-              <article className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-                <p className="text-xs font-extrabold uppercase tracking-wider text-slate-400">Business Account</p>
-                <div className="mt-2 space-y-1">
-                  <div className="flex justify-between items-center text-xs font-extrabold text-slate-800">
-                    <span>Status:</span>
-                    <span className="text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">Approved</span>
+            {marketplaceAccess !== 'NOT_APPLIED' && (
+              isApprovedVendor ? (
+                <article className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+                  <p className="text-xs font-extrabold uppercase tracking-wider text-slate-400">Business Account</p>
+                  <div className="mt-2 space-y-1">
+                    <div className="flex justify-between items-center text-xs font-extrabold text-slate-800">
+                      <span>Status:</span>
+                      <span className="text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">Approved</span>
+                    </div>
+                    <p className="text-xs font-black text-slate-800 truncate">Name: {app?.step2?.details?.businessName || 'Verified Vendor'}</p>
+                    <p className="text-xs font-semibold text-slate-500">Category: {app?.step2?.details?.businessCategory?.name || 'Local Trade'}</p>
+                    <div className="flex justify-between items-center text-[10px] font-bold text-slate-400 mt-1">
+                      <span>Profile: 100%</span>
+                      <span>Rating: 4.8 ⭐</span>
+                    </div>
                   </div>
-                  <p className="text-xs font-black text-slate-800 truncate">Name: {app?.step2?.details?.businessName || 'Verified Vendor'}</p>
-                  <p className="text-xs font-semibold text-slate-500">Category: {app?.step2?.details?.businessCategory?.name || 'Local Trade'}</p>
-                  <div className="flex justify-between items-center text-[10px] font-bold text-slate-400 mt-1">
-                    <span>Profile: 100%</span>
-                    <span>Rating: 4.8 ⭐</span>
+                </article>
+              ) : (
+                <article className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+                  <p className="text-xs font-extrabold uppercase tracking-wider text-slate-400">Vendor Status</p>
+                  <div className="mt-3 flex items-center justify-between">
+                    <span className="text-lg font-black text-slate-800">{vendorStatusText}</span>
+                    <span className={`flex h-7 items-center gap-1 rounded-full px-2.5 text-xs font-extrabold border ${vendorStatusColorClass}`}>
+                      {vendorStatusText === 'Approved' ? 'Active' : 'Vendor Log'}
+                    </span>
                   </div>
-                </div>
-              </article>
-            ) : (
-              <article className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-                <p className="text-xs font-extrabold uppercase tracking-wider text-slate-400">Vendor Status</p>
-                <div className="mt-3 flex items-center justify-between">
-                  <span className="text-lg font-black text-slate-800">{vendorStatusText}</span>
-                  <span className={`flex h-7 items-center gap-1 rounded-full px-2.5 text-xs font-extrabold border ${vendorStatusColorClass}`}>
-                    {vendorStatusText === 'Approved' ? 'Active' : 'Vendor Log'}
-                  </span>
-                </div>
-              </article>
+                </article>
+              )
             )}
 
             {/* Profile Completion */}
@@ -238,7 +224,7 @@ export default function MemberDashboard() {
             {/* Left Actions & Details */}
             <div className="space-y-6">
               {/* Vendor Onboarding Widget / Business Dashboard */}
-              {isApprovedVendor ? (
+              {marketplaceAccess === 'APPROVED' ? (
                 <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
                   <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center mb-4">
                     <div>
@@ -282,28 +268,14 @@ export default function MemberDashboard() {
                     </div>
                   </div>
                 </section>
-              ) : (
+              ) : marketplaceAccess === 'PENDING' ? (
                 <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
                   <h3 className="text-lg font-extrabold text-slate-950 mb-3">Vendor Marketplace Onboarding</h3>
                   <p className="text-sm font-semibold text-slate-500 mb-5 leading-6">
                     Become a verified vendor in the Gloaro Network to promote your business, list products/services, and generate localized referrals.
                   </p>
                   
-                  {!app ? (
-                    <div className="rounded-xl bg-slate-50 border border-slate-200 p-5 flex flex-col justify-between items-start gap-4 sm:flex-row sm:items-center">
-                      <div>
-                        <p className="font-extrabold text-slate-800 text-sm">Start Onboarding</p>
-                        <p className="text-xs font-semibold text-slate-500 mt-1">Submit your business registration details and logo.</p>
-                      </div>
-                      <button
-                        onClick={() => navigate('/member/vendor-application')}
-                        className="inline-flex h-10 items-center gap-1.5 rounded-lg bg-[#0d4697] px-4 py-2 text-xs font-extrabold text-white hover:bg-blue-800"
-                      >
-                        <PlusCircle className="h-4 w-4" />
-                        Apply as Vendor
-                      </button>
-                    </div>
-                  ) : app.status === 'draft' ? (
+                  {app?.status === 'draft' ? (
                     <div className="rounded-xl bg-amber-50/50 border border-amber-200 p-5 flex flex-col justify-between items-start gap-4 sm:flex-row sm:items-center">
                       <div>
                         <p className="font-extrabold text-amber-900 text-sm">Resume Onboarding (Draft)</p>
@@ -334,6 +306,44 @@ export default function MemberDashboard() {
                       </button>
                     </div>
                   )}
+                </section>
+              ) : (
+                <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+                  <h3 className="text-xl font-black text-slate-950 mb-2">Become a Vendor</h3>
+                  <p className="text-sm font-semibold text-slate-500 mb-6">
+                    Promote your products and services inside GLOARO.
+                  </p>
+                  <div className="bg-slate-50/60 border border-slate-100 rounded-xl p-5 mb-6">
+                    <p className="text-xs font-bold uppercase text-slate-400 mb-3">Benefits:</p>
+                    <ul className="space-y-2.5 text-sm font-semibold text-slate-700">
+                      <li className="flex items-center gap-2">
+                        <span className="h-1.5 w-1.5 rounded-full bg-[#0d4697]" />
+                        List Products
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <span className="h-1.5 w-1.5 rounded-full bg-[#0d4697]" />
+                        Offer Services
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <span className="h-1.5 w-1.5 rounded-full bg-[#0d4697]" />
+                        Receive Leads
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <span className="h-1.5 w-1.5 rounded-full bg-[#0d4697]" />
+                        Manage Orders
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <span className="h-1.5 w-1.5 rounded-full bg-[#0d4697]" />
+                        Grow Business
+                      </li>
+                    </ul>
+                  </div>
+                  <button
+                    onClick={() => navigate('/member/vendor-application')}
+                    className="h-11 rounded-lg bg-[#0d4697] px-6 text-xs font-extrabold text-white hover:bg-blue-800 transition"
+                  >
+                    Apply as Vendor
+                  </button>
                 </section>
               )}
 

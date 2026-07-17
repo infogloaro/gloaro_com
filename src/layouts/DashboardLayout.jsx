@@ -5,9 +5,10 @@ import logo from '../assets/signup_logo.png'
 import { useAuth } from '../hooks/useAuth'
 import { storage } from '../utils/storage'
 import { adminNav, vendorNav, customerNav, membershipNav, memberNav, secretaryNav, regionDirectorNav, stateDirectorNav, districtDirectorNav, chapterDirectorNav, presidentNav, vicePresidentNav, getSidebarNav } from '../constants/navigation'
+import { buildAdminRoute } from '../utils/permissions'
 
 export default function DashboardLayout({ navItems = [], title = 'Dashboard' }) {
-  const { user, logout, hasSidebar } = useAuth()
+  const { user, logout, hasSidebar, marketplaceAccess } = useAuth()
   const location = useLocation()
   const [open, setOpen] = useState(false)
   const [collapsed, setCollapsed] = useState(false)
@@ -30,7 +31,7 @@ export default function DashboardLayout({ navItems = [], title = 'Dashboard' }) 
       storage.setSession(session, false)
       sessionStorage.removeItem('gloaro_superadmin_session')
       setImpersonating(false)
-      window.location.href = '/admin/admin-management'
+      window.location.href = buildAdminRoute('superadmin', '/admin-management')
     } catch {
       sessionStorage.removeItem('gloaro_superadmin_session')
       setImpersonating(false)
@@ -74,12 +75,23 @@ export default function DashboardLayout({ navItems = [], title = 'Dashboard' }) 
 
     const visibleNavItems = activeNavItems
       .map((item) => {
+        if (!item) return null
         if (Array.isArray(item)) return (bypassEnabledCheck || isSidebarItemEnabled(item[0])) ? item : null
         
         let children = [...item.children];
 
-        if (item.label === 'Marketplace' && (title === 'Member Console' || location.pathname.includes('/member'))) {
-          if (isApprovedVendor) {
+        const isMemberRoute = location.pathname.startsWith('/member') || location.pathname.startsWith('/customer');
+
+        if (item.label === 'Marketplace' && (title === 'Member Console' || isMemberRoute)) {
+          if (marketplaceAccess === 'NOT_APPLIED') {
+            return null
+          }
+          if (marketplaceAccess === 'PENDING') {
+            children = [
+              ['My Vendor Application', '/member/vendor-application', FileText],
+              ['Application Status', '/member/vendor-application-status', ClipboardList],
+            ];
+          } else {
             children = [
               ['Dashboard', '/member/dashboard/vendor-analytics', LayoutDashboard],
               ['My Business', '/member/dashboard/my-business', Building2],
@@ -92,25 +104,14 @@ export default function DashboardLayout({ navItems = [], title = 'Dashboard' }) 
               ['Subscription', '/member/dashboard/subscription', ToggleLeft],
               ['Analytics', '/member/dashboard/vendor-analytics', FileBarChart]
             ];
-          } else {
-            children = [
-              ['Products', '/products', ShoppingBag],
-              ['Services', '/services', BriefcaseBusiness],
-              ['Vendors', '/vendors', Users],
-              ['Become a Vendor', '/member/vendor-application', PlusCircle],
-              ['My Vendor Application', '/member/vendor-application', FileText],
-              ['Application Status', '/member/vendor-application-status', ClipboardList],
-              ['Wishlist', '/customer/wishlist', Heart],
-              ['Orders', '/customer/wishlist', ShoppingBag],
-            ];
           }
         }
 
         const isMarketplaceGroup = item.label === 'Marketplace';
-        const isMemberConsole = title === 'Member Console' || location.pathname.includes('/member');
+        const isMemberConsole = title === 'Member Console' || isMemberRoute;
         const filteredChildren = children.filter(([label]) => 
           bypassEnabledCheck || 
-          (isApprovedVendor && isMarketplaceGroup) || 
+          ((marketplaceAccess === 'APPROVED' || marketplaceAccess === 'PENDING') && isMarketplaceGroup) || 
           isMemberConsole ||
           isSidebarItemEnabled(label)
         )
@@ -122,13 +123,14 @@ export default function DashboardLayout({ navItems = [], title = 'Dashboard' }) 
 
     return visibleNavItems
       .map((item) => {
+        if (!item) return null
         if (Array.isArray(item)) return item[0].toLowerCase().includes(value) ? item : null
         const children = item.children.filter(([label]) => label.toLowerCase().includes(value))
         if (item.label.toLowerCase().includes(value) || children.length) return { ...item, children: children.length ? children : item.children }
         return null
       })
       .filter(Boolean)
-  }, [isSidebarItemEnabled, resolvedNavItems, query, user?.role, user?.vendorProfile?.status])
+  }, [isSidebarItemEnabled, resolvedNavItems, query, user?.role, user?.vendorProfile?.status, marketplaceAccess])
 
   const pageTitle = useMemo(() => {
     for (const item of resolvedNavItems) {
@@ -213,7 +215,7 @@ export default function DashboardLayout({ navItems = [], title = 'Dashboard' }) 
             <NavLink
               key={label}
               to={to}
-              end={['/admin', '/vendor', '/membership/dashboard'].includes(to)}
+              end={['/admin/dashboard', '/super-admin/dashboard', '/vendor', '/membership/dashboard'].includes(to)}
               onClick={() => setOpen(false)}
               className={({ isActive }) => `flex h-10 items-center gap-3 rounded-md px-3 text-sm font-bold ${collapsed ? 'justify-center' : ''} ${isActive ? 'bg-[#0d4697] text-white shadow-lg shadow-blue-950/30' : 'text-slate-300 hover:bg-white/10 hover:text-white'}`}
             >

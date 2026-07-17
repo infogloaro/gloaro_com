@@ -72,11 +72,25 @@ export default function DynamicDashboard() {
   }
 
   const stats = dashboard.data || {}
-  const org = user?.organization || user?.meta?.organization || {}
-  const region = org.region?.name || org.region || 'South Region'
-  const state = org.state?.name || org.state || 'Tamil Nadu'
-  const district = org.district?.name || org.district || 'Chennai'
-  const chapter = org.chapter?.name || org.chapter || 'Tambaram East'
+  const org = user?.meta?.adminProfile?.organization || user?.organization || user?.meta?.organization || {}
+  const region = org.assignedRegion?.name || org.region?.name || org.region || ''
+  const state = org.assignedState?.name || org.state?.name || org.state || ''
+  const district = org.assignedDistrict?.name || org.district?.name || org.district || ''
+  const chapter = org.assignedChapter?.name || org.chapter?.name || org.chapter || ''
+
+  const formatName = (name, suffix) => {
+    if (!name) return ''
+    if (name.toLowerCase().includes(suffix.toLowerCase())) return name
+    return `${name} ${suffix}`
+  }
+
+  const hierarchyParts = []
+  if (chapter) hierarchyParts.push(formatName(chapter, 'Chapter'))
+  if (district) hierarchyParts.push(formatName(district, 'District'))
+  if (state) hierarchyParts.push(state)
+  if (region) hierarchyParts.push(formatName(region, 'Region'))
+
+  const hierarchyString = hierarchyParts.filter(Boolean).join(' • ') || 'All Territories Authorized'
   const memberId = user?.officialId || user?.memberId || 'MEM-TN-CHN-000145'
 
   // Map stat key names to readable values and icons
@@ -225,7 +239,7 @@ export default function DynamicDashboard() {
           </p>
           <h1 className="text-3xl font-black capitalize">{role.replaceAll('_', ' ')} Console</h1>
           <p className="text-sm font-semibold text-slate-200">
-            {chapter} Chapter • {district} District • {state} • {region}
+            {hierarchyString}
           </p>
         </div>
         <div className="bg-white/10 px-4 py-3 rounded-xl border border-white/20 backdrop-blur text-xs space-y-1">

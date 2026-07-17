@@ -46,102 +46,101 @@ import {
   User,
 } from 'lucide-react'
 
+import { buildAdminRoute } from '../utils/permissions'
+
 export const adminNav = [
-  ['Dashboard', '/admin', LayoutDashboard],
+  ['Dashboard', '/dashboard', LayoutDashboard],
   {
     label: 'Organization Management',
     icon: Building2,
     children: [
-      ['Locations', '/admin/locations', MapPinned],
+      ['Locations', '/locations', MapPinned],
     ],
   },
   {
     label: 'Super Admin',
     icon: ShieldCheck,
     children: [
-      ['Admin Management', '/admin/admin-management', Users],
-      ['Assignments', '/admin/assignments', Workflow],
-      ['Roles', '/admin/roles', ShieldCheck],
-      ['Permissions', '/admin/permissions', KeyRound],
-      ['Feature Management', '/admin/features', ToggleLeft],
-      ['Dashboard Config', '/admin/dashboard-config', LayoutGrid],
-      ['Module Config', '/admin/module-config', Settings],
-      ['Workflow Settings', '/admin/membership-workflow', Workflow],
-      ['Workflow Engine', '/admin/workflow-engine', Workflow],
-      ['Tasks', '/admin/tasks', Activity],
-      ['Calendar', '/admin/calendar', CalendarDays],
+      ['Admin Management', '/admin-management', Users],
+      ['Assignments', '/assignments', Workflow],
+      ['Roles', '/roles', ShieldCheck],
+      ['Permissions', '/permissions', KeyRound],
+      ['Feature Management', '/features', ToggleLeft],
+      ['Dashboard Config', '/dashboard-config', LayoutGrid],
+      ['Module Config', '/module-config', Settings],
+      ['Workflow Settings', '/membership-workflow', Workflow],
+      ['Workflow Engine', '/workflow-engine', Workflow],
+      ['Tasks', '/tasks', Activity],
+      ['Calendar', '/calendar', CalendarDays],
     ],
   },
   {
     label: 'Membership',
     icon: CreditCard,
     children: [
-      ['Membership Applications', '/admin/applications/membership', ClipboardList],
-      ['Memberships', '/admin/memberships', CreditCard],
-      ['Membership Plans', '/admin/plans', CreditCard],
-      ['Members', '/admin/members', Users],
-      ['Visitors', '/admin/visitors', Users],
-      ['Visitor Conversion', '/admin/visitor-conversion', Workflow],
-      ['Attendance', '/admin/attendance', Activity],
-      ['Meetings', '/admin/meetings', CalendarDays],
-      ['Chapters', '/admin/chapters', Network],
-      ['Referrals', '/admin/referrals', Ticket],
+      ['Member Approval', '/applications/membership', ClipboardList],
+      ['Membership Plans', '/plans', CreditCard],
+      ['Members', '/members', Users],
+      ['Visitors', '/visitors', Users],
+      ['Visitor Conversion', '/visitor-conversion', Workflow],
+      ['Attendance', '/attendance', Activity],
+      ['Meetings', '/meetings', CalendarDays],
+      ['Chapters', '/chapters', Network],
+      ['Referrals', '/referrals', Ticket],
     ],
   },
   {
     label: 'Directory',
     icon: Building2,
     children: [
-      ['Users', '/admin/users', Users],
-      ['Vendors', '/admin/vendors', Building2],
-      ['Vendor Settings', '/admin/vendor-settings', Settings],
-      ['Vendor Approval', '/admin/vendor-approval-workflow', Workflow],
-      ['Business', '/admin/business', BriefcaseBusiness],
-      ['Business Wall', '/admin/business-wall', Network],
-      ['Categories', '/admin/categories', ListTree],
+      ['Users', '/users', Users],
+      ['Vendor Settings', '/vendor-settings', Settings],
+      ['Business', '/business', BriefcaseBusiness],
+      ['Business Wall', '/business-wall', Network],
+      ['Categories', '/categories', ListTree],
     ],
   },
   {
     label: 'Marketplace',
     icon: ShoppingBag,
     children: [
-      ['Products', '/admin/products', Package],
-      ['Services', '/admin/services', BriefcaseBusiness],
-      ['Marketplace Settings', '/admin/marketplace-settings', Settings],
-      ['Marketplace Approval', '/admin/marketplace-approval', Workflow],
+      ['Vendors', '/vendors', Building2],
+      ['Products', '/products', Package],
+      ['Services', '/services', BriefcaseBusiness],
+      ['Marketplace Approval', '/marketplace-approval', Workflow],
     ],
   },
   {
     label: 'Applications',
     icon: FileText,
     children: [
-      ['All Applications', '/admin/applications', FileText],
-      ['Membership', '/admin/applications/membership', CreditCard],
-      ['Franchise', '/admin/applications/franchise', BriefcaseBusiness],
-      ['Business Network', '/admin/applications/business-network', Network],
-      ['Vendor', '/admin/applications/vendor', Building2],
+      ['All Applications', '/applications', FileText],
+      ['Membership', '/applications/membership', CreditCard],
+      ['Franchise', '/applications/franchise', BriefcaseBusiness],
+      ['Business Network', '/applications/business-network', Network],
+      ['Vendor', '/applications/vendor', Building2],
     ],
   },
-  ['Meetings', '/admin/meeting-settings', CalendarDays],
-  ['Events', '/admin/events', CalendarDays],
-  ['Training', '/admin/training', Star],
-  ['Testimonials', '/admin/testimonials', FileText],
-  ['Banners', '/admin/banners', FileText],
-  ['FAQs', '/admin/faqs', HelpCircle],
-  ['Support', '/admin/support', HelpCircle],
-  ['Reports', '/admin/reports', FileBarChart],
-  ['Analytics', '/admin/analytics', BarChart3],
-  ['Executive Dashboard', '/admin/executive-dashboard', BarChart3],
-  ['Scorecards', '/admin/scorecards', Activity],
-  ['Member Journey', '/admin/member-journey', Workflow],
-  ['Activity Center', '/admin/activity', Activity],
-  ['Global Search', '/admin/global-search', Search],
-  ['Notification Center', '/admin/notifications', Bell],
-  ['Notification Automation', '/admin/notification-automation', Workflow],
-  ['AI Insights', '/admin/ai-insights', Star],
-  ['Settings', '/admin/settings', Settings],
-  ['Audit Logs', '/admin/audit-logs', FileText],
-  ['System Logs', '/admin/system-logs', Lock],
+  ['Meetings', '/meeting-settings', CalendarDays],
+  ['Events', '/events', CalendarDays],
+  ['Training', '/training', Star],
+  ['Testimonials', '/testimonials', FileText],
+  ['Banners', '/banners', FileText],
+  ['FAQs', '/faqs', HelpCircle],
+  ['Support', '/support', HelpCircle],
+  ['Reports', '/reports', FileBarChart],
+  ['Analytics', '/analytics', BarChart3],
+  ['Executive Dashboard', '/executive-dashboard', BarChart3],
+  ['Scorecards', '/scorecards', Activity],
+  ['Member Journey', '/member-journey', Workflow],
+  ['Activity Center', '/activity', Activity],
+  ['Global Search', '/global-search', Search],
+  ['Notification Center', '/notifications', Bell],
+  ['Notification Automation', '/notification-automation', Workflow],
+  ['AI Insights', '/ai-insights', Star],
+  ['Settings', '/settings', Settings],
+  ['Audit Logs', '/audit-logs', FileText],
+  ['System Logs', '/system-logs', Lock],
 ]
 
 export const vendorNav = [
@@ -282,14 +281,13 @@ const roleModules = {
     ['Member Registration', '/register-member', Users],
     ['Membership Applications', '/membership-applications', FileText],
     ['Secretaries', '/secretaries', Users],
-    ['Approved Vendors', '/admin/approved-vendors', Building2],
     ['Reports', '/reports', FileBarChart],
     ['Announcements', '/announcements', Bell]
   ],
   chapter_president: [
+    ['Approved Members', '/members', Users],
     ['Vice Presidents', '/vice-presidents', Users],
     ['Chapter Reports', '/reports', FileBarChart],
-    ['Vendor Approvals', '/admin/applications/vendor', Building2],
     ['Leadership', '/leadership', Award]
   ],
   executive_director: [
@@ -315,15 +313,8 @@ const roleModules = {
     ['Approved Vendors', '/approved-vendors', Building2]
   ],
   district_director: [
-    ['District Overview', '/district-management', Settings],
-    ['Chapters', '/chapters', Building2],
-    ['Chapter Directors', '/chapter-directors', Users],
     ['Executive Directors', '/executive-directors', Users],
-    ['Membership Requests', '/memberships', CreditCard],
-    ['Active Members', '/members', Users],
-    ['Pending Members', '/memberships', CreditCard],
-    ['Vendor Applications', '/vendor-applications', BriefcaseBusiness],
-    ['Approved Vendors', '/approved-vendors', Building2]
+    ['Active Members', '/members', Users]
   ],
   state_director: [
     ['District Directors', '/district-directors', Users],
@@ -334,29 +325,30 @@ const roleModules = {
     ['Regional Analytics', '/analytics', FileBarChart]
   ],
   launch_director: [
-    ['Assigned Chapters', '/chapters', Building2],
-    ['Chapter Launch Status', '/chapter-launch', Settings],
-    ['Membership Applications', '/membership-applications', CreditCard],
-    ['Membership Verification', '/membership-verification', ShieldCheck],
-    ['Chapter Presidents', '/presidents', Users],
-    ['Vice Presidents', '/vice-presidents', Users],
-    ['Approved Vendors', '/admin/approved-vendors', Building2],
-    ['Vendor Applications', '/vendor-applications', BriefcaseBusiness],
+    ['Direct Consultants', '/direct-consultants', Users],
+    ['Approved Members', '/members', Users],
     ['Launch Reports', '/launch-reports', FileBarChart],
-    ['Membership Reports', '/membership-reports', FileBarChart],
-    ['Vendor Reports', '/vendor-reports', FileBarChart]
+    ['Membership Reports', '/membership-reports', FileBarChart]
   ],
   direct_consultant: [
-    ['Vendor Applications', '/vendor-applications', BriefcaseBusiness],
-    ['Approved Vendors', '/approved-vendors', Building2],
-    ['Assigned Members', '/members', Users],
-    ['Membership Status', '/membership-applications', CreditCard]
+    ['Chapter Presidents', '/presidents', Users],
+    ['Approved Members', '/members', Users]
   ]
 };
 
 export function getSidebarNav(role) {
   if (['superadmin', 'admin'].includes(role)) {
-    return adminNav;
+    const prefixPath = (item) => {
+      if (Array.isArray(item)) {
+        const [label, to, icon] = item;
+        return [label, buildAdminRoute(role, to), icon];
+      }
+      return {
+        ...item,
+        children: item.children.map(prefixPath)
+      };
+    };
+    return adminNav.map(prefixPath);
   }
 
   const prefix = rolePrefixes[role] || '/member/dashboard';
@@ -364,32 +356,152 @@ export function getSidebarNav(role) {
   const prefixItem = (item) => {
     if (Array.isArray(item)) {
       const [label, to, icon] = item;
-      const finalPath = (to.startsWith('/admin/') || to === '/admin' || to.startsWith('/member/') || to === '/member') ? to : `${prefix}${to}`;
+      const finalPath = (to.startsWith('/admin/') || to === '/admin' || to.startsWith('/member/') || to === '/member') || to.startsWith('/super-admin')) ? to : `${prefix}${to}`;
       return [label, finalPath, icon];
+    }
+    let children = item.children;
+    if (['region_director', 'state_director', 'district_director', 'launch_director', 'direct_consultant', 'chapter_president', 'vice_president', 'secretary'].includes(role) && item.label === 'Marketplace') {
+      children = children.filter(([label]) => !['Orders', 'Payments', 'Subscription'].includes(label));
     }
     return {
       ...item,
-      children: item.children.map(prefixItem)
+      children: children.map(prefixItem)
     };
   };
 
-  const base = commonModules.map(item => {
-    if (item.label === 'Account') {
-      const children = [...item.children];
-      if (['customer', 'user', 'vendor'].includes(role)) {
-        children.splice(1, 0, ['Membership Application Status', '/member/membership-application-status', ClipboardCheck]);
-      }
-      return prefixItem({
-        ...item,
-        children
-      });
+
+let base = commonModules.map(item => {
+  if (item.label === 'Account') {
+    const children = [...item.children];
+
+    if (['customer', 'user', 'vendor'].includes(role)) {
+      children.splice(1, 0, [
+        'Membership Application Status',
+        '/member/membership-application-status',
+        ClipboardCheck,
+      ]);
     }
-    return prefixItem(item);
-  });
 
-  const extra = (roleModules[role] || []).map(prefixItem);
+    return prefixItem({
+      ...item,
+      children,
+    });
+  }
 
-  return [...base, ...extra];
+  return prefixItem(item);
+});
+
+if (
+  ['region_director', 'state_director', 'district_director'].includes(role)
+) {
+  const orgMgmt = {
+    label: 'Organization Management',
+    icon: Building2,
+    children: [
+      ['Locations', '/locations', MapPinned],
+    ].map(prefixItem),
+  };
+
+  if (role === 'district_director') {
+    base = [
+      base[0], // Dashboard
+      orgMgmt,
+      base[2], // Marketplace
+      base[3], // Meetings
+      base[4], // Chapter
+      base[5], // Collaboration
+      base[6], // Account
+    ];
+  } else {
+    base = [
+      base[0], // Dashboard
+      orgMgmt,
+      base[2], // Marketplace
+      base[3], // Meetings
+      base[1], // Community
+      base[4], // Chapter
+      base[5], // Collaboration
+      base[6], // Account
+    ];
+  }
 }
+
+const extra = (roleModules[role] || []).map(prefixItem);
+
+return [...base, ...extra];
+}
+
+//   const base = commonModules.map(item => {
+//     if (item.label === 'Account') {
+//       const children = [...item.children];
+//       if (['customer', 'user', 'vendor'].includes(role)) {
+//         children.splice(1, 0, ['Membership Application Status', '/member/membership-application-status', ClipboardCheck]);
+//       }
+//       return prefixItem({
+//         ...item,
+//         children
+//       });
+//     }
+//     return prefixItem(item);
+//   });
+// =======
+//   let base = commonModules.map(prefixItem);
+
+//   if (role === 'region_director') {
+//     const orgMgmt = {
+//       label: 'Organization Management',
+//       icon: Building2,
+//       children: [
+//         ['Locations', '/locations', MapPinned]
+//       ].map(prefixItem)
+//     };
+
+//     const newBase = [];
+//     newBase.push(base[0]); // Dashboard
+//     newBase.push(orgMgmt); // Organization Management
+//     newBase.push(base[2]); // Marketplace
+//     newBase.push(base[3]); // Meetings
+//     newBase.push(base[1]); // Community
+//     newBase.push(base[4]); // Profile
+//     base = newBase;
+//   } else if (role === 'state_director') {
+//     const orgMgmt = {
+//       label: 'Organization Management',
+//       icon: Building2,
+//       children: [
+//         ['Locations', '/locations', MapPinned]
+//       ].map(prefixItem)
+//     };
+
+//     const newBase = [];
+//     newBase.push(base[0]); // Dashboard
+//     newBase.push(orgMgmt); // Organization Management
+//     newBase.push(base[2]); // Marketplace
+//     newBase.push(base[3]); // Meetings
+//     newBase.push(base[1]); // Community
+//     newBase.push(base[4]); // Profile
+//     base = newBase;
+//   } else if (role === 'district_director') {
+//     const orgMgmt = {
+//       label: 'Organization Management',
+//       icon: Building2,
+//       children: [
+//         ['Locations', '/locations', MapPinned]
+//       ].map(prefixItem)
+//     };
+
+//     const newBase = [];
+//     newBase.push(base[0]); // Dashboard
+//     newBase.push(orgMgmt); // Organization Management
+//     newBase.push(base[2]); // Marketplace
+//     newBase.push(base[3]); // Meetings
+//     base = newBase;
+//   }
+// >>>>>>> main
+
+//   const extra = (roleModules[role] || []).map(prefixItem);
+
+//   return [...base, ...extra];
+// }
 
 
