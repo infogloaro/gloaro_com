@@ -67,7 +67,7 @@ export default function MembershipApplication() {
       .then(res => {
         const app = res.data?.data
         if (app) {
-          if (app.status !== 'draft') {
+          if (!['draft', 'rejected', 'changes_requested'].includes(app.status)) {
             navigate('/member/membership-application-status')
             return
           }

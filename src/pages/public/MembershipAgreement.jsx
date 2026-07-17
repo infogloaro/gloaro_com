@@ -68,7 +68,7 @@ export default function MembershipAgreement() {
       api.get('/membership-applications/my-application', { silent: true })
         .then(res => {
           const app = res.data?.data
-          if (app && app.status !== 'draft') {
+          if (app && !['draft', 'rejected', 'changes_requested'].includes(app.status)) {
             navigate('/member/membership-application-status')
           }
         })

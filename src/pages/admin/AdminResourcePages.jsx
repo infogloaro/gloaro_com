@@ -397,7 +397,7 @@ function MembershipApplicationDetails({ application, adminNotes, onNotesChange, 
   const isFinalDecision = ['approved', 'rejected'].includes(application.status)
 
   if (!isFinalDecision) {
-    if (['superadmin', 'admin'].includes(userRole)) {
+    if (['superadmin', 'admin', 'vice_president'].includes(userRole)) {
       showVerifyBtn = true
       showApproveBtn = true
       showRejectBtn = true
