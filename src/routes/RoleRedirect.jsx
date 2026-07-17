@@ -10,6 +10,10 @@ export default function RoleRedirect() {
   if (isHydrating) return <LoadingScreen label="Loading dashboard..." />
   if (!user) return <Navigate to="/" replace />
 
+  if (user.status === 'pending_approval' && user.role === 'customer') {
+    return <Navigate to="/membership-agreement" replace />
+  }
+
   const targetPath = getDashboardRoute(user.role)
   return <Navigate to={targetPath} replace />
 }

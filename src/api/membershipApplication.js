@@ -5,4 +5,5 @@ export const membershipApplicationApi = {
     headers: { 'Content-Type': 'multipart/form-data' },
   }),
   track: (params) => api.get('/membership-applications/track', { params }),
+  getMyApplication: () => api.get('/membership-applications/my-application'),
 }

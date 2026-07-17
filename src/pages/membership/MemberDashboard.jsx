@@ -47,6 +47,7 @@ import UnifiedCalendar from './UnifiedCalendar'
 import ChatSystem from './ChatSystem'
 import TasksAndHelpDesk from './TasksAndHelpDesk'
 import AIInsightsAndDigitalCard from './AIInsightsAndDigitalCard'
+import MembershipApplicationStatus from './MembershipApplicationStatus'
 import JurisdictionCard from '../../components/common/JurisdictionCard'
 
 export default function MemberDashboard() {
@@ -481,6 +482,7 @@ export default function MemberDashboard() {
       {activeTab === 'chat' && <ChatSystem />}
       {activeTab === 'tasks' && <TasksAndHelpDesk />}
       {activeTab === 'digitalCard' && <AIInsightsAndDigitalCard />}
+      {activeTab === 'membership-application-status' && <MembershipApplicationStatus />}
     </section>
   )
 }

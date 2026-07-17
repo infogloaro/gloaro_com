@@ -61,6 +61,7 @@ export default function VicePresidentDashboard() {
   const [posts, setPosts] = useState([])
   const [referrals, setReferrals] = useState([])
   const [visitorsCount, setVisitorsCount] = useState(0)
+  const [membershipApps, setMembershipApps] = useState([])
 
   useEffect(() => {
     adminApi.adminAccounts({ role: 'secretary', limit: 1 })
@@ -83,6 +84,11 @@ export default function VicePresidentDashboard() {
     // Load recent visitors
     api.get('/community/visitors')
       .then(res => setVisitorsCount(res.data?.data?.length || 0))
+      .catch(() => {})
+
+    // Load pending membership applications
+    api.get('/membership-applications?status=submitted&limit=3')
+      .then(res => setMembershipApps(res.data?.data || []))
       .catch(() => {})
   }, [])
 
@@ -240,7 +246,7 @@ export default function VicePresidentDashboard() {
             <h4 className="text-2xl font-black text-emerald-600 mt-2">{kpis.activeMembers}</h4>
             <p className="text-xs text-slate-500 font-semibold mt-1">Verified standing</p>
           </div>
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <div onClick={() => navigate('/vice-president/membership-applications')} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm hover:border-[#0d4697] cursor-pointer transition">
             <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Pending Registrations</p>
             <h4 className="text-2xl font-black text-amber-500 mt-2">{kpis.pendingRegs}</h4>
             <p className="text-xs text-slate-500 font-semibold mt-1">Awaiting approval</p>
@@ -408,16 +414,22 @@ export default function VicePresidentDashboard() {
           </div>
 
           <div className="space-y-2 pt-2 border-t border-slate-100">
-            <h4 className="text-xs font-black uppercase tracking-wider text-slate-400">Pending Registrations ({kpis.pendingRegs})</h4>
-            <div className="text-xs flex items-center justify-between text-slate-850 bg-slate-50 p-2.5 rounded-lg border border-slate-100">
-              <div>
-                <div className="font-extrabold">Karthik Raja</div>
-                <div className="text-[10px] text-slate-500 font-semibold mt-0.5">Software Development Category</div>
-              </div>
-              <button onClick={() => navigate('/vice-president/memberships')} className="text-[#0d4697] font-extrabold flex items-center gap-0.5 hover:underline">
-                Review <ChevronRight className="h-3 w-3" />
-              </button>
-            </div>
+            <h4 className="text-xs font-black uppercase tracking-wider text-slate-400">Pending Membership Applications ({membershipApps.length})</h4>
+            {membershipApps.length > 0 ? (
+              membershipApps.map(app => (
+                <div key={app._id} className="text-xs flex items-center justify-between text-slate-850 bg-slate-50 p-2.5 rounded-lg border border-slate-100 mb-2 last:mb-0">
+                  <div>
+                    <div className="font-extrabold">{app.personal?.fullName || app.submittedBy?.name || 'Applicant'}</div>
+                    <div className="text-[10px] text-slate-500 font-semibold mt-0.5">{app.professional?.companyName || 'Silver Plan'}</div>
+                  </div>
+                  <button onClick={() => navigate('/vice-president/membership-applications')} className="text-[#0d4697] font-extrabold flex items-center gap-0.5 hover:underline">
+                    Review <ChevronRight className="h-3 w-3" />
+                  </button>
+                </div>
+              ))
+            ) : (
+              <p className="text-xs font-semibold text-slate-500 mt-2">No pending membership applications found.</p>
+            )}
           </div>
         </div>
       </section>

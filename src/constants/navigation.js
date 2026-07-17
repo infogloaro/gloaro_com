@@ -279,6 +279,7 @@ const roleModules = {
   ],
   vice_president: [
     ['Member Registration', '/register-member', Users],
+    ['Membership Applications', '/membership-applications', FileText],
     ['Secretaries', '/secretaries', Users],
     ['Reports', '/reports', FileBarChart],
     ['Announcements', '/announcements', Bell]
@@ -355,7 +356,7 @@ export function getSidebarNav(role) {
   const prefixItem = (item) => {
     if (Array.isArray(item)) {
       const [label, to, icon] = item;
-      const finalPath = (to.startsWith('/admin') || to.startsWith('/super-admin')) ? to : `${prefix}${to}`;
+      const finalPath = (to.startsWith('/admin/') || to === '/admin' || to.startsWith('/member/') || to === '/member') || to.startsWith('/super-admin')) ? to : `${prefix}${to}`;
       return [label, finalPath, icon];
     }
     let children = item.children;
@@ -368,62 +369,139 @@ export function getSidebarNav(role) {
     };
   };
 
-  let base = commonModules.map(prefixItem);
 
-  if (role === 'region_director') {
-    const orgMgmt = {
-      label: 'Organization Management',
-      icon: Building2,
-      children: [
-        ['Locations', '/locations', MapPinned]
-      ].map(prefixItem)
-    };
+let base = commonModules.map(item => {
+  if (item.label === 'Account') {
+    const children = [...item.children];
 
-    const newBase = [];
-    newBase.push(base[0]); // Dashboard
-    newBase.push(orgMgmt); // Organization Management
-    newBase.push(base[2]); // Marketplace
-    newBase.push(base[3]); // Meetings
-    newBase.push(base[1]); // Community
-    newBase.push(base[4]); // Profile
-    base = newBase;
-  } else if (role === 'state_director') {
-    const orgMgmt = {
-      label: 'Organization Management',
-      icon: Building2,
-      children: [
-        ['Locations', '/locations', MapPinned]
-      ].map(prefixItem)
-    };
+    if (['customer', 'user', 'vendor'].includes(role)) {
+      children.splice(1, 0, [
+        'Membership Application Status',
+        '/member/membership-application-status',
+        ClipboardCheck,
+      ]);
+    }
 
-    const newBase = [];
-    newBase.push(base[0]); // Dashboard
-    newBase.push(orgMgmt); // Organization Management
-    newBase.push(base[2]); // Marketplace
-    newBase.push(base[3]); // Meetings
-    newBase.push(base[1]); // Community
-    newBase.push(base[4]); // Profile
-    base = newBase;
-  } else if (role === 'district_director') {
-    const orgMgmt = {
-      label: 'Organization Management',
-      icon: Building2,
-      children: [
-        ['Locations', '/locations', MapPinned]
-      ].map(prefixItem)
-    };
-
-    const newBase = [];
-    newBase.push(base[0]); // Dashboard
-    newBase.push(orgMgmt); // Organization Management
-    newBase.push(base[2]); // Marketplace
-    newBase.push(base[3]); // Meetings
-    base = newBase;
+    return prefixItem({
+      ...item,
+      children,
+    });
   }
 
-  const extra = (roleModules[role] || []).map(prefixItem);
+  return prefixItem(item);
+});
 
-  return [...base, ...extra];
+if (
+  ['region_director', 'state_director', 'district_director'].includes(role)
+) {
+  const orgMgmt = {
+    label: 'Organization Management',
+    icon: Building2,
+    children: [
+      ['Locations', '/locations', MapPinned],
+    ].map(prefixItem),
+  };
+
+  if (role === 'district_director') {
+    base = [
+      base[0], // Dashboard
+      orgMgmt,
+      base[2], // Marketplace
+      base[3], // Meetings
+      base[4], // Chapter
+      base[5], // Collaboration
+      base[6], // Account
+    ];
+  } else {
+    base = [
+      base[0], // Dashboard
+      orgMgmt,
+      base[2], // Marketplace
+      base[3], // Meetings
+      base[1], // Community
+      base[4], // Chapter
+      base[5], // Collaboration
+      base[6], // Account
+    ];
+  }
 }
+
+const extra = (roleModules[role] || []).map(prefixItem);
+
+return [...base, ...extra];
+}
+
+//   const base = commonModules.map(item => {
+//     if (item.label === 'Account') {
+//       const children = [...item.children];
+//       if (['customer', 'user', 'vendor'].includes(role)) {
+//         children.splice(1, 0, ['Membership Application Status', '/member/membership-application-status', ClipboardCheck]);
+//       }
+//       return prefixItem({
+//         ...item,
+//         children
+//       });
+//     }
+//     return prefixItem(item);
+//   });
+// =======
+//   let base = commonModules.map(prefixItem);
+
+//   if (role === 'region_director') {
+//     const orgMgmt = {
+//       label: 'Organization Management',
+//       icon: Building2,
+//       children: [
+//         ['Locations', '/locations', MapPinned]
+//       ].map(prefixItem)
+//     };
+
+//     const newBase = [];
+//     newBase.push(base[0]); // Dashboard
+//     newBase.push(orgMgmt); // Organization Management
+//     newBase.push(base[2]); // Marketplace
+//     newBase.push(base[3]); // Meetings
+//     newBase.push(base[1]); // Community
+//     newBase.push(base[4]); // Profile
+//     base = newBase;
+//   } else if (role === 'state_director') {
+//     const orgMgmt = {
+//       label: 'Organization Management',
+//       icon: Building2,
+//       children: [
+//         ['Locations', '/locations', MapPinned]
+//       ].map(prefixItem)
+//     };
+
+//     const newBase = [];
+//     newBase.push(base[0]); // Dashboard
+//     newBase.push(orgMgmt); // Organization Management
+//     newBase.push(base[2]); // Marketplace
+//     newBase.push(base[3]); // Meetings
+//     newBase.push(base[1]); // Community
+//     newBase.push(base[4]); // Profile
+//     base = newBase;
+//   } else if (role === 'district_director') {
+//     const orgMgmt = {
+//       label: 'Organization Management',
+//       icon: Building2,
+//       children: [
+//         ['Locations', '/locations', MapPinned]
+//       ].map(prefixItem)
+//     };
+
+//     const newBase = [];
+//     newBase.push(base[0]); // Dashboard
+//     newBase.push(orgMgmt); // Organization Management
+//     newBase.push(base[2]); // Marketplace
+//     newBase.push(base[3]); // Meetings
+//     base = newBase;
+//   }
+// >>>>>>> main
+
+//   const extra = (roleModules[role] || []).map(prefixItem);
+
+//   return [...base, ...extra];
+// }
 
 

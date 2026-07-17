@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
+import toast from 'react-hot-toast'
 import { BriefcaseBusiness, Building2, Camera, Globe2, MapPin, UserRound } from 'lucide-react'
 import api from '../../api/axios'
 import { useAuth } from '../../hooks/useAuth'
 import { getMembershipDraft, saveMembershipDraft, setMembershipFile } from '../../utils/membershipOnboarding'
+import LoadingScreen from '../../components/common/LoadingScreen'
 
 const expertise = ['Technology', 'Finance', 'Real Estate', 'Education', 'Marketing', 'Healthcare', 'Design', 'Manufacturing']
 const industries = ['Technology', 'Finance', 'Real Estate', 'Education', 'Healthcare', 'Retail', 'Manufacturing', 'Construction', 'Hospitality', 'Legal Services', 'Marketing', 'Transportation']
@@ -11,10 +13,13 @@ const businessTypes = ['B2B Enterprise', 'B2C Business', 'D2C Brand', 'Startup',
 
 export default function MembershipApplication() {
   const { user } = useAuth()
+  const navigate = useNavigate()
   const draft = getMembershipDraft()
   const [personal, setPersonal] = useState(draft.personal || {})
   const [address, setAddress] = useState(draft.address || {})
   const [professional, setProfessional] = useState(draft.professional || { expertise: [] })
+  const [loading, setLoading] = useState(true)
+  const [savingDraft, setSavingDraft] = useState(false)
   const mobileDigits = String(personal.mobileNumber || '').replace(/\D/g, '')
   const mobileInvalid = Boolean(personal.mobileNumber) && (mobileDigits.length < 10 || mobileDigits.length > 15)
 
@@ -31,14 +36,111 @@ export default function MembershipApplication() {
   const isVicePresident = user?.role === 'vice_president'
   const userOrg = user?.meta?.adminProfile?.organization || {}
 
-  // 1. Fetch Regions
+  // 1. Fetch Regions & Existing Application Status
   useEffect(() => {
     api.get('/organization/regions')
       .then(res => {
         setRegions(res.data?.data?.regions || [])
       })
       .catch(() => {})
+
+    // Redirect official roles who shouldn't apply
+    if (user && !['customer', 'user', 'vendor'].includes(user.role)) {
+      const roleDashboardMap = {
+        vice_president: '/vice-president/dashboard',
+        secretary: '/secretary/dashboard',
+        chapter_president: '/president/dashboard',
+        admin: '/admin',
+        superadmin: '/admin',
+      }
+      navigate(roleDashboardMap[user.role] || '/')
+      return
+    }
+
+    const token = localStorage.getItem('gloaro_access_token') || sessionStorage.getItem('gloaro_access_token')
+    if (!token) {
+      setLoading(false)
+      return
+    }
+
+    api.get('/membership-applications/my-application', { silent: true })
+      .then(res => {
+        const app = res.data?.data
+        if (app) {
+          if (!['draft', 'rejected', 'changes_requested'].includes(app.status)) {
+            navigate('/member/membership-application-status')
+            return
+          }
+          const loadedDraft = {
+            personal: app.personal || {},
+            address: app.address || {},
+            professional: app.professional || {},
+            regionId: app.regionId || '',
+            stateId: app.stateId || '',
+            districtId: app.districtId || '',
+            chapterId: app.chapterId || '',
+            credentials: app.credentials || {},
+            references: app.references || [{}, {}],
+            referralCode: app.referralCode || ''
+          }
+          localStorage.setItem('gloaro_membership_onboarding', JSON.stringify(loadedDraft))
+          setPersonal(loadedDraft.personal)
+          setAddress(loadedDraft.address)
+          setProfessional(loadedDraft.professional)
+          setSelectedRegion(loadedDraft.regionId)
+          setSelectedState(loadedDraft.stateId)
+          setSelectedDistrict(loadedDraft.districtId)
+          setSelectedChapter(loadedDraft.chapterId)
+        }
+      })
+      .catch(() => {})
+      .finally(() => {
+        setLoading(false)
+      })
   }, [])
+
+  const handleSaveDraft = async (e) => {
+    e?.preventDefault()
+    setSavingDraft(true)
+    try {
+      const payload = {
+        personal,
+        address,
+        professional,
+        regionId: selectedRegion,
+        stateId: selectedState,
+        districtId: selectedDistrict,
+        chapterId: selectedChapter,
+        status: 'draft'
+      }
+      
+      const formData = new FormData()
+      formData.append('data', JSON.stringify(payload))
+      
+      await api.post('/membership-applications', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      })
+      
+      // Update local storage too
+      const current = getMembershipDraft()
+      localStorage.setItem('gloaro_membership_onboarding', JSON.stringify({
+        ...current,
+        personal,
+        address,
+        professional,
+        regionId: selectedRegion,
+        stateId: selectedState,
+        districtId: selectedDistrict,
+        chapterId: selectedChapter
+      }))
+
+      toast.success('Application draft saved successfully!')
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to save draft application')
+    } finally {
+      setSavingDraft(false)
+    }
+  }
 
   // Auto-fill from Vice President details
   useEffect(() => {
@@ -173,6 +275,10 @@ export default function MembershipApplication() {
     })
   }
 
+  if (loading) {
+    return <LoadingScreen label="Resuming your application..." />
+  }
+
   return (
     <main className="min-h-screen bg-[#fff9e8] px-4 py-4 font-playfair text-slate-950">
       <section className="mx-auto max-w-4xl">
@@ -286,7 +392,9 @@ export default function MembershipApplication() {
         </form>
 
         <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
-          <a href="/" className="rounded-md border border-slate-300 bg-white px-5 py-2.5 text-xs font-extrabold text-slate-700">Save Draft</a>
+          <button type="button" onClick={handleSaveDraft} disabled={savingDraft} className="rounded-md border border-slate-300 bg-white px-5 py-2.5 text-xs font-extrabold text-slate-700 disabled:opacity-60">
+            {savingDraft ? 'Saving Draft...' : 'Save Draft'}
+          </button>
           <div className="flex gap-3">
             <Link to="/membership-agreement" className="rounded-md bg-[#ffbf1a] px-5 py-2.5 text-xs font-extrabold text-[#0b1f3d]">Step Back</Link>
             <Link to="/membership-qualification" className="rounded-md bg-[#0b469e] px-5 py-2.5 text-xs font-extrabold text-white">Next Step →</Link>

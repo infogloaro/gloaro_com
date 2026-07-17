@@ -127,13 +127,13 @@ export default function ReferralsPipeline() {
             </thead>
             <tbody className="divide-y divide-slate-100 text-xs font-semibold text-slate-700">
               {referrals.map((ref) => {
-                const member = ref.referred || {}
-                const approved = member.isActive ? 'Approved' : 'Pending'
-                const chapterName = member.meta?.adminProfile?.organization?.chapterName || member.chapter || 'Sultanpur'
+                const member = ref.referred || null
+                const approved = member?.status === 'approved' ? 'Approved' : 'Pending'
+                const chapterName = member?.meta?.adminProfile?.organization?.chapterName || member?.chapter || 'Sultanpur'
                 return (
                   <tr key={ref._id} className="hover:bg-slate-50/50 transition">
-                    <td className="py-4 px-4 font-extrabold text-slate-900">{member.name || '-'}</td>
-                    <td className="py-4 px-4 text-slate-500 font-semibold">{member.phone || '-'}</td>
+                    <td className="py-4 px-4 font-extrabold text-slate-900">{member?.name || '-'}</td>
+                    <td className="py-4 px-4 text-slate-500 font-semibold">{member?.phone || '-'}</td>
                     <td className="py-4 px-4 text-slate-500 font-semibold">{chapterName}</td>
                     <td className="py-4 px-4 uppercase text-[10px] font-extrabold">
                       <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full border ${
@@ -150,7 +150,7 @@ export default function ReferralsPipeline() {
                       </span>
                     </td>
                     <td className="py-4 px-4 text-right text-slate-400 font-bold">
-                      {formatDate(member.createdAt)}
+                      {member?.createdAt ? formatDate(member.createdAt) : '-'}
                     </td>
                   </tr>
                 )

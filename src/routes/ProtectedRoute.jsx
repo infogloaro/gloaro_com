@@ -22,6 +22,23 @@ export default function ProtectedRoute({ roles, requirePathAccess = false, fallb
   const isHydrating = loading || (storage.getAccessToken() && !user)
   if (isHydrating) return <LoadingScreen label="Checking session..." />
   if (!isAuthenticated) return <Navigate to="/login" replace state={{ from: location }} />
+
+  if (user?.role === 'customer' && user?.onboardingStatus !== 'Approved') {
+    const isOnboardingPath = ['/membership-agreement', '/membership-application', '/membership-qualification', '/member/membership-application-status'].includes(location.pathname);
+    
+    if (user?.onboardingStatus === 'Pending') {
+      if (location.pathname !== '/member/membership-application-status') {
+        return <Navigate to="/member/membership-application-status" replace />
+      }
+      return <Outlet />
+    } else { // Draft, Rejected, ChangesRequested
+      if (!isOnboardingPath || location.pathname === '/member/membership-application-status') {
+        return <Navigate to="/membership-agreement" replace />
+      }
+      return <Outlet />
+    }
+  }
+
   if (roles?.length && !roles.some((allowed) => roleMatches(allowed, role))) return <Navigate to="/" replace />
   if (requirePathAccess && permissionsLoading) return <LoadingScreen label="Loading access..." />
   if (requirePathAccess && !canAccessPath(location.pathname)) return <Navigate to={fallback} replace state={{ from: location }} />

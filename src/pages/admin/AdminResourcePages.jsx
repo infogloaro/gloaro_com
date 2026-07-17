@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import toast from 'react-hot-toast'
-import { CheckCircle2, ExternalLink, Eye, FileText, Loader2, XCircle, Package, BriefcaseBusiness } from 'lucide-react'
+import { CheckCircle2, ExternalLink, Eye, FileText, Loader2, XCircle, Package, BriefcaseBusiness, AlertCircle } from 'lucide-react'
 import api from '../../api/axios'
 import { adminApi } from '../../api/admin'
 import Modal from '../../components/common/Modal'
@@ -310,7 +310,7 @@ export function AdminMembershipApplicationsPage() {
 
   return (
     <>
-      <ResourceListPage module="members" section="applications" title="Membership Applications" fetcher={adminApi.membershipApplications} filters={[{ key: 'status', label: 'Status', options: ['submitted', 'documents_verified', 'under_review', 'approved', 'rejected'].map((value) => ({ value, label: value.replaceAll('_', ' ') })) }]} columns={[
+      <ResourceListPage module="members" section="applications" title="Membership Applications" fetcher={adminApi.membershipApplications} filters={[{ key: 'status', label: 'Status', options: ['submitted', 'documents_verified', 'under_review', 'approved', 'rejected', 'changes_requested'].map((value) => ({ value, label: value.replaceAll('_', ' ') })) }]} columns={[
         { key: 'applicationNumber', header: 'Member ID/App ID', render: (row) => row.submittedBy?.memberId || row.applicationNumber },
         { key: 'fullName', header: 'Name', render: (row) => row.personal?.fullName || row.submittedBy?.name },
         { key: 'email', header: 'Email', render: (row) => row.personal?.emailAddress || row.submittedBy?.email || 'Not added' },
@@ -320,6 +320,7 @@ export function AdminMembershipApplicationsPage() {
         { key: 'state', header: 'State', render: (row) => row.stateId?.name || 'Not assigned' },
         { key: 'district', header: 'District', render: (row) => row.districtId?.name || 'Not assigned' },
         { key: 'chapter', header: 'Chapter', render: (row) => row.chapterId?.name || 'Not assigned' },
+        { key: 'referredBy', header: 'Referred By', render: (row) => row.submittedBy?.referredBy?.name || row.submittedBy?.referredBy?.email || 'Direct' },
         { key: 'submittedBy', header: 'Submitted By (VP)', render: (row) => row.vicePresidentId?.name || row.vicePresidentId?.email || 'Self' },
         { key: 'createdAt', header: 'Submitted Date', render: (row) => formatDate(row.createdAt) },
         { key: 'status', header: 'Status', render: (row) => <StatusBadge value={row.status} /> },
@@ -343,6 +344,7 @@ export function AdminMembershipApplicationsPage() {
               <option value="under_review">Under Review</option>
               <option value="approved">Final Approval</option>
               <option value="rejected">Rejected</option>
+              <option value="changes_requested">Changes Requested</option>
             </select>}
           </>
         )
@@ -363,6 +365,7 @@ export function AdminMembershipApplicationsPage() {
             onUnderReview={() => changeStatus('under_review')}
             onApprove={() => changeStatus('approved')}
             onReject={() => changeStatus('rejected')}
+            onRequestChanges={() => changeStatus('changes_requested')}
             updating={updatingStatus}
             user={user}
           />
@@ -372,7 +375,7 @@ export function AdminMembershipApplicationsPage() {
   )
 }
 
-function MembershipApplicationDetails({ application, adminNotes, onNotesChange, onClose, onDocumentsVerified, onUnderReview, onApprove, onReject, updating, user }) {
+function MembershipApplicationDetails({ application, adminNotes, onNotesChange, onClose, onDocumentsVerified, onUnderReview, onApprove, onReject, onRequestChanges, updating, user }) {
   if (!application) return null
 
   const openDocument = async (field) => {
@@ -394,7 +397,7 @@ function MembershipApplicationDetails({ application, adminNotes, onNotesChange, 
   const isFinalDecision = ['approved', 'rejected'].includes(application.status)
 
   if (!isFinalDecision) {
-    if (['superadmin', 'admin'].includes(userRole)) {
+    if (['superadmin', 'admin', 'vice_president'].includes(userRole)) {
       showVerifyBtn = true
       showApproveBtn = true
       showRejectBtn = true
@@ -440,6 +443,8 @@ function MembershipApplicationDetails({ application, adminNotes, onNotesChange, 
           ['Mobile Number', application.personal?.mobileNumber],
           ['Email Address', application.personal?.emailAddress],
           ['Submitted By', application.submittedBy?.email || application.submittedBy?.name],
+          ['Referred By', application.submittedBy?.referredBy?.name || application.submittedBy?.referredBy?.email || 'Direct'],
+          ['Referral Code Used', application.referralCode || 'None'],
         ]} />
         <DetailSection title="Address Information" items={[
           ['Address Line 1', application.address?.line1],
@@ -588,6 +593,10 @@ function MembershipApplicationDetails({ application, adminNotes, onNotesChange, 
         </button>}
         {showVerifyBtn && <button disabled={updating} onClick={onUnderReview} className="inline-flex items-center justify-center rounded-md border border-amber-200 px-4 py-2 text-sm font-extrabold text-amber-700 hover:bg-amber-50 disabled:opacity-60">
           Under Review
+        </button>}
+        {showRejectBtn && <button disabled={updating} onClick={onRequestChanges} className="inline-flex items-center justify-center gap-2 rounded-md border border-amber-200 px-4 py-2 text-sm font-extrabold text-amber-700 hover:bg-amber-50 disabled:opacity-60">
+          <AlertCircle className="h-4 w-4" />
+          Request Changes
         </button>}
         {showRejectBtn && <button disabled={updating} onClick={onReject} className="inline-flex items-center justify-center gap-2 rounded-md border border-red-200 px-4 py-2 text-sm font-extrabold text-red-600 hover:bg-red-50 disabled:opacity-60">
           <XCircle className="h-4 w-4" />
