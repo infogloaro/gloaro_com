@@ -356,7 +356,7 @@ export function getSidebarNav(role) {
   const prefixItem = (item) => {
     if (Array.isArray(item)) {
       const [label, to, icon] = item;
-      const finalPath = (to.startsWith('/admin/') || to === '/admin' || to.startsWith('/member/') || to === '/member') || to.startsWith('/super-admin')) ? to : `${prefix}${to}`;
+      const finalPath = (to.startsWith('/admin/') || to === '/admin' || to.startsWith('/member/') || to === '/member') || to.startsWith('/super-admin') ? to : `${prefix}${to}`;
       return [label, finalPath, icon];
     }
     let children = item.children;
