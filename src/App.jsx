@@ -149,6 +149,7 @@ import SettingsPage from './pages/secretary/SettingsPage'
 import StateDirectorDashboard from './pages/state-director/StateDirectorDashboard'
 import DistrictDirectorDashboard from './pages/district-director/DistrictDirectorDashboard'
 import ChapterDirectorDashboard from './pages/chapter-director/ChapterDirectorDashboard'
+import { ChapterDirectorProductsPage, ChapterDirectorServicesPage, ChapterDirectorVendorsPage } from './pages/chapter-director/ChapterDirectorPages'
 import PresidentDashboard from './pages/president/PresidentDashboard'
 import VicePresidentDashboard from './pages/vice-president/VicePresidentDashboard'
 import DynamicDashboard from './pages/shared/DynamicDashboard'
@@ -397,6 +398,7 @@ function App() {
               <Route path="/region-director/dashboard" element={<AdminDashboard />} />
               <Route path="/region-director/locations" element={<LocationsManagementPage />} />
               <Route path="/region-director/state-directors" element={<AdminManagementPage />} />
+              <Route path="/region-director/members" element={<AdminMembersPage />} />
               <Route path="/region-director/memberships" element={<AdminMembershipsPage />} />
               <Route path="/region-director/approved-vendors" element={<ApprovedVendorsPage />} />
               <Route path="/region-director/reports" element={<EnterpriseReportBuilderPage />} />
@@ -423,6 +425,7 @@ function App() {
               <Route path="/state-director/districts" element={<LocationsManagementPage />} />
               <Route path="/state-director/locations" element={<LocationsManagementPage />} />
               <Route path="/state-director/district-directors" element={<AdminManagementPage />} />
+              <Route path="/state-director/members" element={<AdminMembersPage />} />
               <Route path="/state-director/memberships" element={<AdminMembershipsPage />} />
               <Route path="/state-director/reports" element={<EnterpriseReportBuilderPage />} />
               <Route path="/state-director/settings" element={<AdminSettingsPage />} />
@@ -465,7 +468,7 @@ function App() {
               <Route path="/district-director/profile" element={<MembershipProfilePage />} />
 
               {/* District Director Custom Operations */}
-              <Route path="/district-director/members" element={<AdminManagementPage role="customer" />} />
+              <Route path="/district-director/members" element={<AdminMembersPage />} />
             </Route>
 
             {/* Chapter Director Console */}
@@ -473,7 +476,7 @@ function App() {
               <Route path="/chapter-director" element={<Navigate to="/chapter-director/dashboard" replace />} />
               <Route path="/chapter-director/dashboard" element={<DynamicDashboard />} />
               <Route path="/chapter-director/president" element={<AdminManagementPage />} />
-              <Route path="/chapter-director/members" element={<AdminManagementPage role="customer" />} />
+              <Route path="/chapter-director/members" element={<AdminMembersPage />} />
               <Route path="/chapter-director/launch-directors" element={<AdminManagementPage />} />
               <Route path="/chapter-director/memberships" element={<AdminMembershipsPage />} />
               <Route path="/chapter-director/membership-applications" element={<AdminMembershipApplicationsPage />} />
@@ -490,16 +493,15 @@ function App() {
               <Route path="/chapter-director/visitors" element={<VisitorsPage />} />
               <Route path="/chapter-director/directory" element={<BusinessDirectory />} />
               <Route path="/chapter-director/leaderboard" element={<Leaderboard />} />
-              <Route path="/chapter-director/products" element={<MemberProductsPage />} />
-              <Route path="/chapter-director/services" element={<ServicesPage />} />
-              <Route path="/chapter-director/vendors" element={<VendorsPage />} />
+              <Route path="/chapter-director/products" element={<ChapterDirectorProductsPage />} />
+              <Route path="/chapter-director/services" element={<ChapterDirectorServicesPage />} />
+              <Route path="/chapter-director/vendors" element={<ChapterDirectorVendorsPage />} />
               <Route path="/chapter-director/profile" element={<MembershipProfilePage />} />
 
               {/* Chapter Director specific sub-routes */}
-              <Route path="/chapter-director/presidents" element={<AdminManagementPage role="chapter_president" />} />
-              <Route path="/chapter-director/vice-presidents" element={<AdminManagementPage role="vice_president" />} />
-              <Route path="/chapter-director/secretaries" element={<AdminManagementPage role="secretary" />} />
+              <Route path="/chapter-director/launch-directors" element={<AdminManagementPage role="launch_director" />} />
               <Route path="/chapter-director/vendor-applications" element={<AdminVendorApplicationsPage />} />
+              <Route path="/chapter-director/marketplace-approval" element={<AdminVendorApplicationsPage title="Marketplace Approval" description="Review and manage vendor marketplace applications for your chapter." />} />
               <Route path="/chapter-director/approved-vendors" element={<ApprovedVendorsPage />} />
             </Route>
 
@@ -508,7 +510,7 @@ function App() {
               <Route path="/president" element={<Navigate to="/president/dashboard" replace />} />
               <Route path="/president/dashboard" element={<PresidentDashboard />} />
               <Route path="/president/vice-presidents" element={<AdminManagementPage />} />
-              <Route path="/president/members" element={<AdminManagementPage role="customer" />} />
+              <Route path="/president/members" element={<AdminMembersPage />} />
               <Route path="/president/reports" element={<EnterpriseReportBuilderPage />} />
               <Route path="/president/settings" element={<AdminSettingsPage />} />
               {/* Inherited Base Member Modules */}
@@ -531,9 +533,8 @@ function App() {
               <Route path="/vice-president" element={<Navigate to="/vice-president/dashboard" replace />} />
               <Route path="/vice-president/dashboard" element={<VicePresidentDashboard />} />
               <Route path="/vice-president/secretaries" element={<AdminManagementPage />} />
-              <Route path="/vice-president/members" element={<AdminManagementPage role="customer" />} />
+              <Route path="/vice-president/members" element={<AdminMembersPage />} />
               <Route path="/vice-president/register-member" element={<AdminManagementPage role="customer" />} />
-              <Route path="/vice-president/membership-applications" element={<AdminMembershipApplicationsPage />} />
               <Route path="/vice-president/memberships" element={<AdminMembershipsPage />} />
               <Route path="/vice-president/reports" element={<EnterpriseReportBuilderPage />} />
               <Route path="/vice-president/settings" element={<AdminSettingsPage />} />

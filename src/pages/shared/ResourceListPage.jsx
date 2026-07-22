@@ -36,6 +36,16 @@ export default function ResourceListPage({
   const canEdit = readOnly ? false : (module ? hasOperation(module, 'edit') : true)
   const canDelete = readOnly ? false : (module ? hasOperation(module, 'delete') : true)
 
+  useEffect(() => {
+    console.log({
+      pathname: window.location.pathname,
+      module,
+      section,
+      title,
+      fetcher,
+    })
+  }, [module, section, title, fetcher])
+
   const params = useMemo(() => ({ page, limit: 10, search: search || undefined, ...filterValues }), [page, search, filterValues])
 
   const load = useCallback(async () => {

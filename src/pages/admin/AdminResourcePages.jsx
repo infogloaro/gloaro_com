@@ -7,6 +7,7 @@ import Modal from '../../components/common/Modal'
 import StatusBadge from '../../components/common/StatusBadge'
 import { useAuth } from '../../hooks/useAuth'
 import { formatCurrency, formatDate } from '../../utils/format'
+import { canReviewMembershipApplication } from '../../utils/permissions'
 import ResourceListPage from '../shared/ResourceListPage'
 import SimpleJsonForm from '../shared/SimpleJsonForm'
 
@@ -270,6 +271,10 @@ export function AdminMembershipApplicationsPage() {
   const [adminNotes, setAdminNotes] = useState('')
   const [reloadList, setReloadList] = useState(null)
 
+  useEffect(() => {
+    console.log('AdminMembershipApplicationsPage mounted', window.location.pathname)
+  }, [])
+
   const openDetails = async (row, reload) => {
     setReloadList(() => reload)
     setLoadingDetails(true)
@@ -325,8 +330,7 @@ export function AdminMembershipApplicationsPage() {
         { key: 'createdAt', header: 'Submitted Date', render: (row) => formatDate(row.createdAt) },
         { key: 'status', header: 'Status', render: (row) => <StatusBadge value={row.status} /> },
       ]} renderActions={(row, { reload }, permissions) => {
-        const userRole = user?.role || ''
-        const showDropdownStatus = ['superadmin', 'admin'].includes(userRole) && !['approved', 'rejected'].includes(row.status)
+        const showDropdownStatus = canReviewMembershipApplication(user, row, 'status') && !['approved', 'rejected'].includes(row.status)
         return (
           <>
             {permissions.hasOperation('members', 'view') && <button onClick={() => openDetails(row, reload)} className="inline-flex items-center gap-1.5 rounded-md border border-[#0d4697]/20 px-3 py-1.5 text-xs font-extrabold text-[#0d4697] hover:bg-blue-50">
@@ -388,28 +392,11 @@ function MembershipApplicationDetails({ application, adminNotes, onNotesChange, 
     }
   }
 
-  const userRole = user?.role || ''
-  
-  let showVerifyBtn = false
-  let showApproveBtn = false
-  let showRejectBtn = false
-
   const isFinalDecision = ['approved', 'rejected'].includes(application.status)
-
-  if (!isFinalDecision) {
-    if (['superadmin', 'admin', 'vice_president'].includes(userRole)) {
-      showVerifyBtn = true
-      showApproveBtn = true
-      showRejectBtn = true
-    } else if (userRole === 'direct_consultant') {
-      showVerifyBtn = true
-      showApproveBtn = true
-      showRejectBtn = true
-    } else if (userRole === 'executive_director') {
-      showApproveBtn = true
-      showRejectBtn = true
-    }
-  }
+  const canVerifyBtn = !isFinalDecision && canReviewMembershipApplication(user, application, 'documents_verified')
+  const canApproveBtn = !isFinalDecision && canReviewMembershipApplication(user, application, 'approve')
+  const canRejectBtn = !isFinalDecision && canReviewMembershipApplication(user, application, 'reject')
+  const canRequestChangesBtn = !isFinalDecision && canReviewMembershipApplication(user, application, 'changes_requested')
 
   const documents = [
     ['profilePhoto', 'Profile Photo'],
@@ -588,21 +575,21 @@ function MembershipApplicationDetails({ application, adminNotes, onNotesChange, 
         <button disabled={updating} onClick={onClose} className="inline-flex items-center justify-center rounded-md border border-slate-200 px-4 py-2 text-sm font-extrabold text-slate-700 hover:bg-slate-50 disabled:opacity-60">
           Close
         </button>
-        {showVerifyBtn && <button disabled={updating} onClick={onDocumentsVerified} className="inline-flex items-center justify-center rounded-md border border-blue-200 px-4 py-2 text-sm font-extrabold text-[#0d4697] hover:bg-blue-50 disabled:opacity-60">
+        {canVerifyBtn && <button disabled={updating} onClick={onDocumentsVerified} className="inline-flex items-center justify-center rounded-md border border-blue-200 px-4 py-2 text-sm font-extrabold text-[#0d4697] hover:bg-blue-50 disabled:opacity-60">
           Documents Verified
         </button>}
-        {showVerifyBtn && <button disabled={updating} onClick={onUnderReview} className="inline-flex items-center justify-center rounded-md border border-amber-200 px-4 py-2 text-sm font-extrabold text-amber-700 hover:bg-amber-50 disabled:opacity-60">
+        {canVerifyBtn && <button disabled={updating} onClick={onUnderReview} className="inline-flex items-center justify-center rounded-md border border-amber-200 px-4 py-2 text-sm font-extrabold text-amber-700 hover:bg-amber-50 disabled:opacity-60">
           Under Review
         </button>}
-        {showRejectBtn && <button disabled={updating} onClick={onRequestChanges} className="inline-flex items-center justify-center gap-2 rounded-md border border-amber-200 px-4 py-2 text-sm font-extrabold text-amber-700 hover:bg-amber-50 disabled:opacity-60">
+        {canRequestChangesBtn && <button disabled={updating} onClick={onRequestChanges} className="inline-flex items-center justify-center gap-2 rounded-md border border-amber-200 px-4 py-2 text-sm font-extrabold text-amber-700 hover:bg-amber-50 disabled:opacity-60">
           <AlertCircle className="h-4 w-4" />
           Request Changes
         </button>}
-        {showRejectBtn && <button disabled={updating} onClick={onReject} className="inline-flex items-center justify-center gap-2 rounded-md border border-red-200 px-4 py-2 text-sm font-extrabold text-red-600 hover:bg-red-50 disabled:opacity-60">
+        {canRejectBtn && <button disabled={updating} onClick={onReject} className="inline-flex items-center justify-center gap-2 rounded-md border border-red-200 px-4 py-2 text-sm font-extrabold text-red-600 hover:bg-red-50 disabled:opacity-60">
           <XCircle className="h-4 w-4" />
           Reject
         </button>}
-        {showApproveBtn && <button disabled={updating} onClick={onApprove} className="inline-flex items-center justify-center gap-2 rounded-md bg-emerald-600 px-4 py-2 text-sm font-extrabold text-white hover:bg-emerald-700 disabled:opacity-60">
+        {canApproveBtn && <button disabled={updating} onClick={onApprove} className="inline-flex items-center justify-center gap-2 rounded-md bg-emerald-600 px-4 py-2 text-sm font-extrabold text-white hover:bg-emerald-700 disabled:opacity-60">
           <CheckCircle2 className="h-4 w-4" />
           Approve
         </button>}
@@ -683,6 +670,10 @@ export function AdminSettingsPage() {
 }
 
 export function AdminMembersPage() {
+  useEffect(() => {
+    console.log('AdminMembersPage mounted', window.location.pathname)
+  }, [])
+
   const [regions, setRegions] = useState([])
   const [states, setStates] = useState([])
   const [districts, setDistricts] = useState([])

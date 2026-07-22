@@ -74,7 +74,7 @@ const ROLE_CONFIGS = {
   finance_admin: createRoleConfig({ modules: ['dashboard', 'members', 'reports', 'meetings', 'settings'], workflows: ['meeting'], widgets: ['members', 'meetings', ...alwaysExtraWidgets], sidebar: ['dashboard', 'members', 'reports', 'meetings', 'settings'], permissionFields: ['canView', 'canApprove', 'canExport', 'canPrint'], workflowActions: reviewWorkflowActions }),
   state_director: createRoleConfig({ modules: ['dashboard', 'members', 'meetings', 'attendance', 'visitors', 'events', 'reports', 'settings'], workflows: ['membership', 'meeting'], widgets: ['members', 'meetings', 'attendance', 'visitors', ...alwaysExtraWidgets], sidebar: ['dashboard', 'members', 'meetings', 'attendance', 'visitors', 'events', 'reports', 'settings'] }),
   district_director: createRoleConfig({ modules: ['dashboard', 'members', 'meetings', 'attendance', 'visitors', 'events', 'reports', 'settings'], workflows: ['membership', 'meeting'], widgets: ['members', 'meetings', 'attendance', 'visitors', ...alwaysExtraWidgets], sidebar: ['dashboard', 'members', 'meetings', 'attendance', 'visitors', 'events', 'reports', 'settings'] }),
-  executive_director: createRoleConfig({ modules: ['dashboard', 'members', 'meetings', 'attendance', 'visitors', 'reports'], workflows: ['membership', 'meeting'], widgets: ['members', 'meetings', 'attendance', 'visitors', ...alwaysExtraWidgets], sidebar: ['dashboard', 'members', 'meetings', 'attendance', 'visitors', 'reports'] }),
+  executive_director: createRoleConfig({ modules: ['dashboard', 'members', 'meetings', 'attendance', 'visitors', 'reports', 'marketplace', 'vendors'], workflows: ['membership', 'meeting'], widgets: ['members', 'meetings', 'attendance', 'visitors', ...alwaysExtraWidgets], sidebar: ['dashboard', 'members', 'meetings', 'attendance', 'visitors', 'reports', 'marketplace', 'vendors'] }),
   launch_director: createRoleConfig({ modules: ['dashboard', 'members', 'meetings', 'attendance'], workflows: ['membership', 'meeting'], widgets: ['members', 'meetings', 'attendance', 'visitors'], sidebar: ['dashboard', 'members', 'meetings', 'visitors'], permissionFields: operatorPermissionKeys, workflowActions: reviewWorkflowActions }),
   direct_consultant: createRoleConfig({ modules: ['dashboard', 'members', 'meetings'], workflows: ['membership', 'meeting'], widgets: ['members', 'meetings', 'attendance'], sidebar: ['dashboard', 'members', 'meetings'], permissionFields: readOnlyPermissionKeys, workflowActions: ['create', 'review'] }),
   operation_vice_president: createRoleConfig({ modules: ['dashboard', 'members', 'meetings', 'attendance', 'visitors', 'vendors', 'reports'], workflows: ['membership', 'meeting', 'vendor'], widgets: ['members', 'meetings', 'attendance', 'visitors', 'vendors', ...alwaysExtraWidgets], sidebar: ['dashboard', 'members', 'meetings', 'attendance', 'visitors', 'vendors', 'reports'] }),
@@ -211,10 +211,17 @@ export default function AdminManagementPage({ role: overrideRole }) {
       toast.error('You are not authorized to create accounts')
       return
     }
+    const userOrg = user?.meta?.adminProfile?.organization || user?.meta?.memberProfile?.organization || {}
     setEditing(null)
     setForm({
       ...emptyForm,
-      role: childRole || 'admin'
+      role: childRole || 'admin',
+      organization: {
+        region: userOrg.region || '',
+        state: userOrg.state || '',
+        district: userOrg.district || '',
+        chapter: userOrg.chapter || '',
+      }
     })
     setWizardOpen(true)
   }
@@ -351,7 +358,7 @@ const saveAdmin = async () => {
     (user?.role === 'direct_consultant' && childRole === 'chapter_president' && listData.length >= 1)
   )
 
-  const showCreateButton = canCreateAdmin && !(user?.role === 'executive_director' && childRole === 'customer') && !(user?.role === 'district_director' && childRole === 'customer') && !(user?.role === 'launch_director' && childRole === 'customer') && !(user?.role === 'direct_consultant' && childRole === 'customer') && !(user?.role === 'chapter_president' && childRole === 'customer') && !(user?.role === 'vice_president' && childRole === 'customer') && !isCreateDisabled
+  const showCreateButton = canCreateAdmin && !(user?.role === 'executive_director' && childRole === 'customer') && !(user?.role === 'district_director' && childRole === 'customer') && !(user?.role === 'launch_director' && childRole === 'customer') && !(user?.role === 'direct_consultant' && childRole === 'customer') && !(user?.role === 'chapter_president' && childRole === 'customer') && !isCreateDisabled
 
   const getDisabledTitle = () => {
     if (!isCreateDisabled) return ""
@@ -395,7 +402,7 @@ const saveAdmin = async () => {
               title={getDisabledTitle()}
             >
               <Plus className="h-4 w-4" />
-              {childRole ? `Create New ${roleLabel(childRole)}` : 'Create New Admin'}
+              {childRole === 'customer' ? 'Add Member' : childRole ? `Create New ${roleLabel(childRole)}` : 'Create New Admin'}
             </button>
           )}
         </div>
