@@ -146,6 +146,9 @@ import AttendancePage from './pages/secretary/AttendancePage'
 import DocumentsPage from './pages/secretary/DocumentsPage'
 import ReportsPage from './pages/secretary/ReportsPage'
 import SettingsPage from './pages/secretary/SettingsPage'
+import SecretaryCategoriesPage from './pages/secretary/SecretaryCategoriesPage'
+import SecretaryMemberDetailsPage from './pages/secretary/SecretaryMemberDetailsPage'
+import SecretaryEventsPage from './pages/secretary/SecretaryEventsPage'
 import StateDirectorDashboard from './pages/state-director/StateDirectorDashboard'
 import DistrictDirectorDashboard from './pages/district-director/DistrictDirectorDashboard'
 import ChapterDirectorDashboard from './pages/chapter-director/ChapterDirectorDashboard'
@@ -372,6 +375,9 @@ function App() {
               <Route path="/secretary" element={<Navigate to="/secretary/dashboard" replace />} />
               <Route path="/secretary/dashboard" element={<SecretaryDashboard />} />
               <Route path="/secretary/members" element={<MembersPage />} />
+              <Route path="/secretary/members/:id" element={<SecretaryMemberDetailsPage />} />
+              <Route path="/secretary/categories" element={<SecretaryCategoriesPage />} />
+              <Route path="/secretary/events" element={<SecretaryEventsPage />} />
               <Route path="/secretary/minutes" element={<MinutesPage />} />
               <Route path="/secretary/attendance" element={<AttendancePage />} />
               <Route path="/secretary/documents" element={<DocumentsPage />} />
