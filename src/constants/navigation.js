@@ -44,9 +44,10 @@ import {
   MessageSquare,
   ClipboardCheck,
   User,
+  UserCheck,
 } from 'lucide-react'
 
-import { buildAdminRoute } from '../utils/permissions'
+import { buildAdminRoute, normalizeRole } from '../utils/permissions'
 
 export const adminNav = [
   ['Dashboard', '/dashboard', LayoutDashboard],
@@ -198,6 +199,7 @@ export const rolePrefixes = {
   vendor: '/member/dashboard',
   secretary: '/secretary',
   vice_president: '/vice-president',
+  chapter_director: '/chapter-director',
   chapter_president: '/president',
   executive_director: '/chapter-director',
   district_director: '/district-director',
@@ -227,6 +229,7 @@ const commonModules = [
       ['Products', '/products', Package],
       ['Services', '/services', BriefcaseBusiness],
       ['Vendors', '/vendors', Users],
+      ['Marketplace Approval', '/marketplace-approval', ShieldCheck],
       ['Orders', '/orders', ShoppingBag],
       ['Payments', '/payments', CreditCard],
       ['Subscription', '/subscription', ToggleLeft]
@@ -279,7 +282,7 @@ const roleModules = {
   ],
   vice_president: [
     ['Member Registration', '/register-member', Users],
-    ['Membership Applications', '/membership-applications', FileText],
+    ['Approved Members', '/members', Users],
     ['Secretaries', '/secretaries', Users],
     ['Reports', '/reports', FileBarChart],
     ['Announcements', '/announcements', Bell]
@@ -291,37 +294,27 @@ const roleModules = {
     ['Leadership', '/leadership', Award]
   ],
   executive_director: [
-    ['Chapter Management', '/chapter-management', Settings],
-    ['Chapter Presidents', '/presidents', Users],
-    ['Vice Presidents', '/vice-presidents', Users],
-    ['Secretaries', '/secretaries', Users],
-    ['Assigned Members', '/members', Users],
-    ['Membership Applications', '/membership-applications', ClipboardList],
-    ['Membership Status', '/memberships', CreditCard],
-    ['Vendor Applications', '/vendor-applications', BriefcaseBusiness],
-    ['Approved Vendors', '/approved-vendors', Building2]
+    ['Launch Directors', '/launch-directors', UserCheck],
+    ['Approved Members', '/members', Users],
+    ['Membership Applications', '/membership-applications', ClipboardList]
   ],
   chapter_director: [
-    ['Chapter Management', '/chapter-management', Settings],
-    ['Chapter Presidents', '/presidents', Users],
-    ['Vice Presidents', '/vice-presidents', Users],
-    ['Secretaries', '/secretaries', Users],
-    ['Assigned Members', '/members', Users],
-    ['Membership Applications', '/membership-applications', ClipboardList],
-    ['Membership Status', '/memberships', CreditCard],
-    ['Vendor Applications', '/vendor-applications', BriefcaseBusiness],
-    ['Approved Vendors', '/approved-vendors', Building2]
+    ['Launch Directors', '/launch-directors', UserCheck],
+    ['Approved Members', '/members', Users],
+    ['Membership Applications', '/membership-applications', ClipboardList]
   ],
   district_director: [
     ['Executive Directors', '/executive-directors', Users],
-    ['Active Members', '/members', Users]
+    ['Approved Members', '/members', Users]
   ],
   state_director: [
     ['District Directors', '/district-directors', Users],
+    ['Approved Members', '/members', Users],
     ['State Analytics', '/analytics', FileBarChart]
   ],
   region_director: [
     ['State Directors', '/state-directors', Users],
+    ['Approved Members', '/members', Users],
     ['Regional Analytics', '/analytics', FileBarChart]
   ],
   launch_director: [
@@ -337,6 +330,8 @@ const roleModules = {
 };
 
 export function getSidebarNav(role) {
+  const normalizedRole = normalizeRole(role)
+
   if (['superadmin', 'admin'].includes(role)) {
     const prefixPath = (item) => {
       if (Array.isArray(item)) {
@@ -351,7 +346,7 @@ export function getSidebarNav(role) {
     return adminNav.map(prefixPath);
   }
 
-  const prefix = rolePrefixes[role] || '/member/dashboard';
+  const prefix = rolePrefixes[normalizedRole] || '/member/dashboard';
 
   const prefixItem = (item) => {
     if (Array.isArray(item)) {
@@ -360,8 +355,13 @@ export function getSidebarNav(role) {
       return [label, finalPath, icon];
     }
     let children = item.children;
-    if (['region_director', 'state_director', 'district_director', 'launch_director', 'direct_consultant', 'chapter_president', 'vice_president', 'secretary'].includes(role) && item.label === 'Marketplace') {
-      children = children.filter(([label]) => !['Orders', 'Payments', 'Subscription'].includes(label));
+    if (item.label === 'Marketplace') {
+      if (['region_director', 'state_director', 'district_director', 'executive_director', 'launch_director', 'direct_consultant', 'chapter_president', 'vice_president', 'secretary', 'customer', 'user', 'vendor'].includes(normalizedRole)) {
+        children = children.filter(([label]) => !['Orders', 'Payments', 'Subscription'].includes(label));
+      }
+      if (!['superadmin', 'admin', 'executive_director'].includes(normalizedRole)) {
+        children = children.filter(([label]) => label !== 'Marketplace Approval');
+      }
     }
     return {
       ...item,
@@ -392,7 +392,7 @@ let base = commonModules.map(item => {
 });
 
 if (
-  ['region_director', 'state_director', 'district_director'].includes(role)
+  ['region_director', 'state_director', 'district_director'].includes(normalizedRole)
 ) {
   const orgMgmt = {
     label: 'Organization Management',
@@ -402,7 +402,7 @@ if (
     ].map(prefixItem),
   };
 
-  if (role === 'district_director') {
+  if (normalizedRole === 'district_director') {
     base = [
       base[0], // Dashboard
       orgMgmt,
@@ -426,7 +426,7 @@ if (
   }
 }
 
-const extra = (roleModules[role] || []).map(prefixItem);
+const extra = (roleModules[normalizedRole] || []).map(prefixItem);
 
 return [...base, ...extra];
 }

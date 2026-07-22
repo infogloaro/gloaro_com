@@ -8,6 +8,43 @@ const OPERATION_TO_PERMISSION = {
   print: 'canPrint',
 }
 
+export function normalizeRole(role = '') {
+  const cleanRole = String(role || '').toLowerCase().replace(/\s+/g, '').replace(/-/g, '_')
+  if (cleanRole === 'chapter_director') return 'executive_director'
+  return cleanRole
+}
+
+const getOrganizationChapterId = (entity) => {
+  return (
+    entity?.meta?.adminProfile?.organization?.chapter ||
+    entity?.meta?.memberProfile?.organization?.chapter ||
+    entity?.chapterId?._id ||
+    entity?.chapterId ||
+    entity?.chapter ||
+    null
+  )
+}
+
+export function canReviewMembershipApplication(user, application = null, action = 'review') {
+  const role = normalizeRole(user?.role)
+  if (['superadmin', 'admin'].includes(role)) return true
+
+  const userChapterId = getOrganizationChapterId(user)
+  const applicationChapterId = getOrganizationChapterId(application)
+  if (!userChapterId || !applicationChapterId) return false
+  if (String(userChapterId) !== String(applicationChapterId)) return false
+
+  if (role === 'executive_director') {
+    return ['review', 'status', 'approve', 'reject', 'changes_requested'].includes(action)
+  }
+
+  if (role === 'vice_president') {
+    return ['review', 'status', 'documents_verified', 'under_review', 'approve', 'reject', 'changes_requested'].includes(action)
+  }
+
+  return false
+}
+
 const SIDEBAR_ALIASES = {
   dashboard: 'dashboard',
   organization: 'settings',
@@ -205,7 +242,7 @@ export function translatePermissionsToConfig(permissionsArray = []) {
 }
 
 export function createPermissionHelpers(user, permissionConfig = null) {
-  const isSuperAdmin = user?.role === 'superadmin'
+  const isSuperAdmin = normalizeRole(user?.role) === 'superadmin'
   let config = permissionConfig
   if (Array.isArray(permissionConfig)) {
     config = translatePermissionsToConfig(permissionConfig)
@@ -316,7 +353,7 @@ export function createPermissionHelpers(user, permissionConfig = null) {
 }
 
 export function getAdminBasePath(role) {
-  const cleanRole = String(role || '').toLowerCase().replace(/\s+/g, '')
+  const cleanRole = normalizeRole(role)
   if (cleanRole === 'superadmin') return '/super-admin'
   return '/admin'
 }
@@ -328,7 +365,7 @@ export function buildAdminRoute(role, relativePath) {
 }
 
 export function getDashboardRoute(role) {
-  const cleanRole = String(role || '').toLowerCase().replace(/\s+/g, '')
+  const cleanRole = normalizeRole(role)
   if (cleanRole === 'region_director') return '/region-director/dashboard'
   if (cleanRole === 'state_director') return '/state-director/dashboard'
   if (cleanRole === 'district_director') return '/district-director/dashboard'

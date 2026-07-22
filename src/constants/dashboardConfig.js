@@ -112,7 +112,7 @@ export const dashboardConfig = {
     ],
     quickActions: [
       { label: "Approve Membership", path: "/chapter-director/memberships" },
-      { label: "Approve Vendor", path: "/chapter-director/approved-vendors" },
+      { label: "Marketplace Vendors", path: "/chapter-director/vendors" },
       { label: "Chapter Management", path: "/chapter-director/chapter-management" },
       { label: "Presidents List", path: "/chapter-director/president" },
       { label: "Members List", path: "/chapter-director/members" },
@@ -139,7 +139,7 @@ export const dashboardConfig = {
     ],
     quickActions: [
       { label: "Approve Membership", path: "/chapter-director/memberships" },
-      { label: "Approve Vendor", path: "/chapter-director/approved-vendors" },
+      { label: "Marketplace Vendors", path: "/chapter-director/vendors" },
       { label: "Chapter Management", path: "/chapter-director/chapter-management" },
       { label: "Presidents List", path: "/chapter-director/president" },
       { label: "Members List", path: "/chapter-director/members" },
