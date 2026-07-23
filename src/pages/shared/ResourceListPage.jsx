@@ -19,6 +19,8 @@ export default function ResourceListPage({
   updateAction,
   deleteAction,
   renderActions,
+  detailFetcher,
+  renderDetails,
   renderForm,
   defaultParams = {},
   readOnly = false,
@@ -31,6 +33,8 @@ export default function ResourceListPage({
   const [filterValues, setFilterValues] = useState(defaultParams)
   const [editing, setEditing] = useState(null)
   const [formOpen, setFormOpen] = useState(false)
+  const [details, setDetails] = useState(null)
+  const [detailsLoading, setDetailsLoading] = useState(false)
   const canViewSection = readOnly ? true : (module ? hasSection(module, section) && hasOperation(module, 'view') : true)
   const canCreate = readOnly ? false : (module ? hasOperation(module, 'create') : true)
   const canEdit = readOnly ? false : (module ? hasOperation(module, 'edit') : true)
@@ -93,7 +97,17 @@ export default function ResourceListPage({
     { key: 'status', header: 'Status', render: (row) => <StatusBadge value={row.status || (row.isActive ? 'active' : 'inactive')} /> },
     { key: 'createdAt', header: 'Created', render: (row) => formatDate(row.createdAt) },
   ]
-  const hasActions = Boolean(renderActions || (updateAction && renderForm && canEdit) || (deleteAction && canDelete))
+  const hasActions = Boolean(renderActions || detailFetcher || (updateAction && renderForm && canEdit) || (deleteAction && canDelete))
+
+  const openDetails = async (row) => {
+    setDetailsLoading(true)
+    try {
+      const response = detailFetcher ? await detailFetcher(row._id) : { data: row }
+      setDetails(response.data?.data || response.data || row)
+    } finally {
+      setDetailsLoading(false)
+    }
+  }
 
   if (!canViewSection) return null
 
@@ -124,11 +138,15 @@ export default function ResourceListPage({
         actions={hasActions ? (row) => (
           <div className="flex gap-2">
             {renderActions?.(row, { reload: load }, { canViewSection, canCreate, canEdit, canDelete, hasOperation })}
+            {detailFetcher && <button onClick={() => openDetails(row)} className="rounded-md border border-[#0d4697] bg-white px-3 py-1.5 text-xs font-bold text-[#0d4697] hover:bg-blue-50 transition duration-150">View</button>}
             {updateAction && renderForm && canEdit && <button onClick={() => { setEditing(row); setFormOpen(true) }} className="rounded-md border border-[#0d4697] bg-white px-3 py-1.5 text-xs font-bold text-[#0d4697] hover:bg-blue-50 transition duration-150">Edit</button>}
             {deleteAction && canDelete && <button onClick={() => remove(row)} className="rounded-md border border-red-500 bg-white px-3 py-1.5 text-xs font-bold text-red-500 hover:bg-red-50 transition duration-150">Delete</button>}
           </div>
         ) : undefined}
       />
+      <Modal open={Boolean(details)} title={details?.title || `${title} details`} onClose={() => setDetails(null)}>
+        {detailsLoading ? <p className="py-8 text-center text-sm font-semibold text-slate-500">Loading details...</p> : details ? renderDetails?.(details) : null}
+      </Modal>
       <Modal open={formOpen} title={editing ? `Edit ${title}` : `Add ${title}`} onClose={() => setFormOpen(false)}>
         {renderForm?.({ initialValues: editing, onSubmit: submitForm })}
       </Modal>
