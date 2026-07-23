@@ -5,6 +5,7 @@ import { Briefcase, Check, CheckCircle2, ChevronDown, Clock3, FileText, RefreshC
 import { getMembershipDraft, saveMembershipDraft } from '../../utils/membershipOnboarding'
 import { useAuth } from '../../hooks/useAuth'
 import api from '../../api/axios'
+import { ROLES } from '../../constants/roleConfig.js'
 
 const principles = [
   ['Professional Integrity', 'Members shall conduct all business affairs with the highest level of professional integrity. This includes honesty in representation of credentials, transparency in venture insights, and upholding the reputation of the Gloaro ecosystem in all public and private interactions.'],
@@ -51,13 +52,13 @@ export default function MembershipAgreement() {
 
   // Redirect official roles who shouldn't apply, and redirect submitted applicants
   useEffect(() => {
-    if (user && !['customer', 'user', 'vendor'].includes(user.role)) {
+    if (user && ![ROLES.CUSTOMER, ROLES.USER, ROLES.VENDOR].includes(user.role)) {
       const roleDashboardMap = {
-        vice_president: '/vice-president/dashboard',
-        secretary: '/secretary/dashboard',
-        chapter_president: '/president/dashboard',
-        admin: '/admin',
-        superadmin: '/admin',
+        [ROLES.VICE_PRESIDENT]: '/vice-president/dashboard',
+        [ROLES.SECRETARY]: '/secretary/dashboard',
+        [ROLES.CHAPTER_PRESIDENT]: '/president/dashboard',
+        [ROLES.ADMIN]: '/admin',
+        [ROLES.SUPERADMIN]: '/admin',
       }
       navigate(roleDashboardMap[user.role] || '/')
       return

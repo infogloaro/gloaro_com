@@ -3,11 +3,12 @@ import api from '../../api/axios'
 import LoadingScreen from '../common/LoadingScreen'
 import toast from 'react-hot-toast'
 import { CheckSquare, Square, Shield } from 'lucide-react'
+import { ROLES } from '../../constants/roleConfig.js'
 
 const ALL_MODULES = [
   "dashboard", "members", "meetings", "attendance", "visitors", "business_wall",
   "referrals", "training", "events", "announcements", "reports", "marketplace",
-  "vendor", "products", "services", "payments", "orders", "coupons", "subscriptions",
+  ROLES.VENDOR, "products", "services", "payments", "orders", "coupons", "subscriptions",
   "support", "organization", "users", "roles", "permissions", "audit_logs",
   "settings", "notifications", "community", "ai_insights", "calendar",
   "leaderboard", "business_directory", "chat", "tasks", "help_desk",
@@ -40,7 +41,7 @@ export default function UserPermissionsModal({ userId, userName, onClose }) {
       .then(([myRes, userRes, meRes]) => {
         setCallerPerms(myRes.data?.data || [])
         setUserPerms(userRes.data?.data?.permissions || [])
-        setIsSuper(meRes.data?.data?.user?.role === 'superadmin')
+        setIsSuper(meRes.data?.data?.user?.role === ROLES.SUPERADMIN)
       })
       .catch(() => {
         toast.error('Failed to load permission registry')

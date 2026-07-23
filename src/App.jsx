@@ -130,6 +130,7 @@ import { LaunchDirectorProductsPage, LaunchDirectorServicesPage, LaunchDirectorV
 import { DirectConsultantProductsPage, DirectConsultantServicesPage, DirectConsultantVendorsPage } from './pages/direct-consultant/DirectConsultantPages'
 import { PresidentProductsPage, PresidentServicesPage, PresidentVendorsPage } from './pages/president/PresidentPages'
 import { VicePresidentProductsPage, VicePresidentServicesPage, VicePresidentVendorsPage } from './pages/vice-president/VicePresidentPages'
+import VicePresidentVendorApplicationsPage from './pages/vice-president/VicePresidentVendorApplicationsPage'
 import { SecretaryProductsPage, SecretaryServicesPage, SecretaryVendorsPage } from './pages/secretary/SecretaryPages'
 import {
   MembershipBenefitsPage,
@@ -162,24 +163,25 @@ import OneToOnesPage from './pages/membership/OneToOnesPage'
 import VisitorsPage from './pages/membership/VisitorsPage'
 import BusinessDirectory from './pages/membership/BusinessDirectory'
 import Leaderboard from './pages/membership/Leaderboard'
+import { ROLES } from './constants/roleConfig.js'
 
 function App() {
   const { role, permissionsLoading, canAccessPath } = useAuth()
-  const isAdminSession = ['superadmin', 'admin', 'franchise_admin', 'ecommerce_admin', 'marketplace_admin', 'digital_marketing_admin', 'training_admin', 'finance_admin', 'region_director', 'state_director', 'district_director', 'executive_director', 'launch_director', 'direct_consultant', 'chapter_president', 'vice_president', 'secretary', 'operation_vice_president', 'membership_verification_admin', 'custom_admin'].includes(role)
+  const isAdminSession = [ROLES.SUPERADMIN, ROLES.ADMIN, ROLES.FRANCHISE_ADMIN, ROLES.ECOMMERCE_ADMIN, ROLES.MARKETPLACE_ADMIN, ROLES.DIGITAL_MARKETING_ADMIN, ROLES.TRAINING_ADMIN, ROLES.FINANCE_ADMIN, ROLES.REGION_DIRECTOR, ROLES.STATE_DIRECTOR, ROLES.DISTRICT_DIRECTOR, ROLES.EXECUTIVE_DIRECTOR, ROLES.LAUNCH_DIRECTOR, ROLES.DIRECT_CONSULTANT, ROLES.CHAPTER_PRESIDENT, ROLES.VICE_PRESIDENT, ROLES.SECRETARY, ROLES.OPERATION_VICE_PRESIDENT, ROLES.MEMBERSHIP_VERIFICATION_ADMIN, ROLES.CUSTOM_ADMIN].includes(role)
 
   const adminRouteDefs = [
     { path: '/dashboard', element: <SuperAdminDashboardPage /> },
     { path: '/legacy-dashboard', element: <AdminDashboard /> },
-    { path: '/admin-management', element: <AdminManagementPage />, roles: ['superadmin'] },
-    { path: '/organization', element: <OrganizationManagementPage />, roles: ['superadmin'] },
-    { path: '/assignments', element: <HierarchyAssignmentPage />, roles: ['superadmin'] },
-    { path: '/roles', element: <SuperAdminModulePage {...superAdminModuleConfigs.roles} />, roles: ['superadmin'] },
-    { path: '/permissions', element: <PermissionMatrixPage />, roles: ['superadmin'] },
-    { path: '/features', element: <FeatureManagementPage />, roles: ['superadmin'] },
-    { path: '/dashboard-config', element: <DashboardConfigurationPage />, roles: ['superadmin'] },
-    { path: '/module-config', element: <ModuleConfigurationPage />, roles: ['superadmin'] },
-    { path: '/membership-workflow', element: <WorkflowEnginePage />, roles: ['superadmin'] },
-    { path: '/workflow-engine', element: <WorkflowEnginePage />, roles: ['superadmin'] },
+    { path: '/admin-management', element: <AdminManagementPage />, roles: [ROLES.SUPERADMIN] },
+    { path: '/organization', element: <OrganizationManagementPage />, roles: [ROLES.SUPERADMIN] },
+    { path: '/assignments', element: <HierarchyAssignmentPage />, roles: [ROLES.SUPERADMIN] },
+    { path: '/roles', element: <SuperAdminModulePage {...superAdminModuleConfigs.roles} />, roles: [ROLES.SUPERADMIN] },
+    { path: '/permissions', element: <PermissionMatrixPage />, roles: [ROLES.SUPERADMIN] },
+    { path: '/features', element: <FeatureManagementPage />, roles: [ROLES.SUPERADMIN] },
+    { path: '/dashboard-config', element: <DashboardConfigurationPage />, roles: [ROLES.SUPERADMIN] },
+    { path: '/module-config', element: <ModuleConfigurationPage />, roles: [ROLES.SUPERADMIN] },
+    { path: '/membership-workflow', element: <WorkflowEnginePage />, roles: [ROLES.SUPERADMIN] },
+    { path: '/workflow-engine', element: <WorkflowEnginePage />, roles: [ROLES.SUPERADMIN] },
     { path: '/users', element: <AdminManagementPage /> },
     { path: '/vendors', element: <ApprovedVendorsPage /> },
     { path: '/approved-vendors', element: <ApprovedVendorsPage /> },
@@ -234,23 +236,23 @@ function App() {
     { path: '/ai-insights', element: <AIInsightsPage /> },
     { path: '/broadcast-notifications', element: <AdminNotifications /> },
     { path: '/audit-logs', element: <AuditLogsPage /> },
-    { path: '/system-logs', element: <SystemLogsPage />, roles: ['superadmin'] },
+    { path: '/system-logs', element: <SystemLogsPage />, roles: [ROLES.SUPERADMIN] },
   ]
 
   const superAdminRoutes = adminRouteDefs.filter((route) => {
     if (route.roles?.length && !route.roles.includes(role)) return false
-    return canAccessPath(buildAdminRoute('superadmin', route.path))
+    return canAccessPath(buildAdminRoute(ROLES.SUPERADMIN, route.path))
   }).map((route) => ({
     ...route,
-    path: buildAdminRoute('superadmin', route.path)
+    path: buildAdminRoute(ROLES.SUPERADMIN, route.path)
   }))
 
   const regularAdminRoutes = adminRouteDefs.filter((route) => {
     if (route.roles?.length && !route.roles.includes(role)) return false
-    return canAccessPath(buildAdminRoute('admin', route.path))
+    return canAccessPath(buildAdminRoute(ROLES.ADMIN, route.path))
   }).map((route) => ({
     ...route,
-    path: buildAdminRoute('admin', route.path)
+    path: buildAdminRoute(ROLES.ADMIN, route.path)
   }))
 
   const adminHomePath = regularAdminRoutes[0]?.path || '/dashboard'
@@ -287,23 +289,23 @@ function App() {
           <Route path="/membership-application/track" element={<MembershipApplicationTrack />} />
         </Route>
 
-        <Route element={<ProtectedRoute roles={['admin', 'superadmin', 'region_director', 'state_director', 'district_director', 'executive_director', 'launch_director', 'direct_consultant', 'chapter_president', 'vice_president', 'secretary', 'customer', 'user', 'vendor']} />}>
+        <Route element={<ProtectedRoute roles={[ROLES.ADMIN, ROLES.SUPERADMIN, ROLES.REGION_DIRECTOR, ROLES.STATE_DIRECTOR, ROLES.DISTRICT_DIRECTOR, ROLES.EXECUTIVE_DIRECTOR, ROLES.LAUNCH_DIRECTOR, ROLES.DIRECT_CONSULTANT, ROLES.CHAPTER_PRESIDENT, ROLES.VICE_PRESIDENT, ROLES.SECRETARY, ROLES.CUSTOMER, ROLES.USER, ROLES.VENDOR]} />}>
           <Route element={<DashboardLayout title="Gloaro Portal" />}>
             
             {/* Super Admin Console Route Group */}
-            <Route element={<ProtectedRoute roles={['superadmin']} />}>
+            <Route element={<ProtectedRoute roles={[ROLES.SUPERADMIN]} />}>
               {superAdminRoutes.map((route) => <Route key={route.path} path={route.path} element={route.element} />)}
               <Route path="/super-admin/*" element={<Navigate to="/super-admin/dashboard" replace />} />
             </Route>
 
             {/* Admin Console Route Group */}
-            <Route element={<ProtectedRoute roles={['admin', 'region_director', 'state_director', 'district_director', 'executive_director', 'launch_director', 'direct_consultant', 'chapter_president', 'vice_president', 'secretary']} />}>
+            <Route element={<ProtectedRoute roles={[ROLES.ADMIN, ROLES.REGION_DIRECTOR, ROLES.STATE_DIRECTOR, ROLES.DISTRICT_DIRECTOR, ROLES.EXECUTIVE_DIRECTOR, ROLES.LAUNCH_DIRECTOR, ROLES.DIRECT_CONSULTANT, ROLES.CHAPTER_PRESIDENT, ROLES.VICE_PRESIDENT, ROLES.SECRETARY]} />}>
               {regularAdminRoutes.map((route) => <Route key={route.path} path={route.path} element={route.element} />)}
               <Route path="/admin/*" element={<Navigate to={adminHomePath} replace />} />
             </Route>
 
             {/* Vendor Console Route Group */}
-            <Route element={<ProtectedRoute roles={['vendor']} />}>
+            <Route element={<ProtectedRoute roles={[ROLES.VENDOR]} />}>
               <Route path="/vendor" element={<VendorDashboard />} />
               <Route path="/vendor/profile" element={<VendorProfilePage />} />
               <Route path="/vendor/products" element={<VendorProductsPage />} />
@@ -317,7 +319,7 @@ function App() {
             </Route>
 
             {/* Customer Portal Route Group */}
-            <Route element={<ProtectedRoute roles={['customer', 'user']} />}>
+            <Route element={<ProtectedRoute roles={[ROLES.CUSTOMER, ROLES.USER]} />}>
               <Route path="/customer/wishlist" element={<WishlistPage />} />
               <Route path="/customer/referral" element={<ReferralPage />} />
               <Route path="/customer/notifications" element={<CustomerNotificationsPage />} />
@@ -327,7 +329,7 @@ function App() {
             </Route>
 
             {/* Membership Console Route Group */}
-            <Route element={<ProtectedRoute roles={['customer', 'user', 'vendor', 'secretary', 'chapter_president', 'vice_president']} />}>
+            <Route element={<ProtectedRoute roles={[ROLES.CUSTOMER, ROLES.USER, ROLES.VENDOR, ROLES.SECRETARY, ROLES.CHAPTER_PRESIDENT, ROLES.VICE_PRESIDENT]} />}>
               <Route path="/membership/dashboard" element={<MembershipDashboard />} />
               <Route path="/membership/benefits" element={<MembershipBenefitsPage />} />
               <Route path="/membership/events" element={<MembershipEventsPage />} />
@@ -338,7 +340,7 @@ function App() {
             </Route>
 
             {/* Member Console Route Group */}
-            <Route element={<ProtectedRoute roles={['customer', 'user', 'vendor', 'secretary', 'chapter_president', 'vice_president']} />}>
+            <Route element={<ProtectedRoute roles={[ROLES.CUSTOMER, ROLES.USER, ROLES.VENDOR, ROLES.SECRETARY, ROLES.CHAPTER_PRESIDENT, ROLES.VICE_PRESIDENT]} />}>
               <Route path="/member/vendor-application" element={<VendorApplicationForm />} />
               <Route path="/member/vendor-application-status" element={<VendorApplicationStatus />} />
               <Route path="/member/profile" element={<MembershipProfilePage />} />
@@ -368,7 +370,7 @@ function App() {
             <Route path="/member/membership-application-status" element={<MembershipApplicationStatus />} />
 
             {/* Secretary Console Route Group */}
-            <Route element={<ProtectedRoute roles={['secretary']} />}>
+            <Route element={<ProtectedRoute roles={[ROLES.SECRETARY]} />}>
               <Route path="/secretary" element={<Navigate to="/secretary/dashboard" replace />} />
               <Route path="/secretary/dashboard" element={<SecretaryDashboard />} />
               <Route path="/secretary/members" element={<MembersPage />} />
@@ -393,7 +395,7 @@ function App() {
             </Route>
 
             {/* Region Director Console */}
-            <Route element={<ProtectedRoute roles={['region_director']} />}>
+            <Route element={<ProtectedRoute roles={[ROLES.REGION_DIRECTOR]} />}>
               <Route path="/region-director" element={<Navigate to="/region-director/dashboard" replace />} />
               <Route path="/region-director/dashboard" element={<AdminDashboard />} />
               <Route path="/region-director/locations" element={<LocationsManagementPage />} />
@@ -419,7 +421,7 @@ function App() {
             </Route>
 
             {/* State Director Console */}
-            <Route element={<ProtectedRoute roles={['state_director']} />}>
+            <Route element={<ProtectedRoute roles={[ROLES.STATE_DIRECTOR]} />}>
               <Route path="/state-director" element={<Navigate to="/state-director/dashboard" replace />} />
               <Route path="/state-director/dashboard" element={<StateDirectorDashboard />} />
               <Route path="/state-director/districts" element={<LocationsManagementPage />} />
@@ -445,12 +447,12 @@ function App() {
             </Route>
 
             {/* District Director Console */}
-            <Route element={<ProtectedRoute roles={['district_director']} />}>
+            <Route element={<ProtectedRoute roles={[ROLES.DISTRICT_DIRECTOR]} />}>
               <Route path="/district-director" element={<Navigate to="/district-director/dashboard" replace />} />
               <Route path="/district-director/dashboard" element={<DynamicDashboard />} />
               <Route path="/district-director/chapters" element={<LocationsManagementPage />} />
               <Route path="/district-director/locations" element={<LocationsManagementPage />} />
-              <Route path="/district-director/executive-directors" element={<AdminManagementPage role="executive_director" />} />
+              <Route path="/district-director/executive-directors" element={<AdminManagementPage role={ROLES.EXECUTIVE_DIRECTOR} />} />
               <Route path="/district-director/reports" element={<EnterpriseReportBuilderPage />} />
               <Route path="/district-director/settings" element={<AdminSettingsPage />} />
               
@@ -472,7 +474,7 @@ function App() {
             </Route>
 
             {/* Chapter Director Console */}
-            <Route element={<ProtectedRoute roles={['executive_director']} />}>
+            <Route element={<ProtectedRoute roles={[ROLES.EXECUTIVE_DIRECTOR]} />}>
               <Route path="/chapter-director" element={<Navigate to="/chapter-director/dashboard" replace />} />
               <Route path="/chapter-director/dashboard" element={<DynamicDashboard />} />
               <Route path="/chapter-director/president" element={<AdminManagementPage />} />
@@ -499,14 +501,14 @@ function App() {
               <Route path="/chapter-director/profile" element={<MembershipProfilePage />} />
 
               {/* Chapter Director specific sub-routes */}
-              <Route path="/chapter-director/launch-directors" element={<AdminManagementPage role="launch_director" />} />
+              <Route path="/chapter-director/launch-directors" element={<AdminManagementPage role={ROLES.LAUNCH_DIRECTOR} />} />
               <Route path="/chapter-director/vendor-applications" element={<AdminVendorApplicationsPage />} />
               <Route path="/chapter-director/marketplace-approval" element={<AdminVendorApplicationsPage title="Marketplace Approval" description="Review and manage vendor marketplace applications for your chapter." />} />
               <Route path="/chapter-director/approved-vendors" element={<ApprovedVendorsPage />} />
             </Route>
 
             {/* President Console */}
-            <Route element={<ProtectedRoute roles={['chapter_president']} />}>
+            <Route element={<ProtectedRoute roles={[ROLES.CHAPTER_PRESIDENT]} />}>
               <Route path="/president" element={<Navigate to="/president/dashboard" replace />} />
               <Route path="/president/dashboard" element={<PresidentDashboard />} />
               <Route path="/president/vice-presidents" element={<AdminManagementPage />} />
@@ -529,13 +531,14 @@ function App() {
             </Route>
 
             {/* Vice President Console */}
-            <Route element={<ProtectedRoute roles={['vice_president']} />}>
+            <Route element={<ProtectedRoute roles={[ROLES.VICE_PRESIDENT]} />}>
               <Route path="/vice-president" element={<Navigate to="/vice-president/dashboard" replace />} />
               <Route path="/vice-president/dashboard" element={<VicePresidentDashboard />} />
               <Route path="/vice-president/secretaries" element={<AdminManagementPage />} />
               <Route path="/vice-president/members" element={<AdminMembersPage />} />
-              <Route path="/vice-president/register-member" element={<AdminManagementPage role="customer" />} />
+              <Route path="/vice-president/register-member" element={<AdminManagementPage role={ROLES.CUSTOMER} />} />
               <Route path="/vice-president/memberships" element={<AdminMembershipsPage />} />
+              <Route path="/vice-president/vendor-applications" element={<VicePresidentVendorApplicationsPage />} />
               <Route path="/vice-president/reports" element={<EnterpriseReportBuilderPage />} />
               <Route path="/vice-president/settings" element={<AdminSettingsPage />} />
               {/* Inherited Base Member Modules */}
@@ -554,7 +557,7 @@ function App() {
             </Route>
 
             {/* Launch Director Console */}
-            <Route element={<ProtectedRoute roles={['launch_director']} />}>
+            <Route element={<ProtectedRoute roles={[ROLES.LAUNCH_DIRECTOR]} />}>
               <Route path="/launch-director" element={<Navigate to="/launch-director/dashboard" replace />} />
               <Route path="/launch-director/dashboard" element={<DynamicDashboard />} />
               
@@ -574,14 +577,14 @@ function App() {
               <Route path="/launch-director/settings" element={<MembershipProfilePage />} />
 
               {/* Launch Director Specific Modules */}
-              <Route path="/launch-director/members" element={<AdminManagementPage role="customer" />} />
-              <Route path="/launch-director/direct-consultants" element={<AdminManagementPage role="direct_consultant" />} />
+              <Route path="/launch-director/members" element={<AdminManagementPage role={ROLES.CUSTOMER} />} />
+              <Route path="/launch-director/direct-consultants" element={<AdminManagementPage role={ROLES.DIRECT_CONSULTANT} />} />
               <Route path="/launch-director/launch-reports" element={<EnterpriseReportBuilderPage />} />
               <Route path="/launch-director/membership-reports" element={<EnterpriseReportBuilderPage />} />
             </Route>
 
             {/* Direct Consultant Console */}
-            <Route element={<ProtectedRoute roles={['direct_consultant']} />}>
+            <Route element={<ProtectedRoute roles={[ROLES.DIRECT_CONSULTANT]} />}>
               <Route path="/direct-consultant" element={<Navigate to="/direct-consultant/dashboard" replace />} />
               <Route path="/direct-consultant/dashboard" element={<DynamicDashboard />} />
               
@@ -601,8 +604,8 @@ function App() {
               <Route path="/direct-consultant/settings" element={<MembershipProfilePage />} />
 
               {/* Direct Consultant Specific Modules */}
-              <Route path="/direct-consultant/members" element={<AdminManagementPage role="customer" />} />
-              <Route path="/direct-consultant/presidents" element={<AdminManagementPage role="chapter_president" />} />
+              <Route path="/direct-consultant/members" element={<AdminManagementPage role={ROLES.CUSTOMER} />} />
+              <Route path="/direct-consultant/presidents" element={<AdminManagementPage role={ROLES.CHAPTER_PRESIDENT} />} />
             </Route>
 
           </Route>

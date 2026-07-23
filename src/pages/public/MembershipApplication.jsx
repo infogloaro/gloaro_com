@@ -6,6 +6,7 @@ import api from '../../api/axios'
 import { useAuth } from '../../hooks/useAuth'
 import { getMembershipDraft, saveMembershipDraft, setMembershipFile } from '../../utils/membershipOnboarding'
 import LoadingScreen from '../../components/common/LoadingScreen'
+import { ROLES } from '../../constants/roleConfig.js'
 
 const expertise = ['Technology', 'Finance', 'Real Estate', 'Education', 'Marketing', 'Healthcare', 'Design', 'Manufacturing']
 const industries = ['Technology', 'Finance', 'Real Estate', 'Education', 'Healthcare', 'Retail', 'Manufacturing', 'Construction', 'Hospitality', 'Legal Services', 'Marketing', 'Transportation']
@@ -33,7 +34,7 @@ export default function MembershipApplication() {
   const [selectedDistrict, setSelectedDistrict] = useState(draft.districtId || '')
   const [selectedChapter, setSelectedChapter] = useState(draft.chapterId || '')
 
-  const isVicePresident = user?.role === 'vice_president'
+  const isVicePresident = user?.role === ROLES.VICE_PRESIDENT
   const userOrg = user?.meta?.adminProfile?.organization || {}
 
   // 1. Fetch Regions & Existing Application Status
@@ -45,13 +46,13 @@ export default function MembershipApplication() {
       .catch(() => {})
 
     // Redirect official roles who shouldn't apply
-    if (user && !['customer', 'user', 'vendor'].includes(user.role)) {
+    if (user && ![ROLES.CUSTOMER, ROLES.USER, ROLES.VENDOR].includes(user.role)) {
       const roleDashboardMap = {
-        vice_president: '/vice-president/dashboard',
-        secretary: '/secretary/dashboard',
-        chapter_president: '/president/dashboard',
-        admin: '/admin',
-        superadmin: '/admin',
+        [ROLES.VICE_PRESIDENT]: '/vice-president/dashboard',
+        [ROLES.SECRETARY]: '/secretary/dashboard',
+        [ROLES.CHAPTER_PRESIDENT]: '/president/dashboard',
+        [ROLES.ADMIN]: '/admin',
+        [ROLES.SUPERADMIN]: '/admin',
       }
       navigate(roleDashboardMap[user.role] || '/')
       return

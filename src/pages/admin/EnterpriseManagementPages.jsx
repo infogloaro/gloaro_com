@@ -30,6 +30,7 @@ import { useAuth } from '../../hooks/useAuth'
 import SimpleJsonForm from '../shared/SimpleJsonForm'
 import { formatCurrency, formatDate, getList, getPagination } from '../../utils/format'
 import AdminVendorApplicationsApproval from './AdminVendorApplicationsApproval'
+import { ROLES } from '../../constants/roleConfig.js'
 
 const statusOptions = ['draft', 'pending', 'under_review', 'active', 'inactive', 'approved', 'rejected', 'cancelled', 'archived', 'won', 'lost', 'closed', 'converted', 'completed']
 
@@ -45,7 +46,7 @@ const moduleConfig = {
     title: 'Hierarchy Assignment',
     description: 'Assign and transfer state directors, executive directors, launch directors, direct consultants, and chapters.',
     icon: Network,
-    types: ['state_director', 'executive_director', 'launch_director', 'direct_consultant', 'chapter_assignment'],
+    types: [ROLES.STATE_DIRECTOR, ROLES.EXECUTIVE_DIRECTOR, ROLES.LAUNCH_DIRECTOR, ROLES.DIRECT_CONSULTANT, 'chapter_assignment'],
     fields: ['code', 'type', 'assignedTo', 'reportsTo', 'chapter'],
   },
   visitor: {
@@ -59,7 +60,7 @@ const moduleConfig = {
     title: 'Meeting Management',
     description: 'Manage national, state, executive, chapter, vendor, training, online, and offline meetings.',
     icon: CalendarDays,
-    types: ['national', 'state', 'executive', 'chapter', 'vendor', 'training', 'online', 'offline'],
+    types: ['national', 'state', 'executive', 'chapter', ROLES.VENDOR, 'training', 'online', 'offline'],
     fields: ['code', 'type', 'chapter', 'attendanceCount', 'visitorsCount', 'businessValue'],
   },
   business: {
@@ -80,7 +81,7 @@ const moduleConfig = {
     title: 'Interactive Report Builder',
     description: 'Create reusable reports with date, chapter, role, and region filters plus export controls.',
     icon: BarChart3,
-    types: ['membership', 'attendance', 'meeting', 'vendor', 'business', 'marketplace'],
+    types: ['membership', 'attendance', 'meeting', ROLES.VENDOR, 'business', 'marketplace'],
     fields: ['code', 'type', 'metadata.filters', 'metadata.exportFormat'],
   },
   scorecard: {
@@ -108,14 +109,14 @@ const moduleConfig = {
     title: 'Testimonials',
     description: 'Manage testimonials, approvals, featured stories, public highlights, photos, and status.',
     icon: Activity,
-    types: ['member', 'vendor', 'chapter', 'event', 'training'],
+    types: ['member', ROLES.VENDOR, 'chapter', 'event', 'training'],
     fields: ['code', 'type', 'chapter', 'assignedTo', 'metadata.category'],
   },
   workflow: {
     title: 'Workflow Engine',
     description: 'Configure versioned workflows with steps, assigned roles, notifications, conditions, auto skip, escalation, and history.',
     icon: Workflow,
-    types: ['membership', 'vendor', 'marketplace', 'business', 'visitor', 'meeting'],
+    types: ['membership', ROLES.VENDOR, 'marketplace', 'business', 'visitor', 'meeting'],
     fields: ['code', 'type', 'assignedTo', 'metadata.version', 'metadata.currentStage', 'metadata.condition', 'metadata.escalationHours'],
   },
   referral_pipeline: {
@@ -129,7 +130,7 @@ const moduleConfig = {
     title: 'Visitor Conversion Engine',
     description: 'Track visitor lifecycle from visitor to meeting, follow-up, interested, membership, member, and optional vendor.',
     icon: Users,
-    types: ['visitor', 'meeting', 'follow_up', 'interested', 'membership', 'member', 'vendor'],
+    types: ['visitor', 'meeting', 'follow_up', 'interested', 'membership', 'member', ROLES.VENDOR],
     fields: ['code', 'type', 'assignedTo', 'chapter', 'metadata.owner', 'metadata.daysInStage'],
   },
   attendance: {
@@ -143,7 +144,7 @@ const moduleConfig = {
     title: 'Vendor Approval Workflow',
     description: 'Move member vendor applications through document verification, executive director, marketplace admin, and approval.',
     icon: Building2,
-    types: ['application', 'document_verification', 'executive_director', 'marketplace_admin', 'approved', 'rejected'],
+    types: ['application', 'document_verification', ROLES.EXECUTIVE_DIRECTOR, ROLES.MARKETPLACE_ADMIN, 'approved', 'rejected'],
     fields: ['code', 'type', 'assignedTo', 'chapter', 'metadata.gst', 'metadata.pan', 'metadata.license'],
   },
   marketplace_approval: {
@@ -178,7 +179,7 @@ const moduleConfig = {
     title: 'Member Journey',
     description: 'Timeline from referral, meeting, visitor, application, approval, member, vendor, business, and awards.',
     icon: Sparkles,
-    types: ['referral', 'meeting', 'visitor', 'application', 'approval', 'member', 'vendor', 'business', 'award'],
+    types: ['referral', 'meeting', 'visitor', 'application', 'approval', 'member', ROLES.VENDOR, 'business', 'award'],
     fields: ['code', 'type', 'assignedTo', 'chapter', 'metadata.currentStage'],
   },
   ai_insight: {
@@ -225,7 +226,7 @@ export function EnterpriseReportBuilderPage() {
   const [dataList, setDataList] = useState([])
   const [reportType, setReportType] = useState('summary')
 
-  const userRole = user?.role || 'superadmin'
+  const userRole = user?.role || ROLES.SUPERADMIN
 
   const loadReport = useCallback(async (type) => {
     setLoading(true)
@@ -283,13 +284,13 @@ export function EnterpriseReportBuilderPage() {
 
   useEffect(() => {
     // Determine default report based on role
-    if (['region_director'].includes(userRole)) {
+    if ([ROLES.REGION_DIRECTOR].includes(userRole)) {
       loadReport('region')
-    } else if (['state_director'].includes(userRole)) {
+    } else if ([ROLES.STATE_DIRECTOR].includes(userRole)) {
       loadReport('state')
-    } else if (['district_director'].includes(userRole)) {
+    } else if ([ROLES.DISTRICT_DIRECTOR].includes(userRole)) {
       loadReport('district')
-    } else if (['executive_director'].includes(userRole)) {
+    } else if ([ROLES.EXECUTIVE_DIRECTOR].includes(userRole)) {
       loadReport('membership')
     } else {
       loadReport('summary')
@@ -349,7 +350,7 @@ export function EnterpriseReportBuilderPage() {
 
       {/* Tabs */}
       <div className="flex border-b border-slate-200 dark:border-slate-800 print:hidden">
-        {['superadmin', 'admin'].includes(userRole) && (
+        {[ROLES.SUPERADMIN, ROLES.ADMIN].includes(userRole) && (
           <button
             onClick={() => loadReport('summary')}
             className={`px-4 py-2 text-sm font-bold border-b-2 transition ${reportType === 'summary' ? 'border-[#0d4697] text-[#0d4697]' : 'border-transparent text-slate-500 hover:text-slate-850'}`}
@@ -357,7 +358,7 @@ export function EnterpriseReportBuilderPage() {
             Dashboard Summary
           </button>
         )}
-        {['superadmin', 'admin', 'region_director'].includes(userRole) && (
+        {[ROLES.SUPERADMIN, ROLES.ADMIN, ROLES.REGION_DIRECTOR].includes(userRole) && (
           <button
             onClick={() => loadReport('region')}
             className={`px-4 py-2 text-sm font-bold border-b-2 transition ${reportType === 'region' ? 'border-[#0d4697] text-[#0d4697]' : 'border-transparent text-slate-500 hover:text-slate-850'}`}
@@ -365,7 +366,7 @@ export function EnterpriseReportBuilderPage() {
             Region Performance
           </button>
         )}
-        {['superadmin', 'admin', 'region_director', 'state_director'].includes(userRole) && (
+        {[ROLES.SUPERADMIN, ROLES.ADMIN, ROLES.REGION_DIRECTOR, ROLES.STATE_DIRECTOR].includes(userRole) && (
           <button
             onClick={() => loadReport('state')}
             className={`px-4 py-2 text-sm font-bold border-b-2 transition ${reportType === 'state' ? 'border-[#0d4697] text-[#0d4697]' : 'border-transparent text-slate-500 hover:text-slate-850'}`}
@@ -373,7 +374,7 @@ export function EnterpriseReportBuilderPage() {
             State Summary
           </button>
         )}
-        {['superadmin', 'admin', 'region_director', 'state_director', 'district_director'].includes(userRole) && (
+        {[ROLES.SUPERADMIN, ROLES.ADMIN, ROLES.REGION_DIRECTOR, ROLES.STATE_DIRECTOR, ROLES.DISTRICT_DIRECTOR].includes(userRole) && (
           <button
             onClick={() => loadReport('district')}
             className={`px-4 py-2 text-sm font-bold border-b-2 transition ${reportType === 'district' ? 'border-[#0d4697] text-[#0d4697]' : 'border-transparent text-slate-500 hover:text-slate-850'}`}
@@ -592,7 +593,7 @@ export function EnterpriseAnalyticsPage() {
 }
 
 export function ExecutiveDashboardPage() {
-  return <EnterpriseRecordsPage module="executive_dashboard" config={{ title: 'Executive Dashboard', description: 'Director KPIs, meetings conducted, attendance, visitors, members joined, business generated, referrals, vendor approvals, score, and ranking.', icon: BarChart3, types: ['director', 'executive_director', 'state_director'], fields: ['code', 'type', 'assignedTo', 'meetingsCount', 'attendanceCount', 'visitorsCount', 'membersCount', 'businessValue', 'referralValue'] }} />
+  return <EnterpriseRecordsPage module="executive_dashboard" config={{ title: 'Executive Dashboard', description: 'Director KPIs, meetings conducted, attendance, visitors, members joined, business generated, referrals, vendor approvals, score, and ranking.', icon: BarChart3, types: ['director', ROLES.EXECUTIVE_DIRECTOR, ROLES.STATE_DIRECTOR], fields: ['code', 'type', 'assignedTo', 'meetingsCount', 'attendanceCount', 'visitorsCount', 'membersCount', 'businessValue', 'referralValue'] }} />
 }
 
 export function ChapterDashboardPage() {
@@ -850,11 +851,11 @@ function WorkflowBuilder() {
   const workflow = workflows.membership || []
 
   useEffect(() => {
-    if (user?.role !== 'superadmin') return
+    if (user?.role !== ROLES.SUPERADMIN) return
     adminApi.superConfigSection('workflows').then((response) => setWorkflows(response.data?.data || {}))
   }, [user?.role])
 
-  if (user?.role !== 'superadmin') {
+  if (user?.role !== ROLES.SUPERADMIN) {
     return (
       <section className="rounded-2xl border border-amber-200 bg-amber-50 p-6">
         <h2 className="text-xl font-black text-amber-950">Workflow Engine is Super Admin only</h2>
@@ -877,7 +878,7 @@ function WorkflowBuilder() {
       id: label.toLowerCase().replace(/\s+/g, '_'),
       label,
       order: workflow.length + 1,
-      requiredRole: 'admin',
+      requiredRole: ROLES.ADMIN,
       conditional: false,
       autoSkip: false,
       autoAssignment: true,

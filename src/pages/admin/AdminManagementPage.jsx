@@ -14,22 +14,23 @@ import { ADMIN_ROLE_OPTIONS, roleLabel as originalRoleLabel } from '../../consta
 import { storage } from '../../utils/storage'
 import { getDashboardRoute } from '../../utils/permissions'
 import { formatDate, getList, getPagination } from '../../utils/format'
+import { ROLES } from '../../constants/roleConfig.js'
 
 const roleLabel = (role = '') => {
   const currentUser = storage.getUser()
-  if (currentUser?.role === 'district_director' && role === 'executive_director') {
+  if (currentUser?.role === ROLES.DISTRICT_DIRECTOR && role === ROLES.EXECUTIVE_DIRECTOR) {
     return 'Chapter Director'
   }
-  if (currentUser?.role === 'executive_director' && role === 'chapter_president') {
+  if (currentUser?.role === ROLES.EXECUTIVE_DIRECTOR && role === ROLES.CHAPTER_PRESIDENT) {
     return 'President'
   }
-  if (currentUser?.role === 'chapter_president' && role === 'vice_president') {
+  if (currentUser?.role === ROLES.CHAPTER_PRESIDENT && role === ROLES.VICE_PRESIDENT) {
     return 'Vice President'
   }
-  if (currentUser?.role === 'vice_president' && role === 'secretary') {
+  if (currentUser?.role === ROLES.VICE_PRESIDENT && role === ROLES.SECRETARY) {
     return 'Secretary'
   }
-  if (currentUser?.role === 'vice_president' && role === 'customer') {
+  if (currentUser?.role === ROLES.VICE_PRESIDENT && role === ROLES.CUSTOMER) {
     return 'Member'
   }
   return originalRoleLabel(role)
@@ -37,7 +38,7 @@ const roleLabel = (role = '') => {
 
 const moduleOptions = ['dashboard', 'members', 'meetings', 'attendance', 'vendors', 'marketplace', 'reports', 'visitors', 'business_wall', 'training', 'events', 'referrals', 'settings']
 const permissionKeys = ['canView', 'canCreate', 'canEdit', 'canDelete', 'canApprove', 'canExport', 'canPrint']
-const workflowOptions = ['membership', 'vendor', 'business', 'meeting', 'training', 'marketplace', 'referral']
+const workflowOptions = ['membership', ROLES.VENDOR, 'business', 'meeting', 'training', 'marketplace', 'referral']
 const workflowActionKeys = ['create', 'review', 'approve', 'reject', 'transfer']
 const widgetOptions = ['members', 'meetings', 'visitors', 'attendance', 'business', 'referrals', 'marketplace', 'vendors', 'tasks', 'approvals', 'notifications']
 
@@ -64,26 +65,26 @@ const createRoleConfig = ({
 }) => ({ modules, workflows, widgets, sidebar, permissionFields, workflowActions })
 
 const ROLE_CONFIGS = {
-  superadmin: createRoleConfig({ modules: allModules, workflows: allWorkflows, widgets: allWidgets, sidebar: allModules, permissionFields: adminPermissionKeys, workflowActions: workflowActionKeys }),
-  admin: createRoleConfig({ modules: allModules, workflows: allWorkflows, widgets: allWidgets, sidebar: allModules, permissionFields: adminPermissionKeys, workflowActions: workflowActionKeys }),
-  franchise_admin: createRoleConfig({ modules: allModules, workflows: allWorkflows, widgets: allWidgets, sidebar: allModules, permissionFields: adminPermissionKeys, workflowActions: workflowActionKeys }),
-  ecommerce_admin: createRoleConfig({ modules: ['dashboard', 'vendors', 'marketplace', 'reports', 'settings'], workflows: ['vendor', 'marketplace'], widgets: ['marketplace', 'vendors', ...alwaysExtraWidgets], sidebar: ['dashboard', 'vendors', 'marketplace', 'reports', 'settings'] }),
-  marketplace_admin: createRoleConfig({ modules: ['dashboard', 'vendors', 'marketplace', 'reports', 'settings'], workflows: ['vendor', 'marketplace'], widgets: ['marketplace', 'vendors', ...alwaysExtraWidgets], sidebar: ['dashboard', 'vendors', 'marketplace', 'reports', 'settings'] }),
-  digital_marketing_admin: createRoleConfig({ modules: ['dashboard', 'members', 'visitors', 'business_wall', 'events', 'reports', 'settings'], workflows: ['business'], widgets: ['members', 'visitors', 'business', ...alwaysExtraWidgets], sidebar: ['dashboard', 'members', 'visitors', 'business_wall', 'events', 'reports', 'settings'], permissionFields: operatorPermissionKeys, workflowActions: ['create', 'review', 'approve', 'reject'] }),
-  training_admin: createRoleConfig({ modules: ['dashboard', 'members', 'training', 'events', 'attendance', 'reports', 'settings'], workflows: ['training'], widgets: ['members', 'attendance', ...alwaysExtraWidgets], sidebar: ['dashboard', 'members', 'training', 'events', 'attendance', 'reports', 'settings'], permissionFields: operatorPermissionKeys, workflowActions: ['create', 'review', 'approve', 'reject'] }),
-  finance_admin: createRoleConfig({ modules: ['dashboard', 'members', 'reports', 'meetings', 'settings'], workflows: ['meeting'], widgets: ['members', 'meetings', ...alwaysExtraWidgets], sidebar: ['dashboard', 'members', 'reports', 'meetings', 'settings'], permissionFields: ['canView', 'canApprove', 'canExport', 'canPrint'], workflowActions: reviewWorkflowActions }),
-  state_director: createRoleConfig({ modules: ['dashboard', 'members', 'meetings', 'attendance', 'visitors', 'events', 'reports', 'settings'], workflows: ['membership', 'meeting'], widgets: ['members', 'meetings', 'attendance', 'visitors', ...alwaysExtraWidgets], sidebar: ['dashboard', 'members', 'meetings', 'attendance', 'visitors', 'events', 'reports', 'settings'] }),
-  district_director: createRoleConfig({ modules: ['dashboard', 'members', 'meetings', 'attendance', 'visitors', 'events', 'reports', 'settings'], workflows: ['membership', 'meeting'], widgets: ['members', 'meetings', 'attendance', 'visitors', ...alwaysExtraWidgets], sidebar: ['dashboard', 'members', 'meetings', 'attendance', 'visitors', 'events', 'reports', 'settings'] }),
-  executive_director: createRoleConfig({ modules: ['dashboard', 'members', 'meetings', 'attendance', 'visitors', 'reports', 'marketplace', 'vendors'], workflows: ['membership', 'meeting'], widgets: ['members', 'meetings', 'attendance', 'visitors', ...alwaysExtraWidgets], sidebar: ['dashboard', 'members', 'meetings', 'attendance', 'visitors', 'reports', 'marketplace', 'vendors'] }),
-  launch_director: createRoleConfig({ modules: ['dashboard', 'members', 'meetings', 'attendance'], workflows: ['membership', 'meeting'], widgets: ['members', 'meetings', 'attendance', 'visitors'], sidebar: ['dashboard', 'members', 'meetings', 'visitors'], permissionFields: operatorPermissionKeys, workflowActions: reviewWorkflowActions }),
-  direct_consultant: createRoleConfig({ modules: ['dashboard', 'members', 'meetings'], workflows: ['membership', 'meeting'], widgets: ['members', 'meetings', 'attendance'], sidebar: ['dashboard', 'members', 'meetings'], permissionFields: readOnlyPermissionKeys, workflowActions: ['create', 'review'] }),
-  operation_vice_president: createRoleConfig({ modules: ['dashboard', 'members', 'meetings', 'attendance', 'visitors', 'vendors', 'reports'], workflows: ['membership', 'meeting', 'vendor'], widgets: ['members', 'meetings', 'attendance', 'visitors', 'vendors', ...alwaysExtraWidgets], sidebar: ['dashboard', 'members', 'meetings', 'attendance', 'visitors', 'vendors', 'reports'] }),
-  membership_verification_admin: createRoleConfig({ modules: ['dashboard', 'members', 'meetings', 'attendance'], workflows: ['membership'], widgets: ['members', 'meetings', 'attendance', 'visitors'], sidebar: ['dashboard', 'members', 'meetings', 'visitors'], permissionFields: reviewerPermissionKeys, workflowActions: reviewWorkflowActions }),
-  custom_admin: createRoleConfig({ modules: allModules, workflows: allWorkflows, widgets: allWidgets, sidebar: allModules, permissionFields: adminPermissionKeys, workflowActions: workflowActionKeys }),
-  chapter_president: createRoleConfig({ modules: ['dashboard', 'members', 'meetings', 'attendance', 'visitors', 'reports'], workflows: ['membership', 'meeting'], widgets: ['members', 'meetings', 'attendance', 'visitors', ...alwaysExtraWidgets], sidebar: ['dashboard', 'members', 'meetings', 'attendance', 'visitors', 'reports'] }),
-  vice_president: createRoleConfig({ modules: ['dashboard', 'members', 'meetings', 'attendance', 'visitors', 'reports'], workflows: ['membership', 'meeting'], widgets: ['members', 'meetings', 'attendance', 'visitors', ...alwaysExtraWidgets], sidebar: ['dashboard', 'members', 'meetings', 'attendance', 'visitors', 'reports'] }),
-  secretary: createRoleConfig({ modules: ['dashboard', 'members', 'meetings', 'attendance', 'visitors', 'reports'], workflows: ['membership', 'meeting'], widgets: ['members', 'meetings', 'attendance', 'visitors', ...alwaysExtraWidgets], sidebar: ['dashboard', 'members', 'meetings', 'attendance', 'visitors', 'reports'] }),
-  customer: createRoleConfig({ modules: ['dashboard', 'members'], workflows: [], widgets: ['members'], sidebar: ['dashboard', 'members'], permissionFields: readOnlyPermissionKeys, workflowActions: [] }),
+  [ROLES.SUPERADMIN]: createRoleConfig({ modules: allModules, workflows: allWorkflows, widgets: allWidgets, sidebar: allModules, permissionFields: adminPermissionKeys, workflowActions: workflowActionKeys }),
+  [ROLES.ADMIN]: createRoleConfig({ modules: allModules, workflows: allWorkflows, widgets: allWidgets, sidebar: allModules, permissionFields: adminPermissionKeys, workflowActions: workflowActionKeys }),
+  [ROLES.FRANCHISE_ADMIN]: createRoleConfig({ modules: allModules, workflows: allWorkflows, widgets: allWidgets, sidebar: allModules, permissionFields: adminPermissionKeys, workflowActions: workflowActionKeys }),
+  [ROLES.ECOMMERCE_ADMIN]: createRoleConfig({ modules: ['dashboard', 'vendors', 'marketplace', 'reports', 'settings'], workflows: [ROLES.VENDOR, 'marketplace'], widgets: ['marketplace', 'vendors', ...alwaysExtraWidgets], sidebar: ['dashboard', 'vendors', 'marketplace', 'reports', 'settings'] }),
+  [ROLES.MARKETPLACE_ADMIN]: createRoleConfig({ modules: ['dashboard', 'vendors', 'marketplace', 'reports', 'settings'], workflows: [ROLES.VENDOR, 'marketplace'], widgets: ['marketplace', 'vendors', ...alwaysExtraWidgets], sidebar: ['dashboard', 'vendors', 'marketplace', 'reports', 'settings'] }),
+  [ROLES.DIGITAL_MARKETING_ADMIN]: createRoleConfig({ modules: ['dashboard', 'members', 'visitors', 'business_wall', 'events', 'reports', 'settings'], workflows: ['business'], widgets: ['members', 'visitors', 'business', ...alwaysExtraWidgets], sidebar: ['dashboard', 'members', 'visitors', 'business_wall', 'events', 'reports', 'settings'], permissionFields: operatorPermissionKeys, workflowActions: ['create', 'review', 'approve', 'reject'] }),
+  [ROLES.TRAINING_ADMIN]: createRoleConfig({ modules: ['dashboard', 'members', 'training', 'events', 'attendance', 'reports', 'settings'], workflows: ['training'], widgets: ['members', 'attendance', ...alwaysExtraWidgets], sidebar: ['dashboard', 'members', 'training', 'events', 'attendance', 'reports', 'settings'], permissionFields: operatorPermissionKeys, workflowActions: ['create', 'review', 'approve', 'reject'] }),
+  [ROLES.FINANCE_ADMIN]: createRoleConfig({ modules: ['dashboard', 'members', 'reports', 'meetings', 'settings'], workflows: ['meeting'], widgets: ['members', 'meetings', ...alwaysExtraWidgets], sidebar: ['dashboard', 'members', 'reports', 'meetings', 'settings'], permissionFields: ['canView', 'canApprove', 'canExport', 'canPrint'], workflowActions: reviewWorkflowActions }),
+  [ROLES.STATE_DIRECTOR]: createRoleConfig({ modules: ['dashboard', 'members', 'meetings', 'attendance', 'visitors', 'events', 'reports', 'settings'], workflows: ['membership', 'meeting'], widgets: ['members', 'meetings', 'attendance', 'visitors', ...alwaysExtraWidgets], sidebar: ['dashboard', 'members', 'meetings', 'attendance', 'visitors', 'events', 'reports', 'settings'] }),
+  [ROLES.DISTRICT_DIRECTOR]: createRoleConfig({ modules: ['dashboard', 'members', 'meetings', 'attendance', 'visitors', 'events', 'reports', 'settings'], workflows: ['membership', 'meeting'], widgets: ['members', 'meetings', 'attendance', 'visitors', ...alwaysExtraWidgets], sidebar: ['dashboard', 'members', 'meetings', 'attendance', 'visitors', 'events', 'reports', 'settings'] }),
+  [ROLES.EXECUTIVE_DIRECTOR]: createRoleConfig({ modules: ['dashboard', 'members', 'meetings', 'attendance', 'visitors', 'reports', 'marketplace', 'vendors'], workflows: ['membership', 'meeting'], widgets: ['members', 'meetings', 'attendance', 'visitors', ...alwaysExtraWidgets], sidebar: ['dashboard', 'members', 'meetings', 'attendance', 'visitors', 'reports', 'marketplace', 'vendors'] }),
+  [ROLES.LAUNCH_DIRECTOR]: createRoleConfig({ modules: ['dashboard', 'members', 'meetings', 'attendance'], workflows: ['membership', 'meeting'], widgets: ['members', 'meetings', 'attendance', 'visitors'], sidebar: ['dashboard', 'members', 'meetings', 'visitors'], permissionFields: operatorPermissionKeys, workflowActions: reviewWorkflowActions }),
+  [ROLES.DIRECT_CONSULTANT]: createRoleConfig({ modules: ['dashboard', 'members', 'meetings'], workflows: ['membership', 'meeting'], widgets: ['members', 'meetings', 'attendance'], sidebar: ['dashboard', 'members', 'meetings'], permissionFields: readOnlyPermissionKeys, workflowActions: ['create', 'review'] }),
+  [ROLES.OPERATION_VICE_PRESIDENT]: createRoleConfig({ modules: ['dashboard', 'members', 'meetings', 'attendance', 'visitors', 'vendors', 'reports'], workflows: ['membership', 'meeting', ROLES.VENDOR], widgets: ['members', 'meetings', 'attendance', 'visitors', 'vendors', ...alwaysExtraWidgets], sidebar: ['dashboard', 'members', 'meetings', 'attendance', 'visitors', 'vendors', 'reports'] }),
+  [ROLES.MEMBERSHIP_VERIFICATION_ADMIN]: createRoleConfig({ modules: ['dashboard', 'members', 'meetings', 'attendance'], workflows: ['membership'], widgets: ['members', 'meetings', 'attendance', 'visitors'], sidebar: ['dashboard', 'members', 'meetings', 'visitors'], permissionFields: reviewerPermissionKeys, workflowActions: reviewWorkflowActions }),
+  [ROLES.CUSTOM_ADMIN]: createRoleConfig({ modules: allModules, workflows: allWorkflows, widgets: allWidgets, sidebar: allModules, permissionFields: adminPermissionKeys, workflowActions: workflowActionKeys }),
+  [ROLES.CHAPTER_PRESIDENT]: createRoleConfig({ modules: ['dashboard', 'members', 'meetings', 'attendance', 'visitors', 'reports'], workflows: ['membership', 'meeting'], widgets: ['members', 'meetings', 'attendance', 'visitors', ...alwaysExtraWidgets], sidebar: ['dashboard', 'members', 'meetings', 'attendance', 'visitors', 'reports'] }),
+  [ROLES.VICE_PRESIDENT]: createRoleConfig({ modules: ['dashboard', 'members', 'meetings', 'attendance', 'visitors', 'reports'], workflows: ['membership', 'meeting'], widgets: ['members', 'meetings', 'attendance', 'visitors', ...alwaysExtraWidgets], sidebar: ['dashboard', 'members', 'meetings', 'attendance', 'visitors', 'reports'] }),
+  [ROLES.SECRETARY]: createRoleConfig({ modules: ['dashboard', 'members', 'meetings', 'attendance', 'visitors', 'reports'], workflows: ['membership', 'meeting'], widgets: ['members', 'meetings', 'attendance', 'visitors', ...alwaysExtraWidgets], sidebar: ['dashboard', 'members', 'meetings', 'attendance', 'visitors', 'reports'] }),
+  [ROLES.CUSTOMER]: createRoleConfig({ modules: ['dashboard', 'members'], workflows: [], widgets: ['members'], sidebar: ['dashboard', 'members'], permissionFields: readOnlyPermissionKeys, workflowActions: [] }),
 }
 
 function getRoleConfig(role) {
@@ -132,7 +133,7 @@ const emptyForm = {
   phone: '',
   password: '',
   avatar: null,
-  role: 'region_director',
+  role: ROLES.REGION_DIRECTOR,
   customRoleName: '',
   organization: { region: '', state: '', district: '', chapter: '' },
   modules: ['dashboard', 'members', 'meetings', 'visitors'],
@@ -162,22 +163,22 @@ export default function AdminManagementPage({ role: overrideRole }) {
   const [selectedPermUser, setSelectedPermUser] = useState(null)
 
   const CREATOR_CHILD_ROLE = useMemo(() => ({
-    superadmin: 'admin',
-    admin: 'region_director',
-    region_director: 'state_director',
-    state_director: 'district_director',
-    district_director: 'executive_director',
-    executive_director: 'launch_director',
-    launch_director: 'direct_consultant',
-    direct_consultant: 'chapter_president',
-    chapter_president: 'vice_president',
-    vice_president: 'secretary',
+    [ROLES.SUPERADMIN]: ROLES.ADMIN,
+    [ROLES.ADMIN]: ROLES.REGION_DIRECTOR,
+    [ROLES.REGION_DIRECTOR]: ROLES.STATE_DIRECTOR,
+    [ROLES.STATE_DIRECTOR]: ROLES.DISTRICT_DIRECTOR,
+    [ROLES.DISTRICT_DIRECTOR]: ROLES.EXECUTIVE_DIRECTOR,
+    [ROLES.EXECUTIVE_DIRECTOR]: ROLES.LAUNCH_DIRECTOR,
+    [ROLES.LAUNCH_DIRECTOR]: ROLES.DIRECT_CONSULTANT,
+    [ROLES.DIRECT_CONSULTANT]: ROLES.CHAPTER_PRESIDENT,
+    [ROLES.CHAPTER_PRESIDENT]: ROLES.VICE_PRESIDENT,
+    [ROLES.VICE_PRESIDENT]: ROLES.SECRETARY,
   }), []);
 
   const childRole = overrideRole || CREATOR_CHILD_ROLE[user?.role]
 
   const params = useMemo(() => {
-    const filterRole = user?.role === 'superadmin' ? (role || undefined) : childRole
+    const filterRole = user?.role === ROLES.SUPERADMIN ? (role || undefined) : childRole
     return {
       page,
       limit: 10,
@@ -204,7 +205,7 @@ export default function AdminManagementPage({ role: overrideRole }) {
 
   const rows = getList(payload)
   const pagination = getPagination(payload)
-  const canCreateAdmin = user?.role === 'superadmin' || Boolean(childRole)
+  const canCreateAdmin = user?.role === ROLES.SUPERADMIN || Boolean(childRole)
 
   const openCreate = () => {
     if (!canCreateAdmin) {
@@ -215,7 +216,7 @@ export default function AdminManagementPage({ role: overrideRole }) {
     setEditing(null)
     setForm({
       ...emptyForm,
-      role: childRole || 'admin',
+      role: childRole || ROLES.ADMIN,
       organization: {
         region: userOrg.region || '',
         state: userOrg.state || '',
@@ -235,7 +236,7 @@ export default function AdminManagementPage({ role: overrideRole }) {
       email: admin.email || '',
       phone: admin.phone || '',
       password: '',
-      role: admin.role || 'admin',
+      role: admin.role || ROLES.ADMIN,
       ...profile,
       organization: profile.organization || emptyForm.organization,
       modules: profile.modules || [],
@@ -269,19 +270,19 @@ const saveAdmin = async () => {
     }
 
     // Jurisdiction location validation to ensure "Location Master first -> Official account second"
-    if (form.role === 'region_director' && !form.organization?.region) {
+    if (form.role === ROLES.REGION_DIRECTOR && !form.organization?.region) {
         toast.error("Please create the Region in the Organization Master before creating a Region Director account.")
         return
     }
-    if (form.role === 'state_director' && !form.organization?.state) {
+    if (form.role === ROLES.STATE_DIRECTOR && !form.organization?.state) {
         toast.error("Please create the State in the Organization Master before creating a State Director account.")
         return
     }
-    if (form.role === 'district_director' && !form.organization?.district) {
+    if (form.role === ROLES.DISTRICT_DIRECTOR && !form.organization?.district) {
         toast.error("Please create the District in the Organization Master before creating a District Director account.")
         return
     }
-    if (['executive_director', 'launch_director', 'direct_consultant', 'chapter_president', 'vice_president', 'secretary'].includes(form.role) && !form.organization?.chapter) {
+    if ([ROLES.EXECUTIVE_DIRECTOR, ROLES.LAUNCH_DIRECTOR, ROLES.DIRECT_CONSULTANT, ROLES.CHAPTER_PRESIDENT, ROLES.VICE_PRESIDENT, ROLES.SECRETARY].includes(form.role) && !form.organization?.chapter) {
         toast.error("Please create the Chapter in the Organization Master before creating this official account.")
         return
     }
@@ -351,20 +352,20 @@ const saveAdmin = async () => {
 
   const listData = getList(payload)
   const isCreateDisabled = (
-    (user?.role === 'executive_director' && listData.length >= 1) ||
-    (user?.role === 'chapter_president' && listData.length >= 1) ||
-    (user?.role === 'vice_president' && childRole === 'secretary' && listData.length >= 1) ||
-    (user?.role === 'launch_director' && childRole === 'direct_consultant' && listData.length >= 1) ||
-    (user?.role === 'direct_consultant' && childRole === 'chapter_president' && listData.length >= 1)
+    (user?.role === ROLES.EXECUTIVE_DIRECTOR && listData.length >= 1) ||
+    (user?.role === ROLES.CHAPTER_PRESIDENT && listData.length >= 1) ||
+    (user?.role === ROLES.VICE_PRESIDENT && childRole === ROLES.SECRETARY && listData.length >= 1) ||
+    (user?.role === ROLES.LAUNCH_DIRECTOR && childRole === ROLES.DIRECT_CONSULTANT && listData.length >= 1) ||
+    (user?.role === ROLES.DIRECT_CONSULTANT && childRole === ROLES.CHAPTER_PRESIDENT && listData.length >= 1)
   )
 
-  const showCreateButton = canCreateAdmin && !(user?.role === 'executive_director' && childRole === 'customer') && !(user?.role === 'district_director' && childRole === 'customer') && !(user?.role === 'launch_director' && childRole === 'customer') && !(user?.role === 'direct_consultant' && childRole === 'customer') && !(user?.role === 'chapter_president' && childRole === 'customer') && !isCreateDisabled
+  const showCreateButton = canCreateAdmin && !(user?.role === ROLES.EXECUTIVE_DIRECTOR && childRole === ROLES.CUSTOMER) && !(user?.role === ROLES.DISTRICT_DIRECTOR && childRole === ROLES.CUSTOMER) && !(user?.role === ROLES.LAUNCH_DIRECTOR && childRole === ROLES.CUSTOMER) && !(user?.role === ROLES.DIRECT_CONSULTANT && childRole === ROLES.CUSTOMER) && !(user?.role === ROLES.CHAPTER_PRESIDENT && childRole === ROLES.CUSTOMER) && !isCreateDisabled
 
   const getDisabledTitle = () => {
     if (!isCreateDisabled) return ""
-    if (user?.role === 'executive_director') return "A Chapter President already exists for this Chapter"
-    if (user?.role === 'chapter_president') return "A Vice President already exists for this Chapter"
-    if (user?.role === 'vice_president') return "A Secretary already exists for this Chapter"
+    if (user?.role === ROLES.EXECUTIVE_DIRECTOR) return "A Chapter President already exists for this Chapter"
+    if (user?.role === ROLES.CHAPTER_PRESIDENT) return "A Vice President already exists for this Chapter"
+    if (user?.role === ROLES.VICE_PRESIDENT) return "A Secretary already exists for this Chapter"
     return ""
   }
 
@@ -402,7 +403,7 @@ const saveAdmin = async () => {
               title={getDisabledTitle()}
             >
               <Plus className="h-4 w-4" />
-              {childRole === 'customer' ? 'Add Member' : childRole ? `Create New ${roleLabel(childRole)}` : 'Create New Admin'}
+              {childRole === ROLES.CUSTOMER ? 'Add Member' : childRole ? `Create New ${roleLabel(childRole)}` : 'Create New Admin'}
             </button>
           )}
         </div>
@@ -413,22 +414,22 @@ const saveAdmin = async () => {
           { key: 'officialId', header: 'Official ID', render: (row) => row.officialId || '-' },
           { key: 'name', header: 'Name' },
           { key: 'email', header: 'Email' },
-          { key: 'location', header: childRole === 'region_director' ? 'Region' : 'Location', render: (row) => getSubordinateLocation(row) },
-          { key: 'status', header: 'Status', render: (row) => <StatusBadge value={row.role === 'customer' ? row.status : (row.isBlocked ? 'locked' : row.isSuspended ? 'suspended' : row.isActive ? 'active' : 'inactive')} /> },
+          { key: 'location', header: childRole === ROLES.REGION_DIRECTOR ? 'Region' : 'Location', render: (row) => getSubordinateLocation(row) },
+          { key: 'status', header: 'Status', render: (row) => <StatusBadge value={row.role === ROLES.CUSTOMER ? row.status : (row.isBlocked ? 'locked' : row.isSuspended ? 'suspended' : row.isActive ? 'active' : 'inactive')} /> },
         ]}
         rows={rows}
         loading={loading}
         pagination={pagination}
         onPageChange={setPage}
         actions={(row) => {
-          if ((user?.role === 'district_director' || user?.role === 'launch_director' || user?.role === 'direct_consultant' || user?.role === 'chapter_president' || user?.role === 'vice_president') && childRole === 'customer') {
+          if ((user?.role === ROLES.DISTRICT_DIRECTOR || user?.role === ROLES.LAUNCH_DIRECTOR || user?.role === ROLES.DIRECT_CONSULTANT || user?.role === ROLES.CHAPTER_PRESIDENT || user?.role === ROLES.VICE_PRESIDENT) && childRole === ROLES.CUSTOMER) {
             return (
               <div className="flex flex-wrap gap-2">
                 <button onClick={() => viewAdmin(row)} className="rounded-md border border-slate-200 px-2 py-1.5 text-xs font-bold text-slate-900" title="View Details"><Eye className="h-3.5 w-3.5" /></button>
               </div>
             )
           }
-          if (user?.role === 'executive_director' && childRole === 'customer') {
+          if (user?.role === ROLES.EXECUTIVE_DIRECTOR && childRole === ROLES.CUSTOMER) {
             return (
               <div className="flex flex-wrap gap-2">
                 <button onClick={() => viewAdmin(row)} className="rounded-md border border-slate-200 px-2 py-1.5 text-xs font-bold text-slate-900" title="View Details"><Eye className="h-3.5 w-3.5" /></button>
@@ -460,7 +461,7 @@ const saveAdmin = async () => {
               <button onClick={() => setSelectedPermUser(row)} className="rounded-md border border-slate-200 px-3 py-1.5 text-xs font-bold text-[#0d4697]">Permissions</button>
               <button onClick={() => resetPassword(row)} className="rounded-md border border-slate-200 px-2 py-1.5 text-xs font-bold text-slate-900"><KeyRound className="h-3.5 w-3.5" /></button>
               <button onClick={() => loginAs(row)} className="rounded-md border border-blue-200 px-2 py-1.5 text-xs font-bold text-[#0d4697]"><LogIn className="h-3.5 w-3.5" /></button>
-              {row.role !== 'superadmin' && <button onClick={() => deleteAdmin(row)} className="rounded-md border border-red-200 px-3 py-1.5 text-xs font-bold text-red-600">Delete</button>}
+              {row.role !== ROLES.SUPERADMIN && <button onClick={() => deleteAdmin(row)} className="rounded-md border border-red-200 px-3 py-1.5 text-xs font-bold text-red-600">Delete</button>}
             </div>
           )
         }}
@@ -567,7 +568,7 @@ function AdminWizard({ form, setForm, editing, onSave, user, saving }) {
       </WizardSection>
 
       <WizardSection number="2" title="Role Selection">
-        {user?.role === 'superadmin' ? (
+        {user?.role === ROLES.SUPERADMIN ? (
           <select
             value={form.role}
             onChange={(e)=>handleRoleChange(e.target.value)}
@@ -580,7 +581,7 @@ function AdminWizard({ form, setForm, editing, onSave, user, saving }) {
             {roleLabel(form.role)} (Read Only)
           </div>
         )}
-        {form.role === 'custom_admin' && <Input label="Custom Role Name" value={form.customRoleName} onChange={(value) => update({ customRoleName: value })} />}
+        {form.role === ROLES.CUSTOM_ADMIN && <Input label="Custom Role Name" value={form.customRoleName} onChange={(value) => update({ customRoleName: value })} />}
       </WizardSection>
 
       <WizardSection number="3" title="Organization Assignment">
@@ -799,12 +800,12 @@ function OrganizationAssignmentSection({ organization, onChangeOrg, user, target
   const [errDistricts, setErrDistricts] = useState('')
   const [errChapters, setErrChapters] = useState('')
 
-  const creatorRole = user?.role || 'superadmin'
+  const creatorRole = user?.role || ROLES.SUPERADMIN
   const creatorOrg = user?.meta?.adminProfile?.organization || {}
-  const isGlobal = ['superadmin', 'admin'].includes(creatorRole)
+  const isGlobal = [ROLES.SUPERADMIN, ROLES.ADMIN].includes(creatorRole)
 
   const regionsList = useMemo(() => {
-    if (creatorRole === 'region_director') {
+    if (creatorRole === ROLES.REGION_DIRECTOR) {
       const regId = creatorOrg.region
       const regName = creatorOrg.assignedRegion?.name || 'North Region'
       if (regId) {
@@ -820,16 +821,16 @@ function OrganizationAssignmentSection({ organization, onChangeOrg, user, target
   let showDistrict = false
   let showChapter = false
 
-  if (targetRole === 'region_director') {
+  if (targetRole === ROLES.REGION_DIRECTOR) {
     showRegion = true
-  } else if (targetRole === 'state_director') {
+  } else if (targetRole === ROLES.STATE_DIRECTOR) {
     showRegion = true
     showState = true
-  } else if (targetRole === 'district_director') {
+  } else if (targetRole === ROLES.DISTRICT_DIRECTOR) {
     showRegion = true
     showState = true
     showDistrict = true
-  } else if (targetRole === 'executive_director') {
+  } else if (targetRole === ROLES.EXECUTIVE_DIRECTOR) {
     showRegion = true
     showState = true
     showDistrict = true
@@ -842,10 +843,10 @@ function OrganizationAssignmentSection({ organization, onChangeOrg, user, target
   }
 
   // Determine locking states
-  const isRegionLocked = !isGlobal || (targetRole !== 'region_director' && organization.region)
-  const isStateLocked = (!isGlobal && creatorRole !== 'region_director') || (targetRole !== 'state_director' && organization.state)
-  const isDistrictLocked = (!isGlobal && !['region_director', 'state_director'].includes(creatorRole)) || (targetRole !== 'district_director' && organization.district)
-  const isChapterLocked = (!isGlobal && !['region_director', 'state_director', 'district_director'].includes(creatorRole)) || (targetRole !== 'executive_director' && organization.chapter)
+  const isRegionLocked = !isGlobal || (targetRole !== ROLES.REGION_DIRECTOR && organization.region)
+  const isStateLocked = (!isGlobal && creatorRole !== ROLES.REGION_DIRECTOR) || (targetRole !== ROLES.STATE_DIRECTOR && organization.state)
+  const isDistrictLocked = (!isGlobal && ![ROLES.REGION_DIRECTOR, ROLES.STATE_DIRECTOR].includes(creatorRole)) || (targetRole !== ROLES.DISTRICT_DIRECTOR && organization.district)
+  const isChapterLocked = (!isGlobal && ![ROLES.REGION_DIRECTOR, ROLES.STATE_DIRECTOR, ROLES.DISTRICT_DIRECTOR].includes(creatorRole)) || (targetRole !== ROLES.EXECUTIVE_DIRECTOR && organization.chapter)
 
   // Auto-fill creator credentials once on mount
   useEffect(() => {
@@ -860,7 +861,7 @@ function OrganizationAssignmentSection({ organization, onChangeOrg, user, target
 
   // 1. Fetch Regions
   useEffect(() => {
-    if (['region_director', 'state_director', 'district_director', 'executive_director', 'chapter_president', 'vice_president'].includes(creatorRole)) {
+    if ([ROLES.REGION_DIRECTOR, ROLES.STATE_DIRECTOR, ROLES.DISTRICT_DIRECTOR, ROLES.EXECUTIVE_DIRECTOR, ROLES.CHAPTER_PRESIDENT, ROLES.VICE_PRESIDENT].includes(creatorRole)) {
       const assigned = creatorOrg.assignedRegion
       if (assigned) {
         setRegions([assigned])
@@ -886,7 +887,7 @@ function OrganizationAssignmentSection({ organization, onChangeOrg, user, target
 
   // 2. Fetch States
   useEffect(() => {
-    if (['state_director', 'district_director', 'executive_director', 'chapter_president', 'vice_president'].includes(creatorRole)) {
+    if ([ROLES.STATE_DIRECTOR, ROLES.DISTRICT_DIRECTOR, ROLES.EXECUTIVE_DIRECTOR, ROLES.CHAPTER_PRESIDENT, ROLES.VICE_PRESIDENT].includes(creatorRole)) {
       const assigned = creatorOrg.assignedState
       if (assigned) {
         setStates([assigned])
@@ -917,7 +918,7 @@ function OrganizationAssignmentSection({ organization, onChangeOrg, user, target
 
   // 3. Fetch Districts
   useEffect(() => {
-    if (['district_director', 'executive_director', 'chapter_president', 'vice_president'].includes(creatorRole)) {
+    if ([ROLES.DISTRICT_DIRECTOR, ROLES.EXECUTIVE_DIRECTOR, ROLES.CHAPTER_PRESIDENT, ROLES.VICE_PRESIDENT].includes(creatorRole)) {
       const assigned = creatorOrg.assignedDistrict
       if (assigned) {
         setDistricts([assigned])
@@ -948,7 +949,7 @@ function OrganizationAssignmentSection({ organization, onChangeOrg, user, target
 
   // 4. Fetch Chapters
   useEffect(() => {
-    if (['executive_director', 'chapter_president', 'vice_president'].includes(creatorRole)) {
+    if ([ROLES.EXECUTIVE_DIRECTOR, ROLES.CHAPTER_PRESIDENT, ROLES.VICE_PRESIDENT].includes(creatorRole)) {
       const assigned = creatorOrg.assignedChapter
       if (assigned) {
         setChapters([assigned])
@@ -1077,9 +1078,9 @@ function OrganizationAssignmentSection({ organization, onChangeOrg, user, target
 
 function getSubordinateLocation(row) {
   const org = row.meta?.adminProfile?.organization || {}
-  if (row.role === 'region_director') return org.assignedRegion?.name || 'Not Assigned'
-  if (row.role === 'state_director') return org.assignedState?.name || 'Not Assigned'
-  if (row.role === 'district_director') {
+  if (row.role === ROLES.REGION_DIRECTOR) return org.assignedRegion?.name || 'Not Assigned'
+  if (row.role === ROLES.STATE_DIRECTOR) return org.assignedState?.name || 'Not Assigned'
+  if (row.role === ROLES.DISTRICT_DIRECTOR) {
     return org.assignedDistrict?.name || 'Not Assigned'
   }
   return org.assignedChapter?.name || 'Not Assigned'

@@ -10,6 +10,7 @@ import { useAuth } from '../../hooks/useAuth'
 import { useApi } from '../../hooks/useApi'
 import { formatCurrency } from '../../utils/format'
 import JurisdictionCard from '../../components/common/JurisdictionCard'
+import { ROLES } from '../../constants/roleConfig.js'
 
 const monthLabel = (item) => `${item._id?.month || ''}/${item._id?.year || ''}`
 const statusValue = (value) => Number(value || 0) > 0 ? value : 'Pending'
@@ -65,7 +66,7 @@ export default function AdminDashboard() {
 
       {showPayments && hasWidget('reports') && <DataTable
         columns={[
-          { key: 'user', header: 'User', render: (row) => row.user?.name || row.user?.email || 'User' },
+          { key: ROLES.USER, header: 'User', render: (row) => row.user?.name || row.user?.email || 'User' },
           { key: 'amount', header: 'Amount', render: (row) => formatCurrency(row.amount, row.currency) },
           { key: 'gateway', header: 'Gateway' },
           { key: 'status', header: 'Status', render: (row) => <StatusBadge value={row.status} /> },

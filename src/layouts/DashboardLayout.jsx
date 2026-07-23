@@ -6,6 +6,7 @@ import { useAuth } from '../hooks/useAuth'
 import { storage } from '../utils/storage'
 import { adminNav, vendorNav, customerNav, membershipNav, memberNav, secretaryNav, regionDirectorNav, stateDirectorNav, districtDirectorNav, chapterDirectorNav, presidentNav, vicePresidentNav, getSidebarNav } from '../constants/navigation'
 import { buildAdminRoute } from '../utils/permissions'
+import { ROLES } from '../constants/roleConfig.js'
 
 export default function DashboardLayout({ navItems = [], title = 'Dashboard' }) {
   const { user, logout, hasSidebar, marketplaceAccess } = useAuth()
@@ -16,7 +17,7 @@ export default function DashboardLayout({ navItems = [], title = 'Dashboard' }) 
   const [openGroups, setOpenGroups] = useState({})
   const [impersonating, setImpersonating] = useState(() => Boolean(sessionStorage.getItem('gloaro_superadmin_session')))
   const [dark, setDark] = useState(() => localStorage.getItem('gloaro_theme') === 'dark')
-  const isSuperAdmin = user?.role === 'superadmin'
+  const isSuperAdmin = user?.role === ROLES.SUPERADMIN
 
   useEffect(() => {
     document.documentElement.classList.toggle('dark', dark)
@@ -31,7 +32,7 @@ export default function DashboardLayout({ navItems = [], title = 'Dashboard' }) 
       storage.setSession(session, false)
       sessionStorage.removeItem('gloaro_superadmin_session')
       setImpersonating(false)
-      window.location.href = buildAdminRoute('superadmin', '/admin-management')
+      window.location.href = buildAdminRoute(ROLES.SUPERADMIN, '/admin-management')
     } catch {
       sessionStorage.removeItem('gloaro_superadmin_session')
       setImpersonating(false)
@@ -71,7 +72,7 @@ export default function DashboardLayout({ navItems = [], title = 'Dashboard' }) 
       bypassEnabledCheck = true
     }
 
-    const isApprovedVendor = user?.role === 'vendor' || user?.vendorProfile?.status === 'approved';
+    const isApprovedVendor = user?.role === ROLES.VENDOR || user?.vendorProfile?.status === 'approved';
 
     const visibleNavItems = activeNavItems
       .map((item) => {

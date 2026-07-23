@@ -6,15 +6,16 @@ import FormField from '../../components/forms/FormField'
 import { useAuth } from '../../hooks/useAuth'
 
 const typeRoleMap = {
-  vendor: 'vendor',
-  membership: 'customer',
-  franchise: 'customer',
-  b2b: 'customer',
-  user: 'customer',
+  [ROLES.VENDOR]: ROLES.VENDOR,
+  membership: ROLES.CUSTOMER,
+  franchise: ROLES.CUSTOMER,
+  b2b: ROLES.CUSTOMER,
+  [ROLES.USER]: ROLES.CUSTOMER,
 }
 
 import api from '../../api/axios'
 import toast from 'react-hot-toast'
+import { ROLES } from '../../constants/roleConfig.js'
 
 export default function Register() {
   const { register: createAccount } = useAuth()
@@ -22,8 +23,8 @@ export default function Register() {
   const location = useLocation()
   const [showPassword, setShowPassword] = useState(false)
   const query = new URLSearchParams(location.search)
-  const type = query.get('type') || 'user'
-  const role = typeRoleMap[type] || 'customer'
+  const type = query.get('type') || ROLES.USER
+  const role = typeRoleMap[type] || ROLES.CUSTOMER
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm({ defaultValues: { role } })
 
   const [referralCode, setReferralCode] = useState('')
@@ -60,7 +61,7 @@ export default function Register() {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="w-full rounded-lg bg-white p-6 shadow-[0_22px_70px_rgba(15,23,42,.12)]">
-      <h2 className="font-playfair text-4xl font-bold text-[#0d4697]">{role === 'vendor' ? 'Create Vendor Account' : 'Create User Account'}</h2>
+      <h2 className="font-playfair text-4xl font-bold text-[#0d4697]">{role === ROLES.VENDOR ? 'Create Vendor Account' : 'Create User Account'}</h2>
       <div className="mt-6 space-y-4">
         <FormField label="Name" error={errors.name?.message}><input {...register('name', { required: 'Name is required' })} className="h-11 w-full rounded-md border border-slate-300 px-3 outline-none" /></FormField>
         <FormField label="Email" error={errors.email?.message}><input {...register('email', { required: 'Email is required' })} type="email" className="h-11 w-full rounded-md border border-slate-300 px-3 outline-none" /></FormField>

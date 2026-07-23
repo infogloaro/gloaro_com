@@ -21,6 +21,7 @@ import shopIcon from '../assets/shop_icon.png'
 import nearMeIcon from '../assets/nearme_icon.png'
 import b2bIcon from '../assets/b2b_icon.png'
 import loginIcon from '../assets/login_icon.png'
+import { ROLES } from '../constants/roleConfig.js'
 
 const SearchIcon = () => <svg viewBox="0 0 24 24" className="h-4 w-4 shrink-0 fill-none stroke-white stroke-[3.25]"><circle cx="11" cy="11" r="6" /><path d="m16 16 4 4" /></svg>
 const PinIcon = () => <svg viewBox="0 0 24 24" className="h-4 w-4 fill-current"><path d="M12 2a7 7 0 0 0-7 7c0 5.25 7 13 7 13s7-7.75 7-13a7 7 0 0 0-7-7Zm0 10a3 3 0 1 1 0-6 3 3 0 0 1 0 6Z" /></svg>
@@ -61,7 +62,7 @@ export default function Navbar() {
     [shopIcon, 'Shop', '/products', 'bg-[#ffb20c] text-[#063a85]'],
     [nearMeIcon, 'Near Me', '/nearby', 'bg-[#ffb20c] text-[#063a85]'],
     [b2bIcon, 'B2B Marketplace', loginLink('b2b', '/vendors'), 'bg-[#ffb20c] text-[#063a85]'],
-    [loginIcon, 'Become a Vendor', loginLink('vendor', '/vendor'), 'bg-[#0b469e] text-white', 'brightness-0 invert'],
+    [loginIcon, 'Become a Vendor', loginLink(ROLES.VENDOR, '/vendor'), 'bg-[#0b469e] text-white', 'brightness-0 invert'],
   ]
 
   return (
@@ -85,7 +86,7 @@ export default function Navbar() {
             {isAuthenticated ? (
               <a href={getDashboardRoute(user?.role)} aria-label="Account" className="flex items-center gap-1 text-sm font-medium"><img src={loginIcon} alt="" className="h-5 w-5 object-contain" /> {user?.name || 'Account'}</a>
             ) : (
-              <a href={loginLink('user', '/member/dashboard')} aria-label="Account" className="flex items-center gap-1 text-sm font-medium"><img src={loginIcon} alt="" className="h-5 w-5 object-contain" /> Login</a>
+              <a href={loginLink(ROLES.USER, '/member/dashboard')} aria-label="Account" className="flex items-center gap-1 text-sm font-medium"><img src={loginIcon} alt="" className="h-5 w-5 object-contain" /> Login</a>
             )}
             <div className="relative"><button onClick={() => setOpen(!open)} className="flex h-8 items-center gap-2 rounded-md bg-[#0b469e] px-3 text-xs font-medium text-white"><PinIcon />Kallakurichy <span className="border-l border-white/40 pl-2">⌄</span><SearchIcon /></button>{open && <div className="absolute right-0 top-10 w-52 rounded-b-md bg-white p-3 shadow-xl"><p className="mb-2 flex items-center gap-1 text-xs font-medium text-[#f3a900]"><PinIcon /> Kallakurichy</p><input placeholder="Search City..." className="w-full rounded-md border border-slate-200 px-3 py-2 text-xs text-slate-600 outline-none focus:border-[#0b469e]" /></div>}</div>
           </div>
@@ -113,7 +114,7 @@ export default function Navbar() {
                 {user?.name || 'Account'}
               </a>
             ) : (
-              <a onClick={() => setOpen(false)} href={loginLink('user', '/member/dashboard')} className="flex items-center rounded-lg px-4 py-3 font-medium bg-[#0b469e]/10 text-[#0b469e] sm:col-span-2">
+              <a onClick={() => setOpen(false)} href={loginLink(ROLES.USER, '/member/dashboard')} className="flex items-center rounded-lg px-4 py-3 font-medium bg-[#0b469e]/10 text-[#0b469e] sm:col-span-2">
                 <img src={loginIcon} alt="" className="mr-2 h-4 w-4 object-contain brightness-0 filter" />
                 Login
               </a>
