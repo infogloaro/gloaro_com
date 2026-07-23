@@ -20,12 +20,23 @@ import growthIcon from '../assets/growth.png'
 import rocketIcon from '../assets/rocket.png'
 import whyImage from '../assets/why_img.png'
 import awardsImage from '../assets/awards_img.png'
+import leaderImage1 from '../assets/ceo.jpeg'
+import leaderImage2 from '../assets/Digital_Network.png'
+
+
 
 
 // Add future hero background assets to this list to create additional slides.
 const heroSlides = [
   heroBackground,
 ]
+
+const getLeaderCardsPerView = () => {
+  if (typeof window === 'undefined') return 4
+  if (window.innerWidth >= 1024) return 4
+  if (window.innerWidth >= 640) return 2
+  return 1
+}
 
 const loginLink = (type, redirect) => `/login?type=${type}&redirect=${encodeURIComponent(redirect)}`
 
@@ -98,6 +109,23 @@ const successStories = [
   },
 ]
 
+const leaders = [
+  {
+    name: 'G.MANI VANNAN',
+    role: 'Founder & CEO',
+    bio: 'Visionary leader with 15+ years of experience in business strategy and growth.',
+    image: leaderImage1,
+  },
+  {
+    name: 'Yuvaraj',
+    role: 'Digital Network Director',
+    bio: 'Operations expert focused on delivering excellence and scaling impact.',
+    image: leaderImage2,
+  },
+  
+  
+]
+
 const faqItems = [
   ['How does Gloaro help my business?', 'Gloaro helps your business build trusted connections, discover referrals, and access networking opportunities through its professional ecosystem.'],
   ['How do customers find trusted brands?', 'Customers can discover verified businesses through Gloaro listings, referrals, member visibility, and community-driven recommendations.'],
@@ -108,7 +136,9 @@ const faqItems = [
 
 export default function Home() {
   const [activeSlide, setActiveSlide] = useState(0)
+  const [leaderCardsPerView, setLeaderCardsPerView] = useState(getLeaderCardsPerView)
   const featuredBusinessesRef = useRef(null)
+  const leadersRef = useRef(null)
   const successStoriesRef = useRef(null)
   const businesses = [
     ['Google India Pvt. Ltd.', 'Technology', 'https://images.unsplash.com/photo-1573804633927-bfcbcd909acd?auto=format&fit=crop&w=600&q=80', 'G', 'text-[#4285f4]'],
@@ -142,6 +172,28 @@ export default function Home() {
 
     carousel.scrollBy({ left: direction * scrollAmount, behavior: 'smooth' })
   }, [])
+  const scrollLeaders = useCallback((direction) => {
+    const carousel = leadersRef.current
+    if (!carousel || leaders.length <= getLeaderCardsPerView()) return
+
+    const card = carousel.querySelector('[data-leader-card]')
+    const gap = Number.parseFloat(window.getComputedStyle(carousel).columnGap) || 20
+    const scrollAmount = card ? card.getBoundingClientRect().width + gap : 280
+    const atEnd = carousel.scrollLeft + carousel.clientWidth >= carousel.scrollWidth - scrollAmount / 2
+    const atStart = carousel.scrollLeft <= 0
+
+    if (direction > 0 && atEnd) {
+      carousel.scrollTo({ left: 0, behavior: 'smooth' })
+      return
+    }
+
+    if (direction < 0 && atStart) {
+      carousel.scrollTo({ left: carousel.scrollWidth, behavior: 'smooth' })
+      return
+    }
+
+    carousel.scrollBy({ left: direction * scrollAmount, behavior: 'smooth' })
+  }, [])
   const scrollSuccessStories = useCallback((direction) => {
     const carousel = successStoriesRef.current
     if (!carousel) return
@@ -159,6 +211,20 @@ export default function Home() {
     const featuredSlider = window.setInterval(() => scrollFeaturedBusinesses(1), 3000)
     return () => window.clearInterval(featuredSlider)
   }, [scrollFeaturedBusinesses])
+  useEffect(() => {
+    const updateLeaderCardsPerView = () => setLeaderCardsPerView(getLeaderCardsPerView())
+
+    updateLeaderCardsPerView()
+    window.addEventListener('resize', updateLeaderCardsPerView)
+    return () => window.removeEventListener('resize', updateLeaderCardsPerView)
+  }, [])
+
+  const canScrollLeaders = leaders.length > leaderCardsPerView
+  const hasCompactLeaderList = leaders.length <= 2
+  const leadersCarouselWidth = hasCompactLeaderList ? 'lg:max-w-[564px]' : 'lg:max-w-[1152px]'
+  const leadersContentLayout = hasCompactLeaderList
+    ? 'lg:grid-cols-[auto_minmax(280px,1fr)] lg:items-center lg:gap-12'
+    : 'lg:grid-cols-1 lg:gap-8'
 
   return <main id="top">
     {/* 1. Hero Banner */}
@@ -221,6 +287,48 @@ export default function Home() {
 
     {/* 9. Featured Businesses */}
     <section id="directory" className="border-b-4 border-[#163960] bg-[#fdf9e9] px-5 py-12 sm:py-16 lg:px-8"><div className="mx-auto max-w-7xl"><div className="flex items-center justify-between gap-5"><h2 className="font-playfair text-4xl font-semibold italic leading-none text-[#0d4697] sm:text-5xl"><span>Featured </span><span className="text-[#ffae13]">Businesses</span></h2><a href="#join" className="shrink-0 font-urbanist text-lg font-extrabold text-[#0d4697] sm:text-2xl">View All →</a></div><div className="relative mt-8"><button type="button" onClick={() => scrollFeaturedBusinesses(-1)} aria-label="Previous featured businesses" className="absolute -left-4 top-1/2 z-10 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-full bg-white text-xl font-bold text-[#1c2433] shadow-md lg:-left-7">‹</button><div ref={featuredBusinessesRef} className="flex snap-x gap-5 overflow-x-auto scroll-smooth pb-2 [scrollbar-width:none] lg:gap-6 [&::-webkit-scrollbar]:hidden">{businesses.map(([name, type, image, icon, iconColor]) => <article key={name} data-featured-business-card className="w-[min(230px,78vw)] shrink-0 snap-start overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm sm:w-[calc((100%-1.25rem)/2)] lg:w-[calc((100%-6rem)/5)]"><div className="relative h-[110px] overflow-hidden"><img src={image} className="h-full w-full object-cover" alt={`${name} business`} /><div className="absolute -bottom-8 left-1/2 grid h-16 w-16 -translate-x-1/2 place-items-center rounded-full border border-slate-100 bg-white shadow-lg"><span className={`font-play text-3xl font-bold ${iconColor}`}>{icon}</span></div></div><div className="px-4 pb-5 pt-9 text-center"><h3 className="font-urbanist text-base font-extrabold leading-tight text-[#1f2937]">{name}</h3><p className="mt-0.5 font-urbanist text-xs font-semibold text-[#151515]">{type}</p><p className="mt-1 text-sm leading-none text-[#ffc400]">★★★★★</p><a href="#join" className="mt-5 block rounded bg-[#0d4697] px-4 py-2.5 font-urbanist text-xs font-extrabold text-white">Connect Now</a></div></article>)}</div><button type="button" onClick={() => scrollFeaturedBusinesses(1)} aria-label="Next featured businesses" className="absolute -right-4 top-1/2 z-10 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-full bg-white text-xl font-bold text-[#1c2433] shadow-md lg:-right-7">›</button></div></div></section>
+
+    {/* 10. Our Leaders */}
+    <section id="leaders" className="border-b-4 border-[#163960] bg-[#fdf9e9] px-5 py-12 sm:py-16 lg:px-8">
+      <div className="mx-auto max-w-7xl">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <h2 className="font-playfair text-4xl font-semibold italic leading-none text-[#0d4697] sm:text-5xl"><span>Our </span><span className="text-[#ffae13]">Leaders</span></h2>
+            <p className="mt-3 font-urbanist text-base font-semibold text-[#26364d] sm:text-lg">Visionary leaders driving innovation and excellence</p>
+          </div>
+          <a href="#join" className="shrink-0 font-urbanist text-lg font-extrabold text-[#0d4697] sm:text-2xl">View All →</a>
+        </div>
+        <div className={`mt-10 grid gap-8 ${leadersContentLayout}`}>
+          <div className={`relative w-full max-w-[270px] sm:max-w-[560px] ${leadersCarouselWidth}`}>
+            {canScrollLeaders && <button type="button" onClick={() => scrollLeaders(-1)} aria-label="Previous leaders" className="absolute -left-4 top-1/2 z-10 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-full bg-white text-2xl font-bold text-[#1c2433] shadow-md lg:-left-7">‹</button>}
+            <div ref={leadersRef} className="flex snap-x gap-5 overflow-x-auto scroll-smooth pb-2 [scrollbar-width:none] lg:gap-6 [&::-webkit-scrollbar]:hidden">
+              {leaders.map((leader) => (
+                <article key={leader.name} data-leader-card className="w-full shrink-0 snap-start overflow-hidden rounded-lg border border-slate-200 bg-white shadow-[0_8px_20px_rgba(15,23,42,.12)] sm:w-[270px] lg:w-[270px]">
+                  <div className="relative h-[210px] overflow-hidden bg-slate-200 sm:h-[230px] lg:h-[220px]">
+                    <img src={leader.image} alt={leader.name} className="h-full w-full object-cover object-top" />
+                    <div className="absolute -bottom-9 left-1/2 grid h-[74px] w-[74px] -translate-x-1/2 place-items-center rounded-full border-[3px] border-white bg-[#10223d] shadow-lg">
+                      <UserRound className="h-9 w-9 text-white" strokeWidth={1.8} />
+                    </div>
+                  </div>
+                  <div className="px-5 pb-7 pt-14 text-center">
+                    <h3 className="font-urbanist text-xl font-extrabold leading-tight text-[#172338]">{leader.name}</h3>
+                    <p className="mt-2 font-urbanist text-sm font-extrabold text-[#0d4697]">{leader.role}</p>
+                    <p className="mx-auto mt-5 min-h-[72px] max-w-[210px] font-urbanist text-sm font-semibold leading-6 text-[#1f2937]">{leader.bio}</p>
+                    <a href="#join" aria-label={`${leader.name} LinkedIn profile`} className="mx-auto mt-5 grid h-6 w-6 place-items-center rounded bg-[#0878b9] font-urbanist text-sm font-black leading-none text-white">in</a>
+                  </div>
+                </article>
+              ))}
+            </div>
+            {canScrollLeaders && <button type="button" onClick={() => scrollLeaders(1)} aria-label="Next leaders" className="absolute -right-4 top-1/2 z-10 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-full bg-white text-2xl font-bold text-[#1c2433] shadow-md lg:-right-7">›</button>}
+          </div>
+          <div className="max-w-xl lg:justify-self-end">
+            <h3 className="font-playfair text-3xl font-semibold italic leading-tight text-[#0d4697] sm:text-4xl">Leadership That <span className="text-[#ffae13]">Drives Growth</span></h3>
+            <p className="mt-4 font-urbanist text-base font-semibold leading-7 text-[#26364d] sm:text-lg">Our leadership team brings vision, innovation, and disciplined execution together to help businesses grow with confidence. Their commitment to excellence shapes every connection, opportunity, and partnership across the Gloaro network.</p>
+            <a href="#join" className="mt-6 inline-flex items-center rounded-lg bg-[#0d4697] px-6 py-3 font-urbanist text-base font-extrabold text-white shadow-sm transition hover:bg-[#0a3b81]">Meet Our Leadership&nbsp; →</a>
+          </div>
+        </div>
+      </div>
+    </section>
 
     {/* 10. Awards */}
     <section className="bg-[#08213d] px-5 py-12 text-white sm:py-16 lg:px-8"><div className="mx-auto grid max-w-6xl items-center gap-8 md:grid-cols-2 lg:gap-12"><div className="rounded-lg border border-white/15 bg-white/10 px-6 py-7 text-center shadow-[inset_0_1px_12px_rgba(255,255,255,.04)] sm:px-10"><h2 className="font-playfair text-3xl font-bold leading-[0.95] sm:text-4xl">Weekly Awards<br />Ceremony</h2><h3 className="mt-4 font-urbanist text-lg font-medium">Celebrating Excellence Every Month</h3><p className="mx-auto mt-4 max-w-[390px] font-urbanist text-base font-normal leading-7 text-white/90">Recognizing outstanding members, business leaders, and top performers for their contributions, growth, and achievements within the Gloaro Network community.</p><a href="#join" className="mt-4 inline-flex items-center gap-8 rounded-md bg-[#ffc400] px-8 py-2.5 font-urbanist text-base font-extrabold text-black">View Awards <span className="text-sm">↗</span></a></div><img src={awardsImage} alt="Business award ceremony" className="h-80 w-full rounded-[22px] object-cover object-center shadow-sm sm:h-96 lg:h-[390px]" /></div></section>
