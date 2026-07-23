@@ -1,3 +1,4 @@
+import { ROLES } from '../constants/roleConfig.js'
 const OPERATION_TO_PERMISSION = {
   view: 'canView',
   create: 'canCreate',
@@ -6,6 +7,43 @@ const OPERATION_TO_PERMISSION = {
   approve: 'canApprove',
   export: 'canExport',
   print: 'canPrint',
+}
+
+export function normalizeRole(role = '') {
+  const cleanRole = String(role || '').toLowerCase().replace(/\s+/g, '').replace(/-/g, '_')
+  if (cleanRole === ROLES.CHAPTER_DIRECTOR) return ROLES.EXECUTIVE_DIRECTOR
+  return cleanRole
+}
+
+const getOrganizationChapterId = (entity) => {
+  return (
+    entity?.meta?.adminProfile?.organization?.chapter ||
+    entity?.meta?.memberProfile?.organization?.chapter ||
+    entity?.chapterId?._id ||
+    entity?.chapterId ||
+    entity?.chapter ||
+    null
+  )
+}
+
+export function canReviewMembershipApplication(user, application = null, action = 'review') {
+  const role = normalizeRole(user?.role)
+  if ([ROLES.SUPERADMIN, ROLES.ADMIN].includes(role)) return true
+
+  const userChapterId = getOrganizationChapterId(user)
+  const applicationChapterId = getOrganizationChapterId(application)
+  if (!userChapterId || !applicationChapterId) return false
+  if (String(userChapterId) !== String(applicationChapterId)) return false
+
+  if (role === ROLES.EXECUTIVE_DIRECTOR) {
+    return ['review', 'status', 'approve', 'reject', 'changes_requested'].includes(action)
+  }
+
+  if (role === ROLES.VICE_PRESIDENT) {
+    return ['review', 'status', 'documents_verified', 'under_review', 'approve', 'reject', 'changes_requested'].includes(action)
+  }
+
+  return false
 }
 
 const SIDEBAR_ALIASES = {
@@ -205,7 +243,7 @@ export function translatePermissionsToConfig(permissionsArray = []) {
 }
 
 export function createPermissionHelpers(user, permissionConfig = null) {
-  const isSuperAdmin = user?.role === 'superadmin'
+  const isSuperAdmin = normalizeRole(user?.role) === ROLES.SUPERADMIN
   let config = permissionConfig
   if (Array.isArray(permissionConfig)) {
     config = translatePermissionsToConfig(permissionConfig)
@@ -316,8 +354,8 @@ export function createPermissionHelpers(user, permissionConfig = null) {
 }
 
 export function getAdminBasePath(role) {
-  const cleanRole = String(role || '').toLowerCase().replace(/\s+/g, '')
-  if (cleanRole === 'superadmin') return '/super-admin'
+  const cleanRole = normalizeRole(role)
+  if (cleanRole === ROLES.SUPERADMIN) return '/super-admin'
   return '/admin'
 }
 
@@ -328,23 +366,23 @@ export function buildAdminRoute(role, relativePath) {
 }
 
 export function getDashboardRoute(role) {
-  const cleanRole = String(role || '').toLowerCase().replace(/\s+/g, '')
-  if (cleanRole === 'region_director') return '/region-director/dashboard'
-  if (cleanRole === 'state_director') return '/state-director/dashboard'
-  if (cleanRole === 'district_director') return '/district-director/dashboard'
-  if (cleanRole === 'executive_director') return '/chapter-director/dashboard'
-  if (cleanRole === 'chapter_president') return '/president/dashboard'
-  if (cleanRole === 'vice_president') return '/vice-president/dashboard'
-  if (cleanRole === 'secretary') return '/secretary/dashboard'
-  if (cleanRole === 'launch_director') return '/launch-director/dashboard'
-  if (cleanRole === 'direct_consultant') return '/direct-consultant/dashboard'
-  if (cleanRole === 'vendor') return '/vendor'
+  const cleanRole = normalizeRole(role)
+  if (cleanRole === ROLES.REGION_DIRECTOR) return '/region-director/dashboard'
+  if (cleanRole === ROLES.STATE_DIRECTOR) return '/state-director/dashboard'
+  if (cleanRole === ROLES.DISTRICT_DIRECTOR) return '/district-director/dashboard'
+  if (cleanRole === ROLES.EXECUTIVE_DIRECTOR) return '/chapter-director/dashboard'
+  if (cleanRole === ROLES.CHAPTER_PRESIDENT) return '/president/dashboard'
+  if (cleanRole === ROLES.VICE_PRESIDENT) return '/vice-president/dashboard'
+  if (cleanRole === ROLES.SECRETARY) return '/secretary/dashboard'
+  if (cleanRole === ROLES.LAUNCH_DIRECTOR) return '/launch-director/dashboard'
+  if (cleanRole === ROLES.DIRECT_CONSULTANT) return '/direct-consultant/dashboard'
+  if (cleanRole === ROLES.VENDOR) return '/vendor'
   
   const adminRoles = [
-    'superadmin', 'admin', 'franchise_admin', 'ecommerce_admin', 'marketplace_admin',
-    'digital_marketing_admin', 'training_admin', 'finance_admin',
-    'operation_vice_president',
-    'membership_verification_admin', 'custom_admin'
+    ROLES.SUPERADMIN, ROLES.ADMIN, ROLES.FRANCHISE_ADMIN, ROLES.ECOMMERCE_ADMIN, ROLES.MARKETPLACE_ADMIN,
+    ROLES.DIGITAL_MARKETING_ADMIN, ROLES.TRAINING_ADMIN, ROLES.FINANCE_ADMIN,
+    ROLES.OPERATION_VICE_PRESIDENT,
+    ROLES.MEMBERSHIP_VERIFICATION_ADMIN, ROLES.CUSTOM_ADMIN
   ]
   if (adminRoles.includes(cleanRole)) {
     return buildAdminRoute(cleanRole, '/dashboard')

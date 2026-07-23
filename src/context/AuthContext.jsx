@@ -9,6 +9,7 @@ import { storage } from '../utils/storage'
 import { createPermissionHelpers } from '../utils/permissions'
 import { AuthContext } from './AuthContextObject'
 import { getMarketplaceAccess } from '../utils/marketplaceAccess'
+import { ROLES } from '../constants/roleConfig.js'
 
 const socketUrl = API_BASE_URL.replace('/api/v1', '')
 
@@ -22,7 +23,7 @@ export function AuthProvider({ children }) {
   const [loadingVendorApp, setLoadingVendorApp] = useState(false)
 
   const fetchVendorApplication = useCallback(async () => {
-    if (!user || !['customer', 'user', 'vendor'].includes(user.role)) {
+    if (!user || ![ROLES.CUSTOMER, ROLES.USER, ROLES.VENDOR].includes(user.role)) {
       setVendorApplication(null)
       return null
     }

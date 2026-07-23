@@ -34,9 +34,10 @@ import { useAuth } from '../../hooks/useAuth'
 import { useApi } from '../../hooks/useApi'
 import { formatCurrency, formatDate } from '../../utils/format'
 import ResourceListPage from '../shared/ResourceListPage'
+import { ROLES } from '../../constants/roleConfig.js'
 
 const modules = ['dashboard', 'members', 'meetings', 'visitors', 'reports', 'marketplace', 'vendors', 'training', 'events']
-const roles = ['superadmin', 'admin', 'franchise_admin', 'state_director', 'executive_director', 'direct_consultant']
+const roles = [ROLES.SUPERADMIN, ROLES.ADMIN, ROLES.FRANCHISE_ADMIN, ROLES.STATE_DIRECTOR, ROLES.EXECUTIVE_DIRECTOR, ROLES.DIRECT_CONSULTANT]
 const permissions = ['View', 'Create', 'Edit', 'Delete', 'Approve', 'Export', 'Print', 'Reports', 'Dashboard', 'Settings', 'Notifications']
 
 function SuperAdminOnlyNotice({ title = 'Super Admin access required' }) {
@@ -103,7 +104,7 @@ export function SuperAdminDashboardPage() {
       {hasSection('dashboard', 'payments') && <section className="grid gap-5 xl:grid-cols-[1.2fr_0.8fr]">
         <DataTable
           columns={[
-            { key: 'user', header: 'User', render: (row) => row.user?.name || row.user?.email || 'User' },
+            { key: ROLES.USER, header: 'User', render: (row) => row.user?.name || row.user?.email || 'User' },
             { key: 'amount', header: 'Amount', render: (row) => formatCurrency(row.amount, row.currency) },
             { key: 'gateway', header: 'Gateway' },
             { key: 'status', header: 'Status', render: (row) => <StatusBadge value={row.status} /> },
@@ -142,7 +143,7 @@ export function SuperAdminModulePage({ title, description, icon: Icon = LayoutGr
 
 export function FeatureManagementPage() {
   const { user } = useAuth()
-  const isSuperAdmin = user?.role === 'superadmin'
+  const isSuperAdmin = user?.role === ROLES.SUPERADMIN
   const config = useApi(adminApi.superConfig, [isSuperAdmin], { immediate: isSuperAdmin })
   const roleList = config.data?.roles || roles
   const moduleList = config.data?.modules || modules
@@ -236,7 +237,7 @@ export function FeatureManagementPage() {
 
 export function PermissionMatrixPage() {
   const { user } = useAuth()
-  if (user?.role !== 'superadmin') return <SuperAdminOnlyNotice title="Permission Matrix is Super Admin only" />
+  if (user?.role !== ROLES.SUPERADMIN) return <SuperAdminOnlyNotice title="Permission Matrix is Super Admin only" />
 
   const rows = roles.flatMap((role) => permissions.map((permission, index) => ({
     role,
@@ -254,7 +255,7 @@ export function PermissionMatrixPage() {
 
 export function DashboardConfigurationPage() {
   const { user } = useAuth()
-  const isSuperAdmin = user?.role === 'superadmin'
+  const isSuperAdmin = user?.role === ROLES.SUPERADMIN
   const config = useApi(() => adminApi.superConfigSection('dashboardWidgets'), [isSuperAdmin], { immediate: isSuperAdmin })
   const widgetsByRole = config.data || {}
 
@@ -319,7 +320,7 @@ export function DashboardConfigurationPage() {
 
 export function ModuleConfigurationPage() {
   const { user } = useAuth()
-  if (user?.role !== 'superadmin') return <SuperAdminOnlyNotice title="Module Configuration is Super Admin only" />
+  if (user?.role !== ROLES.SUPERADMIN) return <SuperAdminOnlyNotice title="Module Configuration is Super Admin only" />
 
   const rows = modules.map((module, index) => ({ role: 'Global Module', module, status: index !== 5 }))
   return (
@@ -332,7 +333,7 @@ export function ModuleConfigurationPage() {
 
 export function MembershipWorkflowPage() {
   const { user } = useAuth()
-  const isSuperAdmin = user?.role === 'superadmin'
+  const isSuperAdmin = user?.role === ROLES.SUPERADMIN
   const config = useApi(() => adminApi.superConfigSection('workflows'), [isSuperAdmin], { immediate: isSuperAdmin })
   const workflows = config.data || {}
   const steps = [...(workflows.membership || [])].sort((a, b) => a.order - b.order)
@@ -346,7 +347,7 @@ export function MembershipWorkflowPage() {
   const addStep = async () => {
     const label = window.prompt('Step name')
     if (!label) return
-    const nextSteps = [...steps, { id: label.toLowerCase().replace(/\s+/g, '_'), label, order: steps.length + 1, requiredRole: 'admin' }]
+    const nextSteps = [...steps, { id: label.toLowerCase().replace(/\s+/g, '_'), label, order: steps.length + 1, requiredRole: ROLES.ADMIN }]
     await saveWorkflows({ ...workflows, membership: nextSteps })
   }
 
@@ -412,7 +413,7 @@ export function MembershipWorkflowPage() {
 
 export function AuditLogsPage() {
   const { user } = useAuth()
-  const isAuthorized = ['superadmin', 'admin'].includes(user?.role)
+  const isAuthorized = [ROLES.SUPERADMIN, ROLES.ADMIN].includes(user?.role)
 
   if (!isAuthorized) {
     return (
@@ -445,7 +446,7 @@ export function AuditLogsPage() {
       fetcher={adminApi.auditLogs}
       filters={logFilters}
       columns={[
-        { key: 'user', header: 'User', render: (row) => row.user?.name || row.user?.email || '-' },
+        { key: ROLES.USER, header: 'User', render: (row) => row.user?.name || row.user?.email || '-' },
         { key: 'action', header: 'Action', render: (row) => row.action?.replaceAll('_', ' ').toUpperCase() },
         { key: 'module', header: 'Module' },
         { key: 'ipAddress', header: 'IP Address' },

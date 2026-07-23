@@ -7,6 +7,7 @@ import {
   CalendarDays,
   CheckCircle,
   XCircle,
+  Eye,
   FileText,
   UserCheck,
   Building,
@@ -14,8 +15,10 @@ import {
   ClipboardList
 } from 'lucide-react'
 import { formatDate } from '../../utils/format'
+import { useAuth } from '../../hooks/useAuth'
 
 export default function MeetingsAttendance() {
+  const { user } = useAuth()
   // Retrieve events mapped as meetings
   const { data, loading } = useApi(() => customerApi.events({ limit: 12 }))
   const [meetings, setMeetings] = useState([])
@@ -23,6 +26,7 @@ export default function MeetingsAttendance() {
   const [leaveReason, setLeaveReason] = useState('')
   const [leaveMeetingId, setLeaveMeetingId] = useState('')
   const [leaveRequests, setLeaveRequests] = useState([])
+  const [selectedMeeting, setSelectedMeeting] = useState(null)
 
   useEffect(() => {
     if (data) {
@@ -102,15 +106,18 @@ export default function MeetingsAttendance() {
 
           <div className="divide-y divide-slate-100">
             {meetings.map((meeting, index) => {
-              const isAttended = index > 0; // mock attendance values
+              const event = meeting.event || meeting
+              const registration = meeting.registration || event.attendees?.find((attendee) => attendee.user?._id === user?._id || attendee.user === user?._id)
+              if (meeting.event) Object.assign(meeting, event, { venue: event.venue?.name || event.venue })
+              const isAttended = registration ? registration.status === 'attended' : index > 0 // fallback for legacy records
               return (
-                <div key={meeting._id || index} className="flex justify-between items-center py-4 first:pt-0 last:pb-0">
+                <div key={event._id || index} className="flex justify-between items-center py-4 first:pt-0 last:pb-0">
                   <div className="flex items-start gap-3">
                     <span className="grid h-9 w-9 place-items-center rounded-lg bg-blue-50 text-xs font-black text-[#0d4697]">
-                      {new Date(meeting.startDate || Date.now()).getDate()}
+                      {new Date(event.startDate || Date.now()).getDate()}
                     </span>
                     <div>
-                      <p className="text-sm font-extrabold text-slate-800 leading-tight">{meeting.title || 'Weekly Chapter Meeting'}</p>
+                      <p className="text-sm font-extrabold text-slate-800 leading-tight">{event.title || 'Weekly Chapter Meeting'}</p>
                       <p className="text-[10px] font-semibold text-slate-400 mt-1">
                         {formatDate(meeting.startDate)} • Venue: {meeting.venue || 'Chapter Hall'}
                       </p>
@@ -118,17 +125,14 @@ export default function MeetingsAttendance() {
                   </div>
                   
                   <div className="flex items-center gap-2">
-                    {isAttended ? (
-                      <span className="flex items-center gap-1 text-xs font-bold text-emerald-600 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-100">
-                        <CheckCircle className="h-3.5 w-3.5" />
-                        Present
-                      </span>
-                    ) : (
-                      <span className="flex items-center gap-1 text-xs font-bold text-red-600 bg-red-50 px-2.5 py-0.5 rounded-full border border-red-100">
-                        <XCircle className="h-3.5 w-3.5" />
-                        Absent
-                      </span>
-                    )}
+                    <button
+                      type="button"
+                      onClick={() => setSelectedMeeting({ meeting: event, registration, isAttended })}
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-blue-100 bg-blue-50 px-3 py-1.5 text-xs font-extrabold text-[#0d4697] transition hover:border-[#0d4697] hover:bg-blue-100"
+                    >
+                      <Eye className="h-3.5 w-3.5" />
+                      View details
+                    </button>
                   </div>
                 </div>
               )
@@ -162,6 +166,49 @@ export default function MeetingsAttendance() {
           </div>
         </section>
       </div>
+
+      {selectedMeeting && (
+        <div className="fixed inset-0 z-50 grid place-items-center bg-slate-950/60 p-4" onMouseDown={() => setSelectedMeeting(null)}>
+          <div className="w-full max-w-lg overflow-hidden rounded-2xl bg-white shadow-2xl" onMouseDown={(event) => event.stopPropagation()}>
+            <div className="flex items-start justify-between border-b border-slate-100 px-6 py-5">
+              <div>
+                <p className="text-xs font-extrabold uppercase tracking-wider text-[#0d4697]">Meeting details</p>
+                <h3 className="mt-1 text-xl font-black text-slate-900">{selectedMeeting.meeting.title || 'Weekly Chapter Meeting'}</h3>
+              </div>
+              <button type="button" onClick={() => setSelectedMeeting(null)} className="text-2xl leading-none text-slate-400 hover:text-slate-700" aria-label="Close details">×</button>
+            </div>
+
+            <div className="space-y-5 px-6 py-5">
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="rounded-xl bg-slate-50 p-3"><p className="text-[10px] font-extrabold uppercase text-slate-400">Date</p><p className="mt-1 text-sm font-bold text-slate-800">{formatDate(selectedMeeting.meeting.startDate)}</p></div>
+                <div className="rounded-xl bg-slate-50 p-3"><p className="text-[10px] font-extrabold uppercase text-slate-400">Venue</p><p className="mt-1 text-sm font-bold text-slate-800">{selectedMeeting.meeting.venue?.name || selectedMeeting.meeting.venue || 'Chapter Hall'}</p></div>
+                <div className="rounded-xl bg-slate-50 p-3"><p className="text-[10px] font-extrabold uppercase text-slate-400">Meeting type</p><p className="mt-1 text-sm font-bold capitalize text-slate-800">{selectedMeeting.meeting.type || 'Chapter meeting'}</p></div>
+                <div className="rounded-xl bg-slate-50 p-3"><p className="text-[10px] font-extrabold uppercase text-slate-400">Time</p><p className="mt-1 text-sm font-bold text-slate-800">{selectedMeeting.meeting.startDate ? new Date(selectedMeeting.meeting.startDate).toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit' }) : '—'}</p></div>
+              </div>
+
+              {selectedMeeting.meeting.attendees?.length > 0 && (
+                <div className="border-t border-slate-100 pt-5">
+                  <p className="text-xs font-extrabold uppercase tracking-wider text-slate-400">Event members</p>
+                  <div className="mt-3 divide-y divide-slate-100 rounded-xl border border-slate-200">
+                    {selectedMeeting.meeting.attendees.map((attendee, index) => (
+                      <div key={attendee._id || index} className="flex items-center justify-between gap-3 px-3 py-3">
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-extrabold text-slate-800">{attendee.user?.name || attendee.name || 'Member'}</p>
+                          <p className="text-xs font-semibold text-slate-500">{attendee.role || 'Member'}{attendee.task ? ` • ${attendee.task}` : ''}</p>
+                        </div>
+                        <span className={`shrink-0 rounded-full border px-2 py-1 text-[10px] font-extrabold ${attendee.status === 'attended' ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : attendee.status === 'no_show' ? 'border-red-200 bg-red-50 text-red-700' : 'border-slate-200 bg-slate-50 text-slate-600'}`}>
+                          {attendee.status === 'attended' ? 'Present' : attendee.status === 'no_show' ? 'Absent' : 'Registered'}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Leave Application Modal */}
       {showLeaveModal && (

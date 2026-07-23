@@ -1,12 +1,14 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
 import { CheckCircle2, ExternalLink, Eye, FileText, Loader2, XCircle } from 'lucide-react'
 import api from '../../api/axios'
+import { adminApi } from '../../api/admin'
 import Modal from '../../components/common/Modal'
 import StatusBadge from '../../components/common/StatusBadge'
 import { useAuth } from '../../hooks/useAuth'
 import { formatDate } from '../../utils/format'
 import ResourceListPage from '../shared/ResourceListPage'
+import { ROLES } from '../../constants/roleConfig.js'
 
 const getIdentifier = (field) => {
   if (!field) return ''
@@ -14,13 +16,35 @@ const getIdentifier = (field) => {
   return String(field)
 }
 
-export default function AdminVendorApplicationsPage() {
+const formatRoleLabel = (roleStr = '') => {
+  const clean = String(roleStr || '').toLowerCase().replaceAll('_', ' ').replaceAll('-', ' ')
+  if (clean === 'executive director' || clean === 'chapter director') return 'EXECUTIVE DIRECTOR'
+  if (clean === ROLES.SUPERADMIN) return 'SUPER ADMIN'
+  if (clean === ROLES.ADMIN) return 'ADMIN'
+  if (clean === 'vice president') return 'VICE PRESIDENT'
+  if (clean === 'direct consultant') return 'DIRECT CONSULTANT'
+  return clean.toUpperCase() || 'SYSTEM'
+}
+
+export default function AdminVendorApplicationsPage({
+  title = "Marketplace Approval",
+  description = "Review and manage vendor marketplace applications for your assigned chapter."
+}) {
   const { user } = useAuth()
   const [selected, setSelected] = useState(null)
   const [loadingDetails, setLoadingDetails] = useState(false)
   const [updatingStatus, setUpdatingStatus] = useState(false)
   const [adminNotes, setAdminNotes] = useState('')
   const [reloadList, setReloadList] = useState(null)
+  const [categories, setCategories] = useState([])
+
+  useEffect(() => {
+    adminApi.categories({ type: 'business', limit: 100 })
+      .then((res) => {
+        setCategories((res.data?.data || res.data || []).map(cat => ({ value: cat._id, label: cat.name })))
+      })
+      .catch(() => {})
+  }, [])
 
   const openDetails = async (row, reload) => {
     setReloadList(() => reload)
@@ -69,24 +93,28 @@ export default function AdminVendorApplicationsPage() {
   return (
     <>
       <ResourceListPage
-        title="Vendor Applications"
-        description="Review and manage vendor marketplace applications."
+        title={title}
+        description={description}
         fetcher={(params) => api.get('/vendor-applications', { params })}
         filters={[
-          { key: 'status', label: 'Status', options: ['submitted', 'under_review', 'approved', 'rejected'].map((value) => ({ value, label: value.replaceAll('_', ' ') })) }
+          { key: 'status', label: 'Status', options: ['submitted', 'under_review', 'approved', 'rejected'].map((value) => ({ value, label: value.replaceAll('_', ' ') })) },
+          { key: 'businessCategory', label: 'Category', options: categories }
         ]}
         columns={[
+          { key: 'fullName', header: 'Applicant Name', render: (row) => row.step2?.personal?.fullName || 'Owner' },
           { key: 'businessName', header: 'Business Name', render: (row) => row.step2?.details?.businessName || 'Business' },
-          { key: 'fullName', header: 'Owner Name', render: (row) => row.step2?.personal?.fullName || 'Owner' },
-          { key: 'category', header: 'Category', render: (row) => row.step2?.details?.businessCategory?.name || 'Category' },
+          { key: 'category', header: 'Business Category', render: (row) => row.step2?.details?.businessCategory?.name || '-' },
+          { key: 'mobile', header: 'Mobile', render: (row) => row.step2?.personal?.mobileNumber || '-' },
+          { key: 'email', header: 'Email', render: (row) => row.step2?.personal?.email || '-' },
+          { key: 'chapter', header: 'Chapter', render: (row) => row.chapterId?.name || '-' },
           { key: 'createdAt', header: 'Submitted Date', render: (row) => formatDate(row.createdAt) },
-          { key: 'status', header: 'Status', render: (row) => <StatusBadge value={row.status} /> },
+          { key: 'status', header: 'Current Status', render: (row) => <StatusBadge value={row.status} /> },
         ]}
         renderActions={(row, { reload }, permissions) => {
           const userRole = user?.role || ''
-          const isAllowedReviewer = ['superadmin', 'admin', 'executive_director'].includes(userRole)
+          const isAllowedReviewer = [ROLES.SUPERADMIN, ROLES.ADMIN, ROLES.EXECUTIVE_DIRECTOR].includes(userRole)
           const isFinalized = ['approved', 'rejected'].includes(row.status)
-          const isChapterDirector = userRole === 'executive_director'
+          const isChapterDirector = userRole === ROLES.EXECUTIVE_DIRECTOR
           
           // Boundaries check for Chapter Director
           const userOrg = user?.meta?.adminProfile?.organization || {}
@@ -94,8 +122,12 @@ export default function AdminVendorApplicationsPage() {
             return null
           }
 
+          const latestStep = row.workflowHistory && row.workflowHistory.length > 0 ? row.workflowHistory[row.workflowHistory.length - 1] : null
+          const reviewerRole = latestStep?.role || latestStep?.user?.role || row.reviewedByRole || row.reviewedBy?.role
+          const roleLabel = formatRoleLabel(reviewerRole)
+
           return (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3">
               <button
                 onClick={() => openDetails(row, reload)}
                 className="inline-flex items-center gap-1.5 rounded-md border border-[#0d4697]/20 px-3 py-1.5 text-xs font-extrabold text-[#0d4697] hover:bg-blue-50"
@@ -119,7 +151,20 @@ export default function AdminVendorApplicationsPage() {
                   </button>
                 </>
               )}
-              {isFinalized && <StatusBadge value={row.status} />}
+              {isFinalized && (
+                <div className="flex flex-col text-[10px] font-black uppercase tracking-wider">
+                  <span className={row.status === 'approved' ? 'text-emerald-700' : 'text-red-700'}>
+                    {row.status === 'approved' ? 'APPROVED BY' : 'REJECTED BY'}
+                  </span>
+                  <span className="text-slate-800 font-extrabold">{roleLabel}</span>
+                </div>
+              )}
+              {!isFinalized && !isAllowedReviewer && (
+                <div className="flex flex-col text-[10px] font-black uppercase tracking-wider text-slate-500">
+                  <span>{row.status.replaceAll('_', ' ')}</span>
+                  <span className="text-slate-700 font-extrabold">{roleLabel}</span>
+                </div>
+              )}
             </div>
           )
         }}
@@ -169,11 +214,11 @@ function VendorApplicationDetails({ application, adminNotes, onNotesChange, onCl
   let showReviewBtn = false
 
   if (!isFinalized) {
-    if (['superadmin', 'admin'].includes(userRole)) {
+    if ([ROLES.SUPERADMIN, ROLES.ADMIN].includes(userRole)) {
       showApproveBtn = true
       showRejectBtn = true
       showReviewBtn = true
-    } else if (userRole === 'executive_director') {
+    } else if (userRole === ROLES.EXECUTIVE_DIRECTOR) {
       const userOrg = user?.meta?.adminProfile?.organization || {}
       if (getIdentifier(application.chapterId) === getIdentifier(userOrg.chapter)) {
         showApproveBtn = true

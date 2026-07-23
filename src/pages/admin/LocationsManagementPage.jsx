@@ -25,6 +25,7 @@ import StatusBadge from '../../components/common/StatusBadge'
 import Modal from '../../components/common/Modal'
 import { formatDate } from '../../utils/format'
 import { useAuth } from '../../hooks/useAuth'
+import { ROLES } from '../../constants/roleConfig.js'
 
 export default function LocationsManagementPage() {
   const { user } = useAuth()
@@ -307,13 +308,13 @@ export default function LocationsManagementPage() {
     const role = user?.role
     const org = user?.meta?.adminProfile?.organization || {}
 
-    if (role === 'region_director') {
+    if (role === ROLES.REGION_DIRECTOR) {
       return { label: 'Add State', type: 'state', parentId: org.region || '' }
     }
-    if (role === 'state_director') {
+    if (role === ROLES.STATE_DIRECTOR) {
       return { label: 'Add District', type: 'district', parentId: org.state || '' }
     }
-    if (role === 'district_director') {
+    if (role === ROLES.DISTRICT_DIRECTOR) {
       return { label: 'Add Chapter', type: 'chapter', parentId: org.district || '' }
     }
 
@@ -335,12 +336,12 @@ export default function LocationsManagementPage() {
   const canModifySelectedNode = useMemo(() => {
     if (!selectedNode) return false
     const role = user?.role
-    const isGlobal = ['superadmin', 'admin'].includes(role)
+    const isGlobal = [ROLES.SUPERADMIN, ROLES.ADMIN].includes(role)
     if (isGlobal) return true
 
-    if (role === 'region_director' && selectedNode.type === 'region') return false
-    if (role === 'state_director' && selectedNode.type === 'state') return false
-    if (role === 'district_director' && selectedNode.type === 'district') return false
+    if (role === ROLES.REGION_DIRECTOR && selectedNode.type === 'region') return false
+    if (role === ROLES.STATE_DIRECTOR && selectedNode.type === 'state') return false
+    if (role === ROLES.DISTRICT_DIRECTOR && selectedNode.type === 'district') return false
 
     return true
   }, [selectedNode, user])
@@ -354,13 +355,13 @@ export default function LocationsManagementPage() {
   let pageTitle = "Organization Master Management"
   let pageDesc = "Establish and maintain the single source of truth for geographical hierarchies."
 
-  if (user?.role === 'region_director') {
+  if (user?.role === ROLES.REGION_DIRECTOR) {
     pageTitle = "Organization States Master"
     pageDesc = "Manage geographical States under your assigned Region."
-  } else if (user?.role === 'state_director') {
+  } else if (user?.role === ROLES.STATE_DIRECTOR) {
     pageTitle = "Organization Districts Master"
     pageDesc = "Manage geographical Districts under your assigned State."
-  } else if (user?.role === 'district_director') {
+  } else if (user?.role === ROLES.DISTRICT_DIRECTOR) {
     pageTitle = "Organization Chapters Master"
     pageDesc = "Manage geographical Chapters under your assigned District."
   }
@@ -544,7 +545,7 @@ export default function LocationsManagementPage() {
                   <input
                     type="text"
                     disabled
-                    value={user?.role === 'region_director' ? (user?.meta?.adminProfile?.organization?.assignedRegion?.name || 'Not Assigned') : (selectedNode?.name || '')}
+                    value={user?.role === ROLES.REGION_DIRECTOR ? (user?.meta?.adminProfile?.organization?.assignedRegion?.name || 'Not Assigned') : (selectedNode?.name || '')}
                     className="mt-1 h-11 w-full rounded-md border border-slate-200 bg-slate-50 px-3 text-sm font-semibold text-slate-500"
                   />
                 </div>
@@ -557,7 +558,7 @@ export default function LocationsManagementPage() {
                     <input
                       type="text"
                       disabled
-                      value={user?.role === 'state_director' ? (user?.meta?.adminProfile?.organization?.assignedRegion?.name || '') : (pathList[pathList.length - 2]?.name || '')}
+                      value={user?.role === ROLES.STATE_DIRECTOR ? (user?.meta?.adminProfile?.organization?.assignedRegion?.name || '') : (pathList[pathList.length - 2]?.name || '')}
                       className="mt-1 h-11 w-full rounded-md border border-slate-200 bg-slate-50 px-3 text-sm font-semibold text-slate-500"
                     />
                   </div>
@@ -566,7 +567,7 @@ export default function LocationsManagementPage() {
                     <input
                       type="text"
                       disabled
-                      value={user?.role === 'state_director' ? (user?.meta?.adminProfile?.organization?.assignedState?.name || '') : (selectedNode?.name || '')}
+                      value={user?.role === ROLES.STATE_DIRECTOR ? (user?.meta?.adminProfile?.organization?.assignedState?.name || '') : (selectedNode?.name || '')}
                       className="mt-1 h-11 w-full rounded-md border border-slate-200 bg-slate-50 px-3 text-sm font-semibold text-slate-500"
                     />
                   </div>
@@ -580,7 +581,7 @@ export default function LocationsManagementPage() {
                     <input
                       type="text"
                       disabled
-                      value={user?.role === 'district_director' ? (user?.meta?.adminProfile?.organization?.assignedRegion?.name || '') : (pathList[pathList.length - 3]?.name || '')}
+                      value={user?.role === ROLES.DISTRICT_DIRECTOR ? (user?.meta?.adminProfile?.organization?.assignedRegion?.name || '') : (pathList[pathList.length - 3]?.name || '')}
                       className="mt-1 h-11 w-full rounded-md border border-slate-200 bg-slate-50 px-3 text-sm font-semibold text-slate-500"
                     />
                   </div>
@@ -589,7 +590,7 @@ export default function LocationsManagementPage() {
                     <input
                       type="text"
                       disabled
-                      value={user?.role === 'district_director' ? (user?.meta?.adminProfile?.organization?.assignedState?.name || '') : (pathList[pathList.length - 2]?.name || '')}
+                      value={user?.role === ROLES.DISTRICT_DIRECTOR ? (user?.meta?.adminProfile?.organization?.assignedState?.name || '') : (pathList[pathList.length - 2]?.name || '')}
                       className="mt-1 h-11 w-full rounded-md border border-slate-200 bg-slate-50 px-3 text-sm font-semibold text-slate-500"
                     />
                   </div>
@@ -598,7 +599,7 @@ export default function LocationsManagementPage() {
                     <input
                       type="text"
                       disabled
-                      value={user?.role === 'district_director' ? (user?.meta?.adminProfile?.organization?.assignedDistrict?.name || '') : (selectedNode?.name || '')}
+                      value={user?.role === ROLES.DISTRICT_DIRECTOR ? (user?.meta?.adminProfile?.organization?.assignedDistrict?.name || '') : (selectedNode?.name || '')}
                       className="mt-1 h-11 w-full rounded-md border border-slate-200 bg-slate-50 px-3 text-sm font-semibold text-slate-500"
                     />
                   </div>

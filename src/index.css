@@ -28,6 +28,32 @@ body {
   color: #183153;
   overscroll-behavior: none;
 }
+
+/* Keep form labels readable in light modal surfaces, including Secretary forms. */
+label,
+label input,
+label textarea,
+label select {
+  color: #0f172a !important;
+}
+
+label input::placeholder,
+label textarea::placeholder {
+  color: #64748b !important;
+  opacity: 1;
+}
+
+td,
+td span,
+td p {
+  color: #0f172a !important;
+}
+
+.bg-white p,
+.bg-white h2,
+.bg-white h3 {
+  color: #0f172a !important;
+}
 #root {
   min-height: 100vh;
 }

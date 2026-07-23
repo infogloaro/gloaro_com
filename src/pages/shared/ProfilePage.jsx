@@ -9,18 +9,19 @@ import { useApi } from '../../hooks/useApi'
 import { roleLabel } from '../../constants/adminRoles'
 import { formatDate } from '../../utils/format'
 import { User, Lock, MapPin, Shield, Calendar, UserCheck, Activity } from 'lucide-react'
+import { ROLES } from '../../constants/roleConfig.js'
 
 const REPORTING_STRUCTURE = {
-  admin: 'Super Admin',
-  region_director: 'Admin',
-  state_director: 'Region Director',
-  district_director: 'State Director',
-  executive_director: 'District Director',
-  launch_director: 'Executive Director',
-  direct_consultant: 'Launch Director',
-  chapter_president: 'Direct Consultant',
-  vice_president: 'Chapter President',
-  secretary: 'Vice President',
+  [ROLES.ADMIN]: 'Super Admin',
+  [ROLES.REGION_DIRECTOR]: 'Admin',
+  [ROLES.STATE_DIRECTOR]: 'Region Director',
+  [ROLES.DISTRICT_DIRECTOR]: 'State Director',
+  [ROLES.EXECUTIVE_DIRECTOR]: 'District Director',
+  [ROLES.LAUNCH_DIRECTOR]: 'Executive Director',
+  [ROLES.DIRECT_CONSULTANT]: 'Launch Director',
+  [ROLES.CHAPTER_PRESIDENT]: 'Direct Consultant',
+  [ROLES.VICE_PRESIDENT]: 'Chapter President',
+  [ROLES.SECRETARY]: 'Vice President',
 }
 
 export default function ProfilePage() {
@@ -43,7 +44,7 @@ export default function ProfilePage() {
 
       // Fetch user's activity logs
       setLoadingActivity(true)
-      const fetchActivity = ['admin', 'superadmin'].includes(user.role)
+      const fetchActivity = [ROLES.ADMIN, ROLES.SUPERADMIN].includes(user.role)
         ? adminApi.adminActivity(user._id, { limit: 6 })
         : api.get('/users/activity', { params: { limit: 6 } })
 

@@ -7,15 +7,17 @@ import Modal from '../../components/common/Modal'
 import StatusBadge from '../../components/common/StatusBadge'
 import { useAuth } from '../../hooks/useAuth'
 import { formatCurrency, formatDate } from '../../utils/format'
+import { canReviewMembershipApplication } from '../../utils/permissions'
 import ResourceListPage from '../shared/ResourceListPage'
 import SimpleJsonForm from '../shared/SimpleJsonForm'
+import { ROLES } from '../../constants/roleConfig.js'
 
 const statusFilters = [{ key: 'status', label: 'Status', options: ['pending', 'approved', 'rejected', 'active', 'completed', 'failed'].map((value) => ({ value, label: value })) }]
 
 export function AdminUsersPage() {
-  return <ResourceListPage module="members" section="users" title="User Management" fetcher={adminApi.users} filters={[{ key: 'role', label: 'Role', options: ['customer', 'vendor', 'admin', 'superadmin'].map((value) => ({ value, label: value })) }]} columns={[
+  return <ResourceListPage module="members" section="users" title="User Management" fetcher={adminApi.users} filters={[{ key: 'role', label: 'Role', options: [ROLES.CUSTOMER, ROLES.VENDOR, ROLES.ADMIN, ROLES.SUPERADMIN].map((value) => ({ value, label: value })) }]} columns={[
     { key: 'name', header: 'Name' }, { key: 'email', header: 'Email' }, { key: 'role', header: 'Role' }, { key: 'isActive', header: 'Status', render: (row) => <StatusBadge value={row.isActive ? 'active' : 'blocked'} /> },
-  ]} updateAction={adminApi.updateUser} deleteAction={adminApi.deleteUser} renderForm={(props) => <SimpleJsonForm {...props} fields={[{ name: 'name' }, { name: 'phone' }, { name: 'role', type: 'select', options: ['customer', 'vendor', 'admin'].map((value) => ({ value, label: value })) }]} />} />
+  ]} updateAction={adminApi.updateUser} deleteAction={adminApi.deleteUser} renderForm={(props) => <SimpleJsonForm {...props} fields={[{ name: 'name' }, { name: 'phone' }, { name: 'role', type: 'select', options: [ROLES.CUSTOMER, ROLES.VENDOR, ROLES.ADMIN].map((value) => ({ value, label: value })) }]} />} />
 }
 
 export function AdminVendorsPage() {
@@ -258,7 +260,7 @@ export function AdminServicesPage() {
 
 export function AdminMembershipsPage() {
   return <ResourceListPage module="members" section="memberships" title="Vendor Memberships" fetcher={adminApi.memberships} filters={statusFilters} columns={[
-    { key: 'vendor', header: 'Vendor', render: (row) => row.vendor?.businessName || 'Vendor' }, { key: 'plan', header: 'Plan' }, { key: 'price', header: 'Price', render: (row) => formatCurrency(row.price) }, { key: 'status', header: 'Status', render: (row) => <StatusBadge value={row.status} /> },
+    { key: ROLES.VENDOR, header: 'Vendor', render: (row) => row.vendor?.businessName || 'Vendor' }, { key: 'plan', header: 'Plan' }, { key: 'price', header: 'Price', render: (row) => formatCurrency(row.price) }, { key: 'status', header: 'Status', render: (row) => <StatusBadge value={row.status} /> },
   ]} />
 }
 
@@ -269,6 +271,10 @@ export function AdminMembershipApplicationsPage() {
   const [updatingStatus, setUpdatingStatus] = useState(false)
   const [adminNotes, setAdminNotes] = useState('')
   const [reloadList, setReloadList] = useState(null)
+
+  useEffect(() => {
+    console.log('AdminMembershipApplicationsPage mounted', window.location.pathname)
+  }, [])
 
   const openDetails = async (row, reload) => {
     setReloadList(() => reload)
@@ -325,8 +331,7 @@ export function AdminMembershipApplicationsPage() {
         { key: 'createdAt', header: 'Submitted Date', render: (row) => formatDate(row.createdAt) },
         { key: 'status', header: 'Status', render: (row) => <StatusBadge value={row.status} /> },
       ]} renderActions={(row, { reload }, permissions) => {
-        const userRole = user?.role || ''
-        const showDropdownStatus = ['superadmin', 'admin'].includes(userRole) && !['approved', 'rejected'].includes(row.status)
+        const showDropdownStatus = canReviewMembershipApplication(user, row, 'status') && !['approved', 'rejected'].includes(row.status)
         return (
           <>
             {permissions.hasOperation('members', 'view') && <button onClick={() => openDetails(row, reload)} className="inline-flex items-center gap-1.5 rounded-md border border-[#0d4697]/20 px-3 py-1.5 text-xs font-extrabold text-[#0d4697] hover:bg-blue-50">
@@ -388,28 +393,11 @@ function MembershipApplicationDetails({ application, adminNotes, onNotesChange, 
     }
   }
 
-  const userRole = user?.role || ''
-  
-  let showVerifyBtn = false
-  let showApproveBtn = false
-  let showRejectBtn = false
-
   const isFinalDecision = ['approved', 'rejected'].includes(application.status)
-
-  if (!isFinalDecision) {
-    if (['superadmin', 'admin', 'vice_president'].includes(userRole)) {
-      showVerifyBtn = true
-      showApproveBtn = true
-      showRejectBtn = true
-    } else if (userRole === 'direct_consultant') {
-      showVerifyBtn = true
-      showApproveBtn = true
-      showRejectBtn = true
-    } else if (userRole === 'executive_director') {
-      showApproveBtn = true
-      showRejectBtn = true
-    }
-  }
+  const canVerifyBtn = !isFinalDecision && canReviewMembershipApplication(user, application, 'documents_verified')
+  const canApproveBtn = !isFinalDecision && canReviewMembershipApplication(user, application, 'approve')
+  const canRejectBtn = !isFinalDecision && canReviewMembershipApplication(user, application, 'reject')
+  const canRequestChangesBtn = !isFinalDecision && canReviewMembershipApplication(user, application, 'changes_requested')
 
   const documents = [
     ['profilePhoto', 'Profile Photo'],
@@ -588,21 +576,21 @@ function MembershipApplicationDetails({ application, adminNotes, onNotesChange, 
         <button disabled={updating} onClick={onClose} className="inline-flex items-center justify-center rounded-md border border-slate-200 px-4 py-2 text-sm font-extrabold text-slate-700 hover:bg-slate-50 disabled:opacity-60">
           Close
         </button>
-        {showVerifyBtn && <button disabled={updating} onClick={onDocumentsVerified} className="inline-flex items-center justify-center rounded-md border border-blue-200 px-4 py-2 text-sm font-extrabold text-[#0d4697] hover:bg-blue-50 disabled:opacity-60">
+        {canVerifyBtn && <button disabled={updating} onClick={onDocumentsVerified} className="inline-flex items-center justify-center rounded-md border border-blue-200 px-4 py-2 text-sm font-extrabold text-[#0d4697] hover:bg-blue-50 disabled:opacity-60">
           Documents Verified
         </button>}
-        {showVerifyBtn && <button disabled={updating} onClick={onUnderReview} className="inline-flex items-center justify-center rounded-md border border-amber-200 px-4 py-2 text-sm font-extrabold text-amber-700 hover:bg-amber-50 disabled:opacity-60">
+        {canVerifyBtn && <button disabled={updating} onClick={onUnderReview} className="inline-flex items-center justify-center rounded-md border border-amber-200 px-4 py-2 text-sm font-extrabold text-amber-700 hover:bg-amber-50 disabled:opacity-60">
           Under Review
         </button>}
-        {showRejectBtn && <button disabled={updating} onClick={onRequestChanges} className="inline-flex items-center justify-center gap-2 rounded-md border border-amber-200 px-4 py-2 text-sm font-extrabold text-amber-700 hover:bg-amber-50 disabled:opacity-60">
+        {canRequestChangesBtn && <button disabled={updating} onClick={onRequestChanges} className="inline-flex items-center justify-center gap-2 rounded-md border border-amber-200 px-4 py-2 text-sm font-extrabold text-amber-700 hover:bg-amber-50 disabled:opacity-60">
           <AlertCircle className="h-4 w-4" />
           Request Changes
         </button>}
-        {showRejectBtn && <button disabled={updating} onClick={onReject} className="inline-flex items-center justify-center gap-2 rounded-md border border-red-200 px-4 py-2 text-sm font-extrabold text-red-600 hover:bg-red-50 disabled:opacity-60">
+        {canRejectBtn && <button disabled={updating} onClick={onReject} className="inline-flex items-center justify-center gap-2 rounded-md border border-red-200 px-4 py-2 text-sm font-extrabold text-red-600 hover:bg-red-50 disabled:opacity-60">
           <XCircle className="h-4 w-4" />
           Reject
         </button>}
-        {showApproveBtn && <button disabled={updating} onClick={onApprove} className="inline-flex items-center justify-center gap-2 rounded-md bg-emerald-600 px-4 py-2 text-sm font-extrabold text-white hover:bg-emerald-700 disabled:opacity-60">
+        {canApproveBtn && <button disabled={updating} onClick={onApprove} className="inline-flex items-center justify-center gap-2 rounded-md bg-emerald-600 px-4 py-2 text-sm font-extrabold text-white hover:bg-emerald-700 disabled:opacity-60">
           <CheckCircle2 className="h-4 w-4" />
           Approve
         </button>}
@@ -651,7 +639,19 @@ export function AdminPlansPage() {
 }
 
 export function AdminEventsPage() {
-  return <ResourceListPage module="events" section="events" title="Event Management" fetcher={adminApi.events} columns={[{ key: 'title', header: 'Title' }, { key: 'type', header: 'Type' }, { key: 'startDate', header: 'Starts', render: (row) => formatDate(row.startDate) }, { key: 'status', header: 'Status', render: (row) => <StatusBadge value={row.status} /> }]} />
+  return <ResourceListPage module="events" section="events" title="Event Management" fetcher={adminApi.events} detailFetcher={adminApi.event} columns={[{ key: 'title', header: 'Title' }, { key: 'type', header: 'Type' }, { key: 'startDate', header: 'Starts', render: (row) => formatDate(row.startDate) }, { key: 'status', header: 'Status', render: (row) => <StatusBadge value={row.status} /> }]} renderDetails={(event) => <div className="space-y-5 text-sm">
+    <div className="grid gap-3 sm:grid-cols-2">
+      {[
+        ['Event ID', event.eventId || '—'], ['Created', formatDate(event.createdAt)], ['Type', event.type || '—'], ['Status', event.status || '—'],
+        ['Region', event.region?.name || event.regionName || event.regionCode || event.region || '—'], ['State', event.state?.name || event.stateName || event.stateCode || event.state || '—'], ['District', event.district?.name || event.districtName || event.districtCode || event.district || '—'],
+        ['Starts', `${formatDate(event.startDate)} ${event.startDate ? new Date(event.startDate).toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit' }) : ''}`],
+        ['Ends', `${formatDate(event.endDate)} ${event.endDate ? new Date(event.endDate).toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit' }) : ''}`],
+        ['Venue', event.venue?.name || event.venue || '—'], ['Organizer', event.organizer?.name || '—'], ['Category', event.category?.name || '—'],
+      ].map(([label, value]) => <div key={label} className="rounded-lg bg-slate-50 p-3"><p className="text-[10px] font-extrabold uppercase text-slate-400">{label}</p><p className="mt-1 font-bold capitalize text-slate-800">{value}</p></div>)}
+    </div>
+    <div className="border-t border-slate-100 pt-4"><p className="font-extrabold text-slate-800">Registration</p><div className="mt-2 grid gap-3 sm:grid-cols-3"><div><span className="text-xs text-slate-500">Required</span><p className="font-bold">{event.registration?.isRequired ? 'Yes' : 'No'}</p></div><div><span className="text-xs text-slate-500">Capacity</span><p className="font-bold">{event.registration?.maxAttendees || 'Unlimited'}</p></div><div><span className="text-xs text-slate-500">Registered</span><p className="font-bold">{event.stats?.totalRegistrations ?? event.attendees?.length ?? 0}</p></div></div></div>
+    <div className="border-t border-slate-100 pt-4"><p className="font-extrabold text-slate-800">Description</p><p className="mt-1 text-slate-600">{event.description || '—'}</p></div>
+  </div>} />
 }
 
 export function AdminReferralsPage() {
@@ -659,11 +659,11 @@ export function AdminReferralsPage() {
 }
 
 export function AdminPaymentsPage() {
-  return <ResourceListPage module="reports" section="payments" title="Payment & Transaction Management" fetcher={adminApi.payments} filters={statusFilters} columns={[{ key: 'user', header: 'User', render: (row) => row.user?.name || row.user?.email || 'User' }, { key: 'amount', header: 'Amount', render: (row) => formatCurrency(row.amount, row.currency) }, { key: 'gateway', header: 'Gateway' }, { key: 'status', header: 'Status', render: (row) => <StatusBadge value={row.status} /> }]} />
+  return <ResourceListPage module="reports" section="payments" title="Payment & Transaction Management" fetcher={adminApi.payments} filters={statusFilters} columns={[{ key: ROLES.USER, header: 'User', render: (row) => row.user?.name || row.user?.email || 'User' }, { key: 'amount', header: 'Amount', render: (row) => formatCurrency(row.amount, row.currency) }, { key: 'gateway', header: 'Gateway' }, { key: 'status', header: 'Status', render: (row) => <StatusBadge value={row.status} /> }]} />
 }
 
 export function AdminReviewsPage() {
-  return <ResourceListPage module="marketplace" section="reviews" title="Review Management" fetcher={adminApi.reviews} filters={statusFilters} columns={[{ key: 'user', header: 'User', render: (row) => row.user?.name || 'User' }, { key: 'vendor', header: 'Vendor', render: (row) => row.vendor?.businessName || 'Vendor' }, { key: 'rating', header: 'Rating' }, { key: 'status', header: 'Status', render: (row) => <StatusBadge value={row.status} /> }]} />
+  return <ResourceListPage module="marketplace" section="reviews" title="Review Management" fetcher={adminApi.reviews} filters={statusFilters} columns={[{ key: ROLES.USER, header: 'User', render: (row) => row.user?.name || 'User' }, { key: ROLES.VENDOR, header: 'Vendor', render: (row) => row.vendor?.businessName || 'Vendor' }, { key: 'rating', header: 'Rating' }, { key: 'status', header: 'Status', render: (row) => <StatusBadge value={row.status} /> }]} />
 }
 
 export function AdminSupportPage() {
@@ -683,6 +683,10 @@ export function AdminSettingsPage() {
 }
 
 export function AdminMembersPage() {
+  useEffect(() => {
+    console.log('AdminMembersPage mounted', window.location.pathname)
+  }, [])
+
   const [regions, setRegions] = useState([])
   const [states, setStates] = useState([])
   const [districts, setDistricts] = useState([])

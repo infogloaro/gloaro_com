@@ -44,9 +44,11 @@ import {
   MessageSquare,
   ClipboardCheck,
   User,
+  UserCheck,
 } from 'lucide-react'
 
-import { buildAdminRoute } from '../utils/permissions'
+import { buildAdminRoute, normalizeRole } from '../utils/permissions'
+import { ROLES } from './roleConfig.js'
 
 export const adminNav = [
   ['Dashboard', '/dashboard', LayoutDashboard],
@@ -182,7 +184,7 @@ export const membershipNav = [
 ]
 
 export const memberNav = [];
-export const secretaryNav = [];
+export const secretaryNav = [{ label: 'Secretary Dashboard', icon: ClipboardList, children: [['Events', '/events', CalendarDays], ['Reports', '/reports', FileBarChart]] }];
 export const stateDirectorNav = [];
 export const districtDirectorNav = [];
 export const chapterDirectorNav = [];
@@ -191,20 +193,21 @@ export const vicePresidentNav = [];
 export const regionDirectorNav = [];
 
 export const rolePrefixes = {
-  superadmin: '/admin',
-  admin: '/admin',
-  customer: '/member/dashboard',
-  user: '/member/dashboard',
-  vendor: '/member/dashboard',
-  secretary: '/secretary',
-  vice_president: '/vice-president',
-  chapter_president: '/president',
-  executive_director: '/chapter-director',
-  district_director: '/district-director',
-  state_director: '/state-director',
-  region_director: '/region-director',
-  launch_director: '/launch-director',
-  direct_consultant: '/direct-consultant'
+  [ROLES.SUPERADMIN]: '/admin',
+  [ROLES.ADMIN]: '/admin',
+  [ROLES.CUSTOMER]: '/member/dashboard',
+  [ROLES.USER]: '/member/dashboard',
+  [ROLES.VENDOR]: '/member/dashboard',
+  [ROLES.SECRETARY]: '/secretary',
+  [ROLES.VICE_PRESIDENT]: '/vice-president',
+  [ROLES.CHAPTER_DIRECTOR]: '/chapter-director',
+  [ROLES.CHAPTER_PRESIDENT]: '/president',
+  [ROLES.EXECUTIVE_DIRECTOR]: '/chapter-director',
+  [ROLES.DISTRICT_DIRECTOR]: '/district-director',
+  [ROLES.STATE_DIRECTOR]: '/state-director',
+  [ROLES.REGION_DIRECTOR]: '/region-director',
+  [ROLES.LAUNCH_DIRECTOR]: '/launch-director',
+  [ROLES.DIRECT_CONSULTANT]: '/direct-consultant'
 };
 
 const commonModules = [
@@ -227,6 +230,8 @@ const commonModules = [
       ['Products', '/products', Package],
       ['Services', '/services', BriefcaseBusiness],
       ['Vendors', '/vendors', Users],
+      ['Vendor Applications', '/vendor-applications', Building2],
+      ['Marketplace Approval', '/marketplace-approval', ShieldCheck],
       ['Orders', '/orders', ShoppingBag],
       ['Payments', '/payments', CreditCard],
       ['Subscription', '/subscription', ToggleLeft]
@@ -270,74 +275,66 @@ const commonModules = [
 ];
 
 const roleModules = {
-  secretary: [
+  [ROLES.SECRETARY]: [
     ['Members', '/members', Users],
     ['Minutes', '/minutes', FileText],
     ['Documents', '/documents', Folder],
     ['Reports', '/reports', FileBarChart],
     ['Meeting Records', '/meeting-records', ClipboardList]
   ],
-  vice_president: [
+  [ROLES.VICE_PRESIDENT]: [
     ['Member Registration', '/register-member', Users],
-    ['Membership Applications', '/membership-applications', FileText],
+    ['Approved Members', '/members', Users],
     ['Secretaries', '/secretaries', Users],
     ['Reports', '/reports', FileBarChart],
     ['Announcements', '/announcements', Bell]
   ],
-  chapter_president: [
+  [ROLES.CHAPTER_PRESIDENT]: [
     ['Approved Members', '/members', Users],
     ['Vice Presidents', '/vice-presidents', Users],
     ['Chapter Reports', '/reports', FileBarChart],
     ['Leadership', '/leadership', Award]
   ],
-  executive_director: [
-    ['Chapter Management', '/chapter-management', Settings],
-    ['Chapter Presidents', '/presidents', Users],
-    ['Vice Presidents', '/vice-presidents', Users],
-    ['Secretaries', '/secretaries', Users],
-    ['Assigned Members', '/members', Users],
-    ['Membership Applications', '/membership-applications', ClipboardList],
-    ['Membership Status', '/memberships', CreditCard],
-    ['Vendor Applications', '/vendor-applications', BriefcaseBusiness],
-    ['Approved Vendors', '/approved-vendors', Building2]
+  [ROLES.EXECUTIVE_DIRECTOR]: [
+    ['Launch Directors', '/launch-directors', UserCheck],
+    ['Approved Members', '/members', Users],
+    ['Membership Applications', '/membership-applications', ClipboardList]
   ],
-  chapter_director: [
-    ['Chapter Management', '/chapter-management', Settings],
-    ['Chapter Presidents', '/presidents', Users],
-    ['Vice Presidents', '/vice-presidents', Users],
-    ['Secretaries', '/secretaries', Users],
-    ['Assigned Members', '/members', Users],
-    ['Membership Applications', '/membership-applications', ClipboardList],
-    ['Membership Status', '/memberships', CreditCard],
-    ['Vendor Applications', '/vendor-applications', BriefcaseBusiness],
-    ['Approved Vendors', '/approved-vendors', Building2]
+  [ROLES.CHAPTER_DIRECTOR]: [
+    ['Launch Directors', '/launch-directors', UserCheck],
+    ['Approved Members', '/members', Users],
+    ['Membership Applications', '/membership-applications', ClipboardList]
   ],
-  district_director: [
+  [ROLES.DISTRICT_DIRECTOR]: [
     ['Executive Directors', '/executive-directors', Users],
-    ['Active Members', '/members', Users]
+    ['Approved Members', '/members', Users]
   ],
-  state_director: [
+  [ROLES.STATE_DIRECTOR]: [
     ['District Directors', '/district-directors', Users],
+    ['Approved Members', '/members', Users],
     ['State Analytics', '/analytics', FileBarChart]
   ],
-  region_director: [
+  [ROLES.REGION_DIRECTOR]: [
     ['State Directors', '/state-directors', Users],
+    ['Approved Members', '/members', Users],
     ['Regional Analytics', '/analytics', FileBarChart]
   ],
-  launch_director: [
+  [ROLES.LAUNCH_DIRECTOR]: [
     ['Direct Consultants', '/direct-consultants', Users],
     ['Approved Members', '/members', Users],
     ['Launch Reports', '/launch-reports', FileBarChart],
     ['Membership Reports', '/membership-reports', FileBarChart]
   ],
-  direct_consultant: [
+  [ROLES.DIRECT_CONSULTANT]: [
     ['Chapter Presidents', '/presidents', Users],
     ['Approved Members', '/members', Users]
   ]
 };
 
 export function getSidebarNav(role) {
-  if (['superadmin', 'admin'].includes(role)) {
+  const normalizedRole = normalizeRole(role)
+
+  if ([ROLES.SUPERADMIN, ROLES.ADMIN].includes(role)) {
     const prefixPath = (item) => {
       if (Array.isArray(item)) {
         const [label, to, icon] = item;
@@ -351,7 +348,7 @@ export function getSidebarNav(role) {
     return adminNav.map(prefixPath);
   }
 
-  const prefix = rolePrefixes[role] || '/member/dashboard';
+  const prefix = rolePrefixes[normalizedRole] || '/member/dashboard';
 
   const prefixItem = (item) => {
     if (Array.isArray(item)) {
@@ -360,8 +357,15 @@ export function getSidebarNav(role) {
       return [label, finalPath, icon];
     }
     let children = item.children;
-    if (['region_director', 'state_director', 'district_director', 'launch_director', 'direct_consultant', 'chapter_president', 'vice_president', 'secretary'].includes(role) && item.label === 'Marketplace') {
-      children = children.filter(([label]) => !['Orders', 'Payments', 'Subscription'].includes(label));
+    if (item.label === 'Marketplace') {
+      if ([ROLES.REGION_DIRECTOR, ROLES.STATE_DIRECTOR, ROLES.DISTRICT_DIRECTOR, ROLES.EXECUTIVE_DIRECTOR, ROLES.LAUNCH_DIRECTOR, ROLES.DIRECT_CONSULTANT, ROLES.CHAPTER_PRESIDENT, ROLES.VICE_PRESIDENT, ROLES.SECRETARY, ROLES.CUSTOMER, ROLES.USER, ROLES.VENDOR].includes(normalizedRole)) {
+        children = children.filter(([label]) => !['Orders', 'Payments', 'Subscription'].includes(label));
+      }
+      if (normalizedRole === ROLES.VICE_PRESIDENT) {
+        children = children.filter(([label]) => label !== 'Marketplace Approval');
+      } else if (![ROLES.SUPERADMIN, ROLES.ADMIN, ROLES.EXECUTIVE_DIRECTOR].includes(normalizedRole)) {
+        children = children.filter(([label]) => label !== 'Marketplace Approval');
+      }
     }
     return {
       ...item,
@@ -374,7 +378,7 @@ let base = commonModules.map(item => {
   if (item.label === 'Account') {
     const children = [...item.children];
 
-    if (['customer', 'user', 'vendor'].includes(role)) {
+    if ([ROLES.CUSTOMER, ROLES.USER, ROLES.VENDOR].includes(role)) {
       children.splice(1, 0, [
         'Membership Application Status',
         '/member/membership-application-status',
@@ -392,7 +396,7 @@ let base = commonModules.map(item => {
 });
 
 if (
-  ['region_director', 'state_director', 'district_director'].includes(role)
+  [ROLES.REGION_DIRECTOR, ROLES.STATE_DIRECTOR, ROLES.DISTRICT_DIRECTOR].includes(normalizedRole)
 ) {
   const orgMgmt = {
     label: 'Organization Management',
@@ -402,7 +406,7 @@ if (
     ].map(prefixItem),
   };
 
-  if (role === 'district_director') {
+  if (normalizedRole === ROLES.DISTRICT_DIRECTOR) {
     base = [
       base[0], // Dashboard
       orgMgmt,
@@ -426,7 +430,11 @@ if (
   }
 }
 
-const extra = (roleModules[role] || []).map(prefixItem);
+const extra = (roleModules[normalizedRole] || []).map(prefixItem);
+
+if (normalizedRole === 'secretary') {
+  return [...base, ...secretaryNav.map(prefixItem), ...extra.filter(([label]) => !['Members', 'Reports'].includes(label))];
+}
 
 return [...base, ...extra];
 }
@@ -434,7 +442,7 @@ return [...base, ...extra];
 //   const base = commonModules.map(item => {
 //     if (item.label === 'Account') {
 //       const children = [...item.children];
-//       if (['customer', 'user', 'vendor'].includes(role)) {
+//       if ([ROLES.CUSTOMER, ROLES.USER, ROLES.VENDOR].includes(role)) {
 //         children.splice(1, 0, ['Membership Application Status', '/member/membership-application-status', ClipboardCheck]);
 //       }
 //       return prefixItem({
@@ -447,7 +455,7 @@ return [...base, ...extra];
 // =======
 //   let base = commonModules.map(prefixItem);
 
-//   if (role === 'region_director') {
+//   if (role === ROLES.REGION_DIRECTOR) {
 //     const orgMgmt = {
 //       label: 'Organization Management',
 //       icon: Building2,
@@ -464,7 +472,7 @@ return [...base, ...extra];
 //     newBase.push(base[1]); // Community
 //     newBase.push(base[4]); // Profile
 //     base = newBase;
-//   } else if (role === 'state_director') {
+//   } else if (role === ROLES.STATE_DIRECTOR) {
 //     const orgMgmt = {
 //       label: 'Organization Management',
 //       icon: Building2,
@@ -481,7 +489,7 @@ return [...base, ...extra];
 //     newBase.push(base[1]); // Community
 //     newBase.push(base[4]); // Profile
 //     base = newBase;
-//   } else if (role === 'district_director') {
+//   } else if (role === ROLES.DISTRICT_DIRECTOR) {
 //     const orgMgmt = {
 //       label: 'Organization Management',
 //       icon: Building2,
@@ -503,5 +511,3 @@ return [...base, ...extra];
 
 //   return [...base, ...extra];
 // }
-
-

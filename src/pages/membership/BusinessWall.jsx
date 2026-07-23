@@ -24,6 +24,7 @@ import {
   AlertCircle
 } from 'lucide-react'
 import { formatDate, formatCurrency } from '../../utils/format'
+import { ROLES } from '../../constants/roleConfig.js'
 
 const postTypesList = [
   { key: 'business_requirement', label: 'Business Requirement', color: 'bg-red-50 text-red-700 border-red-150' },
@@ -464,7 +465,7 @@ export default function BusinessWall() {
                       <div>
                         <h4 className="text-xs font-black text-slate-900 leading-tight">{post.author?.name || 'Meena'}</h4>
                         <p className="text-[10px] font-bold text-slate-400 mt-0.5">
-                          {post.author?.role === 'vendor' ? 'Approved Vendor' : 'Secretary • Sultanpur Chapter'} • {formatDate(post.createdAt)}
+                          {post.author?.role === ROLES.VENDOR ? 'Approved Vendor' : 'Secretary • Sultanpur Chapter'} • {formatDate(post.createdAt)}
                         </p>
                       </div>
                     </div>

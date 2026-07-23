@@ -26,6 +26,7 @@ import DataTable from '../../components/tables/DataTable'
 import { useAuth } from '../../hooks/useAuth'
 import { useApi } from '../../hooks/useApi'
 import { formatCurrency, formatDate } from '../../utils/format'
+import { ROLES } from '../../constants/roleConfig.js'
 
 function GlassStat({ label, value, helper, icon: Icon }) {
   return (
@@ -130,7 +131,7 @@ export default function StateDirectorDashboard() {
       .catch(err => console.error('Failed to load locations for districts:', err))
 
     // 2. Fetch admin accounts of type district_director to count district directors
-    adminApi.adminAccounts({ role: 'district_director', limit: 1 })
+    adminApi.adminAccounts({ role: ROLES.DISTRICT_DIRECTOR, limit: 1 })
       .then(res => {
         const pagination = res.data?.data?.pagination || res.data?.pagination || {}
         const count = pagination.total || res.data?.data?.total || 0
@@ -222,7 +223,7 @@ export default function StateDirectorDashboard() {
           <h2 className="text-lg font-extrabold text-slate-950 dark:text-white mb-4">Recent Payments</h2>
           <DataTable
             columns={[
-              { key: 'user', header: 'User', render: (row) => row.user?.name || row.user?.email || 'User' },
+              { key: ROLES.USER, header: 'User', render: (row) => row.user?.name || row.user?.email || 'User' },
               { key: 'amount', header: 'Amount', render: (row) => formatCurrency(row.amount, row.currency) },
               { key: 'gateway', header: 'Gateway' },
               { key: 'status', header: 'Status', render: (row) => <StatusBadge value={row.status} /> },

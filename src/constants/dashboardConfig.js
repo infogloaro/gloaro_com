@@ -1,6 +1,7 @@
+import { ROLES } from './roleConfig.js'
 export const dashboardConfig = {
-  vice_president: {
-    role: "vice_president",
+  [ROLES.VICE_PRESIDENT]: {
+    role: ROLES.VICE_PRESIDENT,
     cards: [
       "members",
       "attendance",
@@ -11,13 +12,14 @@ export const dashboardConfig = {
     ],
     quickActions: [
       { label: "Register Member", path: "/vice-president/register-member" },
+      { label: "Vendor Applications", path: "/vice-president/vendor-applications" },
       { label: "Business Wall", path: "/vice-president/wall" },
       { label: "Invite Visitor", path: "/vice-president/visitors" }
     ],
     permissions: ["view_chapter", "manage_meetings"]
   },
-  chapter_president: {
-    role: "chapter_president",
+  [ROLES.CHAPTER_PRESIDENT]: {
+    role: ROLES.CHAPTER_PRESIDENT,
     cards: [
       "members",
       "meetings",
@@ -31,8 +33,8 @@ export const dashboardConfig = {
     ],
     permissions: ["view_chapter"]
   },
-  secretary: {
-    role: "secretary",
+  [ROLES.SECRETARY]: {
+    role: ROLES.SECRETARY,
     cards: [
       "attendance",
       "meetings",
@@ -44,8 +46,8 @@ export const dashboardConfig = {
     ],
     permissions: ["manage_attendance"]
   },
-  launch_director: {
-    role: "launch_director",
+  [ROLES.LAUNCH_DIRECTOR]: {
+    role: ROLES.LAUNCH_DIRECTOR,
     cards: [
       "assignedChapters",
       "chaptersReady",
@@ -68,8 +70,8 @@ export const dashboardConfig = {
     ],
     permissions: ["manage_chapters", "verify_members", "verify_vendors"]
   },
-  direct_consultant: {
-    role: "direct_consultant",
+  [ROLES.DIRECT_CONSULTANT]: {
+    role: ROLES.DIRECT_CONSULTANT,
     cards: [
       "membersRegistered",
       "activeMembers",
@@ -96,8 +98,8 @@ export const dashboardConfig = {
     ],
     permissions: ["manage_membership", "view_vendors"]
   },
-  executive_director: {
-    role: "executive_director",
+  [ROLES.EXECUTIVE_DIRECTOR]: {
+    role: ROLES.EXECUTIVE_DIRECTOR,
     cards: [
       "assignedChapters",
       "chaptersReady",
@@ -112,7 +114,7 @@ export const dashboardConfig = {
     ],
     quickActions: [
       { label: "Approve Membership", path: "/chapter-director/memberships" },
-      { label: "Approve Vendor", path: "/chapter-director/approved-vendors" },
+      { label: "Marketplace Vendors", path: "/chapter-director/vendors" },
       { label: "Chapter Management", path: "/chapter-director/chapter-management" },
       { label: "Presidents List", path: "/chapter-director/president" },
       { label: "Members List", path: "/chapter-director/members" },
@@ -123,8 +125,8 @@ export const dashboardConfig = {
     ],
     permissions: ["view_chapters", "verify_members"]
   },
-  chapter_director: {
-    role: "chapter_director",
+  [ROLES.CHAPTER_DIRECTOR]: {
+    role: ROLES.CHAPTER_DIRECTOR,
     cards: [
       "assignedChapters",
       "chaptersReady",
@@ -139,7 +141,7 @@ export const dashboardConfig = {
     ],
     quickActions: [
       { label: "Approve Membership", path: "/chapter-director/memberships" },
-      { label: "Approve Vendor", path: "/chapter-director/approved-vendors" },
+      { label: "Marketplace Vendors", path: "/chapter-director/vendors" },
       { label: "Chapter Management", path: "/chapter-director/chapter-management" },
       { label: "Presidents List", path: "/chapter-director/president" },
       { label: "Members List", path: "/chapter-director/members" },
@@ -150,8 +152,8 @@ export const dashboardConfig = {
     ],
     permissions: ["view_chapters", "verify_members"]
   },
-  district_director: {
-    role: "district_director",
+  [ROLES.DISTRICT_DIRECTOR]: {
+    role: ROLES.DISTRICT_DIRECTOR,
     cards: [
       "assignedChapters",
       "chaptersReady",

@@ -20,9 +20,11 @@ import growthIcon from '../assets/growth.png'
 import rocketIcon from '../assets/rocket.png'
 import whyImage from '../assets/why_img.png'
 import awardsImage from '../assets/awards_img.png'
+
 import leaderImage1 from '../assets/ceo.jpeg'
 import leaderImage2 from '../assets/Digital_Network.png'
 
+import { ROLES } from '../constants/roleConfig.js'
 
 
 
@@ -56,7 +58,7 @@ const ecosystemActions = [
   { Icon: Store, title: 'Franchise', description: 'Run your own Gloaro franchise and grow together', action: 'Apply Now', href: loginLink('franchise', '/membership-application'), color: 'text-[#7b4df1]', bg: '#f0eaff' },
   { Icon: UsersRound, title: 'Business Network', description: 'Connect with global businesses and professionals', action: 'Apply Now', href: loginLink('b2b', '/vendors'), color: 'text-[#20b15a]', bg: '#e6f8ed' },
   { Icon: ShoppingCart, title: 'B2B Marketplace', description: 'Buy quality products and services from trusted sellers', action: 'Shop Now', href: loginLink('b2b', '/vendors'), color: 'text-[#1377f2]', bg: '#e8f1ff' },
-  { Icon: ShoppingBag, title: 'Vendor (Sell)', description: 'Sell your products and services to global buyers', action: 'Apply Now', href: loginLink('vendor', '/vendor'), color: 'text-[#ff7a1a]', bg: '#fff0e6' },
+  { Icon: ShoppingBag, title: 'Vendor (Sell)', description: 'Sell your products and services to global buyers', action: 'Apply Now', href: loginLink(ROLES.VENDOR, '/vendor'), color: 'text-[#ff7a1a]', bg: '#fff0e6' },
 ]
 
 const memberBenefits = [

@@ -4,6 +4,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { Eye, EyeOff } from 'lucide-react'
 import FormField from '../../components/forms/FormField'
 import { useAuth } from '../../hooks/useAuth'
+import { ROLES } from '../../constants/roleConfig.js'
 
 
 export default function Login() {
@@ -57,7 +58,7 @@ export default function Login() {
         <Link to="/forgot-password" className="font-extrabold text-[#0d4697]">Forgot password?</Link>
       </div>
       <button disabled={isSubmitting} className="mt-5 h-12 w-full rounded-md bg-[#0d4697] font-extrabold text-white disabled:opacity-60">{isSubmitting ? 'Signing in...' : 'Sign In'}</button>
-      <p className="mt-6 text-center text-sm font-medium text-slate-500">No account? <Link to={`/register?type=${loginType || 'user'}`} className="font-extrabold text-[#0d4697]">Create one</Link></p>
+      <p className="mt-6 text-center text-sm font-medium text-slate-500">No account? <Link to={`/register?type=${loginType || ROLES.USER}`} className="font-extrabold text-[#0d4697]">Create one</Link></p>
     </form>
   )
 }
