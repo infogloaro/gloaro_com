@@ -639,7 +639,19 @@ export function AdminPlansPage() {
 }
 
 export function AdminEventsPage() {
-  return <ResourceListPage module="events" section="events" title="Event Management" fetcher={adminApi.events} columns={[{ key: 'title', header: 'Title' }, { key: 'type', header: 'Type' }, { key: 'startDate', header: 'Starts', render: (row) => formatDate(row.startDate) }, { key: 'status', header: 'Status', render: (row) => <StatusBadge value={row.status} /> }]} />
+  return <ResourceListPage module="events" section="events" title="Event Management" fetcher={adminApi.events} detailFetcher={adminApi.event} columns={[{ key: 'title', header: 'Title' }, { key: 'type', header: 'Type' }, { key: 'startDate', header: 'Starts', render: (row) => formatDate(row.startDate) }, { key: 'status', header: 'Status', render: (row) => <StatusBadge value={row.status} /> }]} renderDetails={(event) => <div className="space-y-5 text-sm">
+    <div className="grid gap-3 sm:grid-cols-2">
+      {[
+        ['Event ID', event.eventId || '—'], ['Created', formatDate(event.createdAt)], ['Type', event.type || '—'], ['Status', event.status || '—'],
+        ['Region', event.region?.name || event.regionName || event.regionCode || event.region || '—'], ['State', event.state?.name || event.stateName || event.stateCode || event.state || '—'], ['District', event.district?.name || event.districtName || event.districtCode || event.district || '—'],
+        ['Starts', `${formatDate(event.startDate)} ${event.startDate ? new Date(event.startDate).toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit' }) : ''}`],
+        ['Ends', `${formatDate(event.endDate)} ${event.endDate ? new Date(event.endDate).toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit' }) : ''}`],
+        ['Venue', event.venue?.name || event.venue || '—'], ['Organizer', event.organizer?.name || '—'], ['Category', event.category?.name || '—'],
+      ].map(([label, value]) => <div key={label} className="rounded-lg bg-slate-50 p-3"><p className="text-[10px] font-extrabold uppercase text-slate-400">{label}</p><p className="mt-1 font-bold capitalize text-slate-800">{value}</p></div>)}
+    </div>
+    <div className="border-t border-slate-100 pt-4"><p className="font-extrabold text-slate-800">Registration</p><div className="mt-2 grid gap-3 sm:grid-cols-3"><div><span className="text-xs text-slate-500">Required</span><p className="font-bold">{event.registration?.isRequired ? 'Yes' : 'No'}</p></div><div><span className="text-xs text-slate-500">Capacity</span><p className="font-bold">{event.registration?.maxAttendees || 'Unlimited'}</p></div><div><span className="text-xs text-slate-500">Registered</span><p className="font-bold">{event.stats?.totalRegistrations ?? event.attendees?.length ?? 0}</p></div></div></div>
+    <div className="border-t border-slate-100 pt-4"><p className="font-extrabold text-slate-800">Description</p><p className="mt-1 text-slate-600">{event.description || '—'}</p></div>
+  </div>} />
 }
 
 export function AdminReferralsPage() {

@@ -57,6 +57,7 @@ export const adminApi = {
   membershipApplicationDocumentUrl: (id, field) => api.get(`/membership-applications/${id}/documents/${field}/url`),
   updateMembershipApplicationStatus: (id, data) => api.patch(`/membership-applications/${id}/status`, data),
   events: (params) => api.get('/events', { params }),
+  event: (id) => api.get(`/events/${id}`),
   referrals: (params) => api.get('/referrals', { params }),
   payments: (params) => api.get('/payments', { params }),
   transactions: (params) => api.get('/payments/transactions', { params }),
