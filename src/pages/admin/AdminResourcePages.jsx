@@ -10,13 +10,14 @@ import { formatCurrency, formatDate } from '../../utils/format'
 import { canReviewMembershipApplication } from '../../utils/permissions'
 import ResourceListPage from '../shared/ResourceListPage'
 import SimpleJsonForm from '../shared/SimpleJsonForm'
+import { ROLES } from '../../constants/roleConfig.js'
 
 const statusFilters = [{ key: 'status', label: 'Status', options: ['pending', 'approved', 'rejected', 'active', 'completed', 'failed'].map((value) => ({ value, label: value })) }]
 
 export function AdminUsersPage() {
-  return <ResourceListPage module="members" section="users" title="User Management" fetcher={adminApi.users} filters={[{ key: 'role', label: 'Role', options: ['customer', 'vendor', 'admin', 'superadmin'].map((value) => ({ value, label: value })) }]} columns={[
+  return <ResourceListPage module="members" section="users" title="User Management" fetcher={adminApi.users} filters={[{ key: 'role', label: 'Role', options: [ROLES.CUSTOMER, ROLES.VENDOR, ROLES.ADMIN, ROLES.SUPERADMIN].map((value) => ({ value, label: value })) }]} columns={[
     { key: 'name', header: 'Name' }, { key: 'email', header: 'Email' }, { key: 'role', header: 'Role' }, { key: 'isActive', header: 'Status', render: (row) => <StatusBadge value={row.isActive ? 'active' : 'blocked'} /> },
-  ]} updateAction={adminApi.updateUser} deleteAction={adminApi.deleteUser} renderForm={(props) => <SimpleJsonForm {...props} fields={[{ name: 'name' }, { name: 'phone' }, { name: 'role', type: 'select', options: ['customer', 'vendor', 'admin'].map((value) => ({ value, label: value })) }]} />} />
+  ]} updateAction={adminApi.updateUser} deleteAction={adminApi.deleteUser} renderForm={(props) => <SimpleJsonForm {...props} fields={[{ name: 'name' }, { name: 'phone' }, { name: 'role', type: 'select', options: [ROLES.CUSTOMER, ROLES.VENDOR, ROLES.ADMIN].map((value) => ({ value, label: value })) }]} />} />
 }
 
 export function AdminVendorsPage() {
@@ -259,7 +260,7 @@ export function AdminServicesPage() {
 
 export function AdminMembershipsPage() {
   return <ResourceListPage module="members" section="memberships" title="Vendor Memberships" fetcher={adminApi.memberships} filters={statusFilters} columns={[
-    { key: 'vendor', header: 'Vendor', render: (row) => row.vendor?.businessName || 'Vendor' }, { key: 'plan', header: 'Plan' }, { key: 'price', header: 'Price', render: (row) => formatCurrency(row.price) }, { key: 'status', header: 'Status', render: (row) => <StatusBadge value={row.status} /> },
+    { key: ROLES.VENDOR, header: 'Vendor', render: (row) => row.vendor?.businessName || 'Vendor' }, { key: 'plan', header: 'Plan' }, { key: 'price', header: 'Price', render: (row) => formatCurrency(row.price) }, { key: 'status', header: 'Status', render: (row) => <StatusBadge value={row.status} /> },
   ]} />
 }
 
@@ -646,11 +647,11 @@ export function AdminReferralsPage() {
 }
 
 export function AdminPaymentsPage() {
-  return <ResourceListPage module="reports" section="payments" title="Payment & Transaction Management" fetcher={adminApi.payments} filters={statusFilters} columns={[{ key: 'user', header: 'User', render: (row) => row.user?.name || row.user?.email || 'User' }, { key: 'amount', header: 'Amount', render: (row) => formatCurrency(row.amount, row.currency) }, { key: 'gateway', header: 'Gateway' }, { key: 'status', header: 'Status', render: (row) => <StatusBadge value={row.status} /> }]} />
+  return <ResourceListPage module="reports" section="payments" title="Payment & Transaction Management" fetcher={adminApi.payments} filters={statusFilters} columns={[{ key: ROLES.USER, header: 'User', render: (row) => row.user?.name || row.user?.email || 'User' }, { key: 'amount', header: 'Amount', render: (row) => formatCurrency(row.amount, row.currency) }, { key: 'gateway', header: 'Gateway' }, { key: 'status', header: 'Status', render: (row) => <StatusBadge value={row.status} /> }]} />
 }
 
 export function AdminReviewsPage() {
-  return <ResourceListPage module="marketplace" section="reviews" title="Review Management" fetcher={adminApi.reviews} filters={statusFilters} columns={[{ key: 'user', header: 'User', render: (row) => row.user?.name || 'User' }, { key: 'vendor', header: 'Vendor', render: (row) => row.vendor?.businessName || 'Vendor' }, { key: 'rating', header: 'Rating' }, { key: 'status', header: 'Status', render: (row) => <StatusBadge value={row.status} /> }]} />
+  return <ResourceListPage module="marketplace" section="reviews" title="Review Management" fetcher={adminApi.reviews} filters={statusFilters} columns={[{ key: ROLES.USER, header: 'User', render: (row) => row.user?.name || 'User' }, { key: ROLES.VENDOR, header: 'Vendor', render: (row) => row.vendor?.businessName || 'Vendor' }, { key: 'rating', header: 'Rating' }, { key: 'status', header: 'Status', render: (row) => <StatusBadge value={row.status} /> }]} />
 }
 
 export function AdminSupportPage() {

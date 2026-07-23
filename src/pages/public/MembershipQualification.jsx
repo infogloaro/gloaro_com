@@ -7,6 +7,7 @@ import { membershipApplicationApi } from '../../api/membershipApplication'
 import { clearMembershipDraft, getMembershipDraft, getMembershipFiles, saveMembershipDraft, setMembershipFile } from '../../utils/membershipOnboarding'
 import LoadingScreen from '../../components/common/LoadingScreen'
 import { useAuth } from '../../hooks/useAuth'
+import { ROLES } from '../../constants/roleConfig.js'
 
 const expectations = [
   ['Professional Conduct', 'Gloaro Network members are expected to maintain the highest levels of professional decorum during all interactions. This includes punctuality for network meetings, respectful communication across all digital channels, and upholding the brand’s prestige in public forums.'],
@@ -34,13 +35,13 @@ export default function MembershipQualification() {
 
   useEffect(() => {
     // Redirect official roles who shouldn't apply
-    if (user && !['customer', 'user', 'vendor'].includes(user.role)) {
+      if (user && ![ROLES.CUSTOMER, ROLES.USER, ROLES.VENDOR].includes(user.role)) {
       const roleDashboardMap = {
-        vice_president: '/vice-president/dashboard',
-        secretary: '/secretary/dashboard',
-        chapter_president: '/president/dashboard',
-        admin: '/admin',
-        superadmin: '/admin',
+        [ROLES.VICE_PRESIDENT]: '/vice-president/dashboard',
+        [ROLES.SECRETARY]: '/secretary/dashboard',
+        [ROLES.CHAPTER_PRESIDENT]: '/president/dashboard',
+        [ROLES.ADMIN]: '/admin',
+        [ROLES.SUPERADMIN]: '/admin',
       }
       navigate(roleDashboardMap[user.role] || '/')
       return

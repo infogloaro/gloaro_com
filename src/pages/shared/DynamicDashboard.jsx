@@ -24,6 +24,7 @@ import api from '../../api/axios'
 import LoadingScreen from '../../components/common/LoadingScreen'
 import { formatCurrency } from '../../utils/format'
 import { dashboardConfig } from '../../constants/dashboardConfig'
+import { ROLES } from '../../constants/roleConfig.js'
 
 // Helper to calculate relative times
 function formatTimeAgo(dateString) {
@@ -58,7 +59,7 @@ export default function DynamicDashboard() {
     return <LoadingScreen label="Loading Dashboard..." />
   }
 
-  const role = user?.role || 'customer'
+  const role = user?.role || ROLES.CUSTOMER
   const config = dashboardConfig[role]
 
   if (!config) {

@@ -132,7 +132,7 @@ export default function VendorApplicationForm() {
             setIsAlreadyApproved(true)
             setLoading(false)
             return
-          } else if (['submitted', 'under_review'].includes(application.status)) {
+          } else if (['pending_vp_review', 'submitted', 'under_review'].includes(application.status)) {
             setIsAlreadySubmitted(true)
             setLoading(false)
             return
@@ -390,7 +390,7 @@ export default function VendorApplicationForm() {
               <StatusBadge value={app ? app.status : 'Submitted'} />
             </div>
             <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 text-center max-w-sm mt-1">
-              The Chapter Director is reviewing your credentials. You will be notified once the decision is finalized.
+              The Vice President is reviewing your credentials. You will be notified once the decision is finalized.
             </p>
           </div>
 

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useAuth } from '../../hooks/useAuth'
 import { Shield, MapPin, BadgeCheck, Calendar, User } from 'lucide-react'
 import api from '../../api/axios'
+import { ROLES } from '../../constants/roleConfig.js'
 
 export default function JurisdictionCard() {
   const { user } = useAuth()
@@ -31,7 +32,7 @@ export default function JurisdictionCard() {
   // Vendor specific business location
   const bizLocation = user.vendorProfile?.businessLocation || org.businessLocation || ''
 
-  const isGlobal = user.role === 'superadmin' || user.role === 'admin' || (!region && !state && !district && !chapter)
+  const isGlobal = user.role === ROLES.SUPERADMIN || user.role === ROLES.ADMIN || (!region && !state && !district && !chapter)
 
   const formattedRole = String(user.role || 'User')
     .replace(/_/g, ' ')

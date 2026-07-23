@@ -17,6 +17,7 @@ import {
   ArrowRight,
   PlusCircle,
   UsersRound,
+  Building2,
   FileText,
   Volume2,
   Ticket,
@@ -34,6 +35,7 @@ import ChartCard from '../../components/charts/ChartCard'
 import LoadingScreen from '../../components/common/LoadingScreen'
 import { formatCurrency, formatDate } from '../../utils/format'
 import toast from 'react-hot-toast'
+import { ROLES } from '../../constants/roleConfig.js'
 
 const monthLabel = (item) => {
   if (!item || !item._id) return 'Unknown'
@@ -64,7 +66,7 @@ export default function VicePresidentDashboard() {
   const [membershipApps, setMembershipApps] = useState([])
 
   useEffect(() => {
-    adminApi.adminAccounts({ role: 'secretary', limit: 1 })
+    adminApi.adminAccounts({ role: ROLES.SECRETARY, limit: 1 })
       .then(res => {
         const pagination = res.data?.data?.pagination || res.data?.pagination || {}
         setSecCount(pagination.total || res.data?.data?.total || 1)
@@ -292,6 +294,12 @@ export default function VicePresidentDashboard() {
             className="flex items-center gap-2 p-3 text-xs font-extrabold text-slate-700 rounded-xl border border-slate-100 bg-slate-50 hover:bg-[#eef4ff] transition text-left"
           >
             <PlusCircle className="h-4 w-4 text-[#0d4697]" /> Register Member
+          </button>
+          <button
+            onClick={() => navigate('/vice-president/vendor-applications')}
+            className="flex items-center gap-2 p-3 text-xs font-extrabold text-slate-700 rounded-xl border border-slate-100 bg-slate-50 hover:bg-[#eef4ff] transition text-left"
+          >
+            <Building2 className="h-4 w-4 text-[#0d4697]" /> Vendor Applications
           </button>
           <button
             onClick={() => navigate('/vice-president/secretaries')}

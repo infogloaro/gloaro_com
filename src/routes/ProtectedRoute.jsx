@@ -3,15 +3,16 @@ import LoadingScreen from '../components/common/LoadingScreen'
 import { useAuth } from '../hooks/useAuth'
 import { isAdminRole } from '../constants/adminRoles'
 import { storage } from '../utils/storage'
+import { ROLES } from '../constants/roleConfig.js'
 
 const roleMatches = (allowed, actual) => {
   const allowedRole = String(allowed || '').toLowerCase().replace(/\s+/g, '')
   const actualRole = String(actual || '').toLowerCase().replace(/\s+/g, '')
   if (allowedRole === actualRole) return true
-  if (allowedRole === 'admin' && isAdminRole(actualRole)) return true
-  if (allowedRole === 'superadmin' && actualRole === 'super_admin') return true
-  if (allowedRole === 'customer' && actualRole === 'user') return true
-  if (allowedRole === 'user' && actualRole === 'customer') return true
+  if (allowedRole === ROLES.ADMIN && isAdminRole(actualRole)) return true
+  if (allowedRole === ROLES.SUPERADMIN && actualRole === 'super_admin') return true
+  if (allowedRole === ROLES.CUSTOMER && actualRole === ROLES.USER) return true
+  if (allowedRole === ROLES.USER && actualRole === ROLES.CUSTOMER) return true
   return false
 }
 
@@ -23,7 +24,7 @@ export default function ProtectedRoute({ roles, requirePathAccess = false, fallb
   if (isHydrating) return <LoadingScreen label="Checking session..." />
   if (!isAuthenticated) return <Navigate to="/login" replace state={{ from: location }} />
 
-  if (user?.role === 'customer' && user?.onboardingStatus !== 'Approved') {
+  if (user?.role === ROLES.CUSTOMER && user?.onboardingStatus !== 'Approved') {
     const isOnboardingPath = ['/membership-agreement', '/membership-application', '/membership-qualification', '/member/membership-application-status'].includes(location.pathname);
     
     if (user?.onboardingStatus === 'Pending') {

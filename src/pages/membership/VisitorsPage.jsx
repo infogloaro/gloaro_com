@@ -17,6 +17,7 @@ import {
 } from 'lucide-react'
 import { formatDate } from '../../utils/format'
 import { useAuth } from '../../hooks/useAuth'
+import { ROLES } from '../../constants/roleConfig.js'
 
 export default function VisitorsPage() {
   const { user } = useAuth()
@@ -31,7 +32,7 @@ export default function VisitorsPage() {
   const [date, setDate] = useState('')
   const [saving, setSaving] = useState(false)
 
-  const isDirector = ['superadmin', 'admin', 'executive_director', 'region_director', 'state_director', 'district_director', 'secretary'].includes(user?.role)
+  const isDirector = [ROLES.SUPERADMIN, ROLES.ADMIN, ROLES.EXECUTIVE_DIRECTOR, ROLES.REGION_DIRECTOR, ROLES.STATE_DIRECTOR, ROLES.DISTRICT_DIRECTOR, ROLES.SECRETARY].includes(user?.role)
 
   const fetchVisitors = () => {
     communityApi.getVisitors()

@@ -8,6 +8,7 @@ import StatusBadge from '../../components/common/StatusBadge'
 import { useAuth } from '../../hooks/useAuth'
 import { formatDate } from '../../utils/format'
 import ResourceListPage from '../shared/ResourceListPage'
+import { ROLES } from '../../constants/roleConfig.js'
 
 const getIdentifier = (field) => {
   if (!field) return ''
@@ -18,8 +19,8 @@ const getIdentifier = (field) => {
 const formatRoleLabel = (roleStr = '') => {
   const clean = String(roleStr || '').toLowerCase().replaceAll('_', ' ').replaceAll('-', ' ')
   if (clean === 'executive director' || clean === 'chapter director') return 'EXECUTIVE DIRECTOR'
-  if (clean === 'superadmin') return 'SUPER ADMIN'
-  if (clean === 'admin') return 'ADMIN'
+  if (clean === ROLES.SUPERADMIN) return 'SUPER ADMIN'
+  if (clean === ROLES.ADMIN) return 'ADMIN'
   if (clean === 'vice president') return 'VICE PRESIDENT'
   if (clean === 'direct consultant') return 'DIRECT CONSULTANT'
   return clean.toUpperCase() || 'SYSTEM'
@@ -111,9 +112,9 @@ export default function AdminVendorApplicationsPage({
         ]}
         renderActions={(row, { reload }, permissions) => {
           const userRole = user?.role || ''
-          const isAllowedReviewer = ['superadmin', 'admin', 'executive_director'].includes(userRole)
+          const isAllowedReviewer = [ROLES.SUPERADMIN, ROLES.ADMIN, ROLES.EXECUTIVE_DIRECTOR].includes(userRole)
           const isFinalized = ['approved', 'rejected'].includes(row.status)
-          const isChapterDirector = userRole === 'executive_director'
+          const isChapterDirector = userRole === ROLES.EXECUTIVE_DIRECTOR
           
           // Boundaries check for Chapter Director
           const userOrg = user?.meta?.adminProfile?.organization || {}
@@ -213,11 +214,11 @@ function VendorApplicationDetails({ application, adminNotes, onNotesChange, onCl
   let showReviewBtn = false
 
   if (!isFinalized) {
-    if (['superadmin', 'admin'].includes(userRole)) {
+    if ([ROLES.SUPERADMIN, ROLES.ADMIN].includes(userRole)) {
       showApproveBtn = true
       showRejectBtn = true
       showReviewBtn = true
-    } else if (userRole === 'executive_director') {
+    } else if (userRole === ROLES.EXECUTIVE_DIRECTOR) {
       const userOrg = user?.meta?.adminProfile?.organization || {}
       if (getIdentifier(application.chapterId) === getIdentifier(userOrg.chapter)) {
         showApproveBtn = true
