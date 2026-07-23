@@ -1,98 +1,22 @@
-import { useState, useEffect, useMemo, useCallback } from 'react'
+import { useEffect, useState } from 'react'
+import { Link, useSearchParams } from 'react-router-dom'
+import toast from 'react-hot-toast'
 import { secretaryApi } from '../../api/secretary'
-import StatusBadge from '../../components/common/StatusBadge'
 import SearchBar from '../../components/common/SearchBar'
-import StatCard from '../../components/dashboard/StatCard'
-import DataTable from '../../components/tables/DataTable'
-import { formatDate, getList, getPagination } from '../../utils/format'
-import { Users } from 'lucide-react'
+import StatusBadge from '../../components/common/StatusBadge'
+import LoadingScreen from '../../components/common/LoadingScreen'
+import EmptyState from '../../components/common/EmptyState'
+import Modal from '../../components/common/Modal'
+import Pagination from '../../components/common/Pagination'
+import { getList } from '../../utils/format'
 
-const columns = [
-  { key: 'name', header: 'Name' },
-  { key: 'email', header: 'Email' },
-  { key: 'phone', header: 'Phone', render: (row) => row.phone || 'Not provided' },
-  { key: 'isActive', header: 'Status', render: (row) => <StatusBadge value={row.isActive ? 'active' : 'suspended'} /> },
-  { key: 'createdAt', header: 'Joined Date', render: (row) => formatDate(row.createdAt) }
-]
-
+const inputClass = 'mt-1 h-10 w-full rounded border border-slate-300 bg-white px-3 text-sm text-slate-900'
 export default function MembersPage() {
-  const [payload, setPayload] = useState(null)
-  const [loading, setLoading] = useState(true)
-  const [page, setPage] = useState(1)
-  const [search, setSearch] = useState('')
-  const [status, setStatus] = useState('')
-
-  const params = useMemo(() => ({
-    page,
-    limit: 10,
-    search: search || undefined,
-    status: status || undefined
-  }), [page, search, status])
-
-  // TODO: When the Chapter Management module is implemented,
-  // scope all member queries and summary statistics using req.user.chapterId
-  // so each Secretary only accesses members, meetings, attendance, documents,
-  // and reports belonging to their assigned chapter.
-  const load = useCallback(async () => {
-    setLoading(true)
-    try {
-      const response = await secretaryApi.members(params)
-      setPayload(response.data)
-    } finally {
-      setLoading(false)
-    }
-  }, [params])
-
-  useEffect(() => {
-    const timer = window.setTimeout(() => load(), 0)
-    return () => window.clearTimeout(timer)
-  }, [load])
-
-  const rows = getList(payload)
-  const pagination = getPagination(payload)
-  const summary = payload?.summary || { totalMembers: 0, activeMembers: 0, inactiveMembers: 0 }
-
-  return (
-    <section className="space-y-6">
-      {/* Title & Filter Header */}
-      <div className="flex flex-col justify-between gap-4 lg:flex-row lg:items-end">
-        <div>
-          <h2 className="text-2xl font-extrabold text-slate-950 dark:text-white">Member Roster</h2>
-          <p className="mt-1 text-sm font-semibold text-slate-500">View and filter chapter member profiles directory.</p>
-        </div>
-        <div className="flex flex-col gap-2 sm:flex-row">
-          <SearchBar 
-            value={search} 
-            onChange={(value) => { setSearch(value); setPage(1) }} 
-            placeholder="Search roster" 
-          />
-          <select 
-            value={status} 
-            onChange={(e) => { setStatus(e.target.value); setPage(1) }} 
-            className="h-10 rounded-md border border-slate-200 bg-white px-3 text-sm font-bold text-slate-800"
-          >
-            <option value="">Filter by Status</option>
-            <option value="active">Active</option>
-            <option value="inactive">Inactive</option>
-          </select>
-        </div>
-      </div>
-
-      {/* Summary KPI Cards Grid */}
-      <div className="grid gap-4 sm:grid-cols-3">
-        <StatCard label="Total Members" value={summary.totalMembers} icon={Users} />
-        <StatCard label="Active Members" value={summary.activeMembers} icon={Users} />
-        <StatCard label="Inactive Members" value={summary.inactiveMembers} icon={Users} />
-      </div>
-
-      {/* Roster Listing Grid Table */}
-      <DataTable
-        columns={columns}
-        rows={rows}
-        loading={loading}
-        pagination={pagination}
-        onPageChange={setPage}
-      />
-    </section>
-  )
+  const [query] = useSearchParams(); const [rows, setRows] = useState([]); const [categories, setCategories] = useState([]); const [pagination, setPagination] = useState({}); const [loading, setLoading] = useState(true); const [page, setPage] = useState(1); const [search, setSearch] = useState(''); const [editing, setEditing] = useState(null); const [form, setForm] = useState({})
+  const load = () => { setLoading(true); Promise.all([secretaryApi.directory({ search, category: query.get('category') || undefined, page, limit: 10 }), secretaryApi.categories({ limit: 100 })]).then(([members, categoryResponse]) => { setRows(getList(members.data)); setPagination(members.data?.pagination || {}); setCategories(getList(categoryResponse.data)) }).finally(() => setLoading(false)) }
+  useEffect(() => { const timer = setTimeout(load, 200); return () => clearTimeout(timer) }, [search, page, query])
+  const remove = async (id) => { if (!window.confirm('Delete this member?')) return; await secretaryApi.deleteMember(id); toast.success('Member deleted'); load() }
+  const save = async (event) => { event.preventDefault(); await secretaryApi.updateMember(editing._id, { ...form, role: form.secretaryRole }); toast.success('Member updated'); setEditing(null); load() }
+  const categoryName = (id) => categories.find((item) => item._id === id)?.name || id || '—'
+  return <div className="space-y-6"><div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end"><div><h2 className="text-2xl font-extrabold text-slate-950">{query.get('category') ? `${categoryName(query.get('category'))} Members` : 'Members'}</h2><p className="mt-1 text-sm font-semibold text-slate-500">Manage members, attendance, and task progress.</p></div><SearchBar value={search} onChange={(value) => { setSearch(value); setPage(1) }} placeholder="Search members" /></div>{loading ? <LoadingScreen label="Loading members..." /> : rows.length ? <div className="overflow-x-auto rounded-lg border border-slate-200 bg-white shadow-sm"><table className="w-full min-w-[1250px] text-left text-sm"><thead className="bg-slate-50 text-xs uppercase text-slate-500"><tr>{['Photo','Name','Role','Phone Number','Email','Category','Today','Assigned','Completed','Pending','Status','Actions'].map((head) => <th key={head} className="px-4 py-3 font-extrabold">{head}</th>)}</tr></thead><tbody className="divide-y divide-slate-100">{rows.map((member) => <tr key={member._id}><td className="px-4 py-3"><img src={member.avatar?.url || '/favicon.svg'} alt="" className="h-9 w-9 rounded-full bg-slate-100 object-cover" /></td><td className="px-4 py-3 font-extrabold"><Link to={`/secretary/members/${member._id}`} className="hover:text-[#1558b0]">{member.name}</Link></td><td className="px-4 py-3">{member.secretaryRole}</td><td className="px-4 py-3">{member.phone || '—'}</td><td className="px-4 py-3">{member.email}</td><td className="px-4 py-3">{categoryName(member.category)}</td><td className="px-4 py-3"><StatusBadge value={member.todayAttendance === 'Present' ? 'Present' : member.todayAttendance === 'Absent' ? 'Absent' : 'pending'} /></td><td className="px-4 py-3 font-bold">{member.taskStats?.total || 0}</td><td className="px-4 py-3 font-bold text-emerald-700">{member.taskStats?.completed || 0}</td><td className="px-4 py-3 font-bold text-amber-700">{member.taskStats?.pending || 0}</td><td className="px-4 py-3"><StatusBadge value={member.isActive ? 'active' : 'inactive'} /></td><td className="px-4 py-3"><div className="flex gap-2 text-xs font-bold"><Link to={`/secretary/members/${member._id}`} className="text-[#1558b0]">View</Link><button onClick={() => { setEditing(member); setForm(member) }} className="text-[#1558b0]">Edit</button><button onClick={() => remove(member._id)} className="text-red-600">Delete</button></div></td></tr>)}</tbody></table><Pagination pagination={pagination} onPageChange={setPage} /></div> : <EmptyState title="No members found" description="Add a member to this category to get started." />}<Modal open={Boolean(editing)} title="Edit member" onClose={() => setEditing(null)}><form onSubmit={save} className="grid gap-4 sm:grid-cols-2"><label className="text-sm font-bold">Name<input required value={form.name || ''} onChange={(event) => setForm({ ...form, name: event.target.value })} className={inputClass} /></label><label className="text-sm font-bold">Role<input value={form.secretaryRole || ''} onChange={(event) => setForm({ ...form, secretaryRole: event.target.value })} className={inputClass} /></label><label className="text-sm font-bold">Phone<input value={form.phone || ''} onChange={(event) => setForm({ ...form, phone: event.target.value })} className={inputClass} /></label><label className="text-sm font-bold">Status<select value={form.isActive ? 'active' : 'inactive'} onChange={(event) => setForm({ ...form, status: event.target.value })} className={inputClass}><option value="active">Active</option><option value="inactive">Inactive</option></select></label><button className="h-10 rounded bg-[#1558b0] font-bold text-white sm:col-span-2">Save member</button></form></Modal></div>
 }

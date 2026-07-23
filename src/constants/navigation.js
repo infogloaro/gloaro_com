@@ -184,7 +184,7 @@ export const membershipNav = [
 ]
 
 export const memberNav = [];
-export const secretaryNav = [];
+export const secretaryNav = [{ label: 'Secretary Dashboard', icon: ClipboardList, children: [['Events', '/events', CalendarDays], ['Reports', '/reports', FileBarChart]] }];
 export const stateDirectorNav = [];
 export const districtDirectorNav = [];
 export const chapterDirectorNav = [];
@@ -431,6 +431,10 @@ if (
 }
 
 const extra = (roleModules[normalizedRole] || []).map(prefixItem);
+
+if (normalizedRole === 'secretary') {
+  return [...base, ...secretaryNav.map(prefixItem), ...extra.filter(([label]) => !['Members', 'Reports'].includes(label))];
+}
 
 return [...base, ...extra];
 }
