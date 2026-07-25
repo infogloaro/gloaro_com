@@ -76,6 +76,7 @@ export default function MembershipApplicationStatus() {
   }
 
   const status = String(app.status).toLowerCase()
+  const sourceLabel = app.source || app.sourceLabel || app.applicationSource || app.applicationSourceLabel || 'Online Member'
 
   const documentFields = [
     ['profilePhoto', 'Profile Photo', app.documents?.profilePhoto],
@@ -87,21 +88,19 @@ export default function MembershipApplicationStatus() {
 
   // Status step for progress timeline
   const statusMeta = {
-    submitted: 0,
-    documents_verified: 1,
-    under_review: 2,
+    submitted: 2,
+    pending_vp_review: 1,
     forwarded: 2,
     approved: 3,
-    rejected: 2,
-    changes_requested: 2,
+    rejected: 3,
   }
   const activeStep = statusMeta[app.status] ?? 0
 
   const steps = [
     { title: 'Submitted', active: activeStep >= 0 },
-    { title: 'Documents Verified', active: activeStep >= 1 },
-    { title: 'Under Review', active: activeStep >= 2 },
-    { title: 'Final Approval', active: activeStep >= 3 },
+    { title: 'Pending VP Review', active: activeStep >= 1 },
+    { title: 'Forwarded', active: activeStep >= 2 },
+    { title: 'Final Decision', active: activeStep >= 3 },
   ]
 
   return (
@@ -120,8 +119,11 @@ export default function MembershipApplicationStatus() {
             <h1 className="text-2xl font-black text-slate-950">Membership Application Status</h1>
             <StatusBadge value={app.status} />
           </div>
+          <p className="mt-1 text-xs font-bold uppercase tracking-wider text-slate-500">
+            Source: <span className="text-slate-800">{sourceLabel}</span>
+          </p>
           <p className="text-xs font-bold text-slate-400 mt-1">
-            Application #: {app.applicationNumber || 'Draft'} • Submitted: {formatDate(app.createdAt)}
+            Application #: {app.applicationNumber || 'Draft'} - Submitted: {formatDate(app.createdAt)}
           </p>
         </div>
 
@@ -137,7 +139,7 @@ export default function MembershipApplicationStatus() {
       </div>
 
       {/* Submitted and Pending Approval Banner */}
-      {['submitted', 'pending_review', 'under_review', 'forwarded', 'documents_verified'].includes(status) && (
+      {['pending_vp_review', 'submitted', 'forwarded'].includes(status) && (
         <div className="p-4 rounded-xl border border-emerald-200 bg-emerald-50/50 flex gap-3">
           <CheckCircle2 className="h-5 w-5 text-emerald-600 shrink-0 mt-0.5" />
           <div>

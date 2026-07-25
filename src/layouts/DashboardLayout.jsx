@@ -1,12 +1,12 @@
-import { ChevronDown, ChevronLeft, Menu, Moon, Search, Sun, LayoutDashboard, Users, FileBarChart, Settings, CreditCard, Building2, MapPinned, CalendarDays, FileText, Volume2, Handshake, Ticket, Clock, Bell, User, Package, Star, ToggleLeft, ShoppingBag, BriefcaseBusiness, Heart, PlusCircle, TrendingUp, ClipboardList } from 'lucide-react'
+import { ChevronDown, ChevronLeft, Menu, Moon, Search, Sun, LayoutDashboard, Users, FileBarChart, Settings, CreditCard, Building2, MapPinned, CalendarDays, FileText, Volume2, Handshake, Ticket, Clock, Bell, User, Package, Star, ToggleLeft, ShoppingBag, BriefcaseBusiness, Heart, PlusCircle, TrendingUp, ClipboardList, LogOut } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import logo from '../assets/signup_logo.png'
 import { useAuth } from '../hooks/useAuth'
 import { storage } from '../utils/storage'
-import { adminNav, vendorNav, customerNav, membershipNav, memberNav, secretaryNav, regionDirectorNav, stateDirectorNav, districtDirectorNav, chapterDirectorNav, presidentNav, vicePresidentNav, getSidebarNav } from '../constants/navigation'
 import { buildAdminRoute } from '../utils/permissions'
 import { ROLES } from '../constants/roleConfig.js'
+import { resolveNavigation, NAVIGATION_MODES } from '../utils/navigationResolver'
 
 export default function DashboardLayout({ navItems = [], title = 'Dashboard' }) {
   const { user, logout, hasSidebar, marketplaceAccess } = useAuth()
@@ -18,6 +18,16 @@ export default function DashboardLayout({ navItems = [], title = 'Dashboard' }) 
   const [impersonating, setImpersonating] = useState(() => Boolean(sessionStorage.getItem('gloaro_superadmin_session')))
   const [dark, setDark] = useState(() => localStorage.getItem('gloaro_theme') === 'dark')
   const isSuperAdmin = user?.role === ROLES.SUPERADMIN
+  const navigation = useMemo(() => resolveNavigation({
+    user,
+    marketplaceAccess,
+    navItems,
+  }), [marketplaceAccess, navItems, user])
+  const resolvedNavItems = navigation.items
+  const navigationMode = navigation.mode
+  const displayTitle = navigation.title === 'Dashboard' ? title : navigation.title
+  const isVendorApplicant = navigationMode === NAVIGATION_MODES.ONLINE_VENDOR_APPLICANT || navigationMode === NAVIGATION_MODES.ONLINE_VENDOR_PENDING
+  const isApprovedVendor = navigationMode === NAVIGATION_MODES.ONLINE_VENDOR_APPROVED
 
   useEffect(() => {
     document.documentElement.classList.toggle('dark', dark)
@@ -56,66 +66,22 @@ export default function DashboardLayout({ navItems = [], title = 'Dashboard' }) 
     return hasSidebar(label)
   }, [hasSidebar, isSuperAdmin])
 
-  const resolvedNavItems = useMemo(() => {
-    if (user?.role) {
-      return getSidebarNav(user.role);
-    }
-    return navItems || [];
-  }, [user?.role, navItems]);
-
   const filteredNav = useMemo(() => {
     const value = query.trim().toLowerCase()
     let activeNavItems = resolvedNavItems
     let bypassEnabledCheck = false
-
     if (user?.role) {
       bypassEnabledCheck = true
     }
-
-    const isApprovedVendor = user?.role === ROLES.VENDOR || user?.vendorProfile?.status === 'approved';
+    if (isVendorApplicant || isApprovedVendor) {
+      bypassEnabledCheck = true
+    }
 
     const visibleNavItems = activeNavItems
       .map((item) => {
         if (!item) return null
         if (Array.isArray(item)) return (bypassEnabledCheck || isSidebarItemEnabled(item[0])) ? item : null
-        
-        let children = [...item.children];
-
-        const isMemberRoute = location.pathname.startsWith('/member') || location.pathname.startsWith('/customer');
-
-        if (item.label === 'Marketplace' && (title === 'Member Console' || isMemberRoute)) {
-          if (marketplaceAccess === 'NOT_APPLIED') {
-            return null
-          }
-          if (marketplaceAccess === 'PENDING') {
-            children = [
-              ['My Vendor Application', '/member/vendor-application', FileText],
-              ['Application Status', '/member/vendor-application-status', ClipboardList],
-            ];
-          } else {
-            children = [
-              ['Dashboard', '/member/dashboard/vendor-analytics', LayoutDashboard],
-              ['My Business', '/member/dashboard/my-business', Building2],
-              ['Products', '/member/dashboard/products', Package],
-              ['Services', '/member/dashboard/services', BriefcaseBusiness],
-              ['Leads', '/member/dashboard/leads', TrendingUp],
-              ['Orders', '/member/dashboard/orders', ShoppingBag],
-              ['Reviews', '/member/dashboard/reviews', Star],
-              ['Payments', '/member/dashboard/payments', CreditCard],
-              ['Subscription', '/member/dashboard/subscription', ToggleLeft],
-              ['Analytics', '/member/dashboard/vendor-analytics', FileBarChart]
-            ];
-          }
-        }
-
-        const isMarketplaceGroup = item.label === 'Marketplace';
-        const isMemberConsole = title === 'Member Console' || isMemberRoute;
-        const filteredChildren = children.filter(([label]) => 
-          bypassEnabledCheck || 
-          ((marketplaceAccess === 'APPROVED' || marketplaceAccess === 'PENDING') && isMarketplaceGroup) || 
-          isMemberConsole ||
-          isSidebarItemEnabled(label)
-        )
+        const filteredChildren = [...item.children].filter(([label]) => bypassEnabledCheck || isSidebarItemEnabled(label))
         return filteredChildren.length ? { ...item, children: filteredChildren } : null
       })
       .filter(Boolean)
@@ -131,7 +97,7 @@ export default function DashboardLayout({ navItems = [], title = 'Dashboard' }) 
         return null
       })
       .filter(Boolean)
-  }, [isSidebarItemEnabled, resolvedNavItems, query, user?.role, user?.vendorProfile?.status, marketplaceAccess])
+  }, [isSidebarItemEnabled, resolvedNavItems, query, user?.role, isVendorApplicant, isApprovedVendor])
 
   const pageTitle = useMemo(() => {
     for (const item of resolvedNavItems) {
@@ -161,7 +127,7 @@ export default function DashboardLayout({ navItems = [], title = 'Dashboard' }) 
             </div>
           </div>
           <div className="mt-1 flex w-full justify-center text-center">
-            <p className="text-[10px] font-extrabold text-center uppercase tracking-[0.16em] text-[#ffbf1a]">{title}</p>
+            <p className="text-[10px] font-extrabold text-center uppercase tracking-[0.16em] text-[#ffbf1a]">{displayTitle}</p>
           </div>
         </div>
         <button type="button" onClick={() => setCollapsed((value) => !value)} className="hidden h-9 w-9 place-items-center rounded-md border border-white/10 text-slate-300 hover:bg-white/10 lg:grid" aria-label="Collapse menu">
@@ -212,6 +178,19 @@ export default function DashboardLayout({ navItems = [], title = 'Dashboard' }) 
           }
 
           const [label, to, Icon] = item
+          if (to === '__logout__') {
+            return (
+              <button
+                key={label}
+                type="button"
+                onClick={logout}
+                className={`flex h-10 w-full items-center gap-3 rounded-md px-3 text-sm font-bold ${collapsed ? 'justify-center' : ''} text-slate-300 hover:bg-white/10 hover:text-white`}
+              >
+                <LogOut className="h-4 w-4" />
+                {!collapsed && label}
+              </button>
+            )
+          }
           return (
             <NavLink
               key={label}
@@ -229,7 +208,7 @@ export default function DashboardLayout({ navItems = [], title = 'Dashboard' }) 
       {!collapsed && (
         <footer className="border-t border-white/10 p-4 text-xs font-semibold text-slate-400">
           <p>Gloaro Network</p>
-          <p className="mt-1">Enterprise Admin Console</p>
+          <p className="mt-1">{displayTitle}</p>
         </footer>
       )}
     </aside>

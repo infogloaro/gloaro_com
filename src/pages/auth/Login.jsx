@@ -5,6 +5,9 @@ import { Eye, EyeOff } from 'lucide-react'
 import FormField from '../../components/forms/FormField'
 import { useAuth } from '../../hooks/useAuth'
 import { ROLES } from '../../constants/roleConfig.js'
+import { getEffectiveRegistrationType, getVendorOnboardingRoutes, normalizeRegistrationType, getRegistrationTypeLabel } from '../../utils/onboarding'
+import { getDashboardRoute } from '../../utils/permissions'
+import { storage } from '../../utils/storage'
 
 
 export default function Login() {
@@ -14,13 +17,39 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false)
   const query = new URLSearchParams(location.search)
   const loginType = query.get('type') || ''
+  const registrationType = normalizeRegistrationType(loginType)
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm({ defaultValues: { remember: true } })
 
   const onSubmit = async (values) => {
     try {
-      await login({ email: values.email, password: values.password }, values.remember)
+      const signedInUser = await login({
+        email: values.email,
+        password: values.password,
+      }, values.remember)
       const fromPath = location.state?.from?.pathname
-      const finalDest = fromPath && fromPath !== '/' && fromPath !== '/login' ? fromPath : '/dashboard'
+      const redirectParam = new URLSearchParams(location.search).get('redirect')
+      const effectiveRegistrationType = getEffectiveRegistrationType(signedInUser, storage.getOnboardingContext()?.registrationType)
+      const vendorRoutes = getVendorOnboardingRoutes(true)
+      const isApprovedVendorAccount =
+        signedInUser.status === 'approved' ||
+        signedInUser.vendorProfile?.status === 'approved' ||
+        signedInUser.role === ROLES.VENDOR
+      const roleDashboard = getDashboardRoute(signedInUser.role, signedInUser)
+      const requestedDest = redirectParam || fromPath || ''
+      const normalizedDest = String(requestedDest || '').toLowerCase()
+      const shouldUseRoleDashboard =
+        !requestedDest ||
+        normalizedDest === '/' ||
+        normalizedDest === '/login' ||
+        normalizedDest === '/dashboard' ||
+        normalizedDest === '/admin' ||
+        normalizedDest === '/super-admin' ||
+        normalizedDest.startsWith('/admin/') ||
+        normalizedDest.startsWith('/super-admin/') ||
+        normalizedDest.startsWith('/member/dashboard')
+      const finalDest = effectiveRegistrationType === 'vendor'
+        ? (isApprovedVendorAccount ? roleDashboard : vendorRoutes.application)
+        : (shouldUseRoleDashboard ? roleDashboard : requestedDest)
       navigate(finalDest, { replace: true })
     } catch (error) {
       // Handled gracefully in context
@@ -29,8 +58,10 @@ export default function Login() {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="w-full rounded-lg bg-white p-6 shadow-[0_22px_70px_rgba(15,23,42,.12)]">
-      <h2 className="font-playfair text-4xl font-bold text-[#0d4697]">Sign In</h2>
-      <p className="mt-1 text-sm font-medium text-slate-500">Access your Gloaro account.</p>
+      <h2 className="font-playfair text-4xl font-bold text-[#0d4697]">{registrationType === 'vendor' ? 'Vendor Login' : 'Sign In'}</h2>
+      <p className="mt-1 text-sm font-medium text-slate-500">
+        {registrationType === 'vendor' ? `Access your ${getRegistrationTypeLabel(registrationType)} onboarding.` : 'Access your Gloaro account.'}
+      </p>
       <div className="mt-6 space-y-4">
         <FormField label="Email" error={errors.email?.message}>
           <input {...register('email', { required: 'Email is required' })} type="email" className="h-11 w-full rounded-md border border-slate-300 px-3 outline-none focus:border-[#0d4697]" />

@@ -7,6 +7,9 @@ import { useAuth } from '../../hooks/useAuth'
 import { getMembershipDraft, saveMembershipDraft, setMembershipFile } from '../../utils/membershipOnboarding'
 import LoadingScreen from '../../components/common/LoadingScreen'
 import { ROLES } from '../../constants/roleConfig.js'
+import OrganizationAssignmentFields from '../../components/forms/OrganizationAssignmentFields'
+import { getEffectiveRegistrationType, getVendorOnboardingRoutes } from '../../utils/onboarding'
+import { storage } from '../../utils/storage'
 
 const expertise = ['Technology', 'Finance', 'Real Estate', 'Education', 'Marketing', 'Healthcare', 'Design', 'Manufacturing']
 const industries = ['Technology', 'Finance', 'Real Estate', 'Education', 'Healthcare', 'Retail', 'Manufacturing', 'Construction', 'Hospitality', 'Legal Services', 'Marketing', 'Transportation']
@@ -15,35 +18,31 @@ const businessTypes = ['B2B Enterprise', 'B2C Business', 'D2C Brand', 'Startup',
 export default function MembershipApplication() {
   const { user } = useAuth()
   const navigate = useNavigate()
+  const onboardingType = getEffectiveRegistrationType(user, storage.getOnboardingContext()?.registrationType)
+  const vendorRoutes = getVendorOnboardingRoutes(true)
   const draft = getMembershipDraft()
   const [personal, setPersonal] = useState(draft.personal || {})
   const [address, setAddress] = useState(draft.address || {})
   const [professional, setProfessional] = useState(draft.professional || { expertise: [] })
+  const [organization, setOrganization] = useState({
+    regionId: draft.regionId || '',
+    stateId: draft.stateId || '',
+    districtId: draft.districtId || '',
+    chapterId: draft.chapterId || '',
+  })
   const [loading, setLoading] = useState(true)
   const [savingDraft, setSavingDraft] = useState(false)
   const mobileDigits = String(personal.mobileNumber || '').replace(/\D/g, '')
   const mobileInvalid = Boolean(personal.mobileNumber) && (mobileDigits.length < 10 || mobileDigits.length > 15)
 
-  const [regions, setRegions] = useState([])
-  const [states, setStates] = useState([])
-  const [districts, setDistricts] = useState([])
-  const [chapters, setChapters] = useState([])
-
-  const [selectedRegion, setSelectedRegion] = useState(draft.regionId || '')
-  const [selectedState, setSelectedState] = useState(draft.stateId || '')
-  const [selectedDistrict, setSelectedDistrict] = useState(draft.districtId || '')
-  const [selectedChapter, setSelectedChapter] = useState(draft.chapterId || '')
-
   const isVicePresident = user?.role === ROLES.VICE_PRESIDENT
   const userOrg = user?.meta?.adminProfile?.organization || {}
 
-  // 1. Fetch Regions & Existing Application Status
   useEffect(() => {
-    api.get('/organization/regions')
-      .then(res => {
-        setRegions(res.data?.data?.regions || [])
-      })
-      .catch(() => {})
+    if (onboardingType === 'vendor') {
+      navigate(vendorRoutes.application, { replace: true })
+      return
+    }
 
     // Redirect official roles who shouldn't apply
     if (user && ![ROLES.CUSTOMER, ROLES.USER, ROLES.VENDOR].includes(user.role)) {
@@ -72,33 +71,48 @@ export default function MembershipApplication() {
             navigate('/member/membership-application-status')
             return
           }
-          const loadedDraft = {
-            personal: app.personal || {},
-            address: app.address || {},
-            professional: app.professional || {},
-            regionId: app.regionId || '',
+        const loadedDraft = {
+          personal: app.personal || {},
+          address: app.address || {},
+          professional: app.professional || {},
+          regionId: app.regionId || '',
             stateId: app.stateId || '',
             districtId: app.districtId || '',
-            chapterId: app.chapterId || '',
-            credentials: app.credentials || {},
-            references: app.references || [{}, {}],
-            referralCode: app.referralCode || ''
-          }
-          localStorage.setItem('gloaro_membership_onboarding', JSON.stringify(loadedDraft))
-          setPersonal(loadedDraft.personal)
-          setAddress(loadedDraft.address)
-          setProfessional(loadedDraft.professional)
-          setSelectedRegion(loadedDraft.regionId)
-          setSelectedState(loadedDraft.stateId)
-          setSelectedDistrict(loadedDraft.districtId)
-          setSelectedChapter(loadedDraft.chapterId)
+          chapterId: app.chapterId || '',
+          credentials: app.credentials || {},
+          references: app.references || [{}, {}],
+          referralCode: app.referralCode || ''
         }
+        localStorage.setItem('gloaro_membership_onboarding', JSON.stringify(loadedDraft))
+        setPersonal(loadedDraft.personal)
+        setAddress(loadedDraft.address)
+        setProfessional(loadedDraft.professional)
+        setOrganization({
+          regionId: loadedDraft.regionId,
+          stateId: loadedDraft.stateId,
+          districtId: loadedDraft.districtId,
+          chapterId: loadedDraft.chapterId,
+        })
+      }
       })
       .catch(() => {})
       .finally(() => {
         setLoading(false)
       })
-  }, [])
+  }, [navigate, onboardingType, user, vendorRoutes.application])
+
+  useEffect(() => {
+    if (!isVicePresident) return
+    const next = {
+      regionId: userOrg.region || organization.regionId || '',
+      stateId: userOrg.state || organization.stateId || '',
+      districtId: userOrg.district || organization.districtId || '',
+      chapterId: userOrg.chapter || organization.chapterId || '',
+    }
+    setOrganization(next)
+    updateLocationDraft(next)
+    // Vice Presidents must stay scoped to their assigned chapter hierarchy.
+  }, [isVicePresident, userOrg.region, userOrg.state, userOrg.district, userOrg.chapter])
 
   const handleSaveDraft = async (e) => {
     e?.preventDefault()
@@ -108,10 +122,10 @@ export default function MembershipApplication() {
         personal,
         address,
         professional,
-        regionId: selectedRegion,
-        stateId: selectedState,
-        districtId: selectedDistrict,
-        chapterId: selectedChapter,
+        regionId: organization.regionId,
+        stateId: organization.stateId,
+        districtId: organization.districtId,
+        chapterId: organization.chapterId,
         status: 'draft'
       }
       
@@ -129,10 +143,10 @@ export default function MembershipApplication() {
         personal,
         address,
         professional,
-        regionId: selectedRegion,
-        stateId: selectedState,
-        districtId: selectedDistrict,
-        chapterId: selectedChapter
+        regionId: organization.regionId,
+        stateId: organization.stateId,
+        districtId: organization.districtId,
+        chapterId: organization.chapterId
       }))
 
       toast.success('Application draft saved successfully!')
@@ -143,115 +157,15 @@ export default function MembershipApplication() {
     }
   }
 
-  // Auto-fill from Vice President details
-  useEffect(() => {
-    if (isVicePresident) {
-      if (userOrg.region) {
-        setSelectedRegion(userOrg.region)
-        updateLocationDraft('regionId', userOrg.region)
-      }
-      if (userOrg.state) {
-        setSelectedState(userOrg.state)
-        updateLocationDraft('stateId', userOrg.state)
-      }
-      if (userOrg.district) {
-        setSelectedDistrict(userOrg.district)
-        updateLocationDraft('districtId', userOrg.district)
-      }
-      if (userOrg.chapter) {
-        setSelectedChapter(userOrg.chapter)
-        updateLocationDraft('chapterId', userOrg.chapter)
-      }
-    }
-  }, [user, isVicePresident])
-
-  // 2. Fetch States
-  useEffect(() => {
-    const rId = isVicePresident ? userOrg.region : selectedRegion
-    if (!rId) {
-      setStates([])
-      return
-    }
-    api.get('/organization/states', { params: { regionId: rId } })
-      .then(res => {
-        setStates(res.data?.data?.states || [])
-      })
-      .catch(() => {})
-  }, [selectedRegion, isVicePresident, userOrg.region])
-
-  // 3. Fetch Districts
-  useEffect(() => {
-    const sId = isVicePresident ? userOrg.state : selectedState
-    if (!sId) {
-      setDistricts([])
-      return
-    }
-    api.get('/organization/districts', { params: { stateId: sId } })
-      .then(res => {
-        setDistricts(res.data?.data?.districts || [])
-      })
-      .catch(() => {})
-  }, [selectedState, isVicePresident, userOrg.state])
-
-  // 4. Fetch Chapters
-  useEffect(() => {
-    const dId = isVicePresident ? userOrg.district : selectedDistrict
-    if (!dId) {
-      setChapters([])
-      return
-    }
-    api.get('/organization/chapters', { params: { districtId: dId } })
-      .then(res => {
-        setChapters(res.data?.data?.chapters || [])
-      })
-      .catch(() => {})
-  }, [selectedDistrict, isVicePresident, userOrg.district])
-
-  const updateLocationDraft = (field, value) => {
+  const updateLocationDraft = (nextValues) => {
     const draftData = getMembershipDraft()
-    const next = { ...draftData, [field]: value }
+    const next = { ...draftData, ...nextValues }
     localStorage.setItem('gloaro_membership_onboarding', JSON.stringify(next))
   }
 
-  const handleRegionChange = (val) => {
-    setSelectedRegion(val)
-    setSelectedState('')
-    setSelectedDistrict('')
-    setSelectedChapter('')
-    setStates([])
-    setDistricts([])
-    setChapters([])
-    
-    updateLocationDraft('regionId', val)
-    updateLocationDraft('stateId', '')
-    updateLocationDraft('districtId', '')
-    updateLocationDraft('chapterId', '')
-  }
-
-  const handleStateChange = (val) => {
-    setSelectedState(val)
-    setSelectedDistrict('')
-    setSelectedChapter('')
-    setDistricts([])
-    setChapters([])
-
-    updateLocationDraft('stateId', val)
-    updateLocationDraft('districtId', '')
-    updateLocationDraft('chapterId', '')
-  }
-
-  const handleDistrictChange = (val) => {
-    setSelectedDistrict(val)
-    setSelectedChapter('')
-    setChapters([])
-
-    updateLocationDraft('districtId', val)
-    updateLocationDraft('chapterId', '')
-  }
-
-  const handleChapterChange = (val) => {
-    setSelectedChapter(val)
-    updateLocationDraft('chapterId', val)
+  const handleOrganizationChange = (next) => {
+    setOrganization(next)
+    updateLocationDraft(next)
   }
 
   const updateSection = (section, setter) => (field, value) => {
@@ -322,41 +236,13 @@ export default function MembershipApplication() {
           </ApplicationSection>
 
           <ApplicationSection icon={MapPin} title="Location & Chapter Assignment">
-            <div className="grid gap-4 md:grid-cols-2">
-              <SelectField
-                label="Region *"
-                value={selectedRegion}
-                onChange={handleRegionChange}
-                placeholder="Select Region"
-                options={regions.map(r => ({ label: r.name, value: r._id }))}
-                disabled={isVicePresident}
-              />
-              <SelectField
-                label="State *"
-                value={selectedState}
-                onChange={handleStateChange}
-                placeholder="Select State"
-                options={states.map(s => ({ label: s.name, value: s._id }))}
-                disabled={isVicePresident || !selectedRegion}
-              />
-              <SelectField
-                label="District *"
-                value={selectedDistrict}
-                onChange={handleDistrictChange}
-                placeholder="Select District"
-                options={districts.map(d => ({ label: d.name, value: d._id }))}
-                disabled={isVicePresident || !selectedState}
-              />
-              <SelectField
-                label="Chapter *"
-                value={selectedChapter}
-                onChange={handleChapterChange}
-                placeholder="Select Chapter"
-                options={chapters.map(c => ({ label: c.name, value: c._id }))}
-                disabled={isVicePresident || !selectedDistrict}
-                className="md:col-span-2"
-              />
-            </div>
+            <OrganizationAssignmentFields
+              value={organization}
+              onChange={handleOrganizationChange}
+              disabled={isVicePresident}
+              hideHeader
+              description="Choose the region, state, district, and chapter for this application."
+            />
           </ApplicationSection>
 
           <ApplicationSection icon={BriefcaseBusiness} title="Professional Details">
@@ -428,27 +314,31 @@ function Field({ label, placeholder, type = 'text', value, onChange, className =
   )
 }
 
-function SelectField({ label, placeholder, value, onChange, options = [placeholder], disabled, className = '' }) {
-  return (
-    <label className={`block ${className}`}>
-      <span className="text-xs font-black text-slate-700">{label}</span>
-      <select value={value} onChange={(event) => onChange(event.target.value)} disabled={disabled} className="mt-1 h-9 w-full rounded-md border border-slate-300 bg-white px-3 text-xs font-medium text-slate-500 outline-none focus:border-[#0b469e] disabled:opacity-50">
-        <option value="">{placeholder}</option>
-        {options.map((option) => {
-          const optVal = typeof option === 'object' ? option.value : option;
-          const optLbl = typeof option === 'object' ? option.label : option;
-          return <option key={optVal} value={optVal}>{optLbl}</option>;
-        })}
-      </select>
-    </label>
-  )
-}
-
 function TextArea({ label, placeholder, value, onChange }) {
   return (
     <label className="block md:col-span-2">
       <span className="text-xs font-black text-slate-700">{label}</span>
       <textarea value={value} onChange={(event) => onChange(event.target.value)} placeholder={placeholder} className="mt-1 min-h-24 w-full rounded-md border border-slate-300 px-3 py-2 text-xs font-medium outline-none focus:border-[#0b469e]" />
+    </label>
+  )
+}
+
+function SelectField({ label, placeholder, value, onChange, options = [] }) {
+  return (
+    <label className="block">
+      <span className="text-xs font-black text-slate-700">{label}</span>
+      <select
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        className="mt-1 h-9 w-full rounded-md border border-slate-300 bg-white px-3 text-xs font-medium outline-none focus:border-[#0b469e]"
+      >
+        <option value="">{placeholder}</option>
+        {options.map((option) => (
+          <option key={option} value={option}>
+            {option}
+          </option>
+        ))}
+      </select>
     </label>
   )
 }

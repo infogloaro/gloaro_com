@@ -4,13 +4,14 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { Eye, EyeOff } from 'lucide-react'
 import FormField from '../../components/forms/FormField'
 import { useAuth } from '../../hooks/useAuth'
+import { normalizeRegistrationType, getRegistrationTypeLabel } from '../../utils/onboarding'
 
 const typeRoleMap = {
-  [ROLES.VENDOR]: ROLES.VENDOR,
   membership: ROLES.CUSTOMER,
   franchise: ROLES.CUSTOMER,
   b2b: ROLES.CUSTOMER,
   [ROLES.USER]: ROLES.CUSTOMER,
+  [ROLES.VENDOR]: ROLES.CUSTOMER,
 }
 
 import api from '../../api/axios'
@@ -24,8 +25,9 @@ export default function Register() {
   const [showPassword, setShowPassword] = useState(false)
   const query = new URLSearchParams(location.search)
   const type = query.get('type') || ROLES.USER
+  const registrationType = normalizeRegistrationType(type)
   const role = typeRoleMap[type] || ROLES.CUSTOMER
-  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm({ defaultValues: { role } })
+  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm({ defaultValues: { role, registrationType } })
 
   const [referralCode, setReferralCode] = useState('')
   const [validatingCode, setValidatingCode] = useState(false)
@@ -55,18 +57,25 @@ export default function Register() {
   }
 
   const onSubmit = async (values) => {
-    await createAccount({ ...values, role, referralCode: referralCode.trim() || undefined })
+    await createAccount({
+      ...values,
+      role,
+      registrationType,
+      onboardingType: registrationType,
+      referralCode: referralCode.trim() || undefined,
+    })
     navigate(`/login?type=${type}`)
   }
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="w-full rounded-lg bg-white p-6 shadow-[0_22px_70px_rgba(15,23,42,.12)]">
-      <h2 className="font-playfair text-4xl font-bold text-[#0d4697]">{role === ROLES.VENDOR ? 'Create Vendor Account' : 'Create User Account'}</h2>
+      <h2 className="font-playfair text-4xl font-bold text-[#0d4697]">Create {getRegistrationTypeLabel(registrationType)} Account</h2>
       <div className="mt-6 space-y-4">
         <FormField label="Name" error={errors.name?.message}><input {...register('name', { required: 'Name is required' })} className="h-11 w-full rounded-md border border-slate-300 px-3 outline-none" /></FormField>
         <FormField label="Email" error={errors.email?.message}><input {...register('email', { required: 'Email is required' })} type="email" className="h-11 w-full rounded-md border border-slate-300 px-3 outline-none" /></FormField>
         <FormField label="Phone"><input {...register('phone')} className="h-11 w-full rounded-md border border-slate-300 px-3 outline-none" /></FormField>
         <input type="hidden" {...register('role')} value={role} />
+        <input type="hidden" {...register('registrationType')} value={registrationType} />
         <FormField label="Password" error={errors.password?.message}>
           <div className="relative">
             <input
