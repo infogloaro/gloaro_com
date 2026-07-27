@@ -106,7 +106,7 @@ const moduleConfig = {
     description: 'Create training programs, sessions, reminders, attendance, certificates, feedback, photos, and reports.',
     icon: CalendarDays,
     types: ['program', 'session', 'workshop', 'online', 'offline'],
-    fields: ['code', 'type', 'chapter', 'attendanceCount', 'visitorsCount', 'metadata.category'],
+    fields: [],
   },
   testimonial: {
     title: 'Testimonials',
@@ -913,6 +913,13 @@ function EnterpriseRecordsPage({ module, config: overrideConfig, extraPanel, wiz
   const [status, setStatus] = useState('')
   const [editing, setEditing] = useState(null)
   const [formOpen, setFormOpen] = useState(false)
+  const [viewingTraining, setViewingTraining] = useState(null)
+  const [trainingMembers, setTrainingMembers] = useState([])
+
+  useEffect(() => {
+    if (module !== 'training') return
+    adminApi.users({ limit: 100, status: 'active' }).then((response) => setTrainingMembers(getList(response.data))).catch(() => setTrainingMembers([]))
+  }, [module])
 
   const params = useMemo(() => ({ page, limit: 10, search: search || undefined, type: type || undefined, status: status || undefined }), [page, search, status, type])
 
@@ -958,8 +965,14 @@ function EnterpriseRecordsPage({ module, config: overrideConfig, extraPanel, wiz
 
   const submit = async (values) => {
     const data = normalizeFormValues(values)
-    if (editing) await adminApi.updateEnterpriseRecord(editing._id, data)
-    else await adminApi.createEnterpriseRecord(module, data)
+    const assignedMemberId = data.assignedMemberId
+    if (module === 'training' && data.assignments) {
+      data.metadata = { ...(data.metadata || {}), assignments: data.assignments.filter((assignment) => assignment.name || assignment.link) }
+      delete data.assignments
+    }
+    delete data.assignedMemberId
+    const response = editing ? await adminApi.updateEnterpriseRecord(editing._id, data) : await adminApi.createEnterpriseRecord(module, data)
+    if (module === 'training' && assignedMemberId?.length) await adminApi.assignTrainingMember(editing?._id || response.data?.data?._id, assignedMemberId)
     toast.success(editing ? 'Record updated' : 'Record created')
     setFormOpen(false)
     setEditing(null)
@@ -976,6 +989,16 @@ function EnterpriseRecordsPage({ module, config: overrideConfig, extraPanel, wiz
     await adminApi.deleteEnterpriseRecord(row._id)
     toast.success('Record deleted')
     load()
+  }
+
+  const viewTraining = async (row) => {
+    const response = await adminApi.enterpriseRecord(row._id)
+    setViewingTraining(response.data?.data || response.data || row)
+  }
+
+  const saveTrainingMark = async (progress) => {
+    await adminApi.updateTrainingProgress(viewingTraining._id, progress._id, progress.marks || '')
+    toast.success('Mark saved')
   }
 
   const importSample = async () => {
@@ -1020,6 +1043,7 @@ function EnterpriseRecordsPage({ module, config: overrideConfig, extraPanel, wiz
         onPageChange={setPage}
         actions={(canEdit || canDelete || canApprove) ? (row) => (
           <div className="flex flex-wrap gap-2">
+            {module === 'training' && <button type="button" onClick={() => viewTraining(row)} className="rounded-md border border-[#0d4697] px-3 py-1.5 text-xs font-bold text-[#0d4697]">View</button>}
             {canEdit && <button type="button" onClick={() => { setEditing(row); setFormOpen(true) }} className="rounded-md border border-slate-200 px-3 py-1.5 text-xs font-bold">Edit</button>}
             {canApprove && <select value={row.status} onChange={(event) => changeStatus(row, event.target.value)} className="h-8 rounded-md border border-slate-200 bg-white px-2 text-xs font-bold">
               {statusOptions.map((item) => <option key={item} value={item}>{formatLabel(item)}</option>)}
@@ -1028,8 +1052,19 @@ function EnterpriseRecordsPage({ module, config: overrideConfig, extraPanel, wiz
           </div>
         ) : undefined}
       />}
+      <Modal open={Boolean(viewingTraining)} title={viewingTraining?.name || 'Training details'} onClose={() => setViewingTraining(null)}>
+        {viewingTraining && <div className="space-y-5 text-sm">
+          <div className="grid gap-3 sm:grid-cols-3">
+            <div className="rounded-lg bg-slate-50 p-3"><p className="text-[10px] font-extrabold uppercase text-slate-400">Type</p><p className="mt-1 font-bold capitalize text-slate-800">{formatLabel(viewingTraining.type)}</p></div>
+            <div className="rounded-lg bg-slate-50 p-3"><p className="text-[10px] font-extrabold uppercase text-slate-400">Status</p><p className="mt-1 font-bold capitalize text-slate-800">{viewingTraining.status}</p></div>
+            <div className="rounded-lg bg-slate-50 p-3"><p className="text-[10px] font-extrabold uppercase text-slate-400">Assigned members</p><p className="mt-1 font-bold text-slate-800">{viewingTraining.metadata?.assignedMemberIds?.length || 0}</p></div>
+          </div>
+          <div><p className="text-xs font-extrabold uppercase tracking-wider text-slate-400">Description</p><p className="mt-2 text-slate-600">{viewingTraining.metadata?.description || 'No description available.'}</p></div>
+          <div className="border-t border-slate-100 pt-4"><p className="text-xs font-extrabold uppercase tracking-wider text-slate-400">Assignments and member status</p>{viewingTraining.metadata?.assignments?.length ? <div className="mt-3 space-y-3">{viewingTraining.metadata.assignments.map((assignment, index) => { const members = (viewingTraining.assignmentProgress || []).filter((item) => item.assignmentIndex === index); return <div key={`${assignment.link}-${index}`} className="rounded-lg border border-slate-200 p-3"><a href={assignment.link} target="_blank" rel="noreferrer" className="flex items-center justify-between hover:underline"><span><span className="block font-extrabold text-slate-800">{assignment.name || `Assignment ${index + 1}`}</span><span className="mt-1 block text-xs font-semibold text-[#0d4697]">{assignment.link}</span></span><span className="text-xs font-extrabold text-[#0d4697]">View</span></a>{members.length ? <div className="mt-3 space-y-1 border-t border-slate-100 pt-2">{members.map((member) => <div key={member._id} className="flex flex-wrap items-center justify-between gap-2 text-xs"><span className="font-semibold text-slate-600">{member.member?.name || member.member?.email || 'Member'}</span><span className={member.status === 'completed' ? 'font-extrabold text-emerald-700' : 'font-extrabold text-amber-700'}>{member.status === 'completed' ? 'Completed' : 'Pending'}</span><input type="number" min="0" max="999" step="1" value={member.marks || ''} onChange={(event) => setViewingTraining((course) => ({ ...course, assignmentProgress: course.assignmentProgress.map((item) => item._id === member._id ? { ...item, marks: event.target.value.slice(0, 3) } : item) }))} placeholder="0–999" className="h-8 w-24 rounded border border-slate-300 bg-white px-2 text-xs font-bold text-slate-800 outline-none focus:border-[#0d4697]" /><button type="button" onClick={() => saveTrainingMark(member)} className="rounded bg-[#0d4697] px-2 py-1 text-[10px] font-extrabold text-white">Save</button></div>)}</div> : <p className="mt-2 text-xs font-semibold text-slate-400">No completion recorded yet.</p>}</div> })}</div> : <p className="mt-2 text-slate-500">No assignments added.</p>}</div>
+        </div>}
+      </Modal>
       <Modal open={formOpen && (canCreate || canEdit)} title={editing ? `Edit ${config.title}` : `Add ${config.title}`} onClose={() => setFormOpen(false)}>
-        <SimpleJsonForm initialValues={editing ? flattenRecord(editing) : { type: config.types[0], status: 'active' }} fields={enterpriseFields(config)} onSubmit={submit} />
+        <SimpleJsonForm initialValues={editing ? flattenRecord(editing) : { type: config.types[0], status: 'active' }} fields={enterpriseFields(config, trainingMembers)} onSubmit={submit} />
       </Modal>
     </section>
   )
@@ -1365,16 +1400,24 @@ function enterpriseColumns() {
   ]
 }
 
-function enterpriseFields(config) {
+function enterpriseFields(config, trainingMembers = []) {
   const base = [
-    { name: 'name', label: 'Name', rules: { required: true } },
-    { name: 'code', label: 'Code' },
+    { name: 'name', label: config.title === 'Training Management' ? 'Course Name' : 'Name', rules: { required: true } },
+    ...(config.title === 'Training Management' ? [] : [{ name: 'code', label: 'Code' }]),
     { name: 'type', label: 'Type', type: 'select', options: config.types.map((value) => ({ value, label: formatLabel(value) })) },
     { name: 'status', label: 'Status', type: 'select', options: statusOptions.map((value) => ({ value, label: formatLabel(value) })) },
   ]
   const extras = config.fields
     .filter((field) => !['code', 'type'].includes(field))
     .map((field) => ({ name: field, label: formatLabel(field), type: numericFields.has(field) ? 'number' : 'text' }))
+  if (config.title === 'Training Management') {
+    extras.unshift({ name: 'metadata.description', label: 'Course Description', type: 'textarea', rules: { required: true } })
+    extras.push({ name: 'metadata.startDate', label: 'Start Date', type: 'date' })
+    extras.push({ name: 'metadata.dailyTiming', label: 'Daily Timing', type: 'time' })
+    extras.push({ name: 'metadata.dailyTaskUpdate', label: 'Daily Task Update', type: 'textarea' })
+    extras.push({ name: 'assignments', label: 'Assignments', type: 'assignment-list' })
+    extras.push({ name: 'assignedMemberId', label: 'Assign Members', type: 'multiselect', options: trainingMembers.map((member) => ({ value: member._id, label: `${member.name} · ${member.email || 'No email'} · ${formatLabel(member.role || 'member')}` })) })
+  }
   return [...base, ...extras]
 }
 
@@ -1401,6 +1444,13 @@ function flattenRecord(record) {
   ;['parent', 'director', 'assignedTo', 'reportsTo', 'chapter', 'organization'].forEach((key) => {
     if (record[key]?._id) flattened[key] = record[key]._id
   })
+  if (record.metadata?.assignedMemberIds) flattened.assignedMemberId = record.metadata.assignedMemberIds
+  if (record.metadata?.description) flattened['metadata.description'] = record.metadata.description
+  if (record.metadata?.startDate) flattened['metadata.startDate'] = record.metadata.startDate
+  if (record.metadata?.dailyTiming) flattened['metadata.dailyTiming'] = record.metadata.dailyTiming
+  if (record.metadata?.dailyTaskUpdate) flattened['metadata.dailyTaskUpdate'] = record.metadata.dailyTaskUpdate
+  if (record.metadata?.assignmentLink) flattened['metadata.assignmentLink'] = record.metadata.assignmentLink
+  if (record.metadata?.assignments) flattened.assignments = record.metadata.assignments
   return flattened
 }
 

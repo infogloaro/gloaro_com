@@ -165,6 +165,7 @@ import CommunityPage from './pages/membership/community/CommunityPage'
 import ChatSystem from './pages/membership/ChatSystem'
 import ReferralsPipeline from './pages/membership/ReferralsPipeline'
 import MeetingsAttendance from './pages/membership/MeetingsAttendance'
+import AssignedTrainingPage from './pages/membership/AssignedTrainingPage'
 import OneToOnesPage from './pages/membership/OneToOnesPage'
 import VisitorsPage from './pages/membership/VisitorsPage'
 import BusinessDirectory from './pages/membership/BusinessDirectory'
@@ -346,6 +347,7 @@ function App() {
               <Route path="/membership/events" element={<MembershipEventsPage />} />
               <Route path="/membership/referral" element={<MembershipReferralPage />} />
               <Route path="/membership/notifications" element={<MembershipNotificationsPage />} />
+              <Route path="/membership/training" element={<AssignedTrainingPage />} />
               <Route path="/membership/profile" element={<MembershipProfilePage />} />
               <Route path="/membership/support" element={<MembershipSupportPage />} />
             </Route>
@@ -360,6 +362,7 @@ function App() {
               {/* Parameterized main dashboard sub-views */}
               <Route path="/member/dashboard" element={<MemberDashboard />} />
               <Route path="/member/dashboard/:tab" element={<MemberDashboard />} />
+              <Route path="/member/training" element={<AssignedTrainingPage />} />
 
               {/* Protected Marketplace routes */}
               <Route element={<MarketplaceRoute />}>

@@ -25,9 +25,13 @@ export const adminApi = {
   createEnterpriseRecord: (module, data) => api.post(`/admin/enterprise/${module}`, data),
   importEnterpriseRecords: (module, records) => api.post(`/admin/enterprise/${module}/import`, { records }),
   enterpriseRecord: (id) => api.get(`/admin/enterprise-records/${id}`),
+
+  assignTrainingMember: (id, userIds) => api.post(`/admin/enterprise/training/${id}/assign`, { userIds }),
+  updateTrainingProgress: (courseId, progressId, marks) => api.patch(`/admin/enterprise/training/${courseId}/progress/${progressId}`, { marks }),
   approveChapter: (id, data) => api.patch(`/admin/enterprise-records/${id}/approve`, data),
   rejectChapter: (id, data) => api.patch(`/admin/enterprise-records/${id}/reject`, data),
   resubmitChapter: (id) => api.patch(`/admin/enterprise-records/${id}/resubmit`),
+
   updateEnterpriseRecord: (id, data) => api.patch(`/admin/enterprise-records/${id}`, data),
   updateEnterpriseStatus: (id, status) => api.patch(`/admin/enterprise-records/${id}/status`, { status }),
   transitionEnterpriseRecord: (id, data) => api.patch(`/admin/enterprise-records/${id}/transition`, data),

@@ -2,6 +2,7 @@ import {
   Activity,
   Award,
   BarChart3,
+  BookOpen,
   Bell,
   BriefcaseBusiness,
   Building2,
@@ -221,13 +222,14 @@ export const membershipNav = [
   ['Dashboard', '/membership/dashboard', LayoutDashboard],
   ['Benefits', '/membership/benefits', Star],
   ['Events', '/membership/events', CalendarDays],
+  ['Assigned Courses', '/membership/training', BookOpen],
   ['Referral', '/membership/referral', Ticket],
   ['Notifications', '/membership/notifications', Bell],
   ['Profile', '/membership/profile', Users],
   ['Support', '/membership/support', HelpCircle],
 ]
 
-export const memberNav = [];
+export const memberNav = [['Assigned Courses', '/member/training', BookOpen]];
 export const secretaryNav = [{ label: 'Secretary Dashboard', icon: ClipboardList, children: [['Events', '/events', CalendarDays], ['Reports', '/reports', FileBarChart]] }];
 export const stateDirectorNav = [];
 export const districtDirectorNav = [];
@@ -335,6 +337,7 @@ const commonModules = [
       ['One-to-Ones', '/one-to-ones', Clock]
     ]
   },
+  ['Training', '/member/training', BookOpen],
   {
     label: 'Chapter',
     icon: Building2,
