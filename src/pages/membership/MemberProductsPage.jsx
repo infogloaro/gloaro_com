@@ -37,43 +37,58 @@ export default function MemberProductsPage() {
 
   // Render unapproved / pending warning page
   const status = app ? String(app.status).toLowerCase() : 'not_applied'
-  
-  let statusText = 'Not Applied'
-  let Icon = HelpCircle
-  let iconColorClass = 'text-slate-500 bg-slate-100'
-  let description = "You haven't submitted a vendor marketplace application yet. Apply now to get started."
 
-  if (status === 'draft') {
-    statusText = 'Draft'
-    Icon = FileText
-    iconColorClass = 'text-amber-600 bg-amber-50'
-    description = "Your vendor application is still in draft mode. Please finish and submit your application for review."
-  } else if (status === 'pending_vp_review') {
-    statusText = 'VP Review'
-    Icon = Clock
-    iconColorClass = 'text-indigo-600 bg-indigo-50'
-    description = "Your vendor application is waiting for Vice President pre-screening before marketplace approval begins."
-  } else if (status === 'submitted') {
-    statusText = 'Submitted'
-    Icon = Clock
-    iconColorClass = 'text-blue-600 bg-blue-50'
-    description = "Your vendor application has been forwarded from Vice President review and is awaiting the existing marketplace approval workflow."
-  } else if (status === 'rejected_by_vp') {
-    statusText = 'Rejected by VP'
-    Icon = ShieldAlert
-    iconColorClass = 'text-red-600 bg-red-50'
-    description = "Your vendor application was rejected during Vice President pre-screening. Please review the application status for notes."
-  } else if (status === 'under_review') {
-    statusText = 'Under Review'
-    Icon = Clock
-    iconColorClass = 'text-indigo-600 bg-indigo-50'
-    description = "Your vendor application is currently in the marketplace approval workflow after Vice President pre-screening."
-  } else if (status === 'rejected') {
-    statusText = 'Rejected'
-    Icon = ShieldAlert
-    iconColorClass = 'text-red-600 bg-red-50'
-    description = "Your vendor application was rejected. Please view the application status to check reviewer comments, and update/resubmit."
+  const statusConfig = {
+    draft: {
+      label: 'Draft',
+      Icon: FileText,
+      iconColorClass: 'text-amber-600 bg-amber-50',
+      description: 'Your vendor application is still in draft mode. Please finish and submit your application for review.',
+    },
+    pending_vp_review: {
+      label: 'Pending VP Review',
+      Icon: Clock,
+      iconColorClass: 'text-indigo-600 bg-indigo-50',
+      description: 'Your vendor application is waiting for Vice President pre-screening before marketplace approval begins.',
+    },
+    submitted: {
+      label: 'Waiting for Marketplace Approval',
+      Icon: Clock,
+      iconColorClass: 'text-blue-600 bg-blue-50',
+      description: 'Your vendor application has been forwarded from Vice President review and is awaiting the existing marketplace approval workflow.',
+    },
+    forwarded: {
+      label: 'Waiting for Marketplace Approval',
+      Icon: Clock,
+      iconColorClass: 'text-blue-600 bg-blue-50',
+      description: 'Your vendor application has been forwarded from Vice President review and is awaiting the existing marketplace approval workflow.',
+    },
+    rejected_by_vp: {
+      label: 'Rejected by VP',
+      Icon: ShieldAlert,
+      iconColorClass: 'text-red-600 bg-red-50',
+      description: 'Your vendor application was rejected during Vice President pre-screening. Please review the application status for notes.',
+    },
+    under_review: {
+      label: 'Under Review',
+      Icon: Clock,
+      iconColorClass: 'text-indigo-600 bg-indigo-50',
+      description: 'Your vendor application is currently in the marketplace approval workflow after Vice President pre-screening.',
+    },
+    rejected: {
+      label: 'Rejected',
+      Icon: ShieldAlert,
+      iconColorClass: 'text-red-600 bg-red-50',
+      description: 'Your vendor application was rejected. Please view the application status to check reviewer comments, and update/resubmit.',
+    },
   }
+  const currentStatus = statusConfig[status] || {
+    label: 'Not Applied',
+    Icon: HelpCircle,
+    iconColorClass: 'text-slate-500 bg-slate-100',
+    description: "You haven't submitted a vendor marketplace application yet. Apply now to get started.",
+  }
+  const StatusIcon = currentStatus.Icon
 
   return (
     <div className="flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
@@ -98,12 +113,12 @@ export default function MemberProductsPage() {
               </span>
               <StatusBadge value={app.status} />
             </div>
-            <div className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-extrabold ${iconColorClass}`}>
-              <Icon className="h-3.5 w-3.5" />
-              {statusText}
+            <div className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-extrabold ${currentStatus.iconColorClass}`}>
+              <StatusIcon className="h-3.5 w-3.5" />
+              {currentStatus.label}
             </div>
             <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 text-center max-w-sm mt-1">
-              {description}
+              {currentStatus.description}
             </p>
           </div>
         )}

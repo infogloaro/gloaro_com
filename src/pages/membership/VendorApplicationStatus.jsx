@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import {
   FileText,
   CheckCircle2,
@@ -15,13 +15,30 @@ import LoadingScreen from '../../components/common/LoadingScreen'
 import StatusBadge from '../../components/common/StatusBadge'
 import { formatDate } from '../../utils/format'
 import toast from 'react-hot-toast'
+import { useAuth } from '../../hooks/useAuth'
+import { getEffectiveRegistrationType, getVendorOnboardingRoutes } from '../../utils/onboarding'
+import { getDashboardRoute } from '../../utils/permissions'
+import { storage } from '../../utils/storage'
 
 export default function VendorApplicationStatus() {
   const navigate = useNavigate()
+  const location = useLocation()
+  const { user } = useAuth()
   const [app, setApp] = useState(null)
   const [loading, setLoading] = useState(true)
+  const onboardingType = getEffectiveRegistrationType(user, storage.getOnboardingContext()?.registrationType)
+  const isVendorOnlineFlow = onboardingType === 'vendor'
+  const isVendorRoute = location.pathname.startsWith('/vendor/')
+  const vendorRoutes = getVendorOnboardingRoutes(isVendorRoute || isVendorOnlineFlow)
+  const applicationPath = vendorRoutes.application
+  const statusPath = vendorRoutes.status
 
   useEffect(() => {
+    if (isVendorOnlineFlow && !isVendorRoute) {
+      navigate(statusPath, { replace: true })
+      return
+    }
+
     setLoading(true)
     api.get('/vendor-applications/my-application')
       .then((res) => {
@@ -33,7 +50,7 @@ export default function VendorApplicationStatus() {
       .finally(() => {
         setLoading(false)
       })
-  }, [])
+  }, [isVendorOnlineFlow, isVendorRoute, navigate, statusPath])
 
   const openDocument = async (field) => {
     if (!app?._id) return
@@ -59,7 +76,7 @@ export default function VendorApplicationStatus() {
           You haven't started your vendor marketplace application yet. Start onboarding now to list your business.
         </p>
         <button
-          onClick={() => navigate('/member/vendor-application')}
+          onClick={() => navigate(applicationPath)}
           className="mt-6 inline-flex h-10 items-center gap-1.5 rounded-lg bg-[#0d4697] px-5 py-2 text-sm font-extrabold text-white hover:bg-blue-800"
         >
           Apply as Vendor
@@ -69,6 +86,23 @@ export default function VendorApplicationStatus() {
   }
 
   const status = String(app.status).toLowerCase()
+  const statusLabels = {
+    draft: 'Draft',
+    pending_vp_review: 'Pending VP Review',
+    submitted: 'Waiting for Marketplace Approval',
+    forwarded: 'Waiting for Marketplace Approval',
+    under_review: 'Under Review',
+    approved: 'Approved',
+    rejected: 'Rejected',
+    rejected_by_vp: 'Rejected by Vice President',
+  }
+  const currentStatusLabel = statusLabels[status] || app.status
+  const decisionOfficer = app.vpReviewedBy || app.reviewedBy || app.forwardedBy || null
+  const decisionOfficerRole = app.vpReviewedBy?.role || app.reviewedByRole || decisionOfficer?.role || 'System'
+  const decisionDate = app.vpReviewedAt || app.reviewedAt || app.forwardedAt || app.createdAt
+  const decisionRemarks = app.vpRemarks || app.adminNotes || ''
+  const submittedDate = app.submittedAt || app.createdAt
+  const submittedFrom = app.submittedFrom?.replaceAll('_', ' ') || 'Unknown'
 
   const documents = [
     ['profilePhoto', 'Profile Photo', app.step2?.personal?.profilePhoto],
@@ -85,7 +119,7 @@ export default function VendorApplicationStatus() {
       <div className="flex flex-col justify-between gap-4 border-b border-slate-200 bg-white p-5 rounded-xl shadow-sm sm:flex-row sm:items-center">
         <div>
           <button
-            onClick={() => navigate('/member/dashboard')}
+            onClick={() => navigate(getDashboardRoute(user?.role, user))}
             className="inline-flex items-center gap-1 text-xs font-extrabold text-slate-500 hover:text-[#0d4697] mb-2"
           >
             <ChevronLeft className="h-3 w-3" />
@@ -102,7 +136,7 @@ export default function VendorApplicationStatus() {
         
         {status === 'draft' && (
           <button
-            onClick={() => navigate('/member/vendor-application')}
+            onClick={() => navigate(applicationPath)}
             className="inline-flex h-10 items-center gap-1.5 rounded-lg bg-amber-600 px-4 py-2 text-xs font-extrabold text-white hover:bg-amber-700 shrink-0"
           >
             Resume Draft
@@ -112,14 +146,14 @@ export default function VendorApplicationStatus() {
       </div>
 
       {/* Reviewer Comment Banner */}
-      {app.adminNotes && (
-        <div className={`p-4 rounded-xl border flex gap-3 ${status === 'rejected' ? 'bg-red-50/50 border-red-200' : 'bg-blue-50/50 border-blue-200'}`}>
-          {status === 'rejected' ? <XCircle className="h-5 w-5 text-red-600 shrink-0 mt-0.5" /> : <AlertCircle className="h-5 w-5 text-blue-600 shrink-0 mt-0.5" />}
+      {decisionRemarks && (
+        <div className={`p-4 rounded-xl border flex gap-3 ${['rejected', 'rejected_by_vp'].includes(status) ? 'bg-red-50/50 border-red-200' : 'bg-blue-50/50 border-blue-200'}`}>
+          {['rejected', 'rejected_by_vp'].includes(status) ? <XCircle className="h-5 w-5 text-red-600 shrink-0 mt-0.5" /> : <AlertCircle className="h-5 w-5 text-blue-600 shrink-0 mt-0.5" />}
           <div>
             <p className="text-sm font-extrabold text-slate-800">
-              Reviewer Notes ({app.reviewedBy?.name || 'Officer'} - {app.reviewedByRole?.replace('_', ' ') || 'Assigned Officer'})
+              Reviewer Notes ({decisionOfficer?.name || 'Officer'} - {decisionOfficerRole?.replace('_', ' ') || 'Assigned Officer'})
             </p>
-            <p className="text-xs font-semibold text-slate-600 mt-1">{app.adminNotes}</p>
+            <p className="text-xs font-semibold text-slate-600 mt-1">{decisionRemarks}</p>
           </div>
         </div>
       )}
@@ -210,26 +244,36 @@ export default function VendorApplicationStatus() {
             <div className="space-y-3.5">
               <div className="flex justify-between text-xs font-bold">
                 <span className="text-slate-400">Review Status</span>
-                <span className="capitalize text-slate-800">{app.status}</span>
+                <span className="capitalize text-slate-800">{currentStatusLabel}</span>
               </div>
               <div className="flex justify-between text-xs font-bold">
                 <span className="text-slate-400">Submitted Date</span>
-                <span className="text-slate-800">{app.status !== 'draft' ? formatDate(app.createdAt) : 'Not submitted yet'}</span>
+                <span className="text-slate-800">{status === 'draft' ? 'Not submitted yet' : formatDate(submittedDate)}</span>
               </div>
-              {app.reviewedBy && (
+              <div className="flex justify-between text-xs font-bold">
+                <span className="text-slate-400">Submitted From</span>
+                <span className="capitalize text-slate-800">{submittedFrom}</span>
+              </div>
+              {decisionOfficer && (
                 <>
                   <div className="flex justify-between text-xs font-bold">
                     <span className="text-slate-400">Decision Officer</span>
-                    <span className="text-slate-800">{app.reviewedBy?.name || 'Officer'}</span>
+                    <span className="text-slate-800">{decisionOfficer?.name || 'Officer'}</span>
                   </div>
                   <div className="flex justify-between text-xs font-bold">
                     <span className="text-slate-400">Officer Role</span>
-                    <span className="text-slate-800">{app.reviewedByRole?.replace('_', ' ').toUpperCase()}</span>
+                    <span className="text-slate-800">{decisionOfficerRole?.replace('_', ' ').toUpperCase()}</span>
                   </div>
                   <div className="flex justify-between text-xs font-bold">
                     <span className="text-slate-400">Action Date</span>
-                    <span className="text-slate-800">{formatDate(app.reviewedAt)}</span>
+                    <span className="text-slate-800">{formatDate(decisionDate)}</span>
                   </div>
+                  {decisionRemarks && (
+                    <div className="rounded-md bg-slate-50 px-3 py-2">
+                      <p className="text-[10px] font-extrabold uppercase text-slate-400">Remarks</p>
+                      <p className="mt-1 text-xs font-semibold text-slate-700">{decisionRemarks}</p>
+                    </div>
+                  )}
                 </>
               )}
             </div>

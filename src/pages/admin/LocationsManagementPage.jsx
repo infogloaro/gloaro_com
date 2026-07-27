@@ -21,6 +21,7 @@ import {
   AlertCircle
 } from 'lucide-react'
 import api from '../../api/axios'
+import { adminApi } from '../../api/admin'
 import StatusBadge from '../../components/common/StatusBadge'
 import Modal from '../../components/common/Modal'
 import { formatDate } from '../../utils/format'
@@ -154,7 +155,7 @@ export default function LocationsManagementPage() {
       code: '',
       type,
       parent: parentId,
-      status: 'active'
+      status: type === 'chapter' && user?.role === ROLES.DISTRICT_DIRECTOR ? 'pending_approval' : 'active'
     })
     setIsCreateOpen(true)
   }
@@ -235,6 +236,17 @@ export default function LocationsManagementPage() {
       loadLocations()
     } catch {
       toast.error('Failed to toggle location status')
+    }
+  }
+
+  const resubmitChapter = async (node) => {
+    try {
+      const response = await adminApi.resubmitChapter(node._id)
+      toast.success('Chapter resubmitted for approval')
+      setSelectedNode(response.data?.data || node)
+      loadLocations()
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to resubmit chapter')
     }
   }
 
@@ -497,6 +509,18 @@ export default function LocationsManagementPage() {
                 </div>
               )}
 
+              {selectedNode.type === 'chapter' && selectedNode.status === 'pending_approval' && (
+                <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm font-semibold text-amber-900">
+                  This chapter is pending approval. Chapter status updates are handled through the approval workflow.
+                </div>
+              )}
+
+              {selectedNode.type === 'chapter' && selectedNode.status === 'rejected' && user?.role === ROLES.DISTRICT_DIRECTOR && (
+                <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm font-semibold text-red-800">
+                  This chapter was rejected. You can edit it, then resubmit after correcting the details.
+                </div>
+              )}
+
               {/* Actions Panel */}
               {canModifySelectedNode && (
                 <div className="flex gap-2 justify-end border-t border-slate-100 dark:border-slate-800 pt-4">
@@ -506,19 +530,31 @@ export default function LocationsManagementPage() {
                   >
                     <Edit2 className="h-4 w-4" /> Edit details
                   </button>
-                  <button
-                    onClick={() => toggleStatus(selectedNode)}
-                    className="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-slate-200 bg-white px-4 text-xs font-extrabold text-slate-700 hover:bg-slate-50"
-                  >
-                    {selectedNode.status === 'active' ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    {selectedNode.status === 'active' ? 'Deactivate' : 'Activate'}
-                  </button>
-                  <button
-                    onClick={() => handleDelete(selectedNode._id)}
-                    className="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-red-50 px-4 text-xs font-extrabold text-red-600 hover:bg-red-100"
-                  >
-                    <Trash2 className="h-4 w-4" /> Delete Location
-                  </button>
+                  {!((selectedNode.type === 'chapter') && user?.role === ROLES.DISTRICT_DIRECTOR) && (
+                    <button
+                      onClick={() => toggleStatus(selectedNode)}
+                      className="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-slate-200 bg-white px-4 text-xs font-extrabold text-slate-700 hover:bg-slate-50"
+                    >
+                      {selectedNode.status === 'active' ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      {selectedNode.status === 'active' ? 'Deactivate' : 'Activate'}
+                    </button>
+                  )}
+                  {selectedNode.type !== 'chapter' && (
+                    <button
+                      onClick={() => handleDelete(selectedNode._id)}
+                      className="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-red-50 px-4 text-xs font-extrabold text-red-600 hover:bg-red-100"
+                    >
+                      <Trash2 className="h-4 w-4" /> Delete Location
+                    </button>
+                  )}
+                  {selectedNode.type === 'chapter' && selectedNode.status === 'rejected' && user?.role === ROLES.DISTRICT_DIRECTOR && (
+                    <button
+                      onClick={() => resubmitChapter(selectedNode)}
+                      className="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-emerald-600 px-4 text-xs font-extrabold text-white hover:bg-emerald-700"
+                    >
+                      <CheckCircle2 className="h-4 w-4" /> Resubmit Chapter
+                    </button>
+                  )}
                 </div>
               )}
             </div>
@@ -674,14 +710,20 @@ export default function LocationsManagementPage() {
           </div>
           <div>
             <label className="block text-xs font-extrabold uppercase text-slate-500">Status</label>
-            <select
-              value={form.status}
-              onChange={(e) => setForm(prev => ({ ...prev, status: e.target.value }))}
-              className="mt-1 h-11 w-full rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-900 focus:outline-none"
-            >
-              <option value="active">Active</option>
-              <option value="inactive">Inactive</option>
-            </select>
+            {form.type === 'chapter' && user?.role === ROLES.DISTRICT_DIRECTOR ? (
+              <div className="mt-1 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-bold text-amber-800">
+                Chapter status is controlled by the approval workflow. Edit details and resubmit when ready.
+              </div>
+            ) : (
+              <select
+                value={form.status}
+                onChange={(e) => setForm(prev => ({ ...prev, status: e.target.value }))}
+                className="mt-1 h-11 w-full rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-900 focus:outline-none"
+              >
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+              </select>
+            )}
           </div>
           <div className="flex justify-end gap-2 pt-4 border-t border-slate-100">
             <button
@@ -700,6 +742,7 @@ export default function LocationsManagementPage() {
           </div>
         </form>
       </Modal>
+
     </div>
   )
 }

@@ -286,7 +286,6 @@ const saveAdmin = async () => {
         toast.error("Please create the Chapter in the Organization Master before creating this official account.")
         return
     }
-
     setSaving(true)
     try {
         const payloadData = buildPayload(form, Boolean(editing))

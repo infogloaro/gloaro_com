@@ -112,6 +112,7 @@ import {
   WishlistPage,
 } from './pages/customer/ListingPages'
 import NotificationsPage from './pages/shared/NotificationsPage'
+import ProfilePage from './pages/shared/ProfilePage'
 import Home from './pages/Home'
 import MembershipAgreement from './pages/public/MembershipAgreement'
 import MembershipApplication from './pages/public/MembershipApplication'
@@ -167,6 +168,8 @@ import VisitorsPage from './pages/membership/VisitorsPage'
 import BusinessDirectory from './pages/membership/BusinessDirectory'
 import Leaderboard from './pages/membership/Leaderboard'
 import { ROLES } from './constants/roleConfig.js'
+import { getEffectiveRegistrationType, getVendorOnboardingRoutes } from './utils/onboarding'
+import { storage } from './utils/storage'
 
 function App() {
   const { role, permissionsLoading, canAccessPath } = useAuth()
@@ -202,7 +205,7 @@ function App() {
     { path: '/visitor-conversion', element: <VisitorConversionEnginePage /> },
     { path: '/attendance', element: <AttendanceEnginePage /> },
     { path: '/meetings', element: <MeetingManagementPage /> },
-    { path: '/chapters', element: <ChapterManagementPage /> },
+    { path: '/chapters', element: <ChapterManagementPage />, roles: [ROLES.ADMIN, ROLES.SUPERADMIN] },
     { path: '/chapter-dashboard', element: <ChapterDashboardPage /> },
     { path: '/applications', element: <AdminMembershipApplicationsPage /> },
     { path: '/applications/membership', element: <AdminMembershipApplicationsPage /> },
@@ -287,7 +290,7 @@ function App() {
           <Route path="/reviews" element={<ReviewsPage />} />
           <Route path="/membership-agreement" element={<MembershipAgreement />} />
           <Route path="/membership-application" element={<MembershipApplication />} />
-          <Route path="/membership-applications" element={<Navigate to="/membership-application" replace />} />
+          <Route path="/membership-applications" element={<MembershipApplicationsRedirect />} />
           <Route path="/membership-qualification" element={<MembershipQualification />} />
           <Route path="/membership-application/track" element={<MembershipApplicationTrack />} />
         </Route>
@@ -311,12 +314,15 @@ function App() {
             <Route element={<ProtectedRoute roles={[ROLES.VENDOR]} />}>
               <Route path="/vendor" element={<VendorDashboard />} />
               <Route path="/vendor/profile" element={<VendorProfilePage />} />
+              <Route path="/vendor/settings" element={<ProfilePage />} />
               <Route path="/vendor/products" element={<VendorProductsPage />} />
               <Route path="/vendor/services" element={<VendorServicesPage />} />
+              <Route path="/vendor/orders" element={<VendorOrdersPage />} />
               <Route path="/vendor/leads" element={<VendorLeadsPage />} />
               <Route path="/vendor/reviews" element={<VendorReviewsPage />} />
               <Route path="/vendor/membership" element={<VendorMembershipPage />} />
               <Route path="/vendor/payments" element={<VendorPaymentsPage />} />
+              <Route path="/vendor/analytics" element={<VendorDashboard />} />
               <Route path="/vendor/notifications" element={<VendorNotificationsPage />} />
               <Route path="/vendor/support" element={<VendorSupportPage />} />
             </Route>
@@ -347,7 +353,7 @@ function App() {
               <Route path="/member/vendor-application" element={<VendorApplicationForm />} />
               <Route path="/member/vendor-application-status" element={<VendorApplicationStatus />} />
               <Route path="/member/profile" element={<MembershipProfilePage />} />
-              <Route path="/member/settings" element={<MembershipProfilePage />} />
+              <Route path="/member/settings" element={<ProfilePage />} />
               
               {/* Parameterized main dashboard sub-views */}
               <Route path="/member/dashboard" element={<MemberDashboard />} />
@@ -357,17 +363,25 @@ function App() {
               <Route element={<MarketplaceRoute />}>
                 <Route path="/member/products" element={<MemberProductsPage />} />
                 <Route path="/member/dashboard/my-business" element={<VendorProfilePage />} />
-                <Route path="/member/dashboard/products" element={<VendorProductsPage />} />
-                <Route path="/member/dashboard/products-mgmt" element={<VendorProductsPage />} />
-                <Route path="/member/dashboard/services" element={<VendorServicesPage />} />
-                <Route path="/member/dashboard/services-mgmt" element={<VendorServicesPage />} />
-                <Route path="/member/dashboard/orders" element={<VendorOrdersPage />} />
-                <Route path="/member/dashboard/leads" element={<VendorLeadsPage />} />
-                <Route path="/member/dashboard/reviews" element={<VendorReviewsPage />} />
-                <Route path="/member/dashboard/payments" element={<VendorPaymentsPage />} />
-                <Route path="/member/dashboard/subscription" element={<VendorMembershipPage />} />
-                <Route path="/member/dashboard/vendor-analytics" element={<VendorDashboard />} />
-              </Route>
+              <Route path="/member/dashboard/products" element={<VendorProductsPage />} />
+              <Route path="/member/dashboard/products-mgmt" element={<VendorProductsPage />} />
+              <Route path="/member/dashboard/services" element={<VendorServicesPage />} />
+              <Route path="/member/dashboard/services-mgmt" element={<VendorServicesPage />} />
+              <Route path="/member/dashboard/orders" element={<VendorOrdersPage />} />
+              <Route path="/member/dashboard/leads" element={<VendorLeadsPage />} />
+              <Route path="/member/dashboard/reviews" element={<VendorReviewsPage />} />
+              <Route path="/member/dashboard/payments" element={<VendorPaymentsPage />} />
+              <Route path="/member/dashboard/notifications" element={<VendorNotificationsPage />} />
+              <Route path="/member/dashboard/subscription" element={<VendorMembershipPage />} />
+              <Route path="/member/dashboard/vendor-analytics" element={<VendorDashboard />} />
+            </Route>
+            </Route>
+
+            {/* Online Vendor Onboarding Route Group */}
+            <Route element={<ProtectedRoute roles={[ROLES.CUSTOMER, ROLES.USER, ROLES.VENDOR]} />}>
+              <Route path="/vendor/onboarding" element={<VendorApplicationForm />} />
+              <Route path="/vendor/onboarding-status" element={<VendorApplicationStatus />} />
+              <Route path="/vendor/account" element={<ProfilePage />} />
             </Route>
 
             <Route path="/member/membership-application-status" element={<MembershipApplicationStatus />} />
@@ -544,6 +558,7 @@ function App() {
               <Route path="/vice-president/members" element={<AdminMembersPage />} />
               <Route path="/vice-president/register-member" element={<AdminManagementPage role={ROLES.CUSTOMER} />} />
               <Route path="/vice-president/memberships" element={<AdminMembershipsPage />} />
+              <Route path="/vice-president/membership-applications" element={<AdminMembershipApplicationsPage />} />
               <Route path="/vice-president/vendor-applications" element={<VicePresidentVendorApplicationsPage />} />
               <Route path="/vice-president/reports" element={<EnterpriseReportBuilderPage />} />
               <Route path="/vice-president/settings" element={<AdminSettingsPage />} />
@@ -626,7 +641,10 @@ function App() {
 }
 
 function MarketplaceRoute() {
-  const { marketplaceAccess, vendorApplication } = useAuth()
+  const { marketplaceAccess, vendorApplication, user } = useAuth()
+  const onboardingType = getEffectiveRegistrationType(user, storage.getOnboardingContext()?.registrationType)
+  const isVendorOnboarding = onboardingType === 'vendor'
+  const vendorRoutes = getVendorOnboardingRoutes(true)
 
   if (marketplaceAccess === 'NOT_APPLIED') {
     return <Navigate to="/member/dashboard" replace />
@@ -634,12 +652,20 @@ function MarketplaceRoute() {
 
   if (marketplaceAccess === 'PENDING') {
     if (vendorApplication?.status === 'draft') {
-      return <Navigate to="/member/vendor-application" replace />
+      return <Navigate to={isVendorOnboarding ? vendorRoutes.application : '/member/vendor-application'} replace />
     }
-    return <Navigate to="/member/vendor-application-status" replace />
+    return <Navigate to={isVendorOnboarding ? vendorRoutes.status : '/member/vendor-application-status'} replace />
   }
 
   return <Outlet />
+}
+
+function MembershipApplicationsRedirect() {
+  const { user } = useAuth()
+  const onboardingType = getEffectiveRegistrationType(user, storage.getOnboardingContext()?.registrationType)
+  const vendorRoutes = getVendorOnboardingRoutes(true)
+
+  return <Navigate to={onboardingType === 'vendor' ? vendorRoutes.application : '/membership-application'} replace />
 }
 
 export default App

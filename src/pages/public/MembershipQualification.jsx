@@ -8,6 +8,8 @@ import { clearMembershipDraft, getMembershipDraft, getMembershipFiles, saveMembe
 import LoadingScreen from '../../components/common/LoadingScreen'
 import { useAuth } from '../../hooks/useAuth'
 import { ROLES } from '../../constants/roleConfig.js'
+import { getEffectiveRegistrationType, getVendorOnboardingRoutes } from '../../utils/onboarding'
+import { storage } from '../../utils/storage'
 
 const expectations = [
   ['Professional Conduct', 'Gloaro Network members are expected to maintain the highest levels of professional decorum during all interactions. This includes punctuality for network meetings, respectful communication across all digital channels, and upholding the brand’s prestige in public forums.'],
@@ -22,6 +24,8 @@ const companyTypes = ['Private Limited', 'Public Limited', 'LLP', 'Partnership',
 export default function MembershipQualification() {
   const navigate = useNavigate()
   const { user } = useAuth()
+  const onboardingType = getEffectiveRegistrationType(user, storage.getOnboardingContext()?.registrationType)
+  const vendorRoutes = getVendorOnboardingRoutes(true)
   const draft = getMembershipDraft()
   const [credentials, setCredentials] = useState(draft.credentials || {})
   const [references, setReferences] = useState(draft.references || [{}, {}])
@@ -34,6 +38,11 @@ export default function MembershipQualification() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    if (onboardingType === 'vendor') {
+      navigate(vendorRoutes.application, { replace: true })
+      return
+    }
+
     // Redirect official roles who shouldn't apply
       if (user && ![ROLES.CUSTOMER, ROLES.USER, ROLES.VENDOR].includes(user.role)) {
       const roleDashboardMap = {
@@ -78,7 +87,7 @@ export default function MembershipQualification() {
       .finally(() => {
         setLoading(false)
       })
-  }, [])
+  }, [navigate, onboardingType, user, vendorRoutes.application])
 
   const handleSaveCompleteLater = async () => {
     setSubmitting(true)

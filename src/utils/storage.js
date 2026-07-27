@@ -1,4 +1,13 @@
 export const storage = {
+  getOnboardingContext: () => {
+    const raw = localStorage.getItem('gloaro_onboarding_context') || sessionStorage.getItem('gloaro_onboarding_context')
+    if (!raw) return null
+    try {
+      return JSON.parse(raw)
+    } catch {
+      return null
+    }
+  },
   getAccessToken: () => localStorage.getItem('gloaro_access_token') || sessionStorage.getItem('gloaro_access_token'),
   getRefreshToken: () => localStorage.getItem('gloaro_refresh_token') || sessionStorage.getItem('gloaro_refresh_token'),
   getUser: () => {
@@ -35,12 +44,27 @@ export const storage = {
     primary.setItem('gloaro_access_token', accessToken)
     primary.setItem('gloaro_refresh_token', refreshToken)
   },
+  setOnboardingContext: (context, remember = true) => {
+    const primary = remember ? localStorage : sessionStorage
+    const secondary = remember ? sessionStorage : localStorage
+    secondary.removeItem('gloaro_onboarding_context')
+    if (!context) {
+      primary.removeItem('gloaro_onboarding_context')
+      return
+    }
+    primary.setItem('gloaro_onboarding_context', JSON.stringify(context))
+  },
+  clearOnboardingContext: () => {
+    localStorage.removeItem('gloaro_onboarding_context')
+    sessionStorage.removeItem('gloaro_onboarding_context')
+  },
   clearSession: () => {
     ;[localStorage, sessionStorage].forEach((store) => {
       store.removeItem('gloaro_user')
       store.removeItem('gloaro_access_token')
       store.removeItem('gloaro_refresh_token')
       store.removeItem('gloaro_permissions')
+      store.removeItem('gloaro_onboarding_context')
     })
   },
 }

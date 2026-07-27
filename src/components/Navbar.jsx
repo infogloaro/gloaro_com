@@ -62,7 +62,7 @@ export default function Navbar() {
     [shopIcon, 'Shop', '/products', 'bg-[#ffb20c] text-[#063a85]'],
     [nearMeIcon, 'Near Me', '/nearby', 'bg-[#ffb20c] text-[#063a85]'],
     [b2bIcon, 'B2B Marketplace', loginLink('b2b', '/vendors'), 'bg-[#ffb20c] text-[#063a85]'],
-    [loginIcon, 'Become a Vendor', loginLink(ROLES.VENDOR, '/vendor'), 'bg-[#0b469e] text-white', 'brightness-0 invert'],
+    [loginIcon, 'Become a Vendor', '/register?type=vendor', 'bg-[#0b469e] text-white', 'brightness-0 invert'],
   ]
 
   return (
@@ -84,7 +84,7 @@ export default function Navbar() {
 
           <div className="ml-auto hidden items-center gap-4 text-[#0b469e] lg:flex">
             {isAuthenticated ? (
-              <a href={getDashboardRoute(user?.role)} aria-label="Account" className="flex items-center gap-1 text-sm font-medium"><img src={loginIcon} alt="" className="h-5 w-5 object-contain" /> {user?.name || 'Account'}</a>
+              <a href={getDashboardRoute(user?.role, user)} aria-label="Account" className="flex items-center gap-1 text-sm font-medium"><img src={loginIcon} alt="" className="h-5 w-5 object-contain" /> {user?.name || 'Account'}</a>
             ) : (
               <a href={loginLink(ROLES.USER, '/member/dashboard')} aria-label="Account" className="flex items-center gap-1 text-sm font-medium"><img src={loginIcon} alt="" className="h-5 w-5 object-contain" /> Login</a>
             )}
@@ -109,7 +109,7 @@ export default function Navbar() {
             </button>
             {mobileNetworkOpen && <MobileGloaroNetworkMenu onNavigate={() => setOpen(false)} />}
             {isAuthenticated ? (
-              <a onClick={() => setOpen(false)} href={getDashboardRoute(user?.role)} className="flex items-center rounded-lg px-4 py-3 font-medium bg-[#0b469e]/10 text-[#0b469e] sm:col-span-2">
+              <a onClick={() => setOpen(false)} href={getDashboardRoute(user?.role, user)} className="flex items-center rounded-lg px-4 py-3 font-medium bg-[#0b469e]/10 text-[#0b469e] sm:col-span-2">
                 <img src={loginIcon} alt="" className="mr-2 h-4 w-4 object-contain brightness-0 filter" />
                 {user?.name || 'Account'}
               </a>

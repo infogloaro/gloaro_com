@@ -6,6 +6,8 @@ import { getMembershipDraft, saveMembershipDraft } from '../../utils/membershipO
 import { useAuth } from '../../hooks/useAuth'
 import api from '../../api/axios'
 import { ROLES } from '../../constants/roleConfig.js'
+import { getEffectiveRegistrationType, getVendorOnboardingRoutes } from '../../utils/onboarding'
+import { storage } from '../../utils/storage'
 
 const principles = [
   ['Professional Integrity', 'Members shall conduct all business affairs with the highest level of professional integrity. This includes honesty in representation of credentials, transparency in venture insights, and upholding the reputation of the Gloaro ecosystem in all public and private interactions.'],
@@ -49,9 +51,16 @@ export default function MembershipAgreement() {
   const navigate = useNavigate()
   const { user } = useAuth()
   const [showTermsDetails, setShowTermsDetails] = useState(false)
+  const onboardingType = getEffectiveRegistrationType(user, storage.getOnboardingContext()?.registrationType)
+  const vendorRoutes = getVendorOnboardingRoutes(true)
 
   // Redirect official roles who shouldn't apply, and redirect submitted applicants
   useEffect(() => {
+    if (onboardingType === 'vendor') {
+      navigate(vendorRoutes.application, { replace: true })
+      return
+    }
+
     if (user && ![ROLES.CUSTOMER, ROLES.USER, ROLES.VENDOR].includes(user.role)) {
       const roleDashboardMap = {
         [ROLES.VICE_PRESIDENT]: '/vice-president/dashboard',
@@ -75,7 +84,7 @@ export default function MembershipAgreement() {
         })
         .catch(() => {})
     }
-  }, [user, navigate])
+  }, [user, navigate, onboardingType, vendorRoutes.application])
 
   const draft = getMembershipDraft()
   const initialAgreement = { ...(draft.agreement || {}) }

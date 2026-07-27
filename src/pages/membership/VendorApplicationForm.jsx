@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import {
   FileText,
   User,
@@ -21,15 +21,27 @@ import LoadingScreen from '../../components/common/LoadingScreen'
 import { customerApi } from '../../api/customer'
 import toast from 'react-hot-toast'
 import StatusBadge from '../../components/common/StatusBadge'
+import OrganizationAssignmentFields from '../../components/forms/OrganizationAssignmentFields'
+import { useAuth } from '../../hooks/useAuth'
+import { getEffectiveRegistrationType, getVendorOnboardingRoutes } from '../../utils/onboarding'
+import { storage } from '../../utils/storage'
 
 const BUSINESS_TYPES = ['Private Limited', 'Partnership', 'Sole Proprietorship', 'LLP', 'One Person Company', 'Other']
 
 export default function VendorApplicationForm() {
   const navigate = useNavigate()
+  const location = useLocation()
+  const { user } = useAuth()
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [categories, setCategories] = useState([])
   const [step, setStep] = useState(1)
+  const onboardingType = getEffectiveRegistrationType(user, storage.getOnboardingContext()?.registrationType)
+  const isVendorOnlineFlow = onboardingType === 'vendor'
+  const isVendorRoute = location.pathname.startsWith('/vendor/')
+  const vendorRoutes = getVendorOnboardingRoutes(isVendorRoute || isVendorOnlineFlow)
+  const applicationPath = vendorRoutes.application
+  const statusPath = vendorRoutes.status
 
   // Current Application details
   const [appId, setAppId] = useState(null)
@@ -86,6 +98,12 @@ export default function VendorApplicationForm() {
       businessEmail: '',
     },
   })
+  const [organization, setOrganization] = useState({
+    regionId: '',
+    stateId: '',
+    districtId: '',
+    chapterId: '',
+  })
 
   // Step 3: Verification
   const [step3, setStep3] = useState({
@@ -114,6 +132,11 @@ export default function VendorApplicationForm() {
 
   // Load existing application & category options
   useEffect(() => {
+    if (isVendorOnlineFlow && !isVendorRoute) {
+      navigate(applicationPath, { replace: true })
+      return
+    }
+
     const initLoad = async () => {
       try {
         setLoading(true)
@@ -138,7 +161,7 @@ export default function VendorApplicationForm() {
             return
           } else if (application.status !== 'draft') {
             // Already submitted (other statuses, e.g., rejected) - redirect to status page
-            navigate('/member/vendor-application-status')
+            navigate(statusPath, { replace: true })
             return
           }
 
@@ -163,6 +186,12 @@ export default function VendorApplicationForm() {
               digitalPresence: { ...step2.digitalPresence, ...application.step2.digitalPresence },
             })
           }
+          setOrganization({
+            regionId: application.regionId || '',
+            stateId: application.stateId || '',
+            districtId: application.districtId || '',
+            chapterId: application.chapterId || '',
+          })
 
           // Populate step 3
           if (application.step3) {
@@ -181,7 +210,7 @@ export default function VendorApplicationForm() {
       }
     }
     initLoad()
-  }, [navigate])
+  }, [applicationPath, isVendorOnlineFlow, isVendorRoute, navigate, statusPath])
 
   const handleFileChange = (field, e) => {
     const file = e.target.files?.[0]
@@ -204,6 +233,10 @@ export default function VendorApplicationForm() {
       step1,
       step2: cleanedStep2,
       step3,
+      regionId: organization.regionId || null,
+      stateId: organization.stateId || null,
+      districtId: organization.districtId || null,
+      chapterId: organization.chapterId || null,
     }))
 
     // Append file binaries
@@ -265,6 +298,10 @@ export default function VendorApplicationForm() {
         toast.error('Please select business name and category.')
         return
       }
+      if (!organization.regionId || !organization.stateId || !organization.districtId || !organization.chapterId) {
+        toast.error('Please select Region, State, District, and Chapter.')
+        return
+      }
     }
 
     // Save and increment step
@@ -312,7 +349,7 @@ export default function VendorApplicationForm() {
         headers: { 'Content-Type': 'multipart/form-data' },
       })
       toast.success('Application submitted successfully!')
-      navigate('/member/vendor-application-status')
+      navigate(statusPath, { replace: true })
     } catch (err) {
       toast.error(err.response?.data?.message || 'Submission failed.')
     } finally {
@@ -355,7 +392,7 @@ export default function VendorApplicationForm() {
               <ArrowRight className="h-4 w-4" />
             </button>
             <button
-              onClick={() => navigate('/member/vendor-application-status')}
+              onClick={() => navigate(statusPath)}
               className="inline-flex h-11 items-center justify-center gap-1.5 rounded-lg border border-slate-200 bg-white px-6 py-2.5 text-sm font-extrabold text-slate-700 hover:bg-slate-50 dark:bg-slate-800 dark:border-slate-700 dark:text-white dark:hover:bg-slate-750 transition duration-150 ease-in-out shadow-sm"
             >
               View Application Details
@@ -396,7 +433,7 @@ export default function VendorApplicationForm() {
 
           <div className="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
             <button
-              onClick={() => navigate('/member/vendor-application-status')}
+              onClick={() => navigate(statusPath)}
               className="inline-flex h-11 items-center justify-center gap-1.5 rounded-lg bg-[#0d4697] px-6 py-2.5 text-sm font-extrabold text-white hover:bg-blue-800 transition duration-150 ease-in-out shadow-md"
             >
               Track Application Status
@@ -597,6 +634,13 @@ export default function VendorApplicationForm() {
               <FormInput label="Pincode" value={step2.address.pincode} onChange={(val) => setStep2(p => ({ ...p, address: { ...p.address, pincode: val } }))} />
             </div>
           </section>
+
+          <OrganizationAssignmentFields
+            value={organization}
+            onChange={(next) => setOrganization(next)}
+            title="Organization Assignment"
+            description="Select the hierarchy that your vendor application should be attached to."
+          />
 
           {/* Business Details */}
           <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm space-y-4">

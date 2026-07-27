@@ -1,5 +1,6 @@
 import {
   ArrowRight,
+  BarChart3,
   Bell,
   BriefcaseBusiness,
   Building2,
@@ -18,14 +19,24 @@ import EmptyState from '../../components/common/EmptyState'
 import LoadingScreen from '../../components/common/LoadingScreen'
 import StatusBadge from '../../components/common/StatusBadge'
 import DataTable from '../../components/tables/DataTable'
+import { useAuth } from '../../hooks/useAuth'
 import { useApi } from '../../hooks/useApi'
 import { formatCurrency, formatDate } from '../../utils/format'
 import JurisdictionCard from '../../components/common/JurisdictionCard'
+import { getEffectiveRegistrationType } from '../../utils/onboarding'
+import { getDashboardRoute } from '../../utils/permissions'
+import { storage } from '../../utils/storage'
 
 export default function VendorDashboard() {
+  const { user } = useAuth()
   const { data, loading, error } = useApi(vendorApi.dashboard)
+  const registrationType = getEffectiveRegistrationType(user, storage.getOnboardingContext()?.registrationType)
+  const isStandaloneVendor = registrationType === 'vendor'
+  const dashboardBase = getDashboardRoute(user?.role, user)
+  const routeFor = (vendorPath, memberPath = vendorPath) => `${dashboardBase}${isStandaloneVendor ? vendorPath : memberPath}`
+
   if (loading) return <LoadingScreen label="Loading vendor dashboard..." />
-  if (error?.response?.status === 404 || !data) return <VendorSetupState />
+  if (error?.response?.status === 404 || !data) return <VendorSetupState routeFor={routeFor} />
 
   const vendor = data.vendor || {}
   const stats = data.stats || {}
@@ -62,7 +73,7 @@ export default function VendorDashboard() {
               </div>
               <StatusBadge value={membership.status || (membership.isActive ? 'active' : 'pending')} />
             </div>
-            <Link to="/vendor/membership" className="mt-4 inline-flex items-center gap-2 rounded-md bg-[#ffb20c] px-4 py-2 text-sm font-extrabold text-[#0b1f3d]">Manage Plan <ArrowRight className="h-4 w-4" /></Link>
+            <Link to={routeFor('/membership', '/subscription')} className="mt-4 inline-flex items-center gap-2 rounded-md bg-[#ffb20c] px-4 py-2 text-sm font-extrabold text-[#0b1f3d]">Manage Plan <ArrowRight className="h-4 w-4" /></Link>
           </div>
         </div>
       </section>
@@ -70,12 +81,13 @@ export default function VendorDashboard() {
       <JurisdictionCard />
 
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-6">
-        <VendorMetric label="Products" value={stats.productsCount} icon={Package} to="/member/dashboard/products" />
-        <VendorMetric label="Services" value={stats.servicesCount} icon={BriefcaseBusiness} to="/member/dashboard/services" />
-        <VendorMetric label="Open Leads" value={stats.pendingLeads} helper={`${stats.totalLeads || 0} total leads`} icon={Ticket} to="/member/dashboard/leads" />
-        <VendorMetric label="Revenue" value={formatCurrency(stats.monthlyRevenue)} helper="This month" icon={Wallet} to="/member/dashboard/payments" />
-        <VendorMetric label="Rating" value={Number(stats.avgRating || 0).toFixed(1)} helper={`${stats.totalReviews || 0} reviews`} icon={Star} to="/member/dashboard/reviews" />
-        <VendorMetric label="Unread" value={stats.unreadNotifications} helper="Notifications" icon={Bell} to="/member/profile" />
+        <VendorMetric label="Products" value={stats.productsCount} icon={Package} to={routeFor('/products')} />
+        <VendorMetric label="Services" value={stats.servicesCount} icon={BriefcaseBusiness} to={routeFor('/services')} />
+        <VendorMetric label="Orders" value={stats.pendingOrders || stats.ordersCount || 0} helper={`${stats.totalOrders || 0} total orders`} icon={Ticket} to={routeFor('/orders')} />
+        <VendorMetric label="Leads" value={stats.pendingLeads} helper={`${stats.totalLeads || 0} total leads`} icon={Ticket} to={routeFor('/leads')} />
+        <VendorMetric label="Reviews" value={Number(stats.avgRating || 0).toFixed(1)} helper={`${stats.totalReviews || 0} reviews`} icon={Star} to={routeFor('/reviews')} />
+        <VendorMetric label="Payments" value={formatCurrency(stats.monthlyRevenue)} helper="This month" icon={Wallet} to={routeFor('/payments')} />
+        <VendorMetric label="Analytics" value={stats.totalViews || 0} helper="Profile views" icon={BarChart3} to={routeFor('/analytics', '/vendor-analytics')} />
       </section>
 
       <section className="grid gap-5 xl:grid-cols-[1.25fr_0.75fr]">
@@ -85,7 +97,7 @@ export default function VendorDashboard() {
               <h2 className="text-xl font-extrabold text-slate-950">Lead Inbox</h2>
               <p className="mt-1 text-sm font-semibold text-slate-500">Latest customer enquiries for your business.</p>
             </div>
-            <Link to="/member/dashboard/leads" className="text-sm font-extrabold text-[#0d4697]">View all</Link>
+            <Link to={routeFor('/leads')} className="text-sm font-extrabold text-[#0d4697]">View all</Link>
           </div>
           <div className="mt-4">
             <DataTable
@@ -102,19 +114,19 @@ export default function VendorDashboard() {
         </div>
 
         <div className="space-y-5">
-          <QuickActions />
-          <RecentPayments payments={data.recentPayments || []} />
+          <QuickActions isStandaloneVendor={isStandaloneVendor} />
+          <RecentPayments payments={data.recentPayments || []} routeFor={routeFor} />
         </div>
       </section>
 
       <section className="grid gap-5 lg:grid-cols-3">
-        <VendorPanel title="Business Verification" icon={Building2} action="Update Profile" to="/member/dashboard/my-business">
+        <VendorPanel title="Business Verification" icon={Building2} action="Update Profile" to={routeFor('/profile', '/my-business')}>
           <p className="text-sm font-semibold text-slate-600">Keep your business profile, documents, address, and map location updated for better marketplace visibility.</p>
         </VendorPanel>
-        <VendorPanel title="Catalog Health" icon={Package} action="Add Product" to="/member/dashboard/products">
+        <VendorPanel title="Catalog Health" icon={Package} action="Add Product" to={routeFor('/products')}>
           <p className="text-sm font-semibold text-slate-600">Add products with price, inventory, images, and categories so nearby customers can discover your store.</p>
         </VendorPanel>
-        <VendorPanel title="Service Bookings" icon={CalendarClock} action="Add Service" to="/member/dashboard/services">
+        <VendorPanel title="Service Bookings" icon={CalendarClock} action="Add Service" to={routeFor('/services')}>
           <p className="text-sm font-semibold text-slate-600">List services, pricing, service areas, and availability to receive more qualified enquiries.</p>
         </VendorPanel>
       </section>
@@ -122,14 +134,14 @@ export default function VendorDashboard() {
   )
 }
 
-  function VendorSetupState() {
+function VendorSetupState({ routeFor = () => '' }) {
     return (
       <div className="space-y-6">
         <section className="rounded-lg bg-[#0b1f3d] p-6 text-white shadow-sm">
           <p className="text-sm font-bold uppercase tracking-[0.18em] text-[#ffb20c]">Vendor Dashboard</p>
           <h1 className="mt-2 text-3xl font-black">Create your business profile</h1>
           <p className="mt-2 max-w-2xl text-sm font-semibold text-slate-200">Your vendor login is working, but this account does not have a business profile yet. Create the profile first, then products, services, leads, payments, and reviews will appear here.</p>
-          <Link to="/member/dashboard/my-business" className="mt-5 inline-flex items-center gap-2 rounded-md bg-[#ffb20c] px-5 py-3 text-sm font-extrabold text-[#0b1f3d]">Set Up Business Profile <ArrowRight className="h-4 w-4" /></Link>
+          <Link to={routeFor('/profile', '/my-business')} className="mt-5 inline-flex items-center gap-2 rounded-md bg-[#ffb20c] px-5 py-3 text-sm font-extrabold text-[#0b1f3d]">Set Up Business Profile <ArrowRight className="h-4 w-4" /></Link>
         </section>
 
         <EmptyState
@@ -154,13 +166,20 @@ export default function VendorDashboard() {
     )
   }
 
-  function QuickActions() {
-    const actions = [
-      ['Add Product', '/member/dashboard/products', Package],
-      ['Add Service', '/member/dashboard/services', BriefcaseBusiness],
-      ['Check Leads', '/member/dashboard/leads', Ticket],
-      ['Payments', '/member/dashboard/payments', CreditCard],
-    ]
+function QuickActions({ isStandaloneVendor }) {
+    const actions = isStandaloneVendor
+      ? [
+          ['Add Product', '/vendor/products', Package],
+          ['Add Service', '/vendor/services', BriefcaseBusiness],
+          ['Check Leads', '/vendor/leads', Ticket],
+          ['Payments', '/vendor/payments', CreditCard],
+        ]
+      : [
+          ['Add Product', '/products', Package],
+          ['Add Service', '/services', BriefcaseBusiness],
+          ['Check Leads', '/leads', Ticket],
+          ['Payments', '/payments', CreditCard],
+        ]
 
     return (
       <div className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
@@ -177,12 +196,12 @@ export default function VendorDashboard() {
     )
   }
 
-  function RecentPayments({ payments }) {
+function RecentPayments({ payments, routeFor }) {
     return (
       <div className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
         <div className="flex items-center justify-between">
           <h2 className="text-xl font-extrabold text-slate-950">Recent Payments</h2>
-          <Link to="/member/dashboard/payments" className="text-sm font-extrabold text-[#0d4697]">View</Link>
+        <Link to={routeFor('/payments')} className="text-sm font-extrabold text-[#0d4697]">View</Link>
       </div>
       <div className="mt-4 space-y-3">
         {payments.length ? payments.map((payment) => (

@@ -7,7 +7,6 @@ import Modal from '../../components/common/Modal'
 import StatusBadge from '../../components/common/StatusBadge'
 import { useAuth } from '../../hooks/useAuth'
 import { formatCurrency, formatDate } from '../../utils/format'
-import { canReviewMembershipApplication } from '../../utils/permissions'
 import ResourceListPage from '../shared/ResourceListPage'
 import SimpleJsonForm from '../shared/SimpleJsonForm'
 import { ROLES } from '../../constants/roleConfig.js'
@@ -316,44 +315,64 @@ export function AdminMembershipApplicationsPage() {
 
   return (
     <>
-      <ResourceListPage module="members" section="applications" title="Membership Applications" fetcher={adminApi.membershipApplications} filters={[{ key: 'status', label: 'Status', options: ['submitted', 'documents_verified', 'under_review', 'approved', 'rejected', 'changes_requested'].map((value) => ({ value, label: value.replaceAll('_', ' ') })) }]} columns={[
+      <ResourceListPage module="members" section="applications" title="Membership Applications" fetcher={adminApi.membershipApplications} filters={[{ key: 'status', label: 'Status', options: ['pending_vp_review', 'submitted', 'approved', 'rejected'].map((value) => ({ value, label: value.replaceAll('_', ' ') })) }]} columns={[
         { key: 'applicationNumber', header: 'Member ID/App ID', render: (row) => row.submittedBy?.memberId || row.applicationNumber },
         { key: 'fullName', header: 'Name', render: (row) => row.personal?.fullName || row.submittedBy?.name },
         { key: 'email', header: 'Email', render: (row) => row.personal?.emailAddress || row.submittedBy?.email || 'Not added' },
         { key: 'mobile', header: 'Mobile', render: (row) => row.personal?.mobileNumber || row.submittedBy?.phone || 'Not added' },
         { key: 'plan', header: 'Membership Plan', render: (row) => row.professional?.membershipPlan || row.membership?.plan || 'Silver' },
+        { key: 'source', header: 'Source', render: (row) => row.source || row.sourceLabel || row.applicationSource || row.applicationSourceLabel || 'Online Member' },
         { key: 'region', header: 'Region', render: (row) => row.regionId?.name || 'Not assigned' },
         { key: 'state', header: 'State', render: (row) => row.stateId?.name || 'Not assigned' },
         { key: 'district', header: 'District', render: (row) => row.districtId?.name || 'Not assigned' },
         { key: 'chapter', header: 'Chapter', render: (row) => row.chapterId?.name || 'Not assigned' },
         { key: 'referredBy', header: 'Referred By', render: (row) => row.submittedBy?.referredBy?.name || row.submittedBy?.referredBy?.email || 'Direct' },
-        { key: 'submittedBy', header: 'Submitted By (VP)', render: (row) => row.vicePresidentId?.name || row.vicePresidentId?.email || 'Self' },
+        { key: 'forwardedBy', header: 'Forwarded By (VP)', render: (row) => row.forwardedBy?.name || row.forwardedBy?.email || row.reviewedBy?.name || row.reviewedBy?.email || 'Pending' },
+        { key: 'forwardedRole', header: 'Forwarded By Role', render: (row) => row.forwardedByRole?.replaceAll('_', ' ') || row.reviewedByRole?.replaceAll('_', ' ') || 'Pending' },
+        { key: 'decisionDate', header: 'Decision Date', render: (row) => formatDate(row.decisionDate || row.reviewedAt || row.approvedAt) },
         { key: 'createdAt', header: 'Submitted Date', render: (row) => formatDate(row.createdAt) },
         { key: 'status', header: 'Status', render: (row) => <StatusBadge value={row.status} /> },
       ]} renderActions={(row, { reload }, permissions) => {
-        const showDropdownStatus = canReviewMembershipApplication(user, row, 'status') && !['approved', 'rejected'].includes(row.status)
+        const userRole = user?.role || ''
+        const isPendingVpReview = row.status === 'pending_vp_review'
+        const isSubmitted = row.status === 'submitted'
+        const isFinalDecision = ['approved', 'rejected'].includes(row.status)
+        const isExecutiveDirector = userRole === ROLES.EXECUTIVE_DIRECTOR
+        const isChapterScoped = !isExecutiveDirector || String(row.chapterId?._id || row.chapterId) === String(user?.meta?.adminProfile?.organization?.chapter?._id || user?.meta?.adminProfile?.organization?.chapter || '')
+        const canVpAct = userRole === ROLES.VICE_PRESIDENT && isPendingVpReview
+        const canFinalAct = [ROLES.SUPERADMIN, ROLES.ADMIN, ROLES.EXECUTIVE_DIRECTOR].includes(userRole) && isSubmitted && isChapterScoped
+        const latestStep = row.workflowHistory && row.workflowHistory.length > 0 ? row.workflowHistory[row.workflowHistory.length - 1] : null
+        const reviewerRole = latestStep?.role || row.forwardedByRole || row.reviewedByRole || row.approvedRole
         return (
           <>
             {permissions.hasOperation('members', 'view') && <button onClick={() => openDetails(row, reload)} className="inline-flex items-center gap-1.5 rounded-md border border-[#0d4697]/20 px-3 py-1.5 text-xs font-extrabold text-[#0d4697] hover:bg-blue-50">
               <Eye className="h-3.5 w-3.5" />
               View
             </button>}
-            {showDropdownStatus && <select
-              value={row.status || 'submitted'}
-              onChange={(event) => changeRowStatus(row, event.target.value, reload)}
-              className="h-8 rounded-md border border-slate-200 bg-white px-2 text-xs font-extrabold text-slate-700 outline-none focus:border-[#0d4697]"
-              aria-label="Change application status"
-            >
-              <option value="submitted">Submitted</option>
-              <option value="documents_verified">Documents Verified</option>
-              <option value="under_review">Under Review</option>
-              <option value="approved">Final Approval</option>
-              <option value="rejected">Rejected</option>
-              <option value="changes_requested">Changes Requested</option>
-            </select>}
-          </>
-        )
-      }} />
+            {canVpAct && <>
+              <button onClick={() => changeRowStatus(row, 'submitted', reload)} className="inline-flex h-8 items-center gap-1.5 rounded-md bg-emerald-600 px-3 text-xs font-extrabold text-white hover:bg-emerald-700">
+                Forward
+              </button>
+              <button onClick={() => changeRowStatus(row, 'rejected', reload)} className="inline-flex h-8 items-center gap-1.5 rounded-md bg-red-600 px-3 text-xs font-extrabold text-white hover:bg-red-700">
+                Reject
+              </button>
+            </>}
+            {canFinalAct && <>
+              <button onClick={() => changeRowStatus(row, 'approved', reload)} className="inline-flex h-8 items-center gap-1.5 rounded-md bg-emerald-600 px-3 text-xs font-extrabold text-white hover:bg-emerald-700">
+                Approve
+              </button>
+              <button onClick={() => changeRowStatus(row, 'rejected', reload)} className="inline-flex h-8 items-center gap-1.5 rounded-md bg-red-600 px-3 text-xs font-extrabold text-white hover:bg-red-700">
+                Reject
+              </button>
+            </>}
+              {isFinalDecision && (
+                <span className="inline-flex items-center gap-1.5 rounded-md bg-slate-100 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-600 border border-slate-200">
+                  {row.status === 'approved' ? 'Approved by' : 'Rejected by'} {String(reviewerRole || '').replaceAll('_', ' ')}
+                </span>
+              )}
+            </>
+          )
+        }} />
 
       <Modal open={Boolean(selected)} title="Membership Application Details" onClose={() => setSelected(null)} maxWidth="max-w-6xl">
         {loadingDetails ? (
@@ -366,11 +385,9 @@ export function AdminMembershipApplicationsPage() {
             adminNotes={adminNotes}
             onNotesChange={setAdminNotes}
             onClose={() => setSelected(null)}
-            onDocumentsVerified={() => changeStatus('documents_verified')}
-            onUnderReview={() => changeStatus('under_review')}
+            onForward={() => changeStatus('submitted')}
             onApprove={() => changeStatus('approved')}
             onReject={() => changeStatus('rejected')}
-            onRequestChanges={() => changeStatus('changes_requested')}
             updating={updatingStatus}
             user={user}
           />
@@ -380,7 +397,7 @@ export function AdminMembershipApplicationsPage() {
   )
 }
 
-function MembershipApplicationDetails({ application, adminNotes, onNotesChange, onClose, onDocumentsVerified, onUnderReview, onApprove, onReject, onRequestChanges, updating, user }) {
+function MembershipApplicationDetails({ application, adminNotes, onNotesChange, onClose, onForward, onApprove, onReject, updating, user }) {
   if (!application) return null
 
   const openDocument = async (field) => {
@@ -393,11 +410,18 @@ function MembershipApplicationDetails({ application, adminNotes, onNotesChange, 
     }
   }
 
+  const userRole = user?.role || ''
+  const isPendingVpReview = application.status === 'pending_vp_review'
+  const isSubmitted = application.status === 'submitted'
   const isFinalDecision = ['approved', 'rejected'].includes(application.status)
-  const canVerifyBtn = !isFinalDecision && canReviewMembershipApplication(user, application, 'documents_verified')
-  const canApproveBtn = !isFinalDecision && canReviewMembershipApplication(user, application, 'approve')
-  const canRejectBtn = !isFinalDecision && canReviewMembershipApplication(user, application, 'reject')
-  const canRequestChangesBtn = !isFinalDecision && canReviewMembershipApplication(user, application, 'changes_requested')
+  const isExecutiveDirector = userRole === ROLES.EXECUTIVE_DIRECTOR
+  const isChapterScoped = !isExecutiveDirector || String(application.chapterId?._id || application.chapterId) === String(user?.meta?.adminProfile?.organization?.chapter?._id || user?.meta?.adminProfile?.organization?.chapter || '')
+  const showForwardBtn = isPendingVpReview && userRole === ROLES.VICE_PRESIDENT
+  const showFinalButtons = isSubmitted && [ROLES.SUPERADMIN, ROLES.ADMIN, ROLES.EXECUTIVE_DIRECTOR].includes(userRole) && isChapterScoped
+  const latestStep = application.workflowHistory && application.workflowHistory.length > 0 ? application.workflowHistory[application.workflowHistory.length - 1] : null
+  const decisionRole = application.forwardedByRole || latestStep?.role || application.reviewedByRole || application.approvedRole
+  const decisionOfficer = application.forwardedBy?.name || application.forwardedBy?.email || application.reviewedBy?.name || application.reviewedBy?.email || 'Pending'
+  const sourceLabel = application.source || application.sourceLabel || application.applicationSource || application.applicationSourceLabel || 'Online Member'
 
   const documents = [
     ['profilePhoto', 'Profile Photo'],
@@ -414,6 +438,9 @@ function MembershipApplicationDetails({ application, adminNotes, onNotesChange, 
           <p className="text-xs font-extrabold uppercase tracking-wide text-slate-500">Applicant</p>
           <h3 className="mt-1 text-xl font-extrabold text-slate-950">{application.personal?.fullName || 'Applicant'}</h3>
           <p className="text-sm font-semibold text-slate-600">{application.professional?.companyName || 'Company not added'}</p>
+          <p className="mt-1 text-xs font-bold uppercase tracking-wider text-slate-500">
+            Source: <span className="text-slate-800">{sourceLabel}</span>
+          </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <StatusBadge value={application.status} />
@@ -423,6 +450,18 @@ function MembershipApplicationDetails({ application, adminNotes, onNotesChange, 
         </div>
       </div>
 
+      {application.decisionRemarks && isFinalDecision && (
+        <div className={`flex gap-3 rounded-xl border p-4 ${application.status === 'rejected' ? 'border-red-200 bg-red-50/50' : 'border-emerald-200 bg-emerald-50/50'}`}>
+          <AlertCircle className={`mt-0.5 h-5 w-5 shrink-0 ${application.status === 'rejected' ? 'text-red-600' : 'text-emerald-600'}`} />
+          <div>
+            <p className="text-sm font-extrabold text-slate-800">
+              Forwarded By (VP): {decisionOfficer || 'Assigned Officer'} {decisionRole ? `(${String(decisionRole).replaceAll('_', ' ')})` : ''}
+            </p>
+            <p className="text-xs font-semibold text-slate-600 mt-1">{application.decisionRemarks}</p>
+          </div>
+        </div>
+      )}
+
       <div className="grid gap-4 lg:grid-cols-2">
         <DetailSection title="Personal Information" items={[
           ['Full Name', application.personal?.fullName],
@@ -431,6 +470,7 @@ function MembershipApplicationDetails({ application, adminNotes, onNotesChange, 
           ['Mobile Number', application.personal?.mobileNumber],
           ['Email Address', application.personal?.emailAddress],
           ['Submitted By', application.submittedBy?.email || application.submittedBy?.name],
+          ['Forwarded By (VP)', application.forwardedBy?.name || application.forwardedBy?.email || application.reviewedBy?.name || application.reviewedBy?.email || 'Pending'],
           ['Referred By', application.submittedBy?.referredBy?.name || application.submittedBy?.referredBy?.email || 'Direct'],
           ['Referral Code Used', application.referralCode || 'None'],
         ]} />
@@ -576,23 +616,20 @@ function MembershipApplicationDetails({ application, adminNotes, onNotesChange, 
         <button disabled={updating} onClick={onClose} className="inline-flex items-center justify-center rounded-md border border-slate-200 px-4 py-2 text-sm font-extrabold text-slate-700 hover:bg-slate-50 disabled:opacity-60">
           Close
         </button>
-        {canVerifyBtn && <button disabled={updating} onClick={onDocumentsVerified} className="inline-flex items-center justify-center rounded-md border border-blue-200 px-4 py-2 text-sm font-extrabold text-[#0d4697] hover:bg-blue-50 disabled:opacity-60">
-          Documents Verified
+        {showForwardBtn && <button disabled={updating} onClick={onForward} className="inline-flex items-center justify-center gap-2 rounded-md bg-emerald-600 px-4 py-2 text-sm font-extrabold text-white hover:bg-emerald-700 disabled:opacity-60">
+          Forward
         </button>}
-        {canVerifyBtn && <button disabled={updating} onClick={onUnderReview} className="inline-flex items-center justify-center rounded-md border border-amber-200 px-4 py-2 text-sm font-extrabold text-amber-700 hover:bg-amber-50 disabled:opacity-60">
-          Under Review
-        </button>}
-        {canRequestChangesBtn && <button disabled={updating} onClick={onRequestChanges} className="inline-flex items-center justify-center gap-2 rounded-md border border-amber-200 px-4 py-2 text-sm font-extrabold text-amber-700 hover:bg-amber-50 disabled:opacity-60">
-          <AlertCircle className="h-4 w-4" />
-          Request Changes
-        </button>}
-        {canRejectBtn && <button disabled={updating} onClick={onReject} className="inline-flex items-center justify-center gap-2 rounded-md border border-red-200 px-4 py-2 text-sm font-extrabold text-red-600 hover:bg-red-50 disabled:opacity-60">
+        {showForwardBtn && <button disabled={updating} onClick={onReject} className="inline-flex items-center justify-center gap-2 rounded-md border border-red-200 px-4 py-2 text-sm font-extrabold text-red-600 hover:bg-red-50 disabled:opacity-60">
           <XCircle className="h-4 w-4" />
           Reject
         </button>}
-        {canApproveBtn && <button disabled={updating} onClick={onApprove} className="inline-flex items-center justify-center gap-2 rounded-md bg-emerald-600 px-4 py-2 text-sm font-extrabold text-white hover:bg-emerald-700 disabled:opacity-60">
+        {showFinalButtons && <button disabled={updating} onClick={onApprove} className="inline-flex items-center justify-center gap-2 rounded-md bg-emerald-600 px-4 py-2 text-sm font-extrabold text-white hover:bg-emerald-700 disabled:opacity-60">
           <CheckCircle2 className="h-4 w-4" />
           Approve
+        </button>}
+        {showFinalButtons && <button disabled={updating} onClick={onReject} className="inline-flex items-center justify-center gap-2 rounded-md border border-red-200 px-4 py-2 text-sm font-extrabold text-red-600 hover:bg-red-50 disabled:opacity-60">
+          <XCircle className="h-4 w-4" />
+          Reject
         </button>}
       </div>
     </div>
