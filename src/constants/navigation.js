@@ -303,7 +303,9 @@ const commonModules = [
     label: 'Community',
     icon: Network,
     children: [
-      ['Business Wall', '/wall', Volume2],
+      ['Chapter Community', '/wall', Volume2],
+      ['Gloaro Network', '/network', Network],
+      ['Messages', '/chat', MessageSquare],
       ['Referrals', '/referrals', Handshake],
       ['Business Directory', '/directory', Users],
       ['Leaderboard', '/leaderboard', Trophy],

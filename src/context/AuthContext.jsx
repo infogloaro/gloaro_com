@@ -19,6 +19,7 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true)
   const [permissionConfig, setPermissionConfig] = useState(() => storage.getPermissions() || (storage.getUser() ? undefined : null))
   const socketRef = useRef(null)
+  const [socket, setSocket] = useState(null)
 
   const [vendorApplication, setVendorApplication] = useState(null)
   const [loadingVendorApp, setLoadingVendorApp] = useState(false)
@@ -111,6 +112,7 @@ export function AuthProvider({ children }) {
     setUser(null)
     setPermissionConfig(null)
     socketRef.current?.disconnect()
+    setSocket(null)
     toast.success('Logged out')
   }, [])
 
@@ -196,10 +198,12 @@ export function AuthProvider({ children }) {
     client.on('notification', (notification) => toast(notification.title || notification.message || 'New notification'))
     client.on('new_lead', (lead) => toast.success(`New lead: ${lead.subject || lead.name}`))
     socketRef.current = client
+    setSocket(client)
 
     return () => {
       client.disconnect()
       if (socketRef.current === client) socketRef.current = null
+      setSocket(null)
     }
   }, [user])
 
@@ -217,13 +221,13 @@ export function AuthProvider({ children }) {
     register,
     logout,
     refreshUser,
-    socket: socketRef.current,
+    socket,
     vendorApplication,
     loadingVendorApp,
     marketplaceAccess,
     refreshVendorApplication: fetchVendorApplication,
     ...permissionHelpers,
-  }), [user, loading, permissionsLoading, permissionConfig, login, register, logout, refreshUser, permissionHelpers, socketRef.current, vendorApplication, loadingVendorApp, marketplaceAccess, fetchVendorApplication])
+  }), [user, loading, permissionsLoading, permissionConfig, login, register, logout, refreshUser, permissionHelpers, socket, vendorApplication, loadingVendorApp, marketplaceAccess, fetchVendorApplication])
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
