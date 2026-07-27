@@ -2,10 +2,12 @@ import api from './axios'
 
 export const communityApi = {
   // 1. Business Wall Feed
-  getPosts: (params) => api.get('/community/posts', { params }),
-  createPost: (payload) => api.post('/community/posts', payload),
-  likePost: (id) => api.post(`/community/posts/${id}/like`),
+  getPosts: (params, config) => api.get('/community/posts', { params, ...config }),
+  createPost: (payload) => api.post('/community/posts', payload, payload instanceof FormData ? { headers: { 'Content-Type': 'multipart/form-data' } } : undefined),
+  deletePost: (id) => api.delete(`/community/posts/${id}`),
+  likePost: (id, payload) => api.post(`/community/posts/${id}/like`, payload),
   commentPost: (id, payload) => api.post(`/community/posts/${id}/comment`, payload),
+  sharePost: (id) => api.post(`/community/posts/${id}/share`),
   getPostAnalytics: () => api.get('/community/posts/analytics'),
 
   // 2. Referrals
@@ -28,6 +30,12 @@ export const communityApi = {
 
   // 6. Business Directory Search
   getDirectory: (params) => api.get('/community/directory', { params }),
+
+  // 6b. Organization filters
+  getRegions: (scope) => api.get('/organization/regions', { params: scope ? { scope } : undefined }),
+  getStates: (regionId, scope) => api.get('/organization/states', { params: { regionId, ...(scope ? { scope } : {}) } }),
+  getDistricts: (stateId, scope) => api.get('/organization/districts', { params: { stateId, ...(scope ? { scope } : {}) } }),
+  getChapters: (districtId, scope) => api.get('/organization/chapters', { params: { districtId, ...(scope ? { scope } : {}) } }),
 
   // 7. Leaderboards
   getLeaderboards: () => api.get('/community/leaderboards'),
@@ -54,6 +62,9 @@ export const communityApi = {
   markQRAttendance: (payload) => api.post('/community/meetings/qr-attendance', payload),
 
   // 14. Chat Messages
-  getChatMessages: () => api.get('/community/chat/messages'),
-  sendChatMessage: (payload) => api.post('/community/chat/messages', payload),
+  getChatConversations: () => api.get('/community/chat/conversations'),
+  getChatUnreadCount: () => api.get('/community/chat/unread-count'),
+  markChatRead: (recipient) => api.patch(`/community/chat/read/${recipient}`),
+  getChatMessages: (params) => api.get('/community/chat/messages', { params }),
+  sendChatMessage: (payload) => api.post('/community/chat/messages', payload, payload instanceof FormData ? { headers: { 'Content-Type': 'multipart/form-data' } } : undefined),
 }

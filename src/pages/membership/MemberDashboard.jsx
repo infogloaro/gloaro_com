@@ -33,6 +33,7 @@ import { formatCurrency, formatDate } from '../../utils/format'
 // Import additive community sub-pages
 import MemberDashboardBI from './MemberDashboardBI'
 import BusinessWall from './BusinessWall'
+import CommunityPage from './community/CommunityPage'
 import ReferralsPipeline from './ReferralsPipeline'
 import MeetingsAttendance from './MeetingsAttendance'
 import OneToOnesPage from './OneToOnesPage'
@@ -468,6 +469,7 @@ export default function MemberDashboard() {
 
       {activeTab === 'analytics' && <MemberDashboardBI />}
       {activeTab === 'wall' && <BusinessWall />}
+      {activeTab === 'network' && <CommunityPage scope="network" />}
       {activeTab === 'referrals' && <ReferralsPipeline />}
       {activeTab === 'meetings' && <MeetingsAttendance />}
       {activeTab === 'oneToOnes' && <OneToOnesPage />}
