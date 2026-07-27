@@ -1,4 +1,5 @@
 import { ROLES } from '../constants/roleConfig.js'
+import { getEffectiveRegistrationType } from './onboarding'
 const OPERATION_TO_PERMISSION = {
   view: 'canView',
   create: 'canCreate',
@@ -365,8 +366,10 @@ export function buildAdminRoute(role, relativePath) {
   return `${basePath}${normalizedRel}`
 }
 
-export function getDashboardRoute(role) {
+export function getDashboardRoute(role, user = null) {
   const cleanRole = normalizeRole(role)
+  const registrationType = getEffectiveRegistrationType(user, user?.meta?.onboarding?.registrationType)
+  const membershipStatus = String(user?.onboardingStatus || user?.status || '').toLowerCase()
   if (cleanRole === ROLES.REGION_DIRECTOR) return '/region-director/dashboard'
   if (cleanRole === ROLES.STATE_DIRECTOR) return '/state-director/dashboard'
   if (cleanRole === ROLES.DISTRICT_DIRECTOR) return '/district-director/dashboard'
@@ -376,7 +379,13 @@ export function getDashboardRoute(role) {
   if (cleanRole === ROLES.SECRETARY) return '/secretary/dashboard'
   if (cleanRole === ROLES.LAUNCH_DIRECTOR) return '/launch-director/dashboard'
   if (cleanRole === ROLES.DIRECT_CONSULTANT) return '/direct-consultant/dashboard'
-  if (cleanRole === ROLES.VENDOR) return '/vendor'
+  if (cleanRole === ROLES.VENDOR) {
+    if (registrationType === 'member') return '/member/dashboard'
+    return String(user?.vendorProfile?.status || '').toLowerCase() === 'approved' ? '/vendor' : '/vendor/onboarding-status'
+  }
+  if ([ROLES.CUSTOMER, ROLES.USER].includes(cleanRole) && membershipStatus !== 'approved') {
+    return '/member/membership-application-status'
+  }
   
   const adminRoles = [
     ROLES.SUPERADMIN, ROLES.ADMIN, ROLES.FRANCHISE_ADMIN, ROLES.ECOMMERCE_ADMIN, ROLES.MARKETPLACE_ADMIN,

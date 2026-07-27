@@ -31,12 +31,16 @@ export default function AdminVendorApplicationsPage({
   description = "Review and manage vendor marketplace applications for your assigned chapter."
 }) {
   const { user } = useAuth()
+  const isMarketplaceApprovalQueue = title === "Marketplace Approval"
   const [selected, setSelected] = useState(null)
   const [loadingDetails, setLoadingDetails] = useState(false)
   const [updatingStatus, setUpdatingStatus] = useState(false)
   const [adminNotes, setAdminNotes] = useState('')
   const [reloadList, setReloadList] = useState(null)
   const [categories, setCategories] = useState([])
+  const statusOptions = isMarketplaceApprovalQueue
+    ? ['submitted']
+    : ['submitted', 'under_review', 'approved', 'rejected']
 
   useEffect(() => {
     adminApi.categories({ type: 'business', limit: 100 })
@@ -95,15 +99,17 @@ export default function AdminVendorApplicationsPage({
       <ResourceListPage
         title={title}
         description={description}
-        fetcher={(params) => api.get('/vendor-applications', { params })}
+        fetcher={(params) => api.get('/vendor-applications', { params: { ...params, approvalQueue: isMarketplaceApprovalQueue } })}
+        defaultParams={isMarketplaceApprovalQueue ? { status: 'submitted' } : undefined}
         filters={[
-          { key: 'status', label: 'Status', options: ['submitted', 'under_review', 'approved', 'rejected'].map((value) => ({ value, label: value.replaceAll('_', ' ') })) },
+          { key: 'status', label: 'Status', options: statusOptions.map((value) => ({ value, label: value.replaceAll('_', ' ') })) },
           { key: 'businessCategory', label: 'Category', options: categories }
         ]}
         columns={[
           { key: 'fullName', header: 'Applicant Name', render: (row) => row.step2?.personal?.fullName || 'Owner' },
           { key: 'businessName', header: 'Business Name', render: (row) => row.step2?.details?.businessName || 'Business' },
           { key: 'category', header: 'Business Category', render: (row) => row.step2?.details?.businessCategory?.name || '-' },
+          { key: 'source', header: 'Source', render: (row) => row.applicationSource || row.submittedFromLabel || row.submittedFrom?.replaceAll('_', ' ') || 'Unknown' },
           { key: 'mobile', header: 'Mobile', render: (row) => row.step2?.personal?.mobileNumber || '-' },
           { key: 'email', header: 'Email', render: (row) => row.step2?.personal?.email || '-' },
           { key: 'chapter', header: 'Chapter', render: (row) => row.chapterId?.name || '-' },
@@ -244,6 +250,9 @@ function VendorApplicationDetails({ application, adminNotes, onNotesChange, onCl
           <p className="text-xs font-extrabold uppercase tracking-wide text-slate-500">Applicant</p>
           <h3 className="mt-1 text-xl font-extrabold text-slate-950">{application.step2?.personal?.fullName || 'Owner'}</h3>
           <p className="text-sm font-semibold text-slate-600">{application.step2?.details?.businessName || 'Business'}</p>
+          <p className="mt-1 text-xs font-bold uppercase tracking-wider text-slate-500">
+            Source: <span className="text-slate-800">{application.applicationSource || application.submittedFromLabel || application.submittedFrom?.replaceAll('_', ' ') || 'Unknown'}</span>
+          </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <StatusBadge value={application.status} />

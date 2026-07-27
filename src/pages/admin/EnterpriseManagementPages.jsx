@@ -9,15 +9,18 @@ import {
   ChevronDown,
   ChevronRight,
   Download,
+  Eye,
   GitBranch,
   Kanban,
   Network,
+  Loader2,
   Plus,
   Search,
   Sparkles,
   Printer,
   Upload,
   Users,
+  XCircle,
   Workflow,
 } from 'lucide-react'
 import { adminApi } from '../../api/admin'
@@ -32,7 +35,7 @@ import { formatCurrency, formatDate, getList, getPagination } from '../../utils/
 import AdminVendorApplicationsApproval from './AdminVendorApplicationsApproval'
 import { ROLES } from '../../constants/roleConfig.js'
 
-const statusOptions = ['draft', 'pending', 'under_review', 'active', 'inactive', 'approved', 'rejected', 'cancelled', 'archived', 'won', 'lost', 'closed', 'converted', 'completed']
+const statusOptions = ['draft', 'pending', 'pending_approval', 'under_review', 'active', 'inactive', 'approved', 'rejected', 'cancelled', 'archived', 'won', 'lost', 'closed', 'converted', 'completed']
 
 const moduleConfig = {
   organization: {
@@ -217,7 +220,297 @@ export function BusinessNetworkingPage() {
 }
 
 export function ChapterManagementPage() {
-  return <EnterpriseRecordsPage module="chapter" />
+  return <ChapterApprovalQueuePage />
+}
+
+function ChapterApprovalQueuePage() {
+  const [payload, setPayload] = useState(null)
+  const [stats, setStats] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [page, setPage] = useState(1)
+  const [search, setSearch] = useState('')
+  const [status, setStatus] = useState('')
+  const [selected, setSelected] = useState(null)
+  const [loadingDetails, setLoadingDetails] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [rejectReason, setRejectReason] = useState('')
+
+  const params = useMemo(() => ({
+    page,
+    limit: 10,
+    search: search || undefined,
+    status: status || undefined,
+  }), [page, search, status])
+
+  const load = useCallback(async () => {
+    setLoading(true)
+    try {
+      const [recordsResponse, statsResponse] = await Promise.all([
+        adminApi.enterpriseRecords('organization', { ...params, type: 'chapter' }),
+        adminApi.enterpriseStats('organization', { type: 'chapter' }),
+      ])
+      setPayload(recordsResponse.data)
+      setStats(statsResponse.data?.data || null)
+    } finally {
+      setLoading(false)
+    }
+  }, [params])
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => load(), 0)
+    return () => window.clearTimeout(timer)
+  }, [load])
+
+  const rows = getList(payload)
+  const pagination = getPagination(payload)
+
+  const openDetails = async (row) => {
+    setSelected(row)
+    setRejectReason(row.rejectedReason || '')
+    setLoadingDetails(true)
+    try {
+      const response = await adminApi.enterpriseRecord(row._id)
+      const record = response.data?.data || row
+      setSelected(record)
+      setRejectReason(record.rejectedReason || '')
+    } finally {
+      setLoadingDetails(false)
+    }
+  }
+
+  const refreshSelected = async (id) => {
+    if (!selected?._id || selected._id !== id) return
+    const response = await adminApi.enterpriseRecord(id)
+    const record = response.data?.data || selected
+    setSelected(record)
+    setRejectReason(record.rejectedReason || '')
+  }
+
+  const approve = async (row) => {
+    setSaving(true)
+    try {
+      await adminApi.approveChapter(row._id, {})
+      toast.success('Chapter approved successfully')
+      await load()
+      await refreshSelected(row._id)
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to approve chapter')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const reject = async (row, reasonValue = rejectReason) => {
+    const reason = String(reasonValue || '').trim()
+    if (!reason) {
+      toast.error('Rejection reason is required')
+      return
+    }
+
+    setSaving(true)
+    try {
+      await adminApi.rejectChapter(row._id, { reason })
+      toast.success('Chapter rejected successfully')
+      await load()
+      await refreshSelected(row._id)
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to reject chapter')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const toggleInactive = async (row) => {
+    const nextStatus = row.status === 'inactive' ? 'active' : 'inactive'
+    setSaving(true)
+    try {
+      await adminApi.updateEnterpriseStatus(row._id, nextStatus)
+      toast.success(`Chapter ${nextStatus}`)
+      await load()
+      await refreshSelected(row._id)
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to update chapter status')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const chapterStats = useMemo(() => {
+    const counts = Object.fromEntries((stats?.byStatus || []).map((item) => [item._id, item.count]))
+    return [
+      { label: 'Total Chapter Approvals', value: stats?.total || 0 },
+      { label: 'Pending Approval', value: counts.pending_approval || 0 },
+      { label: 'Active', value: counts.active || 0 },
+      { label: 'Rejected', value: counts.rejected || 0 },
+      { label: 'Inactive', value: counts.inactive || 0 },
+    ]
+  }, [stats])
+
+  return (
+    <section className="space-y-6">
+      <EnterpriseHeader
+        title="Chapter Approval Queue"
+        description="Review chapter requests submitted by District Directors, then approve, reject, or deactivate them."
+        icon={Building2}
+      />
+
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+        {chapterStats.map((card) => (
+          <article key={card.label} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+            <p className="text-xs font-extrabold uppercase text-slate-400">{card.label}</p>
+            <p className="mt-2 text-2xl font-black text-slate-950">{card.value}</p>
+          </article>
+        ))}
+      </div>
+
+      <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+          <SearchBar value={search} onChange={(value) => { setSearch(value); setPage(1) }} placeholder="Search chapter approvals" />
+          <select value={status} onChange={(event) => { setStatus(event.target.value); setPage(1) }} className="h-10 rounded-md border border-slate-200 bg-white px-3 text-sm font-bold">
+            <option value="">All Statuses</option>
+            {['pending_approval', 'active', 'rejected', 'inactive'].map((value) => (
+              <option key={value} value={value}>{formatLabel(value)}</option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      <DataTable
+        columns={[
+          { key: 'name', header: 'Chapter Name' },
+          { key: 'region', header: 'Region', render: (row) => row.parent?.parent?.parent?.name || '-' },
+          { key: 'state', header: 'State', render: (row) => row.parent?.parent?.name || '-' },
+          { key: 'district', header: 'District', render: (row) => row.parent?.name || '-' },
+          { key: 'createdBy', header: 'Created By', render: (row) => row.createdBy?.name || row.createdBy?.email || 'System' },
+          { key: 'createdAt', header: 'Created Date', render: (row) => formatDate(row.createdAt) },
+          { key: 'status', header: 'Status', render: (row) => <StatusBadge value={row.status} /> },
+        ]}
+        rows={rows}
+        loading={loading}
+        pagination={pagination}
+        onPageChange={setPage}
+        actions={(row) => (
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => openDetails(row)}
+              className="inline-flex items-center gap-1.5 rounded-md border border-[#0d4697]/25 px-3 py-1.5 text-xs font-bold text-[#0d4697] hover:bg-blue-50"
+            >
+              <Eye className="h-3.5 w-3.5" />
+              View
+            </button>
+            <button
+              type="button"
+              disabled={saving || row.status === 'active'}
+              onClick={() => approve(row)}
+              className="inline-flex items-center gap-1.5 rounded-md bg-emerald-600 px-3 py-1.5 text-xs font-extrabold text-white disabled:opacity-50"
+            >
+              <CheckCircle2 className="h-3.5 w-3.5" />
+              Approve
+            </button>
+            <button
+              type="button"
+              disabled={saving || row.status === 'active' || row.status === 'rejected'}
+              onClick={() => {
+                const reason = window.prompt('Enter a rejection reason')
+                if (reason) reject(row, reason)
+              }}
+              className="inline-flex items-center gap-1.5 rounded-md bg-red-600 px-3 py-1.5 text-xs font-extrabold text-white disabled:opacity-50"
+            >
+              <XCircle className="h-3.5 w-3.5" />
+              Reject
+            </button>
+            <button
+              type="button"
+              disabled={saving || !['active', 'inactive'].includes(row.status)}
+              onClick={() => toggleInactive(row)}
+              className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-700 disabled:opacity-50"
+            >
+              {row.status === 'inactive' ? 'Activate' : 'Deactivate'}
+            </button>
+          </div>
+        )}
+      />
+
+      <Modal open={Boolean(selected)} title="Chapter Details" onClose={() => setSelected(null)} maxWidth="max-w-5xl">
+        {loadingDetails ? (
+          <div className="grid min-h-40 place-items-center">
+            <Loader2 className="h-8 w-8 animate-spin text-[#0d4697]" />
+          </div>
+        ) : selected ? (
+          <div className="space-y-5">
+            <div className="flex flex-col justify-between gap-3 rounded-lg border border-slate-200 bg-slate-50 p-4 sm:flex-row sm:items-center">
+              <div>
+                <p className="text-xs font-extrabold uppercase tracking-wide text-slate-500">Chapter</p>
+                <h3 className="mt-1 text-xl font-black text-slate-950">{selected.name}</h3>
+                <p className="mt-1 text-sm font-semibold text-slate-600">
+                  {selected.parent?.parent?.parent?.name || 'Region'} / {selected.parent?.parent?.name || 'State'} / {selected.parent?.name || 'District'}
+                </p>
+              </div>
+              <StatusBadge value={selected.status} />
+            </div>
+
+            <div className="grid gap-4 lg:grid-cols-2">
+              <DetailSection title="Location Details" items={[
+                ['Region', selected.parent?.parent?.parent?.name],
+                ['State', selected.parent?.parent?.name],
+                ['District', selected.parent?.name],
+                ['Code', selected.code],
+              ]} />
+              <DetailSection title="Approval Audit" items={[
+                ['Requested By', selected.requestedBy?.name || selected.createdBy?.name || 'System'],
+                ['Requested At', formatDate(selected.requestedAt || selected.createdAt)],
+                ['Approved By', selected.approvedBy?.name || '-'],
+                ['Approved At', formatDate(selected.approvedAt)],
+                ['Rejected By', selected.rejectedBy?.name || '-'],
+                ['Rejected At', formatDate(selected.rejectedAt)],
+              ]} />
+            </div>
+
+            <section className="rounded-lg border border-slate-200 bg-white p-4">
+              <label className="text-sm font-extrabold text-slate-950">Rejection Reason</label>
+              <textarea
+                value={rejectReason}
+                onChange={(event) => setRejectReason(event.target.value)}
+                rows={4}
+                placeholder="Add a rejection reason before rejecting this chapter"
+                className="mt-2 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 outline-none focus:border-[#0d4697] focus:ring-2 focus:ring-blue-100"
+              />
+            </section>
+
+            <div className="flex flex-col gap-2 border-t border-slate-200 pt-4 sm:flex-row sm:justify-end">
+              <button onClick={() => setSelected(null)} className="inline-flex items-center justify-center rounded-md border border-slate-200 px-4 py-2 text-sm font-extrabold text-slate-700 hover:bg-slate-50">
+                Close
+              </button>
+              <button
+                onClick={() => approve(selected)}
+                disabled={saving || selected.status === 'active'}
+                className="inline-flex items-center justify-center gap-2 rounded-md bg-emerald-600 px-4 py-2 text-sm font-extrabold text-white disabled:opacity-50"
+              >
+                <CheckCircle2 className="h-4 w-4" />
+                Approve
+              </button>
+              <button
+                onClick={() => reject(selected)}
+                disabled={saving || selected.status === 'active' || selected.status === 'rejected'}
+                className="inline-flex items-center justify-center gap-2 rounded-md border border-red-200 px-4 py-2 text-sm font-extrabold text-red-600 hover:bg-red-50 disabled:opacity-50"
+              >
+                <XCircle className="h-4 w-4" />
+                Reject
+              </button>
+              <button
+                onClick={() => toggleInactive(selected)}
+                disabled={saving || !['active', 'inactive'].includes(selected.status)}
+                className="inline-flex items-center justify-center gap-2 rounded-md border border-slate-200 px-4 py-2 text-sm font-extrabold text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+              >
+                {selected.status === 'inactive' ? 'Activate' : 'Deactivate'}
+              </button>
+            </div>
+          </div>
+        ) : null}
+      </Modal>
+    </section>
+  )
 }
 
 export function EnterpriseReportBuilderPage() {

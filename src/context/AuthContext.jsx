@@ -6,6 +6,7 @@ import { authApi } from '../api/auth'
 import api, { API_BASE_URL } from '../api/axios'
 import { isAdminRole } from '../constants/adminRoles'
 import { storage } from '../utils/storage'
+import { getEffectiveRegistrationType } from '../utils/onboarding'
 import { createPermissionHelpers } from '../utils/permissions'
 import { AuthContext } from './AuthContextObject'
 import { getMarketplaceAccess } from '../utils/marketplaceAccess'
@@ -18,6 +19,7 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true)
   const [permissionConfig, setPermissionConfig] = useState(() => storage.getPermissions() || (storage.getUser() ? undefined : null))
   const socketRef = useRef(null)
+  const [socket, setSocket] = useState(null)
 
   const [vendorApplication, setVendorApplication] = useState(null)
   const [loadingVendorApp, setLoadingVendorApp] = useState(false)
@@ -41,6 +43,32 @@ export function AuthProvider({ children }) {
     }
   }, [user])
 
+  const syncOnboardingContext = useCallback((nextUser, remember = true) => {
+    if (!nextUser) {
+      storage.clearOnboardingContext()
+      return nextUser
+    }
+
+    const storedRegistrationType = storage.getOnboardingContext()?.registrationType
+    const registrationType = getEffectiveRegistrationType(nextUser, storedRegistrationType)
+    const normalizedUser = registrationType
+      ? {
+          ...nextUser,
+          registrationType,
+          onboardingType: registrationType,
+        }
+      : { ...nextUser }
+
+    if (registrationType) {
+      storage.setOnboardingContext({ registrationType }, remember)
+    } else if (storedRegistrationType) {
+      storage.setOnboardingContext({ registrationType: storedRegistrationType }, remember)
+    } else {
+      storage.clearOnboardingContext()
+    }
+    return normalizedUser
+  }, [])
+
   useEffect(() => {
     fetchVendorApplication()
   }, [user, fetchVendorApplication])
@@ -53,22 +81,25 @@ export function AuthProvider({ children }) {
     try {
       const response = await authApi.login(payload)
       const data = response.data.data
-      storage.setSession(data, remember)
-      setUser(data.user)
-      setPermissionConfig(data.user ? undefined : null)
+      const nextUser = syncOnboardingContext(data.user, remember)
+      storage.setSession({ ...data, user: nextUser }, remember)
+      setUser(nextUser)
+      setPermissionConfig(nextUser ? undefined : null)
       toast.success('Signed in successfully')
-      return data.user
+      return nextUser
     } catch (error) {
       toast.error(error.response?.data?.message || 'Invalid email or password')
       throw error
     }
-  }, [])
+  }, [syncOnboardingContext])
 
   const register = useCallback(async (payload) => {
     const response = await authApi.register(payload)
+    const data = response.data?.data || {}
+    const nextUser = syncOnboardingContext(data.user, true)
     toast.success(response.data.message || 'Registration successful')
-    return response.data.data
-  }, [])
+    return { ...data, user: nextUser }
+  }, [syncOnboardingContext])
 
   const logout = useCallback(async () => {
     try {
@@ -77,23 +108,25 @@ export function AuthProvider({ children }) {
       // session is cleared locally either way
     }
     storage.clearSession()
+    storage.clearOnboardingContext()
     setUser(null)
     setPermissionConfig(null)
     socketRef.current?.disconnect()
+    setSocket(null)
     toast.success('Logged out')
   }, [])
 
   const refreshUser = useCallback(async () => {
     try {
       const response = await authApi.me()
-      const nextUser = response.data.data?.user || response.data.data
+      const nextUser = syncOnboardingContext(response.data.data?.user || response.data.data, true)
       setUser(nextUser)
       setPermissionConfig(nextUser ? undefined : null)
       return nextUser
     } catch (err) {
       console.error('Error refreshing user context:', err)
     }
-  }, [])
+  }, [syncOnboardingContext])
 
   useEffect(() => {
     const hydrate = async () => {
@@ -108,7 +141,7 @@ export function AuthProvider({ children }) {
         if (storage.getAccessToken() !== initialToken) {
           return
         }
-        const nextUser = response.data.data?.user || response.data.data
+        const nextUser = syncOnboardingContext(response.data.data?.user || response.data.data, true)
         setUser(nextUser)
         setPermissionConfig(nextUser ? undefined : null)
       } catch {
@@ -116,6 +149,7 @@ export function AuthProvider({ children }) {
           return
         }
         storage.clearSession()
+        storage.clearOnboardingContext()
         setUser(null)
         setPermissionConfig(null)
       } finally {
@@ -164,10 +198,12 @@ export function AuthProvider({ children }) {
     client.on('notification', (notification) => toast(notification.title || notification.message || 'New notification'))
     client.on('new_lead', (lead) => toast.success(`New lead: ${lead.subject || lead.name}`))
     socketRef.current = client
+    setSocket(client)
 
     return () => {
       client.disconnect()
       if (socketRef.current === client) socketRef.current = null
+      setSocket(null)
     }
   }, [user])
 
@@ -185,13 +221,13 @@ export function AuthProvider({ children }) {
     register,
     logout,
     refreshUser,
-    socket: socketRef.current,
+    socket,
     vendorApplication,
     loadingVendorApp,
     marketplaceAccess,
     refreshVendorApplication: fetchVendorApplication,
     ...permissionHelpers,
-  }), [user, loading, permissionsLoading, permissionConfig, login, register, logout, refreshUser, permissionHelpers, socketRef.current, vendorApplication, loadingVendorApp, marketplaceAccess, fetchVendorApplication])
+  }), [user, loading, permissionsLoading, permissionConfig, login, register, logout, refreshUser, permissionHelpers, socket, vendorApplication, loadingVendorApp, marketplaceAccess, fetchVendorApplication])
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }

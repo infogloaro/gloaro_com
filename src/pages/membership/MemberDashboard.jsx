@@ -33,6 +33,7 @@ import { formatCurrency, formatDate } from '../../utils/format'
 // Import additive community sub-pages
 import MemberDashboardBI from './MemberDashboardBI'
 import BusinessWall from './BusinessWall'
+import CommunityPage from './community/CommunityPage'
 import ReferralsPipeline from './ReferralsPipeline'
 import MeetingsAttendance from './MeetingsAttendance'
 import OneToOnesPage from './OneToOnesPage'
@@ -102,14 +103,26 @@ export default function MemberDashboard() {
       vendorStatusText = 'Draft'
       vendorStatusColorClass = 'text-amber-700 bg-amber-50 border-amber-200'
       vendorStatusIcon = FileText
+    } else if (status === 'pending_vp_review') {
+      vendorStatusText = 'Pending VP Review'
+      vendorStatusColorClass = 'text-indigo-700 bg-indigo-50 border-indigo-200'
+      vendorStatusIcon = AlertCircle
     } else if (status === 'submitted') {
-      vendorStatusText = 'Submitted'
+      vendorStatusText = 'Waiting for Marketplace Approval'
+      vendorStatusColorClass = 'text-blue-700 bg-blue-50 border-blue-200'
+      vendorStatusIcon = AlertCircle
+    } else if (status === 'forwarded') {
+      vendorStatusText = 'Waiting for Marketplace Approval'
       vendorStatusColorClass = 'text-blue-700 bg-blue-50 border-blue-200'
       vendorStatusIcon = AlertCircle
     } else if (status === 'under_review') {
       vendorStatusText = 'Under Review'
       vendorStatusColorClass = 'text-indigo-700 bg-indigo-50 border-indigo-200'
       vendorStatusIcon = AlertCircle
+    } else if (status === 'rejected_by_vp') {
+      vendorStatusText = 'Rejected by VP'
+      vendorStatusColorClass = 'text-red-700 bg-red-50 border-red-200'
+      vendorStatusIcon = XCircle
     } else if (status === 'approved') {
       vendorStatusText = 'Approved'
       vendorStatusColorClass = 'text-emerald-700 bg-emerald-50 border-emerald-200'
@@ -468,6 +481,7 @@ export default function MemberDashboard() {
 
       {activeTab === 'analytics' && <MemberDashboardBI />}
       {activeTab === 'wall' && <BusinessWall />}
+      {activeTab === 'network' && <CommunityPage scope="network" />}
       {activeTab === 'referrals' && <ReferralsPipeline />}
       {activeTab === 'meetings' && <MeetingsAttendance />}
       {activeTab === 'oneToOnes' && <OneToOnesPage />}

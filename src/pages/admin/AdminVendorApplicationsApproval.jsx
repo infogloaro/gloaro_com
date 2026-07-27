@@ -21,6 +21,7 @@ export default function AdminVendorApplicationsApproval() {
   const [updatingStatus, setUpdatingStatus] = useState(false)
   const [adminNotes, setAdminNotes] = useState('')
   const [reloadList, setReloadList] = useState(null)
+  const statusOptions = ['submitted']
 
   const openDetails = async (row, reload) => {
     setReloadList(() => reload)
@@ -71,13 +72,15 @@ export default function AdminVendorApplicationsApproval() {
       <ResourceListPage
         title="Vendor Applications"
         description="Review and approve marketplace vendor applications."
-        fetcher={(params) => api.get('/vendor-applications', { params })}
+        fetcher={(params) => api.get('/vendor-applications', { params: { ...params, approvalQueue: true } })}
+        defaultParams={{ status: 'submitted' }}
         filters={[
-          { key: 'status', label: 'Status', options: ['submitted', 'under_review', 'approved', 'rejected'].map((value) => ({ value, label: value.replaceAll('_', ' ') })) }
+          { key: 'status', label: 'Status', options: statusOptions.map((value) => ({ value, label: value.replaceAll('_', ' ') })) }
         ]}
         columns={[
           { key: 'businessName', header: 'Business Name', render: (row) => row.step2?.details?.businessName || 'Business' },
           { key: 'fullName', header: 'Applicant Name', render: (row) => row.step2?.personal?.fullName || 'Applicant' },
+          { key: 'source', header: 'Source', render: (row) => row.applicationSource || row.submittedFromLabel || row.submittedFrom?.replaceAll('_', ' ') || 'Unknown' },
           { key: 'region', header: 'Region', render: (row) => row.regionId?.name || '-' },
           { key: 'state', header: 'State', render: (row) => row.stateId?.name || '-' },
           { key: 'district', header: 'District', render: (row) => row.districtId?.name || '-' },
@@ -178,6 +181,9 @@ function VendorApplicationDetails({ application, adminNotes, onNotesChange, onCl
           <p className="text-xs font-extrabold uppercase tracking-wide text-slate-500">Applicant</p>
           <h3 className="mt-1 text-xl font-extrabold text-slate-950">{application.step2?.personal?.fullName || 'Owner'}</h3>
           <p className="text-sm font-semibold text-slate-600">{application.step2?.details?.businessName || 'Business'}</p>
+          <p className="mt-1 text-xs font-bold uppercase tracking-wider text-slate-500">
+            Source: <span className="text-slate-800">{application.applicationSource || application.submittedFromLabel || application.submittedFrom?.replaceAll('_', ' ') || 'Unknown'}</span>
+          </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           {isFinalized ? (

@@ -46,6 +46,7 @@ import {
   ClipboardCheck,
   User,
   UserCheck,
+  LogOut,
 } from 'lucide-react'
 
 import { buildAdminRoute, normalizeRole } from '../utils/permissions'
@@ -88,7 +89,7 @@ export const adminNav = [
       ['Visitor Conversion', '/visitor-conversion', Workflow],
       ['Attendance', '/attendance', Activity],
       ['Meetings', '/meetings', CalendarDays],
-      ['Chapters', '/chapters', Network],
+      ['Chapter Approvals', '/chapters', Network],
       ['Referrals', '/referrals', Ticket],
     ],
   },
@@ -151,12 +152,55 @@ export const vendorNav = [
   ['Business Profile', '/vendor/profile', Building2],
   ['Products', '/vendor/products', Package],
   ['Services', '/vendor/services', BriefcaseBusiness],
+  ['Orders', '/vendor/orders', ShoppingBag],
   ['Leads', '/vendor/leads', Ticket],
   ['Reviews', '/vendor/reviews', Star],
   ['Membership', '/vendor/membership', CreditCard],
   ['Payments', '/vendor/payments', CreditCard],
+  ['Analytics', '/vendor/analytics', BarChart3],
   ['Notifications', '/vendor/notifications', Bell],
   ['Support', '/vendor/support', HelpCircle],
+]
+
+export const memberVendorNav = [
+  ['Dashboard', '/member/dashboard', LayoutDashboard],
+  ['Business Profile', '/member/dashboard/my-business', Building2],
+  ['My Products', '/member/dashboard/products', Package],
+  ['My Services', '/member/dashboard/services', BriefcaseBusiness],
+  ['Orders', '/member/dashboard/orders', ShoppingBag],
+  ['Leads', '/member/dashboard/leads', Ticket],
+  ['Reviews', '/member/dashboard/reviews', Star],
+  ['Payments', '/member/dashboard/payments', CreditCard],
+  ['Membership', '/member/dashboard/subscription', ToggleLeft],
+  ['Analytics', '/member/dashboard/vendor-analytics', BarChart3],
+]
+
+export const applicantNav = [
+  ['Dashboard', '/member/membership-application-status', LayoutDashboard],
+  ['Membership Application Status', '/member/membership-application-status', ClipboardCheck],
+  ['Profile', '/member/profile', Users],
+  ['Settings', '/member/settings', Settings],
+  ['Logout', '__logout__', LogOut],
+]
+
+export const vendorApplicantNav = [
+  ['Dashboard', '/vendor/onboarding-status', LayoutDashboard],
+  ['Vendor Application Status', '/vendor/onboarding-status', ClipboardList],
+  ['Profile', '/vendor/account', User],
+  ['Settings', '/vendor/settings', Settings],
+  ['Logout', '__logout__', LogOut],
+]
+
+export const vendorOnboardingNav = [
+  ['Vendor Onboarding', '/vendor/onboarding', FileText],
+  ['Application Status', '/vendor/onboarding-status', ClipboardList],
+  ['Account', '/vendor/account', User],
+]
+
+export const memberOnboardingNav = [
+  ['Membership Status', '/member/membership-application-status', ClipboardCheck],
+  ['Profile', '/member/profile', User],
+  ['Account', '/member/settings', Settings],
 ]
 
 export const customerNav = [
@@ -194,6 +238,49 @@ export const presidentNav = [];
 export const vicePresidentNav = [];
 export const regionDirectorNav = [];
 
+const removeMarketplaceSection = (navItems = []) => navItems.filter((_, index) => index !== 2)
+
+const memberVendorMarketplaceChildren = [
+  ['Business Profile', '/member/dashboard/my-business', Building2],
+  ['Products', '/member/dashboard/products', Package],
+  ['Services', '/member/dashboard/services', BriefcaseBusiness],
+  ['Orders', '/member/dashboard/orders', ShoppingBag],
+  ['Leads', '/member/dashboard/leads', Ticket],
+  ['Reviews', '/member/dashboard/reviews', Star],
+  ['Payments', '/member/dashboard/payments', CreditCard],
+  ['Subscription', '/member/dashboard/subscription', ToggleLeft],
+  ['Analytics', '/member/dashboard/vendor-analytics', BarChart3],
+]
+
+export function getMemberVendorSidebarNav(role) {
+  return getSidebarNav(role).map((item) => {
+    if (Array.isArray(item) || item.label !== 'Marketplace') {
+      return item
+    }
+
+    return {
+      ...item,
+      children: memberVendorMarketplaceChildren,
+    }
+  })
+}
+
+export function getMemberSidebarNav(role) {
+  return removeMarketplaceSection(getSidebarNav(role))
+}
+
+export function getApplicantSidebarNav() {
+  return applicantNav
+}
+
+export function getVendorApplicantSidebarNav() {
+  return vendorApplicantNav
+}
+
+export function getRoleBasedSidebarNav(role) {
+  return getSidebarNav(role)
+}
+
 export const rolePrefixes = {
   [ROLES.SUPERADMIN]: '/admin',
   [ROLES.ADMIN]: '/admin',
@@ -218,7 +305,9 @@ const commonModules = [
     label: 'Community',
     icon: Network,
     children: [
-      ['Business Wall', '/wall', Volume2],
+      ['Chapter Community', '/wall', Volume2],
+      ['Gloaro Network', '/network', Network],
+      ['Messages', '/chat', MessageSquare],
       ['Referrals', '/referrals', Handshake],
       ['Business Directory', '/directory', Users],
       ['Leaderboard', '/leaderboard', Trophy],
@@ -287,6 +376,7 @@ const roleModules = {
   ],
   [ROLES.VICE_PRESIDENT]: [
     ['Member Registration', '/register-member', Users],
+    ['Membership Applications', '/membership-applications', ClipboardList],
     ['Approved Members', '/members', Users],
     ['Secretaries', '/secretaries', Users],
     ['Reports', '/reports', FileBarChart],
@@ -366,8 +456,10 @@ export function getSidebarNav(role) {
       }
       if (normalizedRole === ROLES.VICE_PRESIDENT) {
         children = children.filter(([label]) => label !== 'Marketplace Approval');
-      } else if (![ROLES.SUPERADMIN, ROLES.ADMIN, ROLES.EXECUTIVE_DIRECTOR].includes(normalizedRole)) {
-        children = children.filter(([label]) => label !== 'Marketplace Approval');
+      } else if (normalizedRole === ROLES.EXECUTIVE_DIRECTOR) {
+        children = children.filter(([label]) => label !== 'Vendor Applications');
+      } else {
+        children = children.filter(([label]) => !['Vendor Applications', 'Marketplace Approval'].includes(label));
       }
     }
     return {

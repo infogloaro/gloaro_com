@@ -112,6 +112,7 @@ import {
   WishlistPage,
 } from './pages/customer/ListingPages'
 import NotificationsPage from './pages/shared/NotificationsPage'
+import ProfilePage from './pages/shared/ProfilePage'
 import Home from './pages/Home'
 import MembershipAgreement from './pages/public/MembershipAgreement'
 import MembershipApplication from './pages/public/MembershipApplication'
@@ -160,6 +161,8 @@ import DynamicDashboard from './pages/shared/DynamicDashboard'
 
 import MyChapter from './pages/membership/MyChapter'
 import BusinessWall from './pages/membership/BusinessWall'
+import CommunityPage from './pages/membership/community/CommunityPage'
+import ChatSystem from './pages/membership/ChatSystem'
 import ReferralsPipeline from './pages/membership/ReferralsPipeline'
 import MeetingsAttendance from './pages/membership/MeetingsAttendance'
 import AssignedTrainingPage from './pages/membership/AssignedTrainingPage'
@@ -168,6 +171,8 @@ import VisitorsPage from './pages/membership/VisitorsPage'
 import BusinessDirectory from './pages/membership/BusinessDirectory'
 import Leaderboard from './pages/membership/Leaderboard'
 import { ROLES } from './constants/roleConfig.js'
+import { getEffectiveRegistrationType, getVendorOnboardingRoutes } from './utils/onboarding'
+import { storage } from './utils/storage'
 
 function App() {
   const { role, permissionsLoading, canAccessPath } = useAuth()
@@ -203,7 +208,7 @@ function App() {
     { path: '/visitor-conversion', element: <VisitorConversionEnginePage /> },
     { path: '/attendance', element: <AttendanceEnginePage /> },
     { path: '/meetings', element: <MeetingManagementPage /> },
-    { path: '/chapters', element: <ChapterManagementPage /> },
+    { path: '/chapters', element: <ChapterManagementPage />, roles: [ROLES.ADMIN, ROLES.SUPERADMIN] },
     { path: '/chapter-dashboard', element: <ChapterDashboardPage /> },
     { path: '/applications', element: <AdminMembershipApplicationsPage /> },
     { path: '/applications/membership', element: <AdminMembershipApplicationsPage /> },
@@ -288,7 +293,7 @@ function App() {
           <Route path="/reviews" element={<ReviewsPage />} />
           <Route path="/membership-agreement" element={<MembershipAgreement />} />
           <Route path="/membership-application" element={<MembershipApplication />} />
-          <Route path="/membership-applications" element={<Navigate to="/membership-application" replace />} />
+          <Route path="/membership-applications" element={<MembershipApplicationsRedirect />} />
           <Route path="/membership-qualification" element={<MembershipQualification />} />
           <Route path="/membership-application/track" element={<MembershipApplicationTrack />} />
         </Route>
@@ -312,12 +317,15 @@ function App() {
             <Route element={<ProtectedRoute roles={[ROLES.VENDOR]} />}>
               <Route path="/vendor" element={<VendorDashboard />} />
               <Route path="/vendor/profile" element={<VendorProfilePage />} />
+              <Route path="/vendor/settings" element={<ProfilePage />} />
               <Route path="/vendor/products" element={<VendorProductsPage />} />
               <Route path="/vendor/services" element={<VendorServicesPage />} />
+              <Route path="/vendor/orders" element={<VendorOrdersPage />} />
               <Route path="/vendor/leads" element={<VendorLeadsPage />} />
               <Route path="/vendor/reviews" element={<VendorReviewsPage />} />
               <Route path="/vendor/membership" element={<VendorMembershipPage />} />
               <Route path="/vendor/payments" element={<VendorPaymentsPage />} />
+              <Route path="/vendor/analytics" element={<VendorDashboard />} />
               <Route path="/vendor/notifications" element={<VendorNotificationsPage />} />
               <Route path="/vendor/support" element={<VendorSupportPage />} />
             </Route>
@@ -349,7 +357,7 @@ function App() {
               <Route path="/member/vendor-application" element={<VendorApplicationForm />} />
               <Route path="/member/vendor-application-status" element={<VendorApplicationStatus />} />
               <Route path="/member/profile" element={<MembershipProfilePage />} />
-              <Route path="/member/settings" element={<MembershipProfilePage />} />
+              <Route path="/member/settings" element={<ProfilePage />} />
               
               {/* Parameterized main dashboard sub-views */}
               <Route path="/member/dashboard" element={<MemberDashboard />} />
@@ -360,17 +368,25 @@ function App() {
               <Route element={<MarketplaceRoute />}>
                 <Route path="/member/products" element={<MemberProductsPage />} />
                 <Route path="/member/dashboard/my-business" element={<VendorProfilePage />} />
-                <Route path="/member/dashboard/products" element={<VendorProductsPage />} />
-                <Route path="/member/dashboard/products-mgmt" element={<VendorProductsPage />} />
-                <Route path="/member/dashboard/services" element={<VendorServicesPage />} />
-                <Route path="/member/dashboard/services-mgmt" element={<VendorServicesPage />} />
-                <Route path="/member/dashboard/orders" element={<VendorOrdersPage />} />
-                <Route path="/member/dashboard/leads" element={<VendorLeadsPage />} />
-                <Route path="/member/dashboard/reviews" element={<VendorReviewsPage />} />
-                <Route path="/member/dashboard/payments" element={<VendorPaymentsPage />} />
-                <Route path="/member/dashboard/subscription" element={<VendorMembershipPage />} />
-                <Route path="/member/dashboard/vendor-analytics" element={<VendorDashboard />} />
-              </Route>
+              <Route path="/member/dashboard/products" element={<VendorProductsPage />} />
+              <Route path="/member/dashboard/products-mgmt" element={<VendorProductsPage />} />
+              <Route path="/member/dashboard/services" element={<VendorServicesPage />} />
+              <Route path="/member/dashboard/services-mgmt" element={<VendorServicesPage />} />
+              <Route path="/member/dashboard/orders" element={<VendorOrdersPage />} />
+              <Route path="/member/dashboard/leads" element={<VendorLeadsPage />} />
+              <Route path="/member/dashboard/reviews" element={<VendorReviewsPage />} />
+              <Route path="/member/dashboard/payments" element={<VendorPaymentsPage />} />
+              <Route path="/member/dashboard/notifications" element={<VendorNotificationsPage />} />
+              <Route path="/member/dashboard/subscription" element={<VendorMembershipPage />} />
+              <Route path="/member/dashboard/vendor-analytics" element={<VendorDashboard />} />
+            </Route>
+            </Route>
+
+            {/* Online Vendor Onboarding Route Group */}
+            <Route element={<ProtectedRoute roles={[ROLES.CUSTOMER, ROLES.USER, ROLES.VENDOR]} />}>
+              <Route path="/vendor/onboarding" element={<VendorApplicationForm />} />
+              <Route path="/vendor/onboarding-status" element={<VendorApplicationStatus />} />
+              <Route path="/vendor/account" element={<ProfilePage />} />
             </Route>
 
             <Route path="/member/membership-application-status" element={<MembershipApplicationStatus />} />
@@ -391,6 +407,8 @@ function App() {
               {/* Inherited Base Member Modules */}
               <Route path="/secretary/chapter" element={<MyChapter />} />
               <Route path="/secretary/wall" element={<BusinessWall />} />
+              <Route path="/secretary/network" element={<CommunityPage scope="network" />} />
+              <Route path="/secretary/chat" element={<ChatSystem />} />
               <Route path="/secretary/referrals" element={<ReferralsPipeline />} />
               <Route path="/secretary/meetings" element={<MeetingsAttendance />} />
               <Route path="/secretary/one-to-ones" element={<OneToOnesPage />} />
@@ -417,6 +435,8 @@ function App() {
               {/* Inherited Base Member Modules */}
               <Route path="/region-director/chapter" element={<MyChapter />} />
               <Route path="/region-director/wall" element={<BusinessWall />} />
+              <Route path="/region-director/network" element={<CommunityPage scope="network" />} />
+              <Route path="/region-director/chat" element={<ChatSystem />} />
               <Route path="/region-director/referrals" element={<ReferralsPipeline />} />
               <Route path="/region-director/meetings" element={<MeetingsAttendance />} />
               <Route path="/region-director/one-to-ones" element={<OneToOnesPage />} />
@@ -443,6 +463,8 @@ function App() {
               {/* Inherited Base Member Modules */}
               <Route path="/state-director/chapter" element={<MyChapter />} />
               <Route path="/state-director/wall" element={<BusinessWall />} />
+              <Route path="/state-director/network" element={<CommunityPage scope="network" />} />
+              <Route path="/state-director/chat" element={<ChatSystem />} />
               <Route path="/state-director/referrals" element={<ReferralsPipeline />} />
               <Route path="/state-director/meetings" element={<MeetingsAttendance />} />
               <Route path="/state-director/one-to-ones" element={<OneToOnesPage />} />
@@ -467,6 +489,8 @@ function App() {
               
               {/* Inherited Base Member Modules */}
               <Route path="/district-director/wall" element={<BusinessWall />} />
+              <Route path="/district-director/network" element={<CommunityPage scope="network" />} />
+              <Route path="/district-director/chat" element={<ChatSystem />} />
               <Route path="/district-director/referrals" element={<ReferralsPipeline />} />
               <Route path="/district-director/meetings" element={<MeetingsAttendance />} />
               <Route path="/district-director/one-to-ones" element={<OneToOnesPage />} />
@@ -497,6 +521,8 @@ function App() {
               <Route path="/chapter-director/chapter" element={<MyChapter />} />
               <Route path="/chapter-director/wall" element={<BusinessWall />} />
               <Route path="/chapter-director/business-wall" element={<BusinessWall />} />
+              <Route path="/chapter-director/network" element={<CommunityPage scope="network" />} />
+              <Route path="/chapter-director/chat" element={<ChatSystem />} />
               <Route path="/chapter-director/referrals" element={<ReferralsPipeline />} />
               <Route path="/chapter-director/meetings" element={<MeetingsAttendance />} />
               <Route path="/chapter-director/attendance" element={<MeetingsAttendance />} />
@@ -527,6 +553,8 @@ function App() {
               {/* Inherited Base Member Modules */}
               <Route path="/president/chapter" element={<MyChapter />} />
               <Route path="/president/wall" element={<BusinessWall />} />
+              <Route path="/president/network" element={<CommunityPage scope="network" />} />
+              <Route path="/president/chat" element={<ChatSystem />} />
               <Route path="/president/referrals" element={<ReferralsPipeline />} />
               <Route path="/president/meetings" element={<MeetingsAttendance />} />
               <Route path="/president/one-to-ones" element={<OneToOnesPage />} />
@@ -547,12 +575,15 @@ function App() {
               <Route path="/vice-president/members" element={<AdminMembersPage />} />
               <Route path="/vice-president/register-member" element={<AdminManagementPage role={ROLES.CUSTOMER} />} />
               <Route path="/vice-president/memberships" element={<AdminMembershipsPage />} />
+              <Route path="/vice-president/membership-applications" element={<AdminMembershipApplicationsPage />} />
               <Route path="/vice-president/vendor-applications" element={<VicePresidentVendorApplicationsPage />} />
               <Route path="/vice-president/reports" element={<EnterpriseReportBuilderPage />} />
               <Route path="/vice-president/settings" element={<AdminSettingsPage />} />
               {/* Inherited Base Member Modules */}
               <Route path="/vice-president/chapter" element={<MyChapter />} />
               <Route path="/vice-president/wall" element={<BusinessWall />} />
+              <Route path="/vice-president/network" element={<CommunityPage scope="network" />} />
+              <Route path="/vice-president/chat" element={<ChatSystem />} />
               <Route path="/vice-president/referrals" element={<ReferralsPipeline />} />
               <Route path="/vice-president/meetings" element={<MeetingsAttendance />} />
               <Route path="/vice-president/one-to-ones" element={<OneToOnesPage />} />
@@ -573,6 +604,8 @@ function App() {
               {/* Inherited Base Member Modules */}
               <Route path="/launch-director/chapter" element={<MyChapter />} />
               <Route path="/launch-director/wall" element={<BusinessWall />} />
+              <Route path="/launch-director/network" element={<CommunityPage scope="network" />} />
+              <Route path="/launch-director/chat" element={<ChatSystem />} />
               <Route path="/launch-director/referrals" element={<ReferralsPipeline />} />
               <Route path="/launch-director/meetings" element={<MeetingsAttendance />} />
               <Route path="/launch-director/one-to-ones" element={<OneToOnesPage />} />
@@ -600,6 +633,8 @@ function App() {
               {/* Inherited Base Member Modules */}
               <Route path="/direct-consultant/chapter" element={<MyChapter />} />
               <Route path="/direct-consultant/wall" element={<BusinessWall />} />
+              <Route path="/direct-consultant/network" element={<CommunityPage scope="network" />} />
+              <Route path="/direct-consultant/chat" element={<ChatSystem />} />
               <Route path="/direct-consultant/referrals" element={<ReferralsPipeline />} />
               <Route path="/direct-consultant/meetings" element={<MeetingsAttendance />} />
               <Route path="/direct-consultant/one-to-ones" element={<OneToOnesPage />} />
@@ -629,7 +664,10 @@ function App() {
 }
 
 function MarketplaceRoute() {
-  const { marketplaceAccess, vendorApplication } = useAuth()
+  const { marketplaceAccess, vendorApplication, user } = useAuth()
+  const onboardingType = getEffectiveRegistrationType(user, storage.getOnboardingContext()?.registrationType)
+  const isVendorOnboarding = onboardingType === 'vendor'
+  const vendorRoutes = getVendorOnboardingRoutes(true)
 
   if (marketplaceAccess === 'NOT_APPLIED') {
     return <Navigate to="/member/dashboard" replace />
@@ -637,12 +675,20 @@ function MarketplaceRoute() {
 
   if (marketplaceAccess === 'PENDING') {
     if (vendorApplication?.status === 'draft') {
-      return <Navigate to="/member/vendor-application" replace />
+      return <Navigate to={isVendorOnboarding ? vendorRoutes.application : '/member/vendor-application'} replace />
     }
-    return <Navigate to="/member/vendor-application-status" replace />
+    return <Navigate to={isVendorOnboarding ? vendorRoutes.status : '/member/vendor-application-status'} replace />
   }
 
   return <Outlet />
+}
+
+function MembershipApplicationsRedirect() {
+  const { user } = useAuth()
+  const onboardingType = getEffectiveRegistrationType(user, storage.getOnboardingContext()?.registrationType)
+  const vendorRoutes = getVendorOnboardingRoutes(true)
+
+  return <Navigate to={onboardingType === 'vendor' ? vendorRoutes.application : '/membership-application'} replace />
 }
 
 export default App

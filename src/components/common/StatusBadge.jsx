@@ -7,6 +7,7 @@ const toneMap = {
   pending: 'bg-amber-50 text-amber-700 ring-amber-200',
   pending_approval: 'bg-amber-50 text-amber-700 ring-amber-200',
   pending_vp_review: 'bg-indigo-50 text-indigo-700 ring-indigo-200',
+  forwarded: 'bg-indigo-50 text-indigo-700 ring-indigo-200',
   in_progress: 'bg-blue-50 text-blue-700 ring-blue-200',
   under_review: 'bg-amber-50 text-amber-700 ring-amber-200',
   open: 'bg-blue-50 text-blue-700 ring-blue-200',
