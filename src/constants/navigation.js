@@ -112,6 +112,7 @@ export const adminNav = [
       ['Products', '/products', Package],
       ['Services', '/services', BriefcaseBusiness],
       ['Marketplace Approval', '/marketplace-approval', Workflow],
+      ['Vendor Category Requests', '/vendor-category-approvals', Workflow],
     ],
   },
   {
@@ -150,6 +151,7 @@ export const adminNav = [
 export const vendorNav = [
   ['Dashboard', '/vendor', LayoutDashboard],
   ['Business Profile', '/vendor/profile', Building2],
+  ['Business Categories', '/vendor/business-categories', PlusCircle],
   ['Products', '/vendor/products', Package],
   ['Services', '/vendor/services', BriefcaseBusiness],
   ['Orders', '/vendor/orders', ShoppingBag],
@@ -165,6 +167,7 @@ export const vendorNav = [
 export const memberVendorNav = [
   ['Dashboard', '/member/dashboard', LayoutDashboard],
   ['Business Profile', '/member/dashboard/my-business', Building2],
+  ['Business Categories', '/member/dashboard/business-categories', PlusCircle],
   ['My Products', '/member/dashboard/products', Package],
   ['My Services', '/member/dashboard/services', BriefcaseBusiness],
   ['Orders', '/member/dashboard/orders', ShoppingBag],
@@ -242,6 +245,7 @@ const removeMarketplaceSection = (navItems = []) => navItems.filter((_, index) =
 
 const memberVendorMarketplaceChildren = [
   ['Business Profile', '/member/dashboard/my-business', Building2],
+  ['Business Categories', '/member/dashboard/business-categories', PlusCircle],
   ['Products', '/member/dashboard/products', Package],
   ['Services', '/member/dashboard/services', BriefcaseBusiness],
   ['Orders', '/member/dashboard/orders', ShoppingBag],
@@ -323,6 +327,7 @@ const commonModules = [
       ['Vendors', '/vendors', Users],
       ['Vendor Applications', '/vendor-applications', Building2],
       ['Marketplace Approval', '/marketplace-approval', ShieldCheck],
+      ['Vendor Category Requests', '/vendor-category-approvals', Workflow],
       ['Orders', '/orders', ShoppingBag],
       ['Payments', '/payments', CreditCard],
       ['Subscription', '/subscription', ToggleLeft]

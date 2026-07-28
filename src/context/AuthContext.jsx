@@ -6,8 +6,7 @@ import { authApi } from '../api/auth'
 import api, { API_BASE_URL } from '../api/axios'
 import { isAdminRole } from '../constants/adminRoles'
 import { storage } from '../utils/storage'
-import { getEffectiveRegistrationType } from '../utils/onboarding'
-import { createPermissionHelpers } from '../utils/permissions'
+import { createPermissionHelpers, getExplicitRegistrationType } from '../utils/permissions'
 import { AuthContext } from './AuthContextObject'
 import { getMarketplaceAccess } from '../utils/marketplaceAccess'
 import { ROLES } from '../constants/roleConfig.js'
@@ -49,8 +48,7 @@ export function AuthProvider({ children }) {
       return nextUser
     }
 
-    const storedRegistrationType = storage.getOnboardingContext()?.registrationType
-    const registrationType = getEffectiveRegistrationType(nextUser, storedRegistrationType)
+    const registrationType = getExplicitRegistrationType(nextUser)
     const normalizedUser = registrationType
       ? {
           ...nextUser,
@@ -61,8 +59,6 @@ export function AuthProvider({ children }) {
 
     if (registrationType) {
       storage.setOnboardingContext({ registrationType }, remember)
-    } else if (storedRegistrationType) {
-      storage.setOnboardingContext({ registrationType: storedRegistrationType }, remember)
     } else {
       storage.clearOnboardingContext()
     }

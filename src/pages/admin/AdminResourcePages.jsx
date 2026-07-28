@@ -3,6 +3,7 @@ import toast from 'react-hot-toast'
 import { CheckCircle2, ExternalLink, Eye, FileText, Loader2, XCircle, Package, BriefcaseBusiness, AlertCircle } from 'lucide-react'
 import api from '../../api/axios'
 import { adminApi } from '../../api/admin'
+import DataTable from '../../components/tables/DataTable'
 import Modal from '../../components/common/Modal'
 import StatusBadge from '../../components/common/StatusBadge'
 import { useAuth } from '../../hooks/useAuth'
@@ -20,19 +21,220 @@ export function AdminUsersPage() {
 }
 
 export function AdminVendorsPage() {
-  return <ResourceListPage module="vendors" section="vendors" title="Vendor Management" fetcher={adminApi.vendors} filters={statusFilters} columns={[
-    { key: 'businessName', header: 'Business' }, { key: 'email', header: 'Email' }, { key: 'city', header: 'City', render: (row) => row.address?.city || 'Not added' }, { key: 'status', header: 'Status', render: (row) => <StatusBadge value={row.status} /> },
-  ]} />
+  const [vendorProductsOpen, setVendorProductsOpen] = useState(false)
+  const [selectedVendor, setSelectedVendor] = useState(null)
+  const [vendorProducts, setVendorProducts] = useState([])
+  const [vendorProductsLoading, setVendorProductsLoading] = useState(false)
+
+  const loadVendorProducts = async (vendor) => {
+    if (!vendor?._id) return
+    setSelectedVendor(vendor)
+    setVendorProductsOpen(true)
+    setVendorProductsLoading(true)
+    try {
+      const response = await adminApi.products({ vendor: vendor._id, status: 'all', limit: 100 })
+      setVendorProducts(response.data?.data || response.data || [])
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to load vendor products')
+    } finally {
+      setVendorProductsLoading(false)
+    }
+  }
+
+  const moderateVendor = async (vendor, action, reload) => {
+    const reason = action === 'suspend' ? window.prompt('Optional suspension reason') || '' : ''
+    try {
+      await adminApi.moderateVendor(vendor._id, { action, reason })
+      toast.success(`Vendor ${action}d successfully`)
+      reload?.()
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to update vendor')
+    }
+  }
+
+  return (
+    <>
+      <ResourceListPage
+        module="vendors"
+        section="vendors"
+        title="Vendor Management"
+        fetcher={adminApi.vendors}
+        filters={statusFilters}
+        columns={[
+          { key: 'businessName', header: 'Business' },
+          { key: 'email', header: 'Email' },
+          { key: 'city', header: 'City', render: (row) => row.address?.city || 'Not added' },
+          { key: 'status', header: 'Status', render: (row) => <StatusBadge value={row.status} /> },
+        ]}
+        renderActions={(row, { reload }) => (
+          <div className="flex flex-wrap gap-2">
+            <button onClick={() => loadVendorProducts(row)} className="inline-flex items-center gap-1 rounded-md border border-[#0d4697]/25 px-2.5 py-1.5 text-xs font-bold text-[#0d4697] hover:bg-blue-50 transition">
+              <Eye className="h-3 w-3" />
+              View Products
+            </button>
+            <button onClick={() => moderateVendor(row, row.status === 'suspended' ? 'activate' : 'suspend', reload)} className="inline-flex items-center gap-1 rounded-md border border-red-200 px-2.5 py-1.5 text-xs font-bold text-red-600 hover:bg-red-50 transition">
+              {row.status === 'suspended' ? 'Activate' : 'Suspend'}
+            </button>
+          </div>
+        )}
+      />
+
+      <Modal open={vendorProductsOpen} title={`${selectedVendor?.businessName || 'Vendor'} Products`} onClose={() => setVendorProductsOpen(false)} maxWidth="max-w-6xl">
+        {vendorProductsLoading ? (
+          <div className="grid min-h-40 place-items-center">
+            <Loader2 className="h-8 w-8 animate-spin text-[#0d4697]" />
+          </div>
+        ) : (
+          <DataTable
+            columns={[
+              { key: 'title', header: 'Product' },
+              { key: 'category', header: 'Category', render: (row) => row.category?.name || '-' },
+              { key: 'visibility', header: 'Visibility', render: (row) => <StatusBadge value={row.isHidden ? 'hidden' : 'visible'} /> },
+              { key: 'state', header: 'State', render: (row) => <StatusBadge value={row.isActive ? 'active' : 'disabled'} /> },
+            ]}
+            rows={vendorProducts}
+          />
+        )}
+      </Modal>
+    </>
+  )
 }
 
 export function AdminCategoriesPage() {
-  return <ResourceListPage module="settings" section="categories" title="Category Management" fetcher={adminApi.categories} createAction={adminApi.createCategory} updateAction={adminApi.updateCategory} deleteAction={adminApi.deleteCategory} columns={[
-    { key: 'name', header: 'Name' }, { key: 'type', header: 'Type' }, { key: 'isActive', header: 'Status', render: (row) => <StatusBadge value={row.isActive ? 'active' : 'inactive'} /> },
-  ]} renderForm={(props) => <SimpleJsonForm {...props} fields={[{ name: 'name' }, { name: 'type', type: 'select', options: ['business', 'product', 'service', 'event'].map((value) => ({ value, label: value })) }, { name: 'description', type: 'textarea' }]} />} />
+  const moderateCategory = async (row, action, reload) => {
+    try {
+      await adminApi.moderateCategory(row._id, { action })
+      toast.success(`Category ${action}d successfully`)
+      reload?.()
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to update category')
+    }
+  }
+
+  return (
+    <ResourceListPage
+      module="settings"
+      section="categories"
+      title="Category Management"
+      fetcher={adminApi.categories}
+      createAction={adminApi.createCategory}
+      updateAction={adminApi.updateCategory}
+      deleteAction={adminApi.deleteCategory}
+      columns={[
+        { key: 'name', header: 'Name' },
+        { key: 'isActive', header: 'Status', render: (row) => <StatusBadge value={row.isActive ? 'active' : 'inactive'} /> },
+      ]}
+      renderActions={(row, { reload }) => (
+        <button
+          onClick={() => moderateCategory(row, row.isActive ? 'disable' : 'enable', reload)}
+          className="inline-flex items-center gap-1 rounded-md border border-slate-200 px-2.5 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-50 transition"
+        >
+          {row.isActive ? 'Disable' : 'Enable'}
+        </button>
+      )}
+      renderForm={(props) => <SimpleJsonForm {...props} fields={[{ name: 'name' }, { name: 'isActive', type: 'select', options: ['true', 'false'].map((value) => ({ value, label: value === 'true' ? 'active' : 'inactive' })) }]} />}
+    />
+  )
 }
 
 export function AdminProductsPage() {
   const [selectedProduct, setSelectedProduct] = useState(null)
+  const [vendorProductsOpen, setVendorProductsOpen] = useState(false)
+  const [vendorProductsVendor, setVendorProductsVendor] = useState(null)
+  const [vendorProducts, setVendorProducts] = useState([])
+  const [vendorProductsLoading, setVendorProductsLoading] = useState(false)
+  const [reloadProducts, setReloadProducts] = useState(null)
+
+  const loadVendorProducts = async (vendor, reload) => {
+    if (!vendor?._id) return
+    setVendorProductsVendor(vendor)
+    setVendorProductsLoading(true)
+    setReloadProducts(() => reload)
+    setVendorProductsOpen(true)
+    try {
+      const response = await adminApi.products({ vendor: vendor._id, status: 'all', limit: 100 })
+      setVendorProducts(response.data?.data || response.data || [])
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to load vendor products')
+    } finally {
+      setVendorProductsLoading(false)
+    }
+  }
+
+  const refreshSelectedProduct = async () => {
+    if (!selectedProduct?._id) return
+    const response = await adminApi.products({ vendor: selectedProduct.vendor?._id, status: 'all', limit: 100 })
+    const updated = (response.data?.data || response.data || []).find((item) => item._id === selectedProduct._id)
+    if (updated) setSelectedProduct(updated)
+    reloadProducts?.()
+  }
+
+  const moderateProduct = async (action) => {
+    if (!selectedProduct?._id) return
+    const reason = action === 'hide' ? window.prompt('Optional hide reason') || '' : ''
+    try {
+      const response = await adminApi.moderateProduct(selectedProduct._id, { action, reason })
+      setSelectedProduct(response.data?.data || selectedProduct)
+      toast.success(`Product ${action}d successfully`)
+      await refreshSelectedProduct()
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to update product')
+    }
+  }
+
+  const deleteProduct = async () => {
+    if (!selectedProduct?._id) return
+    if (!window.confirm('Delete this product permanently?')) return
+    try {
+      await adminApi.deleteProduct(selectedProduct._id)
+      toast.success('Product deleted successfully')
+      setSelectedProduct(null)
+      reloadProducts?.()
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to delete product')
+    }
+  }
+
+  const suspendVendor = async () => {
+    const vendor = selectedProduct?.vendor
+    if (!vendor?._id) return
+    const action = vendor.status === 'suspended' ? 'activate' : 'suspend'
+    const reason = action === 'suspend' ? window.prompt('Optional suspension reason') || '' : ''
+    try {
+      const response = await adminApi.moderateVendor(vendor._id, { action, reason })
+      setSelectedProduct((current) => current ? { ...current, vendor: response.data?.data || current.vendor } : current)
+      toast.success(`Vendor ${action}d successfully`)
+      reloadProducts?.()
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to update vendor')
+    }
+  }
+
+  const productColumns = [
+    {
+      key: 'image',
+      header: 'Image',
+      render: (row) => {
+        const url = row.images?.find((img) => img.isMain)?.url || row.images?.[0]?.url
+        return url ? (
+          <img src={url} alt={row.title} className="h-10 w-10 rounded-md object-cover border border-slate-100" />
+        ) : (
+          <div className="grid h-10 w-10 place-items-center rounded-md bg-slate-100 border border-slate-200">
+            <Package className="h-5 w-5 text-slate-400" />
+          </div>
+        )
+      }
+    },
+    { key: 'title', header: 'Product Name' },
+    { key: 'vendorName', header: 'Vendor Name', render: (row) => row.vendor?.ownerName || row.vendor?.user?.name || '-' },
+    { key: 'businessName', header: 'Business Name', render: (row) => row.vendor?.businessName || '-' },
+    { key: 'category', header: 'Category', render: (row) => row.category?.name || '-' },
+    { key: 'price', header: 'Price', render: (row) => formatCurrency(row.pricing?.sellingPrice) },
+    { key: 'stock', header: 'Stock', render: (row) => row.inventory?.isUnlimited ? 'Unlimited' : (row.inventory?.quantity ?? 0) },
+    { key: 'visibility', header: 'Visibility', render: (row) => <StatusBadge value={row.isHidden ? 'hidden' : 'visible'} /> },
+    { key: 'state', header: 'State', render: (row) => <StatusBadge value={row.isActive ? 'active' : 'disabled'} /> },
+    { key: 'createdAt', header: 'Created Date', render: (row) => formatDate(row.createdAt) }
+  ]
 
   return (
     <>
@@ -40,46 +242,34 @@ export function AdminProductsPage() {
         module="marketplace"
         section="products"
         title="Product Management"
-        fetcher={adminApi.products}
-        filters={statusFilters}
-        columns={[
-          {
-            key: 'image',
-            header: 'Image',
-            render: (row) => {
-              const url = row.images?.find((img) => img.isMain)?.url || row.images?.[0]?.url
-              return url ? (
-                <img src={url} alt={row.title} className="h-10 w-10 rounded-md object-cover border border-slate-100" />
-              ) : (
-                <div className="grid h-10 w-10 place-items-center rounded-md bg-slate-100 border border-slate-200">
-                  <Package className="h-5 w-5 text-slate-400" />
-                </div>
-              )
-            }
-          },
-          { key: 'title', header: 'Product Name' },
-          { key: 'vendorName', header: 'Vendor Name', render: (row) => row.vendor?.ownerName || row.vendor?.user?.name || '-' },
-          { key: 'businessName', header: 'Business Name', render: (row) => row.vendor?.businessName || '-' },
-          { key: 'category', header: 'Category', render: (row) => row.category?.name || '-' },
-          { key: 'price', header: 'Price', render: (row) => formatCurrency(row.pricing?.sellingPrice) },
-          { key: 'stock', header: 'Stock', render: (row) => row.inventory?.isUnlimited ? 'Unlimited' : (row.inventory?.quantity ?? 0) },
-          { key: 'status', header: 'Status', render: (row) => <StatusBadge value={row.status} /> },
-          { key: 'createdAt', header: 'Created Date', render: (row) => formatDate(row.createdAt) }
-        ]}
-        renderActions={(row) => (
-          <button
-            onClick={() => setSelectedProduct(row)}
-            className="inline-flex items-center gap-1 rounded-md border border-[#0d4697]/25 px-2.5 py-1.5 text-xs font-bold text-[#0d4697] hover:bg-blue-50 transition"
-          >
-            <Eye className="h-3 w-3" />
-            View
-          </button>
-        )}
+        fetcher={(params) => adminApi.products({ ...params, status: params.status || 'all' })}
+        columns={productColumns}
+        renderActions={(row, { reload }) => {
+          return (
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() => { setSelectedProduct(row); setReloadProducts(() => reload) }}
+                className="inline-flex items-center gap-1 rounded-md border border-[#0d4697]/25 px-2.5 py-1.5 text-xs font-bold text-[#0d4697] hover:bg-blue-50 transition"
+              >
+                <Eye className="h-3 w-3" />
+                View
+              </button>
+              <button
+                type="button"
+                onClick={() => loadVendorProducts(row.vendor, reload)}
+                className="inline-flex items-center gap-1 rounded-md border border-slate-200 px-2.5 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-50 transition"
+              >
+                Vendor Products
+              </button>
+            </div>
+          )
+        }}
       />
 
-      <Modal open={Boolean(selectedProduct)} title="Product Details" onClose={() => setSelectedProduct(null)}>
+      <Modal open={Boolean(selectedProduct)} title="Product Details" onClose={() => setSelectedProduct(null)} maxWidth="max-w-5xl">
         {selectedProduct && (
-          <div className="space-y-4 text-sm font-semibold text-slate-700">
+          <div className="space-y-5 text-sm font-semibold text-slate-700">
             <div className="flex items-center gap-4 border-b border-slate-100 pb-4">
               {(() => {
                 const url = selectedProduct.images?.find((img) => img.isMain)?.url || selectedProduct.images?.[0]?.url
@@ -94,8 +284,13 @@ export function AdminProductsPage() {
               <div>
                 <h3 className="text-base font-extrabold text-slate-950">{selectedProduct.title}</h3>
                 <p className="text-xs text-slate-500 mt-0.5">SKU: {selectedProduct.sku || '-'}</p>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  <StatusBadge value={selectedProduct.isHidden ? 'hidden' : 'visible'} />
+                  <StatusBadge value={selectedProduct.isActive ? 'active' : 'disabled'} />
+                </div>
               </div>
             </div>
+
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <p className="text-xs font-bold uppercase text-slate-400">Vendor Name</p>
@@ -120,20 +315,58 @@ export function AdminProductsPage() {
                 <p className="mt-0.5 text-slate-900">{selectedProduct.inventory?.isUnlimited ? 'Unlimited' : selectedProduct.inventory?.quantity}</p>
               </div>
               <div>
-                <p className="text-xs font-bold uppercase text-slate-400">Status</p>
+                <p className="text-xs font-bold uppercase text-slate-400">Live Status</p>
                 <div className="mt-1"><StatusBadge value={selectedProduct.status} /></div>
               </div>
             </div>
+
             {selectedProduct.description && (
               <div className="border-t border-slate-100 pt-4">
                 <p className="text-xs font-bold uppercase text-slate-400">Description</p>
                 <p className="mt-1 text-xs font-medium text-slate-600 leading-relaxed max-h-48 overflow-y-auto pr-2">{selectedProduct.description}</p>
               </div>
             )}
-            <div className="flex justify-end pt-2 border-t border-slate-100">
-              <button onClick={() => setSelectedProduct(null)} className="h-9 rounded-md bg-slate-100 px-4 text-xs font-bold text-slate-700 hover:bg-slate-200 transition">Close</button>
+
+            <div className="flex flex-wrap justify-end gap-2 border-t border-slate-100 pt-4">
+              <button onClick={() => moderateProduct(selectedProduct.isHidden ? 'unhide' : 'hide')} className="rounded-md bg-amber-600 px-4 py-2 text-xs font-extrabold text-white hover:bg-amber-700">
+                {selectedProduct.isHidden ? 'Unhide Product' : 'Hide Product'}
+              </button>
+              <button onClick={() => moderateProduct(selectedProduct.isActive ? 'disable' : 'enable')} className="rounded-md border border-slate-200 px-4 py-2 text-xs font-extrabold text-slate-700 hover:bg-slate-50">
+                {selectedProduct.isActive ? 'Disable Product' : 'Enable Product'}
+              </button>
+              <button onClick={deleteProduct} className="rounded-md bg-red-600 px-4 py-2 text-xs font-extrabold text-white hover:bg-red-700">
+                Delete Product
+              </button>
+              <button onClick={suspendVendor} className="rounded-md border border-red-200 px-4 py-2 text-xs font-extrabold text-red-600 hover:bg-red-50">
+                {selectedProduct.vendor?.status === 'suspended' ? 'Activate Vendor' : 'Suspend Vendor'}
+              </button>
+              <button onClick={() => loadVendorProducts(selectedProduct.vendor, reloadProducts)} className="rounded-md border border-[#0d4697]/25 px-4 py-2 text-xs font-extrabold text-[#0d4697] hover:bg-blue-50">
+                View Vendor Products
+              </button>
+              <button onClick={() => setSelectedProduct(null)} className="rounded-md bg-slate-100 px-4 py-2 text-xs font-extrabold text-slate-700 hover:bg-slate-200">
+                Close
+              </button>
             </div>
           </div>
+        )}
+      </Modal>
+
+      <Modal open={vendorProductsOpen} title={`${vendorProductsVendor?.businessName || 'Vendor'} Products`} onClose={() => setVendorProductsOpen(false)} maxWidth="max-w-6xl">
+        {vendorProductsLoading ? (
+          <div className="grid min-h-40 place-items-center">
+            <Loader2 className="h-8 w-8 animate-spin text-[#0d4697]" />
+          </div>
+        ) : (
+          <DataTable
+            columns={[
+              { key: 'title', header: 'Product' },
+              { key: 'category', header: 'Category', render: (row) => row.category?.name || '-' },
+              { key: 'visibility', header: 'Visibility', render: (row) => <StatusBadge value={row.isHidden ? 'hidden' : 'visible'} /> },
+              { key: 'state', header: 'State', render: (row) => <StatusBadge value={row.isActive ? 'active' : 'disabled'} /> },
+              { key: 'createdAt', header: 'Created', render: (row) => formatDate(row.createdAt) },
+            ]}
+            rows={vendorProducts}
+          />
         )}
       </Modal>
     </>
@@ -149,7 +382,7 @@ export function AdminServicesPage() {
         module="marketplace"
         section="services"
         title="Service Management"
-        fetcher={adminApi.services}
+        fetcher={(params) => adminApi.services({ ...params, status: params.status || 'all' })}
         filters={statusFilters}
         columns={[
           {

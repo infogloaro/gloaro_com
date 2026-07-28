@@ -5,9 +5,8 @@ import { Eye, EyeOff } from 'lucide-react'
 import FormField from '../../components/forms/FormField'
 import { useAuth } from '../../hooks/useAuth'
 import { ROLES } from '../../constants/roleConfig.js'
-import { getEffectiveRegistrationType, getVendorOnboardingRoutes, normalizeRegistrationType, getRegistrationTypeLabel } from '../../utils/onboarding'
-import { getDashboardRoute } from '../../utils/permissions'
-import { storage } from '../../utils/storage'
+import { getVendorOnboardingRoutes, normalizeRegistrationType, getRegistrationTypeLabel } from '../../utils/onboarding'
+import { getAccountClassification, getDashboardRoute } from '../../utils/permissions'
 
 
 export default function Login() {
@@ -26,14 +25,10 @@ export default function Login() {
         email: values.email,
         password: values.password,
       }, values.remember)
+      const account = getAccountClassification(signedInUser)
       const fromPath = location.state?.from?.pathname
       const redirectParam = new URLSearchParams(location.search).get('redirect')
-      const effectiveRegistrationType = getEffectiveRegistrationType(signedInUser, storage.getOnboardingContext()?.registrationType)
       const vendorRoutes = getVendorOnboardingRoutes(true)
-      const isApprovedVendorAccount =
-        signedInUser.status === 'approved' ||
-        signedInUser.vendorProfile?.status === 'approved' ||
-        signedInUser.role === ROLES.VENDOR
       const roleDashboard = getDashboardRoute(signedInUser.role, signedInUser)
       const requestedDest = redirectParam || fromPath || ''
       const normalizedDest = String(requestedDest || '').toLowerCase()
@@ -47,8 +42,8 @@ export default function Login() {
         normalizedDest.startsWith('/admin/') ||
         normalizedDest.startsWith('/super-admin/') ||
         normalizedDest.startsWith('/member/dashboard')
-      const finalDest = effectiveRegistrationType === 'vendor'
-        ? (isApprovedVendorAccount ? roleDashboard : vendorRoutes.application)
+      const finalDest = account.registrationType === 'vendor'
+        ? (account.isOnlineVendor ? roleDashboard : vendorRoutes.application)
         : (shouldUseRoleDashboard ? roleDashboard : requestedDest)
       navigate(finalDest, { replace: true })
     } catch (error) {

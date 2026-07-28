@@ -141,7 +141,7 @@ export default function VendorApplicationForm() {
       try {
         setLoading(true)
         // 1. Fetch categories
-        const catRes = await customerApi.categories({ type: 'business', limit: 100 })
+        const catRes = await customerApi.categories({ limit: 100 })
         setCategories(catRes.data?.data || catRes.data || [])
 
         // 2. Fetch my vendor application
@@ -653,7 +653,7 @@ export default function VendorApplicationForm() {
                 <FormInput label="Business Name" value={step2.details.businessName} onChange={(val) => setStep2(p => ({ ...p, details: { ...p.details, businessName: val } }))} />
               </div>
               <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-500">Business Category</label>
+                <label className="text-xs font-bold text-slate-500">Category</label>
                 <select
                   value={step2.details.businessCategory}
                   onChange={(e) => setStep2(p => ({ ...p, details: { ...p.details, businessCategory: e.target.value } }))}

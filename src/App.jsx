@@ -18,6 +18,7 @@ import AdminAnalytics from './pages/admin/AdminAnalytics'
 import AdminNotifications from './pages/admin/AdminNotifications'
 import AdminManagementPage from './pages/admin/AdminManagementPage'
 import AdminVendorApplicationsPage from './pages/admin/AdminVendorApplicationsPage'
+import AdminVendorCategoryApprovalsPage from './pages/admin/AdminVendorCategoryApprovalsPage'
 import ApprovedVendorsPage from './pages/shared/ApprovedVendorsPage'
 import {
   AuditLogsPage,
@@ -84,6 +85,7 @@ import {
 } from './pages/admin/AdminResourcePages'
 import LocationsManagementPage from './pages/admin/LocationsManagementPage'
 import VendorDashboard from './pages/vendor/VendorDashboard'
+import VendorCategoryApprovalsPage from './pages/vendor/VendorCategoryApprovalsPage'
 import {
   VendorLeadsPage,
   VendorMembershipPage,
@@ -171,8 +173,7 @@ import VisitorsPage from './pages/membership/VisitorsPage'
 import BusinessDirectory from './pages/membership/BusinessDirectory'
 import Leaderboard from './pages/membership/Leaderboard'
 import { ROLES } from './constants/roleConfig.js'
-import { getEffectiveRegistrationType, getVendorOnboardingRoutes } from './utils/onboarding'
-import { storage } from './utils/storage'
+import { getAccountClassification } from './utils/permissions'
 
 function App() {
   const { role, permissionsLoading, canAccessPath } = useAuth()
@@ -196,6 +197,7 @@ function App() {
     { path: '/approved-vendors', element: <ApprovedVendorsPage /> },
     { path: '/vendor-settings', element: <SuperAdminModulePage {...superAdminModuleConfigs.vendor} /> },
     { path: '/vendor-approval-workflow', element: <VendorApprovalWorkflowPage /> },
+    { path: '/vendor-category-approvals', element: <AdminVendorCategoryApprovalsPage /> },
     { path: '/locations', element: <LocationsManagementPage /> },
     { path: '/categories', element: <AdminCategoriesPage /> },
     { path: '/business', element: <BusinessNetworkingPage /> },
@@ -318,6 +320,7 @@ function App() {
               <Route path="/vendor" element={<VendorDashboard />} />
               <Route path="/vendor/profile" element={<VendorProfilePage />} />
               <Route path="/vendor/settings" element={<ProfilePage />} />
+              <Route path="/vendor/business-categories" element={<VendorCategoryApprovalsPage />} />
               <Route path="/vendor/products" element={<VendorProductsPage />} />
               <Route path="/vendor/services" element={<VendorServicesPage />} />
               <Route path="/vendor/orders" element={<VendorOrdersPage />} />
@@ -368,6 +371,7 @@ function App() {
               <Route element={<MarketplaceRoute />}>
                 <Route path="/member/products" element={<MemberProductsPage />} />
                 <Route path="/member/dashboard/my-business" element={<VendorProfilePage />} />
+              <Route path="/member/dashboard/business-categories" element={<VendorCategoryApprovalsPage />} />
               <Route path="/member/dashboard/products" element={<VendorProductsPage />} />
               <Route path="/member/dashboard/products-mgmt" element={<VendorProductsPage />} />
               <Route path="/member/dashboard/services" element={<VendorServicesPage />} />
@@ -510,6 +514,7 @@ function App() {
             <Route element={<ProtectedRoute roles={[ROLES.EXECUTIVE_DIRECTOR]} />}>
               <Route path="/chapter-director" element={<Navigate to="/chapter-director/dashboard" replace />} />
               <Route path="/chapter-director/dashboard" element={<DynamicDashboard />} />
+              <Route path="/chapter-director/vendor-category-approvals" element={<AdminVendorCategoryApprovalsPage />} />
               <Route path="/chapter-director/president" element={<AdminManagementPage />} />
               <Route path="/chapter-director/members" element={<AdminMembersPage />} />
               <Route path="/chapter-director/launch-directors" element={<AdminManagementPage />} />
@@ -665,19 +670,17 @@ function App() {
 
 function MarketplaceRoute() {
   const { marketplaceAccess, vendorApplication, user } = useAuth()
-  const onboardingType = getEffectiveRegistrationType(user, storage.getOnboardingContext()?.registrationType)
-  const isVendorOnboarding = onboardingType === 'vendor'
-  const vendorRoutes = getVendorOnboardingRoutes(true)
+  const account = getAccountClassification(user)
 
   if (marketplaceAccess === 'NOT_APPLIED') {
-    return <Navigate to="/member/dashboard" replace />
+    return <Navigate to={account.isOnlineVendor ? '/vendor' : '/member/dashboard'} replace />
   }
 
   if (marketplaceAccess === 'PENDING') {
     if (vendorApplication?.status === 'draft') {
-      return <Navigate to={isVendorOnboarding ? vendorRoutes.application : '/member/vendor-application'} replace />
+      return <Navigate to={account.isOnlineVendor ? '/vendor/onboarding' : '/member/vendor-application'} replace />
     }
-    return <Navigate to={isVendorOnboarding ? vendorRoutes.status : '/member/vendor-application-status'} replace />
+    return <Navigate to={account.isOnlineVendor ? '/vendor/onboarding-status' : '/member/vendor-application-status'} replace />
   }
 
   return <Outlet />
@@ -685,10 +688,9 @@ function MarketplaceRoute() {
 
 function MembershipApplicationsRedirect() {
   const { user } = useAuth()
-  const onboardingType = getEffectiveRegistrationType(user, storage.getOnboardingContext()?.registrationType)
-  const vendorRoutes = getVendorOnboardingRoutes(true)
+  const account = getAccountClassification(user)
 
-  return <Navigate to={onboardingType === 'vendor' ? vendorRoutes.application : '/membership-application'} replace />
+  return <Navigate to={account.registrationType === 'vendor' ? '/vendor/onboarding' : '/membership-application'} replace />
 }
 
 export default App

@@ -18,6 +18,7 @@ import {
 import logo from '../assets/logo.png'
 import networkIcon from '../assets/network_icon.png'
 import shopIcon from '../assets/shop_icon.png'
+import brandIcon from '../assets/brand_icon.png'
 import nearMeIcon from '../assets/nearme_icon.png'
 import b2bIcon from '../assets/b2b_icon.png'
 import loginIcon from '../assets/login_icon.png'
@@ -60,6 +61,7 @@ export default function Navbar() {
   const [mobileNetworkOpen, setMobileNetworkOpen] = useState(false)
   const navItems = [
     [shopIcon, 'Shop', '/products', 'bg-[#ffb20c] text-[#063a85]'],
+    [brandIcon, 'Services', '/services', 'bg-[#ffb20c] text-[#063a85]'],
     [nearMeIcon, 'Near Me', '/nearby', 'bg-[#ffb20c] text-[#063a85]'],
     [b2bIcon, 'B2B Marketplace', loginLink('b2b', '/vendors'), 'bg-[#ffb20c] text-[#063a85]'],
     [loginIcon, 'Become a Vendor', '/register?type=vendor', 'bg-[#0b469e] text-white', 'brightness-0 invert'],
@@ -95,7 +97,7 @@ export default function Navbar() {
         </div>
 
         <div className="mt-3 flex items-center gap-3 lg:mt-4">
-          <label className="flex h-8 w-full max-w-[420px] items-center gap-3 rounded-lg bg-[#0b469e] px-5 text-white shadow-sm"><SearchIcon /><input className="w-full bg-transparent text-xs outline-none placeholder:text-white" placeholder="Search for Products, Brands and More" /></label>
+          <label className="flex h-8 w-full max-w-[420px] items-center gap-3 rounded-lg bg-[#0b469e] px-5 text-white shadow-sm"><SearchIcon /><input className="w-full bg-transparent text-xs outline-none placeholder:text-white" placeholder="Search for Products, Services, Brands and More" /></label>
           <button onClick={() => setOpen(!open)} className="ml-auto flex items-center gap-1 text-xs font-medium text-[#f3a900] lg:hidden"><PinIcon /> Kallakurichy</button>
         </div>
       </div>

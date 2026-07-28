@@ -16,6 +16,13 @@ import {
   Users, FileText, HelpCircle, FileBarChart, CreditCard 
 } from 'lucide-react'
 
+const buildApprovedCategoryOptions = (categories = [], approvedCategories = []) => {
+  const approvedIds = new Set((approvedCategories || []).map((category) => String(category?._id || category || '')))
+  return categories
+    .filter((category) => category?.isActive !== false && approvedIds.has(String(category?._id || '')))
+    .map((category) => ({ value: category._id, label: category.name }))
+}
+
 export function VendorProfilePage() {
   return (
     <div className="grid gap-5 xl:grid-cols-2">
@@ -43,11 +50,13 @@ export function VendorProductsPage() {
   useEffect(() => {
     setLoading(true)
     Promise.all([
-      api.get('/categories?type=product'),
+      vendorApi.profile(),
+      api.get('/categories?type=product&isActive=true'),
       vendorApi.products()
-    ]).then(([catRes, prodRes]) => {
+    ]).then(([profileRes, catRes, prodRes]) => {
+      const vendorProfile = profileRes.data?.data || profileRes.data || {}
       const catList = catRes.data?.data || catRes.data || []
-      setCategories(catList.map(cat => ({ value: cat._id, label: cat.name })))
+      setCategories(buildApprovedCategoryOptions(catList, vendorProfile.approvedCategories || []))
       setProducts(prodRes.data?.data || prodRes.data || [])
     }).catch(() => {})
       .finally(() => setLoading(false))
@@ -169,6 +178,11 @@ export function VendorProductsPage() {
       {activeTab === 'add' && (
         <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm max-w-2xl text-left">
           <h3 className="text-sm font-black uppercase text-slate-800 mb-4">Add Product details</h3>
+          {!categories.length && (
+            <p className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-bold text-amber-800">
+              No approved product categories are available yet.
+            </p>
+          )}
           <SimpleJsonForm
             onSubmit={handleCreateProduct}
             fields={[
@@ -189,7 +203,7 @@ export function VendorProductsPage() {
           {categories.map((c) => (
             <div key={c.value} className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm text-left">
               <p className="text-xs font-black text-slate-800">{c.label}</p>
-              <p className="text-[10px] font-bold text-slate-400 mt-1">Product Category</p>
+              <p className="text-[10px] font-bold text-slate-400 mt-1">Category</p>
             </div>
           ))}
         </div>
@@ -222,11 +236,13 @@ export function VendorServicesPage() {
   useEffect(() => {
     setLoading(true)
     Promise.all([
-      api.get('/categories?type=service'),
+      vendorApi.profile(),
+      api.get('/categories?isActive=true'),
       vendorApi.services()
-    ]).then(([catRes, servRes]) => {
+    ]).then(([profileRes, catRes, servRes]) => {
+      const vendorProfile = profileRes.data?.data || profileRes.data || {}
       const catList = catRes.data?.data || catRes.data || []
-      setCategories(catList.map(cat => ({ value: cat._id, label: cat.name })))
+      setCategories(buildApprovedCategoryOptions(catList, vendorProfile.approvedCategories || []))
       setServices(servRes.data?.data || servRes.data || [])
     }).catch(() => {})
       .finally(() => setLoading(false))
@@ -343,6 +359,11 @@ export function VendorServicesPage() {
       {activeTab === 'add' && (
         <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm max-w-2xl text-left">
           <h3 className="text-sm font-black uppercase text-slate-800 mb-4">Add Service details</h3>
+          {!categories.length && (
+            <p className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-bold text-amber-800">
+              No approved categories are available yet.
+            </p>
+          )}
           <SimpleJsonForm
             onSubmit={handleCreateService}
             fields={[
@@ -361,7 +382,7 @@ export function VendorServicesPage() {
           {categories.map((c) => (
             <div key={c.value} className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm text-left">
               <p className="text-xs font-black text-slate-800">{c.label}</p>
-              <p className="text-[10px] font-bold text-slate-400 mt-1">Service Category</p>
+              <p className="text-[10px] font-bold text-slate-400 mt-1">Category</p>
             </div>
           ))}
         </div>
