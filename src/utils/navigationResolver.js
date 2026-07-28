@@ -1,8 +1,7 @@
 import { getApplicantSidebarNav, getMemberSidebarNav, getMemberVendorSidebarNav, getRoleBasedSidebarNav, getVendorApplicantSidebarNav, vendorNav, vendorOnboardingNav } from '../constants/navigation'
 import { isAdminRole } from '../constants/adminRoles'
 import { ROLES } from '../constants/roleConfig.js'
-import { getEffectiveRegistrationType } from './onboarding'
-import { normalizeRole } from './permissions'
+import { getAccountClassification, normalizeRole } from './permissions'
 
 export const NAVIGATION_MODES = Object.freeze({
   ROLE_BASED: 'ROLE_BASED',
@@ -18,57 +17,33 @@ const MEMBER_ROLES = new Set([ROLES.CUSTOMER, ROLES.USER, ROLES.VENDOR])
 const isAdministrativeRole = (role) => isAdminRole(role) || !MEMBER_ROLES.has(normalizeRole(role))
 
 export const isOnlineVendor = ({ user, marketplaceAccess, onboardingType } = {}) => {
-  if (!user?.role) return false
-  const membershipStatus = String(user?.onboardingStatus || user?.status || '').toLowerCase()
-  const isApprovedMarketplaceAccount = marketplaceAccess === 'APPROVED' || user?.vendorProfile?.status === 'approved'
-  return MEMBER_ROLES.has(normalizeRole(user.role)) &&
-    getEffectiveRegistrationType(user, onboardingType) === ROLES.VENDOR &&
-    membershipStatus === 'approved' &&
-    isApprovedMarketplaceAccount
+  const account = getAccountClassification(user)
+  return account.isOnlineVendor
 }
 
 export const isVendorApplicant = ({ user, marketplaceAccess, onboardingType } = {}) => {
-  if (!user?.role) return false
-  const role = normalizeRole(user.role)
-  const isApprovedMarketplaceAccount = marketplaceAccess === 'APPROVED' || user?.vendorProfile?.status === 'approved'
-  return getEffectiveRegistrationType(user, onboardingType) === ROLES.VENDOR &&
-    !isApprovedMarketplaceAccount &&
-    ([ROLES.CUSTOMER, ROLES.USER, ROLES.VENDOR].includes(role))
+  const account = getAccountClassification(user)
+  return account.isVendorApplicant
 }
 
 export const isMemberVendor = ({ user, marketplaceAccess, onboardingType } = {}) => {
-  if (!user?.role) return false
-  const membershipStatus = String(user?.onboardingStatus || user?.status || '').toLowerCase()
-  const isApprovedMarketplaceAccount = marketplaceAccess === 'APPROVED' || user?.vendorProfile?.status === 'approved'
-  return MEMBER_ROLES.has(normalizeRole(user.role)) &&
-    getEffectiveRegistrationType(user, onboardingType) !== ROLES.VENDOR &&
-    membershipStatus === 'approved' &&
-    isApprovedMarketplaceAccount
+  const account = getAccountClassification(user)
+  return account.isMemberVendor
 }
 
 export const isMemberOnly = ({ user, marketplaceAccess, onboardingType } = {}) => {
-  if (!user?.role) return false
-  const membershipStatus = String(user?.onboardingStatus || user?.status || '').toLowerCase()
-  return MEMBER_ROLES.has(normalizeRole(user.role)) &&
-    getEffectiveRegistrationType(user, onboardingType) !== ROLES.VENDOR &&
-    membershipStatus === 'approved' &&
-    marketplaceAccess !== 'APPROVED'
+  const account = getAccountClassification(user)
+  return account.isMemberOnly
 }
 
 export const isMembershipApplicant = ({ user, onboardingType } = {}) => {
-  if (!user?.role) return false
-  const membershipStatus = String(user?.onboardingStatus || user?.status || '').toLowerCase()
-  return MEMBER_ROLES.has(normalizeRole(user.role)) &&
-    getEffectiveRegistrationType(user, onboardingType) !== ROLES.VENDOR &&
-    membershipStatus !== 'approved'
+  const account = getAccountClassification(user)
+  return account.isMemberApplicant
 }
 
 export function resolveNavigation({ user, marketplaceAccess, navItems = [], onboardingType: onboardingTypeOverride = '' } = {}) {
   const role = normalizeRole(user?.role)
-  const onboardingType = getEffectiveRegistrationType(
-    user,
-    onboardingTypeOverride || user?.meta?.onboarding?.registrationType
-  )
+  const account = getAccountClassification(user)
 
   if (!user?.role) {
     return {
@@ -86,7 +61,7 @@ export function resolveNavigation({ user, marketplaceAccess, navItems = [], onbo
     }
   }
 
-  if (isVendorApplicant({ user, marketplaceAccess, onboardingType })) {
+  if (account.isVendorApplicant) {
     return {
       mode: NAVIGATION_MODES.ONLINE_VENDOR_APPLICANT,
       items: getVendorApplicantSidebarNav(),
@@ -94,7 +69,7 @@ export function resolveNavigation({ user, marketplaceAccess, navItems = [], onbo
     }
   }
 
-  if (isOnlineVendor({ user, marketplaceAccess, onboardingType })) {
+  if (account.isOnlineVendor) {
     if (marketplaceAccess === 'APPROVED') {
       return {
         mode: NAVIGATION_MODES.ONLINE_VENDOR_APPROVED,
@@ -110,7 +85,7 @@ export function resolveNavigation({ user, marketplaceAccess, navItems = [], onbo
     }
   }
 
-  if (isMembershipApplicant({ user, onboardingType })) {
+  if (account.isMemberApplicant) {
     return {
       mode: NAVIGATION_MODES.MEMBER,
       items: getApplicantSidebarNav(),
@@ -118,7 +93,7 @@ export function resolveNavigation({ user, marketplaceAccess, navItems = [], onbo
     }
   }
 
-  if (isMemberVendor({ user, marketplaceAccess, onboardingType })) {
+  if (account.isMemberVendor) {
     return {
       mode: NAVIGATION_MODES.MEMBER_VENDOR,
       items: getMemberVendorSidebarNav(user.role),
@@ -126,7 +101,7 @@ export function resolveNavigation({ user, marketplaceAccess, navItems = [], onbo
     }
   }
 
-  if (isMemberOnly({ user, marketplaceAccess, onboardingType })) {
+  if (account.isMemberOnly) {
     return {
       mode: NAVIGATION_MODES.MEMBER,
       items: getMemberSidebarNav(user.role),

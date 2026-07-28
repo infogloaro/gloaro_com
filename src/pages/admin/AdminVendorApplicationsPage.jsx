@@ -43,7 +43,7 @@ export default function AdminVendorApplicationsPage({
     : ['submitted', 'under_review', 'approved', 'rejected']
 
   useEffect(() => {
-    adminApi.categories({ type: 'business', limit: 100 })
+    adminApi.categories({ limit: 100 })
       .then((res) => {
         setCategories((res.data?.data || res.data || []).map(cat => ({ value: cat._id, label: cat.name })))
       })
@@ -108,7 +108,7 @@ export default function AdminVendorApplicationsPage({
         columns={[
           { key: 'fullName', header: 'Applicant Name', render: (row) => row.step2?.personal?.fullName || 'Owner' },
           { key: 'businessName', header: 'Business Name', render: (row) => row.step2?.details?.businessName || 'Business' },
-          { key: 'category', header: 'Business Category', render: (row) => row.step2?.details?.businessCategory?.name || '-' },
+          { key: 'category', header: 'Category', render: (row) => row.step2?.details?.businessCategory?.name || '-' },
           { key: 'source', header: 'Source', render: (row) => row.applicationSource || row.submittedFromLabel || row.submittedFrom?.replaceAll('_', ' ') || 'Unknown' },
           { key: 'mobile', header: 'Mobile', render: (row) => row.step2?.personal?.mobileNumber || '-' },
           { key: 'email', header: 'Email', render: (row) => row.step2?.personal?.email || '-' },

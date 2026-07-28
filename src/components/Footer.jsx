@@ -12,6 +12,7 @@ const links = {
     ['Membership', '#membership'],
     ['Events', '#events'],
     ['Shop', '/products'],
+    ['Services', '/services'],
     ['Near Me', '/nearby'],
     ['B2B Marketplace', '/vendors'],
   ],

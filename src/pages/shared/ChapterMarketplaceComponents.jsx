@@ -15,7 +15,7 @@ export function ChapterMarketplaceProducts({
   const [categories, setCategories] = useState([])
 
   useEffect(() => {
-    adminApi.categories({ type: 'product', limit: 100 })
+    adminApi.categories({ limit: 100 })
       .then((res) => {
         setCategories((res.data?.data || res.data || []).map(cat => ({ value: cat._id, label: cat.name })))
       })
@@ -149,7 +149,7 @@ export function ChapterMarketplaceServices({
   const [categories, setCategories] = useState([])
 
   useEffect(() => {
-    adminApi.categories({ type: 'service', limit: 100 })
+    adminApi.categories({ limit: 100 })
       .then((res) => {
         setCategories((res.data?.data || res.data || []).map(cat => ({ value: cat._id, label: cat.name })))
       })
@@ -283,7 +283,7 @@ export function ChapterMarketplaceVendors({
   const [categories, setCategories] = useState([])
 
   useEffect(() => {
-    adminApi.categories({ type: 'business', limit: 100 })
+    adminApi.categories({ limit: 100 })
       .then((res) => {
         setCategories((res.data?.data || res.data || []).map(cat => ({ value: cat._id, label: cat.name })))
       })
@@ -306,7 +306,7 @@ export function ChapterMarketplaceVendors({
         columns={[
           { key: 'ownerName', header: 'Vendor Name' },
           { key: 'businessName', header: 'Business Name' },
-          { key: 'category', header: 'Business Category', render: (row) => row.businessCategory?.name || '-' },
+          { key: 'category', header: 'Category', render: (row) => row.businessCategory?.name || '-' },
           { key: 'phone', header: 'Mobile', render: (row) => row.phone || '-' },
           { key: 'email', header: 'Email', render: (row) => row.email || '-' },
           { key: 'district', header: 'District', render: (row) => row.districtId?.name || '-' },

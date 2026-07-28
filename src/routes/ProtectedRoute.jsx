@@ -4,7 +4,7 @@ import { useAuth } from '../hooks/useAuth'
 import { isAdminRole } from '../constants/adminRoles'
 import { storage } from '../utils/storage'
 import { ROLES } from '../constants/roleConfig.js'
-import { getEffectiveRegistrationType, getVendorOnboardingRoutes } from '../utils/onboarding'
+import { getAccountClassification } from '../utils/permissions'
 
 const roleMatches = (allowed, actual) => {
   const allowedRole = String(allowed || '').toLowerCase().replace(/\s+/g, '')
@@ -20,23 +20,25 @@ const roleMatches = (allowed, actual) => {
 export default function ProtectedRoute({ roles, requirePathAccess = false, fallback = '/dashboard' }) {
   const { loading, isAuthenticated, role, permissionsLoading, canAccessPath, user } = useAuth()
   const location = useLocation()
-  const onboardingType = getEffectiveRegistrationType(user, storage.getOnboardingContext()?.registrationType)
-  const isVendorOnboarding = onboardingType === 'vendor'
-  const vendorRoutes = getVendorOnboardingRoutes(true)
+  const account = getAccountClassification(user)
 
   const isHydrating = loading || (storage.getAccessToken() && !user)
   if (isHydrating) return <LoadingScreen label="Checking session..." />
   if (!isAuthenticated) return <Navigate to="/login" replace state={{ from: location }} />
 
-  if (isVendorOnboarding && location.pathname === '/member/vendor-application') {
-    return <Navigate to={vendorRoutes.application} replace />
+  if (account.isOnlineVendor && location.pathname.startsWith('/member/')) {
+    return <Navigate to="/vendor" replace />
   }
 
-  if (isVendorOnboarding && location.pathname === '/member/vendor-application-status') {
-    return <Navigate to={vendorRoutes.status} replace />
+  if (account.isVendorApplicant && location.pathname === '/member/vendor-application') {
+    return <Navigate to="/vendor/onboarding" replace />
   }
 
-  if (onboardingType === 'member' && user?.role === ROLES.CUSTOMER && user?.onboardingStatus !== 'Approved') {
+  if (account.isVendorApplicant && location.pathname === '/member/vendor-application-status') {
+    return <Navigate to="/vendor/onboarding-status" replace />
+  }
+
+  if (account.isMemberApplicant && user?.role === ROLES.CUSTOMER && user?.onboardingStatus !== 'Approved') {
     const isApplicantPath = [
       '/membership-agreement',
       '/membership-application',

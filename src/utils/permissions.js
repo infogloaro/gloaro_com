@@ -1,5 +1,5 @@
 import { ROLES } from '../constants/roleConfig.js'
-import { getEffectiveRegistrationType } from './onboarding'
+import { getEffectiveRegistrationType, resolveOnboardingType } from './onboarding'
 const OPERATION_TO_PERMISSION = {
   view: 'canView',
   create: 'canCreate',
@@ -73,6 +73,7 @@ const SIDEBAR_ALIASES = {
   vendors: 'marketplace',
   vendor_settings: 'marketplace',
   vendor_approval: 'marketplace',
+  vendor_category_approvals: 'marketplace',
   business: 'business_wall',
   business_wall: 'business_wall',
   categories: 'settings',
@@ -117,6 +118,7 @@ const ADMIN_ROUTE_RULES = [
   { path: '/vendors', module: 'marketplace', section: 'vendors' },
   { path: '/vendor-settings', module: 'marketplace', section: 'vendor_settings' },
   { path: '/vendor-approval-workflow', module: 'marketplace', section: 'vendor_approval' },
+  { path: '/vendor-category-approvals', module: 'marketplace', section: 'vendor_category_approvals' },
   { path: '/categories', module: 'settings', section: 'categories' },
   { path: '/business', module: 'business_wall', section: 'business' },
   { path: '/business-wall', module: 'business_wall', section: 'business_wall' },
@@ -366,10 +368,37 @@ export function buildAdminRoute(role, relativePath) {
   return `${basePath}${normalizedRel}`
 }
 
+export function getExplicitRegistrationType(user = null) {
+  return (
+    resolveOnboardingType(user?.registrationType) ||
+    resolveOnboardingType(user?.onboardingType) ||
+    resolveOnboardingType(user?.meta?.onboarding?.registrationType) ||
+    resolveOnboardingType(user?.meta?.onboarding?.onboardingType) ||
+    (normalizeRole(user?.role) === ROLES.VENDOR ? ROLES.VENDOR : ROLES.MEMBER)
+  )
+}
+
+export function getAccountClassification(user = null) {
+  const registrationType = getExplicitRegistrationType(user)
+  const vendorProfileStatus = String(user?.vendorProfile?.status || '').toLowerCase()
+  const onboardingStatus = String(user?.onboardingStatus || user?.status || '').toLowerCase()
+  const vendorApproved = vendorProfileStatus === 'approved'
+
+  return {
+    registrationType,
+    vendorApproved,
+    onboardingStatus,
+    isOnlineVendor: registrationType === ROLES.VENDOR && vendorApproved,
+    isVendorApplicant: registrationType === ROLES.VENDOR && !vendorApproved,
+    isMemberVendor: registrationType === ROLES.MEMBER && vendorApproved,
+    isMemberOnly: registrationType === ROLES.MEMBER && !vendorApproved && onboardingStatus === 'approved',
+    isMemberApplicant: registrationType === ROLES.MEMBER && !vendorApproved && onboardingStatus !== 'approved',
+  }
+}
+
 export function getDashboardRoute(role, user = null) {
   const cleanRole = normalizeRole(role)
-  const registrationType = getEffectiveRegistrationType(user, user?.meta?.onboarding?.registrationType)
-  const membershipStatus = String(user?.onboardingStatus || user?.status || '').toLowerCase()
+  const account = getAccountClassification(user)
   if (cleanRole === ROLES.REGION_DIRECTOR) return '/region-director/dashboard'
   if (cleanRole === ROLES.STATE_DIRECTOR) return '/state-director/dashboard'
   if (cleanRole === ROLES.DISTRICT_DIRECTOR) return '/district-director/dashboard'
@@ -379,11 +408,10 @@ export function getDashboardRoute(role, user = null) {
   if (cleanRole === ROLES.SECRETARY) return '/secretary/dashboard'
   if (cleanRole === ROLES.LAUNCH_DIRECTOR) return '/launch-director/dashboard'
   if (cleanRole === ROLES.DIRECT_CONSULTANT) return '/direct-consultant/dashboard'
-  if (cleanRole === ROLES.VENDOR) {
-    if (registrationType === 'member') return '/member/dashboard'
-    return String(user?.vendorProfile?.status || '').toLowerCase() === 'approved' ? '/vendor' : '/vendor/onboarding-status'
-  }
-  if ([ROLES.CUSTOMER, ROLES.USER].includes(cleanRole) && membershipStatus !== 'approved') {
+  if (account.isOnlineVendor) return '/vendor'
+  if (account.isVendorApplicant) return '/vendor/onboarding-status'
+  if (account.isMemberVendor || account.isMemberOnly) return '/member/dashboard'
+  if (account.isMemberApplicant || ([ROLES.CUSTOMER, ROLES.USER].includes(cleanRole) && account.onboardingStatus !== 'approved')) {
     return '/member/membership-application-status'
   }
   

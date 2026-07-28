@@ -487,6 +487,7 @@ export function ProductsPage() {
   const [page, setPage] = useState(1)
   const [search, setSearch] = useState('')
   const [category, setCategory] = useState('')
+  const [sortBy, setSortBy] = useState('')
   const [categories, setCategories] = useState([])
   const [payload, setPayload] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -501,14 +502,14 @@ export function ProductsPage() {
 
   useEffect(() => {
     setLoading(true)
-    customerApi.products({ page, limit: 12, search: search || undefined, category: category || undefined })
+    customerApi.products({ page, limit: 12, search: search || undefined, category: category || undefined, sortBy: sortBy || undefined })
       .then((res) => {
         setPayload(res.data)
       })
       .finally(() => {
         setLoading(false)
       })
-  }, [page, search, category])
+  }, [page, search, category, sortBy])
 
   const productsList = getList(payload)
   const pagination = getPagination(payload)
@@ -526,17 +527,27 @@ export function ProductsPage() {
             value={search}
             onChange={(e) => { setSearch(e.target.value); setPage(1) }}
             placeholder="Search products..."
-            className="h-10 w-full rounded-md border border-slate-200 bg-white px-4 text-sm font-bold text-slate-850 outline-none focus:border-[#0d4697] sm:w-64"
+            className="h-10 w-full rounded-md border border-slate-200 bg-white px-4 text-sm font-bold text-slate-855 outline-none focus:border-[#0d4697] sm:w-64"
           />
           <select
             value={category}
             onChange={(e) => { setCategory(e.target.value); setPage(1) }}
-            className="h-10 rounded-md border border-slate-200 bg-white px-3 text-sm font-bold text-slate-850 outline-none focus:border-[#0d4697]"
+            className="h-10 rounded-md border border-slate-200 bg-white px-3 text-sm font-bold text-slate-855 outline-none focus:border-[#0d4697]"
           >
             <option value="">All Categories</option>
             {categories.map((cat) => (
               <option key={cat._id} value={cat._id}>{cat.name}</option>
             ))}
+          </select>
+          <select
+            value={sortBy}
+            onChange={(e) => { setSortBy(e.target.value); setPage(1) }}
+            className="h-10 rounded-md border border-slate-200 bg-white px-3 text-sm font-bold text-slate-855 outline-none focus:border-[#0d4697]"
+          >
+            <option value="">Sort By</option>
+            <option value="newest">Newest</option>
+            <option value="price_asc">Price: Low to High</option>
+            <option value="price_desc">Price: High to Low</option>
           </select>
         </div>
       </div>
@@ -570,7 +581,7 @@ export function ProductsPage() {
                       )}
                     </div>
                     <div className="p-4">
-                      <span className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-400">
+                      <span className="text-[10px] font-black uppercase tracking-[0.1em] text-[#0d4697]">
                         {product.category?.name || 'Product'}
                       </span>
                       <h3 className="mt-1 text-sm font-bold text-slate-900 line-clamp-1 group-hover:text-[#0d4697] transition">
@@ -652,6 +663,7 @@ export function ServicesPage() {
   const [page, setPage] = useState(1)
   const [search, setSearch] = useState('')
   const [category, setCategory] = useState('')
+  const [sortBy, setSortBy] = useState('')
   const [categories, setCategories] = useState([])
   const [payload, setPayload] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -666,14 +678,14 @@ export function ServicesPage() {
 
   useEffect(() => {
     setLoading(true)
-    customerApi.services({ page, limit: 12, search: search || undefined, category: category || undefined })
+    customerApi.services({ page, limit: 12, search: search || undefined, category: category || undefined, sortBy: sortBy || undefined })
       .then((res) => {
         setPayload(res.data)
       })
       .finally(() => {
         setLoading(false)
       })
-  }, [page, search, category])
+  }, [page, search, category, sortBy])
 
   const servicesList = getList(payload)
   const pagination = getPagination(payload)
@@ -703,6 +715,17 @@ export function ServicesPage() {
               <option key={cat._id} value={cat._id}>{cat.name}</option>
             ))}
           </select>
+          <select
+            value={sortBy}
+            onChange={(e) => { setSortBy(e.target.value); setPage(1) }}
+            className="h-10 rounded-md border border-slate-200 bg-white px-3 text-sm font-bold text-slate-855 outline-none focus:border-[#0d4697]"
+          >
+            <option value="">Sort By</option>
+            <option value="newest">Newest</option>
+            <option value="pricing.minPrice">Price: Low to High</option>
+            <option value="-pricing.minPrice">Price: High to Low</option>
+            <option value="title">Alphabetical</option>
+          </select>
         </div>
       </div>
 
@@ -715,44 +738,57 @@ export function ServicesPage() {
       ) : (
         <>
           <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-            {servicesList.map((service) => (
-              <article key={service._id} className="group overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm hover:shadow-md transition duration-250 ease-in-out flex flex-col justify-between">
-                <div>
-                  <div className="relative overflow-hidden aspect-video bg-slate-100">
-                    <img 
-                      src={service.gallery?.[0]?.url || '/logo.png'} 
-                      alt={service.title} 
-                      className="h-full w-full object-cover group-hover:scale-105 transition duration-300" 
-                    />
+            {servicesList.map((service) => {
+              const vendor = service.vendor || {}
+              const providerName = vendor.user?.name || vendor.ownerName || 'Gloaro vendor'
+              const businessName = vendor.businessName || 'Gloaro business'
+              const address = vendor.address || {}
+              const location = [address.city, address.state].filter(Boolean).join(', ') || 'Location not listed'
+
+              return (
+                <article key={service._id} className="group overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm hover:shadow-md transition duration-250 ease-in-out flex flex-col justify-between">
+                  <div>
+                    <div className="relative overflow-hidden aspect-video bg-slate-100">
+                      <img 
+                        src={service.gallery?.[0]?.url || '/logo.png'} 
+                        alt={service.title} 
+                        className="h-full w-full object-cover group-hover:scale-105 transition duration-300" 
+                      />
+                    </div>
+                    <div className="p-4">
+                      <span className="text-[10px] font-black uppercase tracking-[0.1em] text-[#0d4697]">
+                        {service.category?.name || 'Service'}
+                      </span>
+                      <h3 className="mt-1 text-sm font-bold text-slate-900 line-clamp-1 group-hover:text-[#0d4697] transition">
+                        {service.title}
+                      </h3>
+                      <p className="mt-1 text-xs font-semibold text-slate-650 line-clamp-2">
+                        {service.shortDescription || service.description}
+                      </p>
+                      <div className="mt-2 space-y-1 border-t border-slate-100 pt-2 text-[11px] font-semibold text-slate-500">
+                        <p>Provider: {providerName}</p>
+                        <p>Business: {businessName}</p>
+                        <p className="text-slate-400">📍 {location}</p>
+                      </div>
+                    </div>
                   </div>
-                  <div className="p-4">
-                    <span className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-400">
-                      {service.category?.name || 'Service'}
-                    </span>
-                    <h3 className="mt-1 text-sm font-bold text-slate-900 line-clamp-1 group-hover:text-[#0d4697] transition">
-                      {service.title}
-                    </h3>
-                    <p className="mt-0.5 text-[11px] font-semibold text-slate-500">
-                      Provider: {service.vendor?.user?.name || service.vendor?.ownerName || service.vendor?.businessName || 'Professional'}
-                    </p>
+                  <div className="border-t border-slate-100 p-4 pt-3 flex items-center justify-between mt-auto">
+                    <div className="flex flex-col">
+                      <span className="text-[10px] font-semibold text-slate-400">Starting Price</span>
+                      <span className="text-sm font-black text-slate-900">
+                        {formatCurrency(service.pricing?.minPrice)}
+                      </span>
+                    </div>
+                    <Link 
+                      to={`/services/${service._id}`} 
+                      className="rounded-md bg-[#0d4697] px-3 py-1.5 text-xs font-extrabold text-white hover:bg-blue-800 transition"
+                    >
+                      View Details
+                    </Link>
                   </div>
-                </div>
-                <div className="border-t border-slate-100 p-4 pt-3 flex items-center justify-between mt-auto">
-                  <div className="flex flex-col">
-                    <span className="text-[10px] font-semibold text-slate-400">Starting Price</span>
-                    <span className="text-sm font-black text-slate-900">
-                      {formatCurrency(service.pricing?.minPrice)}
-                    </span>
-                  </div>
-                  <Link 
-                    to={`/services/${service._id}`} 
-                    className="rounded-md bg-[#0d4697] px-3 py-1.5 text-xs font-extrabold text-white hover:bg-blue-800 transition"
-                  >
-                    View Details
-                  </Link>
-                </div>
-              </article>
-            ))}
+                </article>
+              )
+            })}
           </div>
 
           {pagination.totalPages > 1 && (
@@ -786,18 +822,151 @@ export function DetailPage({ type }) {
   const { id } = useParams()
   const fetcher = type === 'vendors' ? customerApi.vendor : type === 'products' ? customerApi.product : customerApi.service
   const { data, loading } = useApi(() => fetcher(id), [id])
+  const [relatedItems, setRelatedItems] = useState([])
   const item = data
+
+  useEffect(() => {
+    if (!item) return
+    const categoryId = item.category?._id || item.category
+    if (categoryId) {
+      const fetchRelated = type === 'products' ? customerApi.products : type === 'services' ? customerApi.services : null
+      if (fetchRelated) {
+        fetchRelated({ category: categoryId, limit: 5 })
+          .then((res) => {
+            const list = getList(res.data)
+            setRelatedItems(list.filter(i => i._id !== item._id).slice(0, 4))
+          })
+          .catch(() => {})
+      }
+    }
+  }, [type, item])
+
   if (loading) return <LoadingScreen label="Loading details..." />
+  if (!item) return <EmptyState title="Not Found" />
+
+  if (type === 'vendors') {
+    return (
+      <section className="mx-auto max-w-5xl px-5 py-8">
+        <img src={item.logo?.url || item.coverImage?.url || '/logo.png'} alt="" className="h-72 w-full rounded-lg object-cover" />
+        <h1 className="mt-5 text-4xl font-extrabold text-slate-955">{item.businessName}</h1>
+        <p className="mt-3 text-lg font-medium leading-8 text-slate-600">{item.description}</p>
+        <button onClick={() => customerApi.addWishlist({ itemType: 'vendor', itemId: id }).then(() => toast.success('Added to wishlist'))} className="mt-5 rounded-md bg-[#0d4697] px-5 py-2.5 font-bold text-white">Add to Wishlist</button>
+        <ReviewBox vendor={id} />
+      </section>
+    )
+  }
+
+  const vendor = item.vendor || {}
+  const providerName = vendor.user?.name || vendor.ownerName || 'Gloaro vendor'
+  const businessName = vendor.businessName || 'Gloaro business'
+  const addressObj = vendor.address || {}
+  const fullAddress = [addressObj.street, addressObj.city, addressObj.state, addressObj.pincode].filter(Boolean).join(', ') || 'Address not listed'
+  const displayPrice = type === 'products' ? item.pricing?.sellingPrice : item.pricing?.minPrice
+  const originalPrice = type === 'products' ? item.pricing?.mrp : null
+  const discount = originalPrice > displayPrice ? Math.round(((originalPrice - displayPrice) / originalPrice) * 100) : 0
+
+  const galleryImages = type === 'products' 
+    ? (item.images || []) 
+    : (item.gallery || [])
+
   return (
-    <section className="mx-auto max-w-5xl px-5 py-8">
-      <img src={item.logo?.url || item.images?.[0]?.url || item.gallery?.[0]?.url || item.coverImage?.url || '/logo.png'} alt="" className="h-72 w-full rounded-lg object-cover" />
-      <h1 className="mt-5 text-4xl font-extrabold text-slate-950">{item.businessName || item.title}</h1>
-      <p className="mt-3 text-lg font-medium leading-8 text-slate-600">{item.description || item.shortDescription}</p>
-      <button onClick={() => customerApi.addWishlist({ itemType: type.slice(0, -1), itemId: id }).then(() => toast.success('Added to wishlist'))} className="mt-5 rounded-md bg-[#0d4697] px-5 py-2.5 font-bold text-white">Add to Wishlist</button>
-      {type === 'vendors' && <ReviewBox vendor={id} />}
-    </section>
-  )
-}
+    <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 bg-slate-50 min-h-screen">
+      <div className="grid gap-8 lg:grid-cols-3">
+        {/* Main Info Columns */}
+        <div className="lg:col-span-2 space-y-6">
+          {/* Image Gallery */}
+          <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white p-2 shadow-sm">
+            <div className="grid gap-2 sm:grid-cols-2">
+              {galleryImages.length ? (
+                galleryImages.map((img, idx) => (
+                  <img key={idx} src={img.url} alt="" className="h-60 w-full rounded-lg object-cover" />
+                ))
+              ) : (
+                <img src="/logo.png" alt="" className="h-60 w-full rounded-lg object-cover sm:col-span-2" />
+              )}
+            </div>
+          </div>
+
+          {/* Title and Category */}
+          <div className="rounded-2xl border border-[#e2e8f0] bg-white p-6 shadow-sm">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <span className="rounded-full bg-[#0d4697]/10 px-3 py-1 text-xs font-black uppercase tracking-wider text-[#0d4697]">
+                {item.category?.name || (type === 'products' ? 'Product' : 'Service')}
+              </span>
+              <span className="text-sm font-bold text-slate-400">ID: {item.productId || item.serviceId}</span>
+            </div>
+            <h1 className="mt-3 font-playfair text-3xl font-black text-slate-900">{item.title}</h1>
+            <p className="mt-4 text-slate-700 leading-relaxed whitespace-pre-line">{item.description}</p>
+          </div>
+
+          {/* Related Items */}
+          {relatedItems.length > 0 && (
+            <div>
+              <h2 className="text-xl font-extrabold text-slate-900 mb-4">Related {type === 'products' ? 'Products' : 'Services'}</h2>
+              <div className="grid gap-4 sm:grid-cols-2">
+                {relatedItems.map((rel) => (
+                  <Link key={rel._id} to={`/${type}/${rel._id}`} className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white p-3 hover:shadow transition">
+                    <img src={(type === 'products' ? rel.images?.[0]?.url : rel.gallery?.[0]?.url) || '/logo.png'} alt="" className="h-16 w-16 rounded-lg object-cover" />
+                    <div>
+                      <p className="text-sm font-bold text-slate-800 line-clamp-1">{rel.title}</p>
+                      <p className="text-xs font-semibold text-slate-500 mt-0.5">
+                        {formatCurrency(type === 'products' ? rel.pricing?.sellingPrice : rel.pricing?.minPrice)}
+                      </p>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Pricing & Vendor Details Sidebar */}
+        <div className="space-y-6">
+          {/* Price box */}
+          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm text-center">
+            <p className="text-xs font-black uppercase tracking-wider text-slate-400">
+              {type === 'products' ? 'Price' : 'Starting Price'}
+            </p>
+            {discount > 0 && (
+              <p className="text-sm font-semibold text-slate-400 line-through">
+                {formatCurrency(originalPrice)}
+              </p>
+            )}
+            <p className="mt-2 text-4xl font-black text-slate-900">
+              {formatCurrency(displayPrice)}
+              {discount > 0 && <span className="ml-2 text-xs text-green-600 font-extrabold">({discount}% OFF)</span>}
+            </p>
+            <button 
+              onClick={() => customerApi.addWishlist({ itemType: type.slice(0, -1), itemId: id }).then(() => toast.success('Added to wishlist'))} 
+              className="mt-6 w-full rounded-xl bg-[#0d4697] py-3 text-sm font-extrabold text-white hover:bg-blue-800 transition"
+            >
+              Add to Wishlist
+            </button>
+          </div>
+
+          {/* Vendor Box */}
+          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-4">
+            <div className="flex items-center gap-3">
+              <img src={vendor.logo?.url || '/logo.png'} alt="" className="h-12 w-12 rounded-full border object-cover" />
+              <div>
+                <h3 className="text-base font-extrabold text-slate-900">{businessName}</h3>
+                <Link to={`/vendors/${vendor._id}`} className="text-xs font-extrabold text-[#0d4697] hover:underline">
+                  View Vendor Profile
+                </Link>
+              </div>
+            </div>
+
+            <div className="border-t border-slate-100 pt-4 space-y-3 text-xs font-semibold text-slate-650">
+              <p><span className="text-slate-400">Owner:</span> {providerName}</p>
+              {vendor.phone && <p><span className="text-slate-400">📞 Phone:</span> <a href={`tel:${vendor.phone}`} className="hover:underline">{vendor.phone}</a></p>}
+              {vendor.email && <p><span className="text-slate-400">✉ Email:</span> <a href={`mailto:${vendor.email}`} className="hover:underline">{vendor.email}</a></p>}
+              <p><span className="text-slate-400">📍 Address:</span> {fullAddress}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  )}
 
 function ReviewBox({ vendor }) {
   const { register, handleSubmit, reset } = useForm()

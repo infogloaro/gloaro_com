@@ -166,7 +166,7 @@ export default function VendorApplicationStatus() {
             <h3 className="text-sm font-extrabold text-slate-900 border-b border-slate-100 pb-2 mb-3">Business Information</h3>
             <div className="grid gap-3 sm:grid-cols-2">
               <InfoCard label="Business Name" value={app.step2?.details?.businessName} />
-              <InfoCard label="Business Category" value={app.step2?.details?.businessCategory?.name} />
+              <InfoCard label="Category" value={app.step2?.details?.businessCategory?.name} />
               <InfoCard label="Business Type" value={app.step2?.details?.businessType} />
               <InfoCard label="Years of Experience" value={app.step2?.details?.yearsOfExperience} />
               <InfoCard label="Website" value={app.step2?.digitalPresence?.website} />

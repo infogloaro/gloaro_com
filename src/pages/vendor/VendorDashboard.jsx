@@ -23,15 +23,13 @@ import { useAuth } from '../../hooks/useAuth'
 import { useApi } from '../../hooks/useApi'
 import { formatCurrency, formatDate } from '../../utils/format'
 import JurisdictionCard from '../../components/common/JurisdictionCard'
-import { getEffectiveRegistrationType } from '../../utils/onboarding'
-import { getDashboardRoute } from '../../utils/permissions'
-import { storage } from '../../utils/storage'
+import { getAccountClassification, getDashboardRoute } from '../../utils/permissions'
 
 export default function VendorDashboard() {
   const { user } = useAuth()
   const { data, loading, error } = useApi(vendorApi.dashboard)
-  const registrationType = getEffectiveRegistrationType(user, storage.getOnboardingContext()?.registrationType)
-  const isStandaloneVendor = registrationType === 'vendor'
+  const account = getAccountClassification(user)
+  const isStandaloneVendor = account.isOnlineVendor
   const dashboardBase = getDashboardRoute(user?.role, user)
   const routeFor = (vendorPath, memberPath = vendorPath) => `${dashboardBase}${isStandaloneVendor ? vendorPath : memberPath}`
 
@@ -123,6 +121,9 @@ export default function VendorDashboard() {
         <VendorPanel title="Business Verification" icon={Building2} action="Update Profile" to={routeFor('/profile', '/my-business')}>
           <p className="text-sm font-semibold text-slate-600">Keep your business profile, documents, address, and map location updated for better marketplace visibility.</p>
         </VendorPanel>
+        <VendorPanel title="Business Categories" icon={Plus} action="Manage Categories" to={routeFor('/business-categories')}>
+          <p className="text-sm font-semibold text-slate-600">Request new approved business categories, check review status, and resubmit rejected requests from one place.</p>
+        </VendorPanel>
         <VendorPanel title="Catalog Health" icon={Package} action="Add Product" to={routeFor('/products')}>
           <p className="text-sm font-semibold text-slate-600">Add products with price, inventory, images, and categories so nearby customers can discover your store.</p>
         </VendorPanel>
@@ -171,12 +172,14 @@ function QuickActions({ isStandaloneVendor }) {
       ? [
           ['Add Product', '/vendor/products', Package],
           ['Add Service', '/vendor/services', BriefcaseBusiness],
+          ['Business Categories', '/vendor/business-categories', Plus],
           ['Check Leads', '/vendor/leads', Ticket],
           ['Payments', '/vendor/payments', CreditCard],
         ]
       : [
           ['Add Product', '/products', Package],
           ['Add Service', '/services', BriefcaseBusiness],
+          ['Business Categories', '/business-categories', Plus],
           ['Check Leads', '/leads', Ticket],
           ['Payments', '/payments', CreditCard],
         ]
