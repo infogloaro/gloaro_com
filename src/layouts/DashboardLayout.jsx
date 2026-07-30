@@ -28,15 +28,17 @@ export default function DashboardLayout({ navItems = [], title = 'Dashboard' }) 
   const [notificationOpen, setNotificationOpen] = useState(false)
   const [notificationPreview, setNotificationPreview] = useState([])
   const [notificationLoading, setNotificationLoading] = useState(false)
+
+  const hasExplicitNavItems = navItems.length > 0
   const isSuperAdmin = user?.role === ROLES.SUPERADMIN
   const navigation = useMemo(() => resolveNavigation({
     user,
     marketplaceAccess,
     navItems,
   }), [marketplaceAccess, navItems, user])
-  const resolvedNavItems = navigation.items
-  const navigationMode = navigation.mode
-  const displayTitle = navigation.title === 'Dashboard' ? title : navigation.title
+  const resolvedNavItems = hasExplicitNavItems ? navItems : navigation.items
+  const navigationMode = hasExplicitNavItems ? NAVIGATION_MODES.ROLE_BASED : navigation.mode
+  const displayTitle = hasExplicitNavItems ? title : (navigation.title === 'Dashboard' ? title : navigation.title)
   const isVendorApplicant = navigationMode === NAVIGATION_MODES.ONLINE_VENDOR_APPLICANT || navigationMode === NAVIGATION_MODES.ONLINE_VENDOR_PENDING
   const isApprovedVendor = navigationMode === NAVIGATION_MODES.ONLINE_VENDOR_APPROVED
 
@@ -357,7 +359,7 @@ export default function DashboardLayout({ navItems = [], title = 'Dashboard' }) 
             <NavLink
               key={label}
               to={to}
-              end={['/admin/dashboard', '/super-admin/dashboard', '/vendor', '/membership/dashboard'].includes(to)}
+              end={['/admin/dashboard', '/super-admin/dashboard', '/vendor', '/membership/dashboard', '/customer/dashboard'].includes(to)}
               onClick={() => setOpen(false)}
               className={({ isActive }) => `flex h-10 items-center gap-3 rounded-md px-3 text-sm font-bold ${collapsed ? 'justify-center' : ''} ${isActive ? 'bg-[#0d4697] text-white shadow-lg shadow-blue-950/30' : 'text-slate-300 hover:bg-white/10 hover:text-white'}`}
             >
@@ -387,8 +389,8 @@ export default function DashboardLayout({ navItems = [], title = 'Dashboard' }) 
           <div className="flex items-center gap-3">
             <button onClick={() => setOpen(true)} className="grid h-9 w-9 place-items-center rounded-md border border-slate-200 lg:hidden dark:border-slate-800" aria-label="Open menu"><Menu className="h-4 w-4" /></button>
             <div>
-              <p className="text-xs font-bold text-slate-500">{title} / {pageTitle}</p>
-              <h1 className="text-lg font-extrabold">{user?.name || title}</h1>
+              <p className="text-xs font-bold text-slate-500 dark:text-blue-300">{title} / {pageTitle}</p>
+              <h1 className="text-lg font-black text-slate-900 dark:text-white">{user?.name || title}</h1>
             </div>
           </div>
           <div className="flex items-center gap-2">

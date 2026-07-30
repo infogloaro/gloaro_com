@@ -344,7 +344,7 @@ function App() {
             </Route>
 
             {/* Membership Console Route Group */}
-            <Route element={<ProtectedRoute roles={[ROLES.CUSTOMER, ROLES.USER, ROLES.VENDOR, ROLES.SECRETARY, ROLES.CHAPTER_PRESIDENT, ROLES.VICE_PRESIDENT]} />}>
+            <Route element={<ProtectedRoute roles={[ROLES.SUPERADMIN, ROLES.ADMIN, ROLES.FRANCHISE_ADMIN, ROLES.ECOMMERCE_ADMIN, ROLES.MARKETPLACE_ADMIN, ROLES.DIGITAL_MARKETING_ADMIN, ROLES.TRAINING_ADMIN, ROLES.FINANCE_ADMIN, ROLES.REGION_DIRECTOR, ROLES.STATE_DIRECTOR, ROLES.DISTRICT_DIRECTOR, ROLES.EXECUTIVE_DIRECTOR, ROLES.LAUNCH_DIRECTOR, ROLES.DIRECT_CONSULTANT, ROLES.CHAPTER_PRESIDENT, ROLES.VICE_PRESIDENT, ROLES.SECRETARY, ROLES.CUSTOMER, ROLES.USER, ROLES.VENDOR]} />}>
               <Route path="/membership/dashboard" element={<MembershipDashboard />} />
               <Route path="/membership/benefits" element={<MembershipBenefitsPage />} />
               <Route path="/membership/events" element={<MembershipEventsPage />} />
@@ -356,7 +356,7 @@ function App() {
             </Route>
 
             {/* Member Console Route Group */}
-            <Route element={<ProtectedRoute roles={[ROLES.CUSTOMER, ROLES.USER, ROLES.VENDOR, ROLES.SECRETARY, ROLES.CHAPTER_PRESIDENT, ROLES.VICE_PRESIDENT]} />}>
+            <Route element={<ProtectedRoute roles={[ROLES.SUPERADMIN, ROLES.ADMIN, ROLES.FRANCHISE_ADMIN, ROLES.ECOMMERCE_ADMIN, ROLES.MARKETPLACE_ADMIN, ROLES.DIGITAL_MARKETING_ADMIN, ROLES.TRAINING_ADMIN, ROLES.FINANCE_ADMIN, ROLES.REGION_DIRECTOR, ROLES.STATE_DIRECTOR, ROLES.DISTRICT_DIRECTOR, ROLES.EXECUTIVE_DIRECTOR, ROLES.LAUNCH_DIRECTOR, ROLES.DIRECT_CONSULTANT, ROLES.CHAPTER_PRESIDENT, ROLES.VICE_PRESIDENT, ROLES.SECRETARY, ROLES.CUSTOMER, ROLES.USER, ROLES.VENDOR]} />}>
               <Route path="/member/vendor-application" element={<VendorApplicationForm />} />
               <Route path="/member/vendor-application-status" element={<VendorApplicationStatus />} />
               <Route path="/member/profile" element={<MembershipProfilePage />} />
@@ -557,6 +557,7 @@ function App() {
               <Route path="/president/dashboard" element={<PresidentDashboard />} />
               <Route path="/president/vice-presidents" element={<AdminManagementPage />} />
               <Route path="/president/members" element={<AdminMembersPage />} />
+              <Route path="/president/approved-vendors" element={<ApprovedVendorsPage />} />
               <Route path="/president/reports" element={<EnterpriseReportBuilderPage />} />
               <Route path="/president/settings" element={<AdminSettingsPage />} />
               {/* Inherited Base Member Modules */}
@@ -586,6 +587,8 @@ function App() {
               <Route path="/vice-president/memberships" element={<AdminMembershipsPage />} />
               <Route path="/vice-president/membership-applications" element={<AdminMembershipApplicationsPage />} />
               <Route path="/vice-president/vendor-applications" element={<VicePresidentVendorApplicationsPage />} />
+              <Route path="/vice-president/vendor-category-approvals" element={<AdminVendorCategoryApprovalsPage />} />
+              <Route path="/vice-president/approved-vendors" element={<ApprovedVendorsPage />} />
               <Route path="/vice-president/reports" element={<EnterpriseReportBuilderPage />} />
               <Route path="/vice-president/settings" element={<AdminSettingsPage />} />
               {/* Inherited Base Member Modules */}

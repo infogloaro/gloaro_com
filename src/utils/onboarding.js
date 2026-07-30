@@ -42,6 +42,13 @@ export const getVendorOnboardingRoutes = (isVendorFlow) => ({
   status: isVendorFlow ? '/vendor/onboarding-status' : '/member/vendor-application-status',
 })
 
+export const getMemberOnboardingRoutes = (isMemberPortalFlow = false) => ({
+  agreement: isMemberPortalFlow ? '/member/membership-agreement' : '/membership-agreement',
+  application: isMemberPortalFlow ? '/member/membership-application' : '/membership-application',
+  qualification: isMemberPortalFlow ? '/member/membership-qualification' : '/membership-qualification',
+  status: '/member/membership-application-status',
+})
+
 export const getRegistrationTypeLabel = (registrationType) => {
   return normalizeRegistrationType(registrationType) === ONBOARDING_TYPES.VENDOR ? 'Vendor' : 'User'
 }

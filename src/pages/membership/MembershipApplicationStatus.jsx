@@ -21,11 +21,13 @@ import StatusBadge from '../../components/common/StatusBadge'
 import { formatDate } from '../../utils/format'
 import toast from 'react-hot-toast'
 import { membershipApplicationApi } from '../../api/membershipApplication'
+import { getMemberOnboardingRoutes } from '../../utils/onboarding'
 
 export default function MembershipApplicationStatus() {
   const navigate = useNavigate()
   const [app, setApp] = useState(null)
   const [loading, setLoading] = useState(true)
+  const memberRoutes = getMemberOnboardingRoutes(true)
 
   useEffect(() => {
     setLoading(true)
@@ -41,6 +43,12 @@ export default function MembershipApplicationStatus() {
         setLoading(false)
       })
   }, [])
+
+  useEffect(() => {
+    if (!loading && (!app || app.status === 'draft')) {
+      navigate(memberRoutes.agreement, { replace: true })
+    }
+  }, [app, loading, memberRoutes.agreement, navigate])
 
   const openDocument = async (field) => {
     if (!app?._id) return

@@ -54,11 +54,11 @@ const serviceItems = [
 ]
 
 const ecosystemActions = [
-  { Icon: UserRound, title: 'Membership', description: 'Join Gloaro Network and get exclusive member benefits', action: 'Apply Now', href: loginLink('membership', '/membership-agreement'), color: 'text-[#ffb21a]', bg: '#fff3d0' },
+  { Icon: UserRound, title: 'Membership', description: 'Join Gloaro Network and get exclusive member benefits', action: 'Learn More', href: '#membership', color: 'text-[#ffb21a]', bg: '#fff3d0' },
   { Icon: Store, title: 'Franchise', description: 'Run your own Gloaro franchise and grow together', action: 'Apply Now', href: loginLink('franchise', '/membership-application'), color: 'text-[#7b4df1]', bg: '#f0eaff' },
   { Icon: UsersRound, title: 'Business Network', description: 'Connect with global businesses and professionals', action: 'Apply Now', href: loginLink('b2b', '/vendors'), color: 'text-[#20b15a]', bg: '#e6f8ed' },
   { Icon: ShoppingCart, title: 'B2B Marketplace', description: 'Buy quality products and services from trusted sellers', action: 'Shop Now', href: loginLink('b2b', '/vendors'), color: 'text-[#1377f2]', bg: '#e8f1ff' },
-  { Icon: ShoppingBag, title: 'Vendor (Sell)', description: 'Sell your products and services to global buyers', action: 'Apply Now', href: loginLink(ROLES.VENDOR, '/vendor'), color: 'text-[#ff7a1a]', bg: '#fff0e6' },
+  { Icon: ShoppingBag, title: 'Vendor (Sell)', description: 'Sell your products and services to global buyers', action: 'Explore Benefits', href: '#membership', color: 'text-[#ff7a1a]', bg: '#fff0e6' },
 ]
 
 const memberBenefits = [
@@ -239,7 +239,7 @@ export default function Home() {
           <div className="flex items-center gap-2 rounded-2xl border border-white/15 bg-slate-400/40 px-4 py-2 shadow-xl backdrop-blur sm:px-7 sm:py-3"><img src={heroNetworkIcon} alt="Gloaro network" className="h-7 w-7 object-contain sm:h-8 sm:w-8" /><span className="text-base font-semibold tracking-tight text-white sm:text-2xl">GLOARO BUSINESS NETWORK</span></div>
           <h1 className="mt-7 max-w-5xl font-playfair text-5xl font-medium italic leading-[0.92] tracking-tight text-white sm:mt-8 sm:text-7xl lg:text-8xl"><span className="block">We Give. <span className="text-[#ffa900]">We Grow.</span></span><span className="mt-3 block sm:mt-4"><span className="text-[#ff9515]">We</span> Win Together.</span></h1>
           <p className="mt-6 max-w-7xl font-urbanist text-base font-medium leading-7 tracking-[0.05em] text-white sm:text-lg">A trusted network of professionals and entrepreneurs building relationships, creating opportunities,<br className="hidden md:block" /> and shaping future success together.</p>
-          <div className="mt-5 flex flex-wrap justify-center gap-3"><a href={loginLink('membership', '/membership-agreement')} className="rounded-lg bg-[#10499b] px-6 py-3 text-lg font-bold text-white shadow-lg shadow-black/30">Become a Member&nbsp; ↗</a><a href="#why-gloaro" className="rounded-lg border border-white/15 bg-slate-700/70 px-6 py-3 text-lg font-bold text-white shadow-lg shadow-black/30 backdrop-blur">Explore Network&nbsp; ↗</a></div>
+          <div className="mt-5 flex flex-wrap justify-center gap-3"><a href="/register?type=membership" className="rounded-lg bg-[#10499b] px-6 py-3 text-lg font-bold text-white shadow-lg shadow-black/30">Become a Member&nbsp; ↗</a><a href="#why-gloaro" className="rounded-lg border border-white/15 bg-slate-700/70 px-6 py-3 text-lg font-bold text-white shadow-lg shadow-black/30 backdrop-blur">Explore Network&nbsp; ↗</a></div>
           <p className="mt-5 font-serif text-2xl font-bold text-[#f6a600]">Connect. Collaborate. Grow Globally</p>
           <div className="mt-5 flex gap-2">{heroSlides.map((_, index) => <button key={index} onClick={() => setActiveSlide(index)} aria-label={`Show slide ${index + 1}`} className={`h-1.5 rounded-full transition-all ${index === activeSlide ? 'w-7 bg-[#ffad16]' : 'w-1.5 bg-white/50'}`} />)}</div>
         </div>

@@ -6,7 +6,7 @@ import { getMembershipDraft, saveMembershipDraft } from '../../utils/membershipO
 import { useAuth } from '../../hooks/useAuth'
 import api from '../../api/axios'
 import { ROLES } from '../../constants/roleConfig.js'
-import { getEffectiveRegistrationType, getVendorOnboardingRoutes } from '../../utils/onboarding'
+import { getEffectiveRegistrationType, getMemberOnboardingRoutes, getVendorOnboardingRoutes } from '../../utils/onboarding'
 import { storage } from '../../utils/storage'
 
 const principles = [
@@ -53,6 +53,7 @@ export default function MembershipAgreement() {
   const [showTermsDetails, setShowTermsDetails] = useState(false)
   const onboardingType = getEffectiveRegistrationType(user, storage.getOnboardingContext()?.registrationType)
   const vendorRoutes = getVendorOnboardingRoutes(true)
+  const memberRoutes = getMemberOnboardingRoutes(Boolean(user && onboardingType !== 'vendor'))
 
   // Redirect official roles who shouldn't apply, and redirect submitted applicants
   useEffect(() => {
@@ -79,12 +80,12 @@ export default function MembershipAgreement() {
         .then(res => {
           const app = res.data?.data
           if (app && !['draft', 'rejected', 'changes_requested'].includes(app.status)) {
-            navigate('/member/membership-application-status')
+            navigate(memberRoutes.status)
           }
         })
         .catch(() => {})
     }
-  }, [user, navigate, onboardingType, vendorRoutes.application])
+  }, [memberRoutes.status, user, navigate, onboardingType, vendorRoutes.application])
 
   const draft = getMembershipDraft()
   const initialAgreement = { ...(draft.agreement || {}) }
@@ -131,7 +132,12 @@ export default function MembershipAgreement() {
     } catch (err) {
       console.error('Save agreement draft error:', err)
     }
-    navigate('/membership-application')
+    navigate(memberRoutes.application)
+  }
+
+  const handleSaveDraftExit = () => {
+    saveAgreementStep()
+    navigate(user ? '/member/profile' : '/')
   }
 
   if (showTermsDetails) return <TermsDetailPage onBack={() => setShowTermsDetails(false)} />
@@ -168,7 +174,7 @@ export default function MembershipAgreement() {
         </div>
 
         <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
-          <a href="/" className="rounded-md border border-slate-300 bg-white px-5 py-2.5 text-xs font-extrabold text-slate-700">Save Draft</a>
+          <button type="button" onClick={handleSaveDraftExit} className="rounded-md border border-slate-300 bg-white px-5 py-2.5 text-xs font-extrabold text-slate-700">Save Draft</button>
           <div className="flex gap-3">
             <a href="#top" className="rounded-md bg-[#ffbf1a] px-5 py-2.5 text-xs font-extrabold text-[#0b1f3d]">Step Back</a>
             <button type="button" onClick={handleNextStep} className="rounded-md bg-[#0b469e] px-5 py-2.5 text-xs font-extrabold text-white">Next Step →</button>

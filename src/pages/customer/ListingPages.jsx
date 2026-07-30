@@ -480,7 +480,7 @@ export function CategoriesPage() {
 }
 
 export function VendorsPage() {
-  return <div className="mx-auto max-w-7xl px-5 py-8"><ResourceListPage title="Vendors" fetcher={customerApi.vendors} columns={[{ key: 'businessName', header: 'Business' }, { key: 'city', header: 'City', render: (row) => row.address?.city }, { key: 'rating', header: 'Rating', render: (row) => row.stats?.avgRating || 0 }, { key: 'status', header: 'Status', render: (row) => <StatusBadge value={row.status} /> }]} /></div>
+  return null
 }
 
 export function ProductsPage() {

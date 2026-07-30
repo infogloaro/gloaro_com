@@ -5,6 +5,7 @@ import { isAdminRole } from '../constants/adminRoles'
 import { storage } from '../utils/storage'
 import { ROLES } from '../constants/roleConfig.js'
 import { getAccountClassification } from '../utils/permissions'
+import { getMemberOnboardingRoutes } from '../utils/onboarding'
 
 const roleMatches = (allowed, actual) => {
   const allowedRole = String(allowed || '').toLowerCase().replace(/\s+/g, '')
@@ -21,6 +22,7 @@ export default function ProtectedRoute({ roles, requirePathAccess = false, fallb
   const { loading, isAuthenticated, role, permissionsLoading, canAccessPath, user } = useAuth()
   const location = useLocation()
   const account = getAccountClassification(user)
+  const memberRoutes = getMemberOnboardingRoutes(true)
 
   const isHydrating = loading || (storage.getAccessToken() && !user)
   if (isHydrating) return <LoadingScreen label="Checking session..." />
@@ -38,27 +40,30 @@ export default function ProtectedRoute({ roles, requirePathAccess = false, fallb
     return <Navigate to="/vendor/onboarding-status" replace />
   }
 
-  if (account.isMemberApplicant && user?.role === ROLES.CUSTOMER && user?.onboardingStatus !== 'Approved') {
-    const isApplicantPath = [
-      '/membership-agreement',
-      '/membership-application',
-      '/membership-qualification',
-      '/member/membership-application-status',
+  if (account.isMemberApplicant) {
+    const isAllowedApplicantPath = [
+      memberRoutes.agreement,
+      memberRoutes.application,
+      memberRoutes.qualification,
+      memberRoutes.status,
       '/member/profile',
       '/member/settings',
     ].includes(location.pathname)
-    
-    if (user?.onboardingStatus === 'Pending') {
-      if (!['/member/membership-application-status', '/member/profile', '/member/settings'].includes(location.pathname)) {
-        return <Navigate to="/member/membership-application-status" replace />
+
+    if (!isAllowedApplicantPath) {
+      const status = String(account.onboardingStatus || '').toLowerCase()
+      if (['pending', 'rejected', 'changes_requested'].includes(status)) {
+        return <Navigate to={memberRoutes.status} replace />
       }
-      return <Outlet />
-    } else { // Draft, Rejected, ChangesRequested
-      if (!isApplicantPath || location.pathname === '/member/membership-application-status') {
-        return <Navigate to="/membership-agreement" replace />
-      }
-      return <Outlet />
+      return <Navigate to={memberRoutes.agreement} replace />
     }
+
+    const currentStatus = String(account.onboardingStatus || '').toLowerCase()
+    if (currentStatus === 'pending' && location.pathname === memberRoutes.application) {
+      return <Navigate to={memberRoutes.status} replace />
+    }
+
+    return <Outlet />
   }
 
   if (roles?.length && !roles.some((allowed) => roleMatches(allowed, role))) return <Navigate to="/" replace />

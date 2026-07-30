@@ -191,7 +191,21 @@ export function ChapterMarketplaceServices({
           { key: 'vendorMobile', header: 'Vendor Mobile', render: (row) => row.vendor?.phone || '-' },
           { key: 'vendorEmail', header: 'Vendor Email', render: (row) => row.vendor?.email || '-' },
           { key: 'price', header: 'Price', render: (row) => row.pricing?.type === 'fixed' ? formatCurrency(row.pricing?.minPrice) : row.pricing?.type === 'range' ? `${formatCurrency(row.pricing?.minPrice)} - ${formatCurrency(row.pricing?.maxPrice)}` : 'Custom' },
-          { key: 'availability', header: 'Availability', render: (row) => row.availability || '-' },
+          {
+            key: 'availability',
+            header: 'Availability',
+            render: (row) => {
+              if (!row.availability) return '-'
+              if (typeof row.availability === 'string') return row.availability
+              if (typeof row.availability === 'object') {
+                if (Array.isArray(row.availability.days) && row.availability.days.length > 0) {
+                  return row.availability.days.join(', ')
+                }
+                return row.availability.isAvailable ? 'Available' : 'Unavailable'
+              }
+              return '-'
+            }
+          },
           { key: 'status', header: 'Status', render: (row) => <StatusBadge value={row.status} /> },
           { key: 'createdAt', header: 'Created Date', render: (row) => formatDate(row.createdAt) }
         ]}
