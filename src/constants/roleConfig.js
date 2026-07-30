@@ -82,7 +82,7 @@ export const ROLE_ROUTE_PREFIXES = Object.freeze({
 });
 
 export const ROLE_DASHBOARD_PATHS = Object.freeze({
-  [ROLES.SUPERADMIN]: "/admin/dashboard",
+  [ROLES.SUPERADMIN]: "/super-admin/dashboard",
   [ROLES.ADMIN]: "/admin/dashboard",
   [ROLES.FRANCHISE_ADMIN]: "/admin/dashboard",
   [ROLES.ECOMMERCE_ADMIN]: "/admin/dashboard",

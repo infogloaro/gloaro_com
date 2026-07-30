@@ -29,7 +29,9 @@ export function useApi(request, deps = [], options = {}) {
 
   useEffect(() => {
     if (options.immediate === false) return
-    const timer = window.setTimeout(() => execute(), 0)
+    const timer = window.setTimeout(() => {
+      execute().catch(() => {})
+    }, 0)
     return () => window.clearTimeout(timer)
   }, [execute, options.immediate, depKey])
 

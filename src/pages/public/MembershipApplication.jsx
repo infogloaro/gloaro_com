@@ -8,7 +8,7 @@ import { getMembershipDraft, saveMembershipDraft, setMembershipFile } from '../.
 import LoadingScreen from '../../components/common/LoadingScreen'
 import { ROLES } from '../../constants/roleConfig.js'
 import OrganizationAssignmentFields from '../../components/forms/OrganizationAssignmentFields'
-import { getEffectiveRegistrationType, getVendorOnboardingRoutes } from '../../utils/onboarding'
+import { getEffectiveRegistrationType, getMemberOnboardingRoutes, getVendorOnboardingRoutes } from '../../utils/onboarding'
 import { storage } from '../../utils/storage'
 
 const expertise = ['Technology', 'Finance', 'Real Estate', 'Education', 'Marketing', 'Healthcare', 'Design', 'Manufacturing']
@@ -20,6 +20,7 @@ export default function MembershipApplication() {
   const navigate = useNavigate()
   const onboardingType = getEffectiveRegistrationType(user, storage.getOnboardingContext()?.registrationType)
   const vendorRoutes = getVendorOnboardingRoutes(true)
+  const memberRoutes = getMemberOnboardingRoutes(Boolean(user && onboardingType !== 'vendor'))
   const draft = getMembershipDraft()
   const [personal, setPersonal] = useState(draft.personal || {})
   const [address, setAddress] = useState(draft.address || {})
@@ -68,7 +69,7 @@ export default function MembershipApplication() {
         const app = res.data?.data
         if (app) {
           if (!['draft', 'rejected', 'changes_requested'].includes(app.status)) {
-            navigate('/member/membership-application-status')
+            navigate(memberRoutes.status)
             return
           }
         const loadedDraft = {
@@ -99,7 +100,7 @@ export default function MembershipApplication() {
       .finally(() => {
         setLoading(false)
       })
-  }, [navigate, onboardingType, user, vendorRoutes.application])
+  }, [memberRoutes.status, navigate, onboardingType, user, vendorRoutes.application])
 
   useEffect(() => {
     if (!isVicePresident) return
@@ -283,8 +284,8 @@ export default function MembershipApplication() {
             {savingDraft ? 'Saving Draft...' : 'Save Draft'}
           </button>
           <div className="flex gap-3">
-            <Link to="/membership-agreement" className="rounded-md bg-[#ffbf1a] px-5 py-2.5 text-xs font-extrabold text-[#0b1f3d]">Step Back</Link>
-            <Link to="/membership-qualification" className="rounded-md bg-[#0b469e] px-5 py-2.5 text-xs font-extrabold text-white">Next Step →</Link>
+            <Link to={memberRoutes.agreement} className="rounded-md bg-[#ffbf1a] px-5 py-2.5 text-xs font-extrabold text-[#0b1f3d]">Step Back</Link>
+            <Link to={memberRoutes.qualification} className="rounded-md bg-[#0b469e] px-5 py-2.5 text-xs font-extrabold text-white">Next Step →</Link>
           </div>
         </div>
       </section>

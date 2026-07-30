@@ -3,6 +3,7 @@ import toast from 'react-hot-toast'
 import { io } from 'socket.io-client'
 import { adminApi } from '../api/admin'
 import { authApi } from '../api/auth'
+import { customerAuthApi } from '../api/customerAuth'
 import api, { API_BASE_URL } from '../api/axios'
 import { isAdminRole } from '../constants/adminRoles'
 import { storage } from '../utils/storage'
@@ -12,6 +13,12 @@ import { getMarketplaceAccess } from '../utils/marketplaceAccess'
 import { ROLES } from '../constants/roleConfig.js'
 
 const socketUrl = API_BASE_URL.replace('/api/v1', '')
+
+const isCustomerPortalSession = (candidateUser = null) => {
+  const user = candidateUser || storage.getUser()
+  const onboardingContext = storage.getOnboardingContext()
+  return Boolean(user?.meta?.customerPortal?.isolated || onboardingContext?.registrationType === 'customer_portal')
+}
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(() => storage.getUser())
@@ -74,18 +81,29 @@ export function AuthProvider({ children }) {
   }, [user, vendorApplication])
 
   const login = useCallback(async (payload, remember = true) => {
-    try {
-      const response = await authApi.login(payload)
-      const data = response.data.data
+    const persistSession = (data) => {
       const nextUser = syncOnboardingContext(data.user, remember)
       storage.setSession({ ...data, user: nextUser }, remember)
       setUser(nextUser)
       setPermissionConfig(nextUser ? undefined : null)
+      return nextUser
+    }
+
+    try {
+      const response = await authApi.login(payload)
+      const nextUser = persistSession(response.data.data)
       toast.success('Signed in successfully')
       return nextUser
-    } catch (error) {
-      toast.error(error.response?.data?.message || 'Invalid email or password')
-      throw error
+    } catch (authError) {
+      try {
+        const response = await customerAuthApi.login(payload)
+        const nextUser = persistSession(response.data?.data || {})
+        toast.success('Signed in successfully')
+        return nextUser
+      } catch (customerError) {
+        toast.error(customerError.response?.data?.message || authError.response?.data?.message || 'Invalid email or password')
+        throw customerError
+      }
     }
   }, [syncOnboardingContext])
 
@@ -98,8 +116,10 @@ export function AuthProvider({ children }) {
   }, [syncOnboardingContext])
 
   const logout = useCallback(async () => {
+    const isCustomerSession = isCustomerPortalSession(user)
     try {
-      await authApi.logout()
+      const sessionApi = isCustomerSession ? customerAuthApi : authApi
+      await sessionApi.logout()
     } catch {
       // session is cleared locally either way
     }
@@ -110,11 +130,15 @@ export function AuthProvider({ children }) {
     socketRef.current?.disconnect()
     setSocket(null)
     toast.success('Logged out')
-  }, [])
+    if (isCustomerSession) {
+      window.location.href = '/'
+    }
+  }, [user])
 
   const refreshUser = useCallback(async () => {
     try {
-      const response = await authApi.me()
+      const sessionApi = isCustomerPortalSession(user) ? customerAuthApi : authApi
+      const response = await sessionApi.me()
       const nextUser = syncOnboardingContext(response.data.data?.user || response.data.data, true)
       setUser(nextUser)
       setPermissionConfig(nextUser ? undefined : null)
@@ -133,7 +157,10 @@ export function AuthProvider({ children }) {
       }
 
       try {
-        const response = await authApi.me()
+        const sessionApi = isCustomerPortalSession()
+          ? customerAuthApi
+          : authApi
+        const response = await sessionApi.me()
         if (storage.getAccessToken() !== initialToken) {
           return
         }
@@ -201,7 +228,7 @@ export function AuthProvider({ children }) {
       if (socketRef.current === client) socketRef.current = null
       setSocket(null)
     }
-  }, [user])
+  }, [user?._id])
 
   const permissionHelpers = useMemo(() => createPermissionHelpers(user, permissionConfig), [user, permissionConfig])
   const permissionsLoading = Boolean(user && permissionConfig === undefined)
