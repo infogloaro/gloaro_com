@@ -1,12 +1,15 @@
-import { ChevronDown, ChevronLeft, Menu, Moon, Search, Sun, LayoutDashboard, Users, FileBarChart, Settings, CreditCard, Building2, MapPinned, CalendarDays, FileText, Volume2, Handshake, Ticket, Clock, Bell, User, Package, Star, ToggleLeft, ShoppingBag, BriefcaseBusiness, Heart, PlusCircle, TrendingUp, ClipboardList, LogOut } from 'lucide-react'
+import { Bell, ChevronDown, ChevronLeft, Menu, Moon, Search, Sun, LogOut } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import logo from '../assets/signup_logo.png'
 import { communityApi } from '../api/community'
+import { notificationApi } from '../api/notification'
 import { useAuth } from '../hooks/useAuth'
 import { storage } from '../utils/storage'
 import { buildAdminRoute } from '../utils/permissions'
+import { formatDate } from '../utils/format'
+import { getCommunityNotificationPath } from '../utils/communityNotifications'
 import { ROLES } from '../constants/roleConfig.js'
 import { resolveNavigation, NAVIGATION_MODES } from '../utils/navigationResolver'
 
@@ -21,6 +24,10 @@ export default function DashboardLayout({ navItems = [], title = 'Dashboard' }) 
   const [impersonating, setImpersonating] = useState(() => Boolean(sessionStorage.getItem('gloaro_superadmin_session')))
   const [dark, setDark] = useState(() => localStorage.getItem('gloaro_theme') === 'dark')
   const [chatUnreadCount, setChatUnreadCount] = useState(0)
+  const [notificationUnreadCount, setNotificationUnreadCount] = useState(0)
+  const [notificationOpen, setNotificationOpen] = useState(false)
+  const [notificationPreview, setNotificationPreview] = useState([])
+  const [notificationLoading, setNotificationLoading] = useState(false)
   const isSuperAdmin = user?.role === ROLES.SUPERADMIN
   const navigation = useMemo(() => resolveNavigation({
     user,
@@ -45,15 +52,43 @@ export default function DashboardLayout({ navItems = [], title = 'Dashboard' }) 
       .catch(() => {})
   }, [user?._id])
 
+  const refreshNotificationUnreadCount = useCallback(() => {
+    if (!user?._id) return
+    notificationApi.unreadCount()
+      .then((res) => setNotificationUnreadCount(Number(res.data?.data?.count || res.data?.count || 0)))
+      .catch(() => {})
+  }, [user?._id])
+
+  const loadNotificationPreview = useCallback(() => {
+    if (!user?._id) return Promise.resolve()
+    setNotificationLoading(true)
+    return Promise.all([
+      notificationApi.list({ limit: 8 }),
+      notificationApi.unreadCount(),
+    ]).then(([listRes, countRes]) => {
+      setNotificationPreview(listRes.data?.data || listRes.data || [])
+      setNotificationUnreadCount(Number(countRes.data?.data?.count || countRes.data?.count || 0))
+    }).catch(() => {
+      toast.error('Unable to load notifications')
+    }).finally(() => setNotificationLoading(false))
+  }, [user?._id])
+
   useEffect(() => {
     refreshChatUnreadCount()
-  }, [refreshChatUnreadCount, location.pathname])
+    refreshNotificationUnreadCount()
+  }, [refreshChatUnreadCount, refreshNotificationUnreadCount, location.pathname])
 
   useEffect(() => {
     const handleRefresh = () => refreshChatUnreadCount()
     window.addEventListener('gloaro:chat-unread-refresh', handleRefresh)
     return () => window.removeEventListener('gloaro:chat-unread-refresh', handleRefresh)
   }, [refreshChatUnreadCount])
+
+  useEffect(() => {
+    const handleRefresh = () => refreshNotificationUnreadCount()
+    window.addEventListener('gloaro:notification-unread-refresh', handleRefresh)
+    return () => window.removeEventListener('gloaro:notification-unread-refresh', handleRefresh)
+  }, [refreshNotificationUnreadCount])
 
   const returnToSuperAdmin = () => {
     const raw = sessionStorage.getItem('gloaro_superadmin_session')
@@ -176,15 +211,66 @@ export default function DashboardLayout({ navItems = [], title = 'Dashboard' }) 
     }
   }, [chatRoute, location.pathname, navigate, refreshChatUnreadCount, socket])
 
+  useEffect(() => {
+    if (!socket) return undefined
+
+    const handleNotification = () => {
+      setNotificationUnreadCount((count) => count + 1)
+      if (notificationOpen) loadNotificationPreview()
+    }
+
+    socket.on('notification', handleNotification)
+    return () => {
+      socket.off('notification', handleNotification)
+    }
+  }, [loadNotificationPreview, notificationOpen, socket])
+
   const toggleGroup = (label) => {
     setOpenGroups((current) => ({ ...current, [label]: !current[label] }))
   }
 
   const shouldShowChatBadge = (label, to) => chatUnreadCount > 0 && to?.endsWith('/chat') && ['Messages', 'Chat'].includes(label)
+  const shouldShowNotificationBadge = (label, to) => notificationUnreadCount > 0 && (to?.endsWith('/notifications') || label.toLowerCase().includes('notification'))
 
-  const ChatBadge = () => (
-    <span className="ml-auto grid min-h-5 min-w-5 place-items-center rounded-full bg-[#0d4697] px-1.5 text-[10px] font-black text-white">
-      {chatUnreadCount > 99 ? '99+' : chatUnreadCount}
+  const notificationCenterRoute = useMemo(() => {
+    for (const item of resolvedNavItems) {
+      if (Array.isArray(item)) {
+        const [label, to] = item
+        if (to?.endsWith('/notifications') || label.toLowerCase().includes('notification')) return to
+        continue
+      }
+      const child = item.children.find(([label, to]) => to?.endsWith('/notifications') || label.toLowerCase().includes('notification'))
+      if (child) return child[1]
+    }
+    return '/notifications'
+  }, [resolvedNavItems])
+
+  const openNotificationCenter = () => {
+    setNotificationOpen(false)
+    navigate(notificationCenterRoute)
+  }
+
+  const handleNotificationClick = async (item) => {
+    const targetPath = getCommunityNotificationPath(item, user) || notificationCenterRoute
+    try {
+      if (!item.isRead) {
+        await notificationApi.markRead(item._id)
+        setNotificationPreview((current) =>
+          current.map((notification) => (notification._id === item._id ? { ...notification, isRead: true } : notification))
+        )
+        setNotificationUnreadCount((count) => Math.max(0, count - 1))
+        window.dispatchEvent(new Event('gloaro:notification-unread-refresh'))
+      }
+      setNotificationOpen(false)
+      navigate(targetPath)
+    } catch {
+      toast.error('Unable to open notification')
+    }
+  }
+
+  const CountBadge = ({ count, tone = 'blue' }) => (
+    <span className={`ml-auto grid min-h-5 min-w-5 place-items-center rounded-full px-1.5 text-[10px] font-black ${tone === 'amber' ? 'bg-[#ffbf1a] text-slate-950' : 'bg-[#0d4697] text-white'}`}>
+      {count > 99 ? '99+' : count}
     </span>
   )
 
@@ -244,7 +330,8 @@ export default function DashboardLayout({ navItems = [], title = 'Dashboard' }) 
                     >
                       <ChildIcon className="h-3.5 w-3.5" />
                       <span className="min-w-0 flex-1 truncate">{label}</span>
-                      {shouldShowChatBadge(label, to) && <ChatBadge />}
+                      {shouldShowChatBadge(label, to) && <CountBadge count={chatUnreadCount} />}
+                      {shouldShowNotificationBadge(label, to) && <CountBadge count={notificationUnreadCount} tone="amber" />}
                     </NavLink>
                   ))}
                 </div>}
@@ -276,7 +363,8 @@ export default function DashboardLayout({ navItems = [], title = 'Dashboard' }) 
             >
               <Icon className="h-4 w-4" />
               {!collapsed && <span className="min-w-0 flex-1 truncate">{label}</span>}
-              {!collapsed && shouldShowChatBadge(label, to) && <ChatBadge />}
+              {!collapsed && shouldShowChatBadge(label, to) && <CountBadge count={chatUnreadCount} />}
+              {!collapsed && shouldShowNotificationBadge(label, to) && <CountBadge count={notificationUnreadCount} tone="amber" />}
             </NavLink>
           )
         })}
@@ -304,6 +392,57 @@ export default function DashboardLayout({ navItems = [], title = 'Dashboard' }) 
             </div>
           </div>
           <div className="flex items-center gap-2">
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => {
+                  setNotificationOpen((openState) => !openState)
+                  if (!notificationOpen) loadNotificationPreview()
+                }}
+                className="relative grid h-9 w-9 place-items-center rounded-md border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
+                aria-label="Open notifications"
+              >
+                <Bell className="h-4 w-4" />
+                {notificationUnreadCount > 0 && (
+                  <span className="absolute -right-1 -top-1 grid min-h-5 min-w-5 place-items-center rounded-full bg-[#ffbf1a] px-1.5 text-[10px] font-black text-slate-950">
+                    {notificationUnreadCount > 99 ? '99+' : notificationUnreadCount}
+                  </span>
+                )}
+              </button>
+              {notificationOpen && (
+                <div className="absolute right-0 top-11 z-40 w-[min(22rem,calc(100vw-2rem))] overflow-hidden rounded-xl border border-slate-200 bg-white shadow-2xl dark:border-slate-800 dark:bg-slate-900">
+                  <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3 dark:border-slate-800">
+                    <p className="text-sm font-black text-slate-900 dark:text-white">Notifications</p>
+                    <button type="button" onClick={openNotificationCenter} className="text-[11px] font-black text-[#0d4697] dark:text-blue-300">View all</button>
+                  </div>
+                  <div className="max-h-96 overflow-y-auto p-2">
+                    {notificationLoading ? (
+                      <p className="px-3 py-8 text-center text-xs font-bold text-slate-400">Loading notifications...</p>
+                    ) : notificationPreview.length ? (
+                      notificationPreview.map((item) => (
+                        <button
+                          key={item._id}
+                          type="button"
+                          onClick={() => handleNotificationClick(item)}
+                          className={`mb-1 flex w-full items-start gap-3 rounded-lg px-3 py-2 text-left transition hover:bg-slate-50 dark:hover:bg-slate-800 ${
+                            item.isRead ? 'bg-white dark:bg-slate-900' : 'bg-blue-50/70 dark:bg-blue-950/30'
+                          }`}
+                        >
+                          <span className={`mt-1 h-2 w-2 shrink-0 rounded-full ${item.isRead ? 'bg-slate-300' : 'bg-[#0d4697]'}`} />
+                          <span className="min-w-0 flex-1">
+                            <span className="block truncate text-xs font-black text-slate-900 dark:text-white">{item.title || 'Notification'}</span>
+                            <span className="mt-1 line-clamp-2 block text-[11px] font-semibold leading-4 text-slate-500 dark:text-slate-300">{item.message || item.body}</span>
+                            <span className="mt-1 block text-[10px] font-bold text-slate-400">{formatDate(item.createdAt)}</span>
+                          </span>
+                        </button>
+                      ))
+                    ) : (
+                      <p className="px-3 py-8 text-center text-xs font-bold text-slate-400">No notifications found.</p>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
             <button onClick={() => setDark((value) => !value)} className="grid h-9 w-9 place-items-center rounded-md border border-slate-200 dark:border-slate-800" aria-label="Toggle theme">
               {dark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
             </button>

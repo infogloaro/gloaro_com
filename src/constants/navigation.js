@@ -243,6 +243,19 @@ export const regionDirectorNav = [];
 
 const removeMarketplaceSection = (navItems = []) => navItems.filter((_, index) => index !== 2)
 
+const getUserOrganization = (user) => (
+  user?.meta?.adminProfile?.organization ||
+  user?.meta?.memberProfile?.organization ||
+  user?.organization ||
+  user?.meta?.organization ||
+  {}
+)
+
+const hasChapterAssignment = (user) => {
+  const org = getUserOrganization(user)
+  return Boolean(org.chapter || org.assignedChapter?._id || org.assignedChapter?.name)
+}
+
 const memberVendorMarketplaceChildren = [
   ['Business Profile', '/member/dashboard/my-business', Building2],
   ['Business Categories', '/member/dashboard/business-categories', PlusCircle],
@@ -256,8 +269,8 @@ const memberVendorMarketplaceChildren = [
   ['Analytics', '/member/dashboard/vendor-analytics', BarChart3],
 ]
 
-export function getMemberVendorSidebarNav(role) {
-  return getSidebarNav(role).map((item) => {
+export function getMemberVendorSidebarNav(role, user) {
+  return getSidebarNav(role, { user }).map((item) => {
     if (Array.isArray(item) || item.label !== 'Marketplace') {
       return item
     }
@@ -269,8 +282,8 @@ export function getMemberVendorSidebarNav(role) {
   })
 }
 
-export function getMemberSidebarNav(role) {
-  return removeMarketplaceSection(getSidebarNav(role))
+export function getMemberSidebarNav(role, user) {
+  return removeMarketplaceSection(getSidebarNav(role, { user }))
 }
 
 export function getApplicantSidebarNav() {
@@ -281,8 +294,8 @@ export function getVendorApplicantSidebarNav() {
   return vendorApplicantNav
 }
 
-export function getRoleBasedSidebarNav(role) {
-  return getSidebarNav(role)
+export function getRoleBasedSidebarNav(role, user) {
+  return getSidebarNav(role, { user })
 }
 
 export const rolePrefixes = {
@@ -429,8 +442,9 @@ const roleModules = {
   ]
 };
 
-export function getSidebarNav(role) {
+export function getSidebarNav(role, options = {}) {
   const normalizedRole = normalizeRole(role)
+  const user = options.user || null
 
   if ([ROLES.SUPERADMIN, ROLES.ADMIN].includes(role)) {
     const prefixPath = (item) => {
@@ -451,7 +465,10 @@ export function getSidebarNav(role) {
   const prefixItem = (item) => {
     if (Array.isArray(item)) {
       const [label, to, icon] = item;
-      const finalPath = (to.startsWith('/admin/') || to === '/admin' || to.startsWith('/member/') || to === '/member') || to.startsWith('/super-admin') ? to : `${prefix}${to}`;
+      const memberReferralPath = label === 'Referrals' && to === '/referrals' && [ROLES.CUSTOMER, ROLES.USER, ROLES.VENDOR].includes(normalizedRole);
+      const finalPath = memberReferralPath
+        ? '/member/referrals'
+        : (to.startsWith('/admin/') || to === '/admin' || to.startsWith('/member/') || to === '/member') || to.startsWith('/super-admin') ? to : `${prefix}${to}`;
       return [label, finalPath, icon];
     }
     let children = item.children;
@@ -465,6 +482,16 @@ export function getSidebarNav(role) {
         children = children.filter(([label]) => label !== 'Vendor Applications');
       } else {
         children = children.filter(([label]) => !['Vendor Applications', 'Marketplace Approval'].includes(label));
+      }
+    }
+    if (item.label === 'Community') {
+      if ([ROLES.REGION_DIRECTOR, ROLES.STATE_DIRECTOR, ROLES.DISTRICT_DIRECTOR].includes(normalizedRole)) {
+        children = children.filter(([label]) => {
+          if (label === 'Chapter Community') return hasChapterAssignment(user)
+          return ['Gloaro Network', 'Messages'].includes(label)
+        })
+      } else if ([ROLES.CUSTOMER, ROLES.USER, ROLES.VENDOR].includes(normalizedRole)) {
+        children = children.filter(([label]) => ['Chapter Community', 'Gloaro Network', 'Messages', 'Referrals'].includes(label))
       }
     }
     return {
@@ -512,6 +539,7 @@ if (
       orgMgmt,
       base[2], // Marketplace
       base[3], // Meetings
+      base[1], // Community
       base[4], // Chapter
       base[5], // Collaboration
       base[6], // Account
