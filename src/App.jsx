@@ -103,16 +103,15 @@ import {
   CustomerNotificationsPage,
   CustomerProfilePage,
   CustomerSupportPage,
-  DetailPage,
   EventsPage,
   NearbyPage,
-  ProductsPage,
   ReferralPage,
   ReviewsPage,
   ServicesPage,
   VendorsPage,
-  WishlistPage,
 } from './pages/customer/ListingPages'
+import { CartPage, CheckoutPage, DetailPage, OrderDetailPage, OrdersPage, ProductsPage, WishlistPage as ShopWishlistPage } from './pages/customer/ShopPages'
+import { CustomerAddressesPage, CustomerDashboardPage } from './pages/customer/CustomerFoundationPages'
 import NotificationsPage from './pages/shared/NotificationsPage'
 import ProfilePage from './pages/shared/ProfilePage'
 import Home from './pages/Home'
@@ -289,6 +288,10 @@ function App() {
           <Route path="/vendors/:id" element={<DetailPage type="vendors" />} />
           <Route path="/products" element={<ProductsPage />} />
           <Route path="/products/:id" element={<DetailPage type="products" />} />
+          <Route path="/cart" element={<CartPage />} />
+          <Route path="/checkout" element={<CheckoutPage />} />
+          <Route path="/orders" element={<OrdersPage />} />
+          <Route path="/orders/:orderId" element={<OrderDetailPage />} />
           <Route path="/services" element={<ServicesPage />} />
           <Route path="/services/:id" element={<DetailPage type="services" />} />
           <Route path="/events" element={<EventsPage />} />
@@ -335,7 +338,9 @@ function App() {
 
             {/* Customer Portal Route Group */}
             <Route element={<ProtectedRoute roles={[ROLES.CUSTOMER, ROLES.USER]} />}>
-              <Route path="/customer/wishlist" element={<WishlistPage />} />
+              <Route path="/customer/dashboard" element={<CustomerDashboardPage />} />
+              <Route path="/customer/addresses" element={<CustomerAddressesPage />} />
+          <Route path="/customer/wishlist" element={<ShopWishlistPage />} />
               <Route path="/customer/referral" element={<ReferralPage />} />
               <Route path="/customer/notifications" element={<CustomerNotificationsPage />} />
               <Route path="/customer/profile" element={<CustomerProfilePage />} />
