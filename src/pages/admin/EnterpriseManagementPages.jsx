@@ -972,7 +972,10 @@ function EnterpriseRecordsPage({ module, config: overrideConfig, extraPanel, wiz
     }
     delete data.assignedMemberId
     const response = editing ? await adminApi.updateEnterpriseRecord(editing._id, data) : await adminApi.createEnterpriseRecord(module, data)
-    if (module === 'training' && assignedMemberId?.length) await adminApi.assignTrainingMember(editing?._id || response.data?.data?._id, assignedMemberId)
+    if (module === 'training' && Array.isArray(assignedMemberId)) {
+      const targetId = editing?._id || response.data?.data?._id || response.data?._id
+      if (targetId) await adminApi.assignTrainingMember(targetId, assignedMemberId)
+    }
     toast.success(editing ? 'Record updated' : 'Record created')
     setFormOpen(false)
     setEditing(null)

@@ -165,7 +165,7 @@ export default function MemberDashboard() {
           <div className="shrink-0">
             <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-4 py-2 text-xs font-extrabold tracking-wider text-[#ffbf1a] backdrop-blur-md">
               <ShieldCheck className="h-4 w-4" />
-              {isApprovedVendor ? 'Verified Vendor' : 'Approved Member'}
+              {isApprovedVendor ? 'Verified Vendor' : user?.onboardingStatus === 'approved' ? 'Approved Member' : 'Member Applicant'}
             </span>
           </div>
         </div>
@@ -182,10 +182,10 @@ export default function MemberDashboard() {
             <article className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
               <p className="text-xs font-extrabold uppercase tracking-wider text-slate-400">Membership Status</p>
               <div className="mt-3 flex items-center justify-between">
-                <span className="text-lg font-black text-slate-800">Approved</span>
+                <span className="text-lg font-black text-slate-800">{user?.onboardingStatus ? user.onboardingStatus.charAt(0).toUpperCase() + user.onboardingStatus.slice(1) : 'Pending'}</span>
                 <span className="flex h-7 items-center gap-1 rounded-full bg-emerald-50 px-2.5 text-xs font-extrabold text-emerald-700 border border-emerald-200">
                   <CheckCircle2 className="h-3.5 w-3.5" />
-                  Active
+                  {user?.onboardingStatus === 'approved' ? 'Active' : user?.onboardingStatus || 'Pending'}
                 </span>
               </div>
             </article>

@@ -18,11 +18,10 @@ import {
 import logo from '../assets/logo.png'
 import networkIcon from '../assets/network_icon.png'
 import shopIcon from '../assets/shop_icon.png'
+import b2bIcon from '../assets/b2b_icon.png'
 import brandIcon from '../assets/brand_icon.png'
 import nearMeIcon from '../assets/nearme_icon.png'
-import b2bIcon from '../assets/b2b_icon.png'
 import loginIcon from '../assets/login_icon.png'
-import { ROLES } from '../constants/roleConfig.js'
 
 const SearchIcon = () => <svg viewBox="0 0 24 24" className="h-4 w-4 shrink-0 fill-none stroke-white stroke-[3.25]"><circle cx="11" cy="11" r="6" /><path d="m16 16 4 4" /></svg>
 const PinIcon = () => <svg viewBox="0 0 24 24" className="h-4 w-4 fill-current"><path d="M12 2a7 7 0 0 0-7 7c0 5.25 7 13 7 13s7-7.75 7-13a7 7 0 0 0-7-7Zm0 10a3 3 0 1 1 0-6 3 3 0 0 1 0 6Z" /></svg>
@@ -45,12 +44,16 @@ const networkHighlights = [
   [ShieldCheck, 'Verified Network', 'Trusted enterprise leaders'],
 ]
 
-const loginLink = (type, redirect) => `/login?type=${type}&redirect=${encodeURIComponent(redirect)}`
-
 const getNetworkLink = (section) => {
-  if (section === 'Membership') return loginLink('membership', '/membership-agreement')
-  if (section === 'Franchise') return loginLink('franchise', '/membership-application')
-  if (section === 'Business Network') return loginLink('b2b', '/vendors')
+  if (section === 'Membership') return '#membership'
+  if (section === 'Franchise') return '#marketplace'
+  if (section === 'Business Network') return '#marketplace'
+  if (section === 'Referral Program') return '#events'
+  if (section === 'Mobile App') return '#features'
+  if (section === 'Business Services') return '/services'
+  if (section === 'Events & Community') return '#events'
+  if (section === 'Leaders & Achievements') return '#leaders'
+  if (section === 'Help Center') return '#join'
   return '#membership'
 }
 
@@ -59,18 +62,18 @@ export default function Navbar() {
   const [open, setOpen] = useState(false)
   const [networkOpen, setNetworkOpen] = useState(false)
   const [mobileNetworkOpen, setMobileNetworkOpen] = useState(false)
+
   const navItems = [
-    [shopIcon, 'Shop', '/products', 'bg-[#ffb20c] text-[#063a85]'],
-    [brandIcon, 'Services', '/services', 'bg-[#ffb20c] text-[#063a85]'],
-    [nearMeIcon, 'Near Me', '/nearby', 'bg-[#ffb20c] text-[#063a85]'],
-    [b2bIcon, 'B2B Marketplace', loginLink('b2b', '/vendors'), 'bg-[#ffb20c] text-[#063a85]'],
-    [loginIcon, 'Become a Vendor', '/register?type=vendor', 'bg-[#0b469e] text-white', 'brightness-0 invert'],
+    [nearMeIcon, 'Near Me', '/nearby', 'bg-slate-100 text-slate-700 hover:bg-slate-200'],
+    [shopIcon, 'Shop', '/products', 'bg-[#ffb20c] text-[#063a85] hover:brightness-95'],
+    [brandIcon, 'Services', '/services', 'bg-[#10b981] text-white hover:bg-[#059669]', 'brightness-0 invert'],
+    [b2bIcon, 'B2B Marketplace', '/vendors', 'bg-[#0b469e] text-white hover:bg-[#093a84]', 'brightness-0 invert'],
   ]
 
   return (
     <header className="sticky top-0 z-50 border-t-4 border-black bg-white font-jakarta shadow-sm">
       <div className="mx-auto max-w-[1440px] px-4 py-3 sm:px-7">
-        <div className="flex items-center gap-4 xl:gap-5">
+        <div className="flex items-center gap-2 xl:gap-3">
           <a href="#top" className="flex w-24 shrink-0 items-center sm:w-28"><img src={logo} alt="Gloaro Business Network" className="h-auto w-full object-contain" /></a>
 
           <div className="hidden flex-1 items-center gap-3 lg:flex">
@@ -81,19 +84,35 @@ export default function Navbar() {
               </button>
               {networkOpen && <GloaroNetworkMenu onClose={() => setNetworkOpen(false)} />}
             </div>
-            {navItems.map(([icon, label, href, colors, iconClass = '']) => <a key={label} href={href} className={`flex h-10 items-center gap-2 whitespace-nowrap rounded-full px-5 text-sm font-medium shadow-sm transition hover:-translate-y-px ${colors}`}><img src={icon} alt="" className={`h-4 w-4 object-contain ${iconClass}`} />{label}</a>)}
+            {navItems.map(([icon, label, href, colors, iconClass = '']) => <a key={label} href={href} className={`flex h-10 items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 text-xs font-semibold shadow-sm transition hover:-translate-y-px xl:px-4 xl:text-sm ${colors}`}><img src={icon} alt="" className={`h-3.5 w-3.5 object-contain ${iconClass}`} />{label}</a>)}
           </div>
 
           <div className="ml-auto hidden items-center gap-4 text-[#0b469e] lg:flex">
             {isAuthenticated ? (
               <a href={getDashboardRoute(user?.role, user)} aria-label="Account" className="flex items-center gap-1 text-sm font-medium"><img src={loginIcon} alt="" className="h-5 w-5 object-contain" /> {user?.name || 'Account'}</a>
             ) : (
-              <a href={loginLink(ROLES.USER, '/member/dashboard')} aria-label="Account" className="flex items-center gap-1 text-sm font-medium"><img src={loginIcon} alt="" className="h-5 w-5 object-contain" /> Login</a>
+              <>
+                <a href="/login" className="flex items-center gap-1.5 text-sm font-semibold transition hover:text-[#0b469e]">
+                  <img src={loginIcon} alt="" className="h-5 w-5 object-contain" />
+                  Login
+                </a>
+                <a href="/register" className="rounded-md border border-[#0b469e] px-3 py-1.5 text-sm font-semibold text-[#0b469e] transition hover:bg-[#0b469e] hover:text-white">
+                  Register
+                </a>
+              </>
             )}
-            <div className="relative"><button onClick={() => setOpen(!open)} className="flex h-8 items-center gap-2 rounded-md bg-[#0b469e] px-3 text-xs font-medium text-white"><PinIcon />Kallakurichy <span className="border-l border-white/40 pl-2">⌄</span><SearchIcon /></button>{open && <div className="absolute right-0 top-10 w-52 rounded-b-md bg-white p-3 shadow-xl"><p className="mb-2 flex items-center gap-1 text-xs font-medium text-[#f3a900]"><PinIcon /> Kallakurichy</p><input placeholder="Search City..." className="w-full rounded-md border border-slate-200 px-3 py-2 text-xs text-slate-600 outline-none focus:border-[#0b469e]" /></div>}</div>
+            <div className="relative">
+              <button onClick={() => setOpen(!open)} className="flex h-8 items-center gap-2 rounded-md bg-[#0b469e] px-3 text-xs font-medium text-white">
+                <PinIcon />
+                Kallakurichy
+                <span className="border-l border-white/40 pl-2">v</span>
+                <SearchIcon />
+              </button>
+              {open && <div className="absolute right-0 top-10 w-52 rounded-b-md bg-white p-3 shadow-xl"><p className="mb-2 flex items-center gap-1 text-xs font-medium text-[#f3a900]"><PinIcon /> Kallakurichy</p><input placeholder="Search City..." className="w-full rounded-md border border-slate-200 px-3 py-2 text-xs text-slate-600 outline-none focus:border-[#0b469e]" /></div>}
+            </div>
           </div>
 
-          <button onClick={() => setOpen((value) => !value)} className="ml-auto rounded-md bg-[#0b469e] px-3 py-2 text-lg text-white lg:hidden" aria-label="Toggle menu">☰</button>
+          <button onClick={() => setOpen((value) => !value)} className="ml-auto rounded-md bg-[#0b469e] px-3 py-2 text-lg text-white lg:hidden" aria-label="Toggle menu">=</button>
         </div>
 
         <div className="mt-3 flex items-center gap-3 lg:mt-4">
@@ -107,19 +126,24 @@ export default function Navbar() {
           <div className="grid gap-2 sm:grid-cols-2">
             <button type="button" onClick={() => setMobileNetworkOpen((value) => !value)} className="flex items-center justify-between rounded-lg bg-[#0b469e] px-4 py-3 font-medium text-white sm:col-span-2">
               <span className="flex items-center"><img src={networkIcon} alt="" className="mr-2 h-4 w-4 object-contain" />Gloaro Network</span>
-              <span className="text-lg leading-none">{mobileNetworkOpen ? '−' : '+'}</span>
+              <span className="text-lg leading-none">{mobileNetworkOpen ? '-' : '+'}</span>
             </button>
             {mobileNetworkOpen && <MobileGloaroNetworkMenu onNavigate={() => setOpen(false)} />}
             {isAuthenticated ? (
-              <a onClick={() => setOpen(false)} href={getDashboardRoute(user?.role, user)} className="flex items-center rounded-lg px-4 py-3 font-medium bg-[#0b469e]/10 text-[#0b469e] sm:col-span-2">
+              <a onClick={() => setOpen(false)} href={getDashboardRoute(user?.role, user)} className="flex items-center rounded-lg bg-[#0b469e]/10 px-4 py-3 font-medium text-[#0b469e] sm:col-span-2">
                 <img src={loginIcon} alt="" className="mr-2 h-4 w-4 object-contain brightness-0 filter" />
                 {user?.name || 'Account'}
               </a>
             ) : (
-              <a onClick={() => setOpen(false)} href={loginLink(ROLES.USER, '/member/dashboard')} className="flex items-center rounded-lg px-4 py-3 font-medium bg-[#0b469e]/10 text-[#0b469e] sm:col-span-2">
-                <img src={loginIcon} alt="" className="mr-2 h-4 w-4 object-contain brightness-0 filter" />
-                Login
-              </a>
+              <>
+                <a onClick={() => setOpen(false)} href="/login" className="flex items-center rounded-lg bg-[#0b469e]/10 px-4 py-3 font-medium text-[#0b469e] sm:col-span-2">
+                  <img src={loginIcon} alt="" className="mr-2 h-4 w-4 object-contain brightness-0 filter" />
+                  Login
+                </a>
+                <a onClick={() => setOpen(false)} href="/register" className="flex items-center justify-center rounded-lg border border-[#0b469e] px-4 py-3 font-medium text-[#0b469e] sm:col-span-2">
+                  Register
+                </a>
+              </>
             )}
             {navItems.map(([icon, label, href, colors, iconClass = '']) => <a onClick={() => setOpen(false)} key={label} href={href} className={`flex items-center rounded-lg px-4 py-3 font-medium ${colors}`}><img src={icon} alt="" className={`mr-2 h-4 w-4 object-contain ${iconClass}`} />{label}</a>)}
           </div>
@@ -166,7 +190,7 @@ function MobileGloaroNetworkMenu({ onNavigate }) {
             </div>
           ))}
         </div>
-        <a onClick={onNavigate} href={loginLink('membership', '/membership-agreement')} className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-[#0b469e] px-4 py-3 text-xs font-extrabold text-white shadow-lg shadow-blue-950/20">Join Membership <span className="text-base leading-none">→</span></a>
+        <a onClick={onNavigate} href="#membership" className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-[#0b469e] px-4 py-3 text-xs font-extrabold text-white shadow-lg shadow-blue-950/20">Explore Membership <span className="text-base leading-none">{'>'}</span></a>
       </aside>
     </div>
   )
@@ -209,7 +233,7 @@ function GloaroNetworkMenu({ onClose }) {
               </div>
             ))}
           </div>
-          <a href={loginLink('membership', '/membership-agreement')} className="mt-auto inline-flex items-center justify-center gap-2 rounded-lg bg-[#0b469e] px-4 py-3 text-xs font-extrabold text-white shadow-lg shadow-blue-950/20">Join Membership <span className="text-base leading-none">→</span></a>
+          <a href="#membership" className="mt-auto inline-flex items-center justify-center gap-2 rounded-lg bg-[#0b469e] px-4 py-3 text-xs font-extrabold text-white shadow-lg shadow-blue-950/20">Explore Membership <span className="text-base leading-none">{'>'}</span></a>
         </aside>
       </div>
     </div>

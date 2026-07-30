@@ -12,10 +12,6 @@ export default function RoleRedirect() {
   if (!user) return <Navigate to="/" replace />
   const account = getAccountClassification(user)
 
-  if (account.isMemberApplicant && user.status === 'pending_approval' && user.role === ROLES.CUSTOMER) {
-    return <Navigate to="/membership-agreement" replace />
-  }
-
   if (account.isVendorApplicant) {
     return <Navigate to="/vendor/onboarding" replace />
   }

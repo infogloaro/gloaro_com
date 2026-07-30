@@ -1,6 +1,14 @@
 import api from './axios'
 
 export const customerApi = {
+  dashboard: () => api.get('/customers/dashboard'),
+  profile: () => api.get('/customers/profile'),
+  updateProfile: (payload) => api.patch('/customers/profile', payload),
+  addresses: () => api.get('/customers/addresses'),
+  createAddress: (payload) => api.post('/customers/addresses', payload),
+  updateAddress: (id, payload) => api.patch(`/customers/addresses/${id}`, payload),
+  deleteAddress: (id) => api.delete(`/customers/addresses/${id}`),
+  setDefaultAddress: (id) => api.patch(`/customers/addresses/${id}/default`),
   vendors: (params) => api.get('/vendors', { params }),
   vendor: (id) => api.get(`/vendors/${id}`),
   vendorBySlug: (slug) => api.get(`/vendors/slug/${slug}`),
@@ -25,7 +33,7 @@ export const customerApi = {
   events: (params) => api.get('/events', { params }),
   registerEvent: (id, data) => api.post(`/events/${id}/register`, data),
   myEvents: (params) => api.get('/customers/events', { params }),
-  training: () => api.get('/customers/training'),
+  training: () => api.get('/customers/training', { silent: true }),
   completeTrainingAssignment: (courseId, assignmentIndex) => api.patch(`/customers/training/${courseId}/assignments/${assignmentIndex}/complete`),
   reviews: (vendorId, params) => api.get(`/reviews/vendor/${vendorId}`, { params }),
   createReview: (data) => api.post('/reviews', data),

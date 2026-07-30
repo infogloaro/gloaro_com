@@ -179,11 +179,9 @@ export const memberVendorNav = [
 ]
 
 export const applicantNav = [
-  ['Dashboard', '/member/membership-application-status', LayoutDashboard],
-  ['Membership Application Status', '/member/membership-application-status', ClipboardCheck],
   ['Profile', '/member/profile', Users],
+  ['Membership Application Status', '/member/membership-application-status', ClipboardCheck],
   ['Settings', '/member/settings', Settings],
-  ['Logout', '__logout__', LogOut],
 ]
 
 export const vendorApplicantNav = [
@@ -219,6 +217,13 @@ export const customerNav = [
   ['Notifications', '/customer/notifications', Bell],
   ['Profile', '/customer/profile', Users],
   ['Support', '/customer/support', HelpCircle],
+]
+
+export const customerFoundationNav = [
+  ['Dashboard', '/customer/dashboard', LayoutDashboard],
+  ['Profile', '/customer/profile', User],
+  ['Addresses', '/customer/addresses', MapPinned],
+  ['Logout', '__logout__', LogOut],
 ]
 
 export const membershipNav = [
@@ -464,7 +469,7 @@ export function getSidebarNav(role) {
       } else if (normalizedRole === ROLES.EXECUTIVE_DIRECTOR) {
         children = children.filter(([label]) => label !== 'Vendor Applications');
       } else {
-        children = children.filter(([label]) => !['Vendor Applications', 'Marketplace Approval'].includes(label));
+        children = children.filter(([label]) => !['Vendor Applications', 'Marketplace Approval', 'Vendor Category Requests'].includes(label));
       }
     }
     return {

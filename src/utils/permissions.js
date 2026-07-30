@@ -1,4 +1,5 @@
 import { ROLES } from '../constants/roleConfig.js'
+import { isAdminRole } from '../constants/adminRoles.js'
 import { getEffectiveRegistrationType, resolveOnboardingType } from './onboarding'
 const OPERATION_TO_PERMISSION = {
   view: 'canView',
@@ -374,31 +375,47 @@ export function getExplicitRegistrationType(user = null) {
     resolveOnboardingType(user?.onboardingType) ||
     resolveOnboardingType(user?.meta?.onboarding?.registrationType) ||
     resolveOnboardingType(user?.meta?.onboarding?.onboardingType) ||
-    (normalizeRole(user?.role) === ROLES.VENDOR ? ROLES.VENDOR : ROLES.MEMBER)
+    (normalizeRole(user?.role) === ROLES.VENDOR ? 'vendor' : 'member')
   )
 }
 
 export function getAccountClassification(user = null) {
+  const isCustomerPortal = Boolean(user?.meta?.customerPortal?.isolated)
   const registrationType = getExplicitRegistrationType(user)
   const vendorProfileStatus = String(user?.vendorProfile?.status || '').toLowerCase()
-  const onboardingStatus = String(user?.onboardingStatus || user?.status || '').toLowerCase()
+  const onboardingStatus = String(user?.onboardingStatus || '').toLowerCase()
   const vendorApproved = vendorProfileStatus === 'approved'
+  const isMemberApproved = onboardingStatus === 'approved'
+  const isAdminOrLeadership = isAdminRole(user?.role)
 
   return {
     registrationType,
     vendorApproved,
     onboardingStatus,
-    isOnlineVendor: registrationType === ROLES.VENDOR && vendorApproved,
-    isVendorApplicant: registrationType === ROLES.VENDOR && !vendorApproved,
-    isMemberVendor: registrationType === ROLES.MEMBER && vendorApproved,
-    isMemberOnly: registrationType === ROLES.MEMBER && !vendorApproved && onboardingStatus === 'approved',
-    isMemberApplicant: registrationType === ROLES.MEMBER && !vendorApproved && onboardingStatus !== 'approved',
+    isCustomerPortal,
+    isOnlineVendor: !isCustomerPortal && registrationType === 'vendor' && vendorApproved,
+    isVendorApplicant: !isCustomerPortal && registrationType === 'vendor' && !vendorApproved,
+    isMemberVendor: !isCustomerPortal && registrationType === 'member' && vendorApproved,
+    isMemberOnly: !isCustomerPortal && (isAdminOrLeadership || (registrationType === 'member' && !vendorApproved && isMemberApproved)),
+    isMemberApplicant: !isCustomerPortal && !isAdminOrLeadership && registrationType === 'member' && !vendorApproved && !isMemberApproved,
   }
 }
 
 export function getDashboardRoute(role, user = null) {
   const cleanRole = normalizeRole(role)
   const account = getAccountClassification(user)
+  if (account.isCustomerPortal) return '/customer/dashboard'
+
+  const adminRoles = [
+    ROLES.SUPERADMIN, ROLES.ADMIN, ROLES.FRANCHISE_ADMIN, ROLES.ECOMMERCE_ADMIN, ROLES.MARKETPLACE_ADMIN,
+    ROLES.DIGITAL_MARKETING_ADMIN, ROLES.TRAINING_ADMIN, ROLES.FINANCE_ADMIN,
+    ROLES.OPERATION_VICE_PRESIDENT,
+    ROLES.MEMBERSHIP_VERIFICATION_ADMIN, ROLES.CUSTOM_ADMIN
+  ]
+  if (adminRoles.includes(cleanRole)) {
+    return buildAdminRoute(cleanRole, '/dashboard')
+  }
+
   if (cleanRole === ROLES.REGION_DIRECTOR) return '/region-director/dashboard'
   if (cleanRole === ROLES.STATE_DIRECTOR) return '/state-director/dashboard'
   if (cleanRole === ROLES.DISTRICT_DIRECTOR) return '/district-director/dashboard'
@@ -412,17 +429,11 @@ export function getDashboardRoute(role, user = null) {
   if (account.isVendorApplicant) return '/vendor/onboarding-status'
   if (account.isMemberVendor || account.isMemberOnly) return '/member/dashboard'
   if (account.isMemberApplicant || ([ROLES.CUSTOMER, ROLES.USER].includes(cleanRole) && account.onboardingStatus !== 'approved')) {
-    return '/member/membership-application-status'
-  }
-  
-  const adminRoles = [
-    ROLES.SUPERADMIN, ROLES.ADMIN, ROLES.FRANCHISE_ADMIN, ROLES.ECOMMERCE_ADMIN, ROLES.MARKETPLACE_ADMIN,
-    ROLES.DIGITAL_MARKETING_ADMIN, ROLES.TRAINING_ADMIN, ROLES.FINANCE_ADMIN,
-    ROLES.OPERATION_VICE_PRESIDENT,
-    ROLES.MEMBERSHIP_VERIFICATION_ADMIN, ROLES.CUSTOM_ADMIN
-  ]
-  if (adminRoles.includes(cleanRole)) {
-    return buildAdminRoute(cleanRole, '/dashboard')
+    const status = String(account.onboardingStatus || '').toLowerCase()
+    if (['pending', 'rejected', 'changes_requested'].includes(status)) {
+      return '/member/membership-application-status'
+    }
+    return '/member/membership-agreement'
   }
 
   return '/member/dashboard'

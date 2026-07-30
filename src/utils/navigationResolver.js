@@ -1,10 +1,11 @@
-import { getApplicantSidebarNav, getMemberSidebarNav, getMemberVendorSidebarNav, getRoleBasedSidebarNav, getVendorApplicantSidebarNav, vendorNav, vendorOnboardingNav } from '../constants/navigation'
+import { customerFoundationNav, getApplicantSidebarNav, getMemberSidebarNav, getMemberVendorSidebarNav, getRoleBasedSidebarNav, getVendorApplicantSidebarNav, vendorNav, vendorOnboardingNav } from '../constants/navigation'
 import { isAdminRole } from '../constants/adminRoles'
 import { ROLES } from '../constants/roleConfig.js'
 import { getAccountClassification, normalizeRole } from './permissions'
 
 export const NAVIGATION_MODES = Object.freeze({
   ROLE_BASED: 'ROLE_BASED',
+  CUSTOMER_PORTAL: 'CUSTOMER_PORTAL',
   MEMBER: 'MEMBER',
   MEMBER_VENDOR: 'MEMBER_VENDOR',
   ONLINE_VENDOR_APPLICANT: 'ONLINE_VENDOR_APPLICANT',
@@ -58,6 +59,14 @@ export function resolveNavigation({ user, marketplaceAccess, navItems = [], onbo
       mode: NAVIGATION_MODES.ROLE_BASED,
       items: getRoleBasedSidebarNav(user.role),
       title: 'Dashboard',
+    }
+  }
+
+  if (account.isCustomerPortal) {
+    return {
+      mode: NAVIGATION_MODES.CUSTOMER_PORTAL,
+      items: customerFoundationNav,
+      title: 'Customer Dashboard',
     }
   }
 

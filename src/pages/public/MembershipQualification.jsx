@@ -23,7 +23,7 @@ const companyTypes = ['Private Limited', 'Public Limited', 'LLP', 'Partnership',
 
 export default function MembershipQualification() {
   const navigate = useNavigate()
-  const { user } = useAuth()
+  const { user, refreshUser } = useAuth()
   const onboardingType = getEffectiveRegistrationType(user, storage.getOnboardingContext()?.registrationType)
   const vendorRoutes = getVendorOnboardingRoutes(true)
   const draft = getMembershipDraft()
@@ -186,6 +186,7 @@ export default function MembershipQualification() {
       const response = await membershipApplicationApi.submit(formData)
       const application = response.data?.data
       clearMembershipDraft()
+      await refreshUser?.()
       toast.success('Membership application submitted successfully!')
       navigate('/member/membership-application-status', { state: { application } })
     } catch (error) {
