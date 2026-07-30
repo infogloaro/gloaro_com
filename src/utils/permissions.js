@@ -144,6 +144,7 @@ const ADMIN_ROUTE_RULES = [
   { path: '/events', module: 'events', section: 'events' },
   { path: '/training', module: 'training', section: 'training' },
   { path: '/testimonials', module: 'reports', section: 'testimonials' },
+  { path: '/referral-management', module: 'referrals', section: 'referrals' },
   { path: '/referrals', module: 'referrals', section: 'referrals' },
   { path: '/referrals-table', module: 'referrals', section: 'referrals' },
   { path: '/payments', module: 'reports', section: 'payments' },
