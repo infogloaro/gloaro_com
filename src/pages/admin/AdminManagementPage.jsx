@@ -36,96 +36,7 @@ const roleLabel = (role = '') => {
   return originalRoleLabel(role)
 }
 
-const moduleOptions = ['dashboard', 'members', 'meetings', 'attendance', 'vendors', 'marketplace', 'reports', 'visitors', 'business_wall', 'training', 'events', 'referrals', 'settings']
-const permissionKeys = ['canView', 'canCreate', 'canEdit', 'canDelete', 'canApprove', 'canExport', 'canPrint']
-const workflowOptions = ['membership', ROLES.VENDOR, 'business', 'meeting', 'training', 'marketplace', 'referral']
-const workflowActionKeys = ['create', 'review', 'approve', 'reject', 'transfer']
-const widgetOptions = ['members', 'meetings', 'visitors', 'attendance', 'business', 'referrals', 'marketplace', 'vendors', 'tasks', 'approvals', 'notifications']
-
-const allModules = moduleOptions
-const allWorkflows = workflowOptions
-const allWidgets = widgetOptions
-
-const alwaysExtraWidgets = ['tasks', 'approvals', 'notifications']
-const adminPermissionKeys = permissionKeys
-const managerPermissionKeys = ['canView', 'canCreate', 'canEdit', 'canApprove', 'canExport', 'canPrint']
-const operatorPermissionKeys = ['canView', 'canCreate', 'canEdit', 'canExport', 'canPrint']
-const reviewerPermissionKeys = ['canView', 'canApprove', 'canExport', 'canPrint']
-const readOnlyPermissionKeys = ['canView', 'canExport', 'canPrint']
-const approvalWorkflowActions = ['review', 'approve', 'reject', 'transfer']
-const reviewWorkflowActions = ['review', 'approve', 'reject']
-
-const createRoleConfig = ({
-  modules,
-  workflows,
-  widgets,
-  sidebar,
-  permissionFields = managerPermissionKeys,
-  workflowActions = approvalWorkflowActions,
-}) => ({ modules, workflows, widgets, sidebar, permissionFields, workflowActions })
-
-const ROLE_CONFIGS = {
-  [ROLES.SUPERADMIN]: createRoleConfig({ modules: allModules, workflows: allWorkflows, widgets: allWidgets, sidebar: allModules, permissionFields: adminPermissionKeys, workflowActions: workflowActionKeys }),
-  [ROLES.ADMIN]: createRoleConfig({ modules: allModules, workflows: allWorkflows, widgets: allWidgets, sidebar: allModules, permissionFields: adminPermissionKeys, workflowActions: workflowActionKeys }),
-  [ROLES.FRANCHISE_ADMIN]: createRoleConfig({ modules: allModules, workflows: allWorkflows, widgets: allWidgets, sidebar: allModules, permissionFields: adminPermissionKeys, workflowActions: workflowActionKeys }),
-  [ROLES.ECOMMERCE_ADMIN]: createRoleConfig({ modules: ['dashboard', 'vendors', 'marketplace', 'reports', 'settings'], workflows: [ROLES.VENDOR, 'marketplace'], widgets: ['marketplace', 'vendors', ...alwaysExtraWidgets], sidebar: ['dashboard', 'vendors', 'marketplace', 'reports', 'settings'] }),
-  [ROLES.MARKETPLACE_ADMIN]: createRoleConfig({ modules: ['dashboard', 'vendors', 'marketplace', 'reports', 'settings'], workflows: [ROLES.VENDOR, 'marketplace'], widgets: ['marketplace', 'vendors', ...alwaysExtraWidgets], sidebar: ['dashboard', 'vendors', 'marketplace', 'reports', 'settings'] }),
-  [ROLES.DIGITAL_MARKETING_ADMIN]: createRoleConfig({ modules: ['dashboard', 'members', 'visitors', 'business_wall', 'events', 'reports', 'settings'], workflows: ['business'], widgets: ['members', 'visitors', 'business', ...alwaysExtraWidgets], sidebar: ['dashboard', 'members', 'visitors', 'business_wall', 'events', 'reports', 'settings'], permissionFields: operatorPermissionKeys, workflowActions: ['create', 'review', 'approve', 'reject'] }),
-  [ROLES.TRAINING_ADMIN]: createRoleConfig({ modules: ['dashboard', 'members', 'training', 'events', 'attendance', 'reports', 'settings'], workflows: ['training'], widgets: ['members', 'attendance', ...alwaysExtraWidgets], sidebar: ['dashboard', 'members', 'training', 'events', 'attendance', 'reports', 'settings'], permissionFields: operatorPermissionKeys, workflowActions: ['create', 'review', 'approve', 'reject'] }),
-  [ROLES.FINANCE_ADMIN]: createRoleConfig({ modules: ['dashboard', 'members', 'reports', 'meetings', 'settings'], workflows: ['meeting'], widgets: ['members', 'meetings', ...alwaysExtraWidgets], sidebar: ['dashboard', 'members', 'reports', 'meetings', 'settings'], permissionFields: ['canView', 'canApprove', 'canExport', 'canPrint'], workflowActions: reviewWorkflowActions }),
-  [ROLES.STATE_DIRECTOR]: createRoleConfig({ modules: ['dashboard', 'members', 'meetings', 'attendance', 'visitors', 'events', 'reports', 'settings'], workflows: ['membership', 'meeting'], widgets: ['members', 'meetings', 'attendance', 'visitors', ...alwaysExtraWidgets], sidebar: ['dashboard', 'members', 'meetings', 'attendance', 'visitors', 'events', 'reports', 'settings'] }),
-  [ROLES.DISTRICT_DIRECTOR]: createRoleConfig({ modules: ['dashboard', 'members', 'meetings', 'attendance', 'visitors', 'events', 'reports', 'settings'], workflows: ['membership', 'meeting'], widgets: ['members', 'meetings', 'attendance', 'visitors', ...alwaysExtraWidgets], sidebar: ['dashboard', 'members', 'meetings', 'attendance', 'visitors', 'events', 'reports', 'settings'] }),
-  [ROLES.EXECUTIVE_DIRECTOR]: createRoleConfig({ modules: ['dashboard', 'members', 'meetings', 'attendance', 'visitors', 'reports', 'marketplace', 'vendors'], workflows: ['membership', 'meeting'], widgets: ['members', 'meetings', 'attendance', 'visitors', ...alwaysExtraWidgets], sidebar: ['dashboard', 'members', 'meetings', 'attendance', 'visitors', 'reports', 'marketplace', 'vendors'] }),
-  [ROLES.LAUNCH_DIRECTOR]: createRoleConfig({ modules: ['dashboard', 'members', 'meetings', 'attendance'], workflows: ['membership', 'meeting'], widgets: ['members', 'meetings', 'attendance', 'visitors'], sidebar: ['dashboard', 'members', 'meetings', 'visitors'], permissionFields: operatorPermissionKeys, workflowActions: reviewWorkflowActions }),
-  [ROLES.DIRECT_CONSULTANT]: createRoleConfig({ modules: ['dashboard', 'members', 'meetings'], workflows: ['membership', 'meeting'], widgets: ['members', 'meetings', 'attendance'], sidebar: ['dashboard', 'members', 'meetings'], permissionFields: readOnlyPermissionKeys, workflowActions: ['create', 'review'] }),
-  [ROLES.OPERATION_VICE_PRESIDENT]: createRoleConfig({ modules: ['dashboard', 'members', 'meetings', 'attendance', 'visitors', 'vendors', 'reports'], workflows: ['membership', 'meeting', ROLES.VENDOR], widgets: ['members', 'meetings', 'attendance', 'visitors', 'vendors', ...alwaysExtraWidgets], sidebar: ['dashboard', 'members', 'meetings', 'attendance', 'visitors', 'vendors', 'reports'] }),
-  [ROLES.MEMBERSHIP_VERIFICATION_ADMIN]: createRoleConfig({ modules: ['dashboard', 'members', 'meetings', 'attendance'], workflows: ['membership'], widgets: ['members', 'meetings', 'attendance', 'visitors'], sidebar: ['dashboard', 'members', 'meetings', 'visitors'], permissionFields: reviewerPermissionKeys, workflowActions: reviewWorkflowActions }),
-  [ROLES.CUSTOM_ADMIN]: createRoleConfig({ modules: allModules, workflows: allWorkflows, widgets: allWidgets, sidebar: allModules, permissionFields: adminPermissionKeys, workflowActions: workflowActionKeys }),
-  [ROLES.CHAPTER_PRESIDENT]: createRoleConfig({ modules: ['dashboard', 'members', 'meetings', 'attendance', 'visitors', 'reports'], workflows: ['membership', 'meeting'], widgets: ['members', 'meetings', 'attendance', 'visitors', ...alwaysExtraWidgets], sidebar: ['dashboard', 'members', 'meetings', 'attendance', 'visitors', 'reports'] }),
-  [ROLES.VICE_PRESIDENT]: createRoleConfig({ modules: ['dashboard', 'members', 'meetings', 'attendance', 'visitors', 'reports'], workflows: ['membership', 'meeting'], widgets: ['members', 'meetings', 'attendance', 'visitors', ...alwaysExtraWidgets], sidebar: ['dashboard', 'members', 'meetings', 'attendance', 'visitors', 'reports'] }),
-  [ROLES.SECRETARY]: createRoleConfig({ modules: ['dashboard', 'members', 'meetings', 'attendance', 'visitors', 'reports'], workflows: ['membership', 'meeting'], widgets: ['members', 'meetings', 'attendance', 'visitors', ...alwaysExtraWidgets], sidebar: ['dashboard', 'members', 'meetings', 'attendance', 'visitors', 'reports'] }),
-  [ROLES.CUSTOMER]: createRoleConfig({ modules: ['dashboard', 'members'], workflows: [], widgets: ['members'], sidebar: ['dashboard', 'members'], permissionFields: readOnlyPermissionKeys, workflowActions: [] }),
-}
-
-function getRoleConfig(role) {
-  return ROLE_CONFIGS[role] || ROLE_CONFIGS.admin
-}
-
-function applyRoleConfig(role, current) {
-  const config = getRoleConfig(role)
-  const filterModules = (arr) => (arr || []).filter((m) => config.modules.includes(m))
-  const filterWidgets = (arr) => (arr || []).filter((w) => config.widgets.includes(w))
-  const filterSidebar = (arr) => (arr || []).filter((s) => config.sidebar.includes(s))
-  return {
-    modules: filterModules(current.modules),
-    permissions: filterPermissions(current.permissions, config),
-    workflowPermissions: filterWorkflowPermissions(current.workflowPermissions, config),
-    dashboardWidgets: filterWidgets(current.dashboardWidgets),
-    sidebar: filterSidebar(current.sidebar),
-  }
-}
-
-function filterPermissions(permissions = {}, config) {
-  return Object.fromEntries(
-    Object.entries(permissions || {})
-      .filter(([module]) => config.modules.includes(module))
-      .map(([module, values]) => [
-        module,
-        Object.fromEntries(Object.entries(values || {}).filter(([permission]) => config.permissionFields.includes(permission))),
-      ])
-  )
-}
-
-function filterWorkflowPermissions(workflowPermissions = {}, config) {
-  return Object.fromEntries(
-    Object.entries(workflowPermissions || {})
-      .filter(([workflow]) => config.workflows.includes(workflow))
-      .map(([workflow, values]) => [
-        workflow,
-        Object.fromEntries(Object.entries(values || {}).filter(([permission]) => config.workflowActions.includes(permission))),
-      ])
-  )
-}
+const emptyReferralValidation = { status: 'idle', code: '', referrer: null, message: '' }
 
 const emptyForm = {
   name: '',
@@ -135,12 +46,9 @@ const emptyForm = {
   avatar: null,
   role: ROLES.REGION_DIRECTOR,
   customRoleName: '',
+  referralCode: '',
+  referralValidation: emptyReferralValidation,
   organization: { region: '', state: '', district: '', chapter: '' },
-  modules: ['dashboard', 'members', 'meetings', 'visitors'],
-  permissions: {},
-  workflowPermissions: {},
-  dashboardWidgets: ['members', 'meetings', 'attendance', 'visitors'],
-  sidebar: ['dashboard', 'members', 'meetings', 'visitors'],
   forcePasswordChange: true,
   sessionTimeoutMinutes: 60,
 }
@@ -236,14 +144,10 @@ export default function AdminManagementPage({ role: overrideRole }) {
       email: admin.email || '',
       phone: admin.phone || '',
       password: '',
+      referralCode: '',
       role: admin.role || ROLES.ADMIN,
       ...profile,
       organization: profile.organization || emptyForm.organization,
-      modules: profile.modules || [],
-      permissions: profile.permissions || {},
-      workflowPermissions: profile.workflowPermissions || {},
-      dashboardWidgets: profile.dashboardWidgets || [],
-      sidebar: profile.sidebar || [],
       sessionTimeoutMinutes: profile.security?.sessionTimeoutMinutes || 60,
       forcePasswordChange: profile.security?.forcePasswordChange || false,
     })
@@ -269,6 +173,13 @@ const saveAdmin = async () => {
         return
     }
 
+    const typedReferralCode = form.referralCode?.trim().toUpperCase() || ''
+    const validatedReferralCode = form.referralValidation?.status === 'valid' ? form.referralValidation?.code : ''
+    if (!editing && form.role === ROLES.CUSTOMER && typedReferralCode && typedReferralCode !== validatedReferralCode) {
+        toast.error("Please validate the referral code before creating the member")
+        return
+    }
+
     // Jurisdiction location validation to ensure "Location Master first -> Official account second"
     if (form.role === ROLES.REGION_DIRECTOR && !form.organization?.region) {
         toast.error("Please create the Region in the Organization Master before creating a Region Director account.")
@@ -289,6 +200,13 @@ const saveAdmin = async () => {
     setSaving(true)
     try {
         const payloadData = buildPayload(form, Boolean(editing))
+        if (import.meta.env.DEV && form.role === ROLES.CUSTOMER) {
+            if (payloadData instanceof FormData) {
+                console.info('[AdminManagementPage] create member FormData', Array.from(payloadData.entries()).map(([key, value]) => [key, value instanceof File ? value.name : value]))
+            } else {
+                console.info('[AdminManagementPage] create member payload', payloadData)
+            }
+        }
 
         if(editing)
             await adminApi.updateAdminAccount(editing._id,payloadData)
@@ -373,7 +291,7 @@ const saveAdmin = async () => {
       <header className="rounded-2xl border border-white/60 bg-white/85 p-6 shadow-sm backdrop-blur">
         <p className="inline-flex items-center gap-2 text-xs font-extrabold uppercase tracking-[0.18em] text-[#0d4697]"><UserCog className="h-4 w-4" />{childRole ? `${roleLabel(childRole)} Management` : 'Admin Management'}</p>
         <h1 className="mt-3 text-3xl font-black text-slate-950">{childRole ? `Manage ${roleLabel(childRole)}s` : 'Admin Management & Access Control'}</h1>
-        <p className="mt-2 max-w-4xl text-sm font-semibold leading-6 text-slate-500">{childRole ? `Manage and assign organization jurisdictions for your subordinate ${roleLabel(childRole)}s.` : 'Create admin accounts, assign organization scope, configure modules, permissions, workflows, widgets, sidebar, security, and support impersonation.'}</p>
+        <p className="mt-2 max-w-4xl text-sm font-semibold leading-6 text-slate-500">{childRole ? `Manage and assign organization jurisdictions for your subordinate ${roleLabel(childRole)}s.` : 'Create admin accounts, assign organization scope, security, and support impersonation.'}</p>
       </header>
 
       <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
@@ -487,41 +405,69 @@ const saveAdmin = async () => {
 
 function AdminWizard({ form, setForm, editing, onSave, user, saving }) {
   const [showPassword, setShowPassword] = useState(false)
+  const [validatingReferral, setValidatingReferral] = useState(false)
   const update = (patch) => setForm((current) => ({ ...current, ...patch }))
   const updateOrg = (key, value) => setForm((current) => ({ ...current, organization: { ...current.organization, [key]: value } }))
-  const toggleArray = (key, value) => setForm((current) => ({ ...current, [key]: toggleValue(current[key] || [], value) }))
-  const togglePermission = (module, permission) => setForm((current) => ({
-    ...current,
-    permissions: {
-      ...current.permissions,
-      [module]: { ...(current.permissions[module] || {}), [permission]: !current.permissions[module]?.[permission] },
-    },
-  }))
-  const toggleWorkflow = (workflow, permission) => setForm((current) => ({
-    ...current,
-    workflowPermissions: {
-      ...current.workflowPermissions,
-      [workflow]: { ...(current.workflowPermissions[workflow] || {}), [permission]: !current.workflowPermissions[workflow]?.[permission] },
-    },
-  }))
-
-  const roleConfig = useMemo(() => getRoleConfig(form.role), [form.role])
 
   useEffect(() => {
     setShowPassword(false)
   }, [editing])
 
   const handleRoleChange = useCallback((role) => {
-    setForm((current) => ({ ...current, role, ...applyRoleConfig(role, current) }))
+    setForm((current) => ({ ...current, role, referralCode: role === ROLES.CUSTOMER ? current.referralCode : '', referralValidation: emptyReferralValidation }))
   }, [setForm])
 
-  const allowedModules = roleConfig.modules
-  const allowedWorkflows = roleConfig.workflows
-  const allowedWidgets = roleConfig.widgets
-  const allowedSidebar = roleConfig.sidebar
-  const allowedPermissionKeys = roleConfig.permissionFields
-  const allowedWorkflowActions = roleConfig.workflowActions
-  const visibleModules = form.modules.filter((m) => allowedModules.includes(m))
+  const handleReferralCodeChange = (value) => {
+    setForm((current) => ({
+      ...current,
+      referralCode: value.toUpperCase(),
+      referralValidation: emptyReferralValidation,
+    }))
+  }
+
+  const validateReferralCode = async () => {
+    const code = form.referralCode?.trim().toUpperCase()
+    if (!code) {
+      setForm((current) => ({ ...current, referralValidation: emptyReferralValidation }))
+      return
+    }
+
+    setValidatingReferral(true)
+    try {
+      const response = await api.get(`/auth/validate-referral/${encodeURIComponent(code)}`, { params: { scope: 'member' } })
+      const data = response.data?.data || {}
+      const referrer = response.data?.referrer || {}
+      setForm((current) => ({
+        ...current,
+        referralCode: code,
+        referralValidation: {
+          status: 'valid',
+          code,
+          referrer: {
+            id: referrer.id,
+            name: data.referredBy || referrer.name,
+          },
+          message: 'Valid referral code',
+        },
+      }))
+    } catch (error) {
+      setForm((current) => ({
+        ...current,
+        referralValidation: {
+          status: 'invalid',
+          code,
+          referrer: null,
+          message: error.response?.data?.message || 'Invalid referral code',
+        },
+      }))
+    } finally {
+      setValidatingReferral(false)
+    }
+  }
+
+  const referralValidation = form.referralValidation || emptyReferralValidation
+  const referralCode = form.referralCode?.trim() || ''
+  const isReferralValidated = referralValidation.status === 'valid' && referralValidation.code === referralCode.toUpperCase()
 
   return (
     <div className="relative space-y-6">
@@ -551,6 +497,38 @@ function AdminWizard({ form, setForm, editing, onSave, user, saving }) {
               isPasswordVisible={showPassword}
               onTogglePassword={() => setShowPassword((current) => !current)}
             />
+          )}
+          {!editing && form.role === ROLES.CUSTOMER && (
+            <div className="block md:col-span-2">
+              <span className="text-xs font-extrabold uppercase text-slate-500">Referral Code (Optional)</span>
+              <div className="mt-1 flex gap-2">
+                <input
+                  type="text"
+                  value={form.referralCode || ''}
+                  onChange={(event) => handleReferralCodeChange(event.target.value)}
+                  className="h-11 min-w-0 flex-1 rounded-md border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-900 outline-none placeholder:text-slate-400 focus:border-[#0d4697]"
+                  placeholder="Enter referral code"
+                />
+                <button
+                  type="button"
+                  onClick={validateReferralCode}
+                  disabled={!referralCode || validatingReferral || isReferralValidated}
+                  className="h-11 shrink-0 rounded-md bg-[#0d4697] px-4 text-sm font-extrabold text-white transition disabled:cursor-not-allowed disabled:bg-[#8aa7d4]"
+                >
+                  {validatingReferral ? 'Validating...' : isReferralValidated ? 'Validated' : 'Validate'}
+                </button>
+              </div>
+              {referralValidation.status === 'valid' && (
+                <div className="mt-2 rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-bold text-emerald-700">
+                  <p>✓ Valid referral code</p>
+                  <p>Referred by: {referralValidation.referrer?.name || 'Member'}</p>
+                  <p>Referral Code: {referralValidation.code}</p>
+                </div>
+              )}
+              {referralValidation.status === 'invalid' && (
+                <p className="mt-2 text-sm font-bold text-red-600">✕ Invalid referral code</p>
+              )}
+            </div>
           )}
           <label className="block">
             <span className="text-xs font-extrabold uppercase text-slate-500">Profile Photo</span>
@@ -585,40 +563,6 @@ function AdminWizard({ form, setForm, editing, onSave, user, saving }) {
 
       <WizardSection number="3" title="Organization Assignment">
         <OrganizationAssignmentSection organization={form.organization} onChangeOrg={updateOrg} user={user} targetRole={form.role} />
-      </WizardSection>
-
-      <WizardSection number="4" title="Module Access">
-        <CheckGrid values={allowedModules} selected={form.modules} onToggle={(value) => toggleArray('modules', value)} />
-      </WizardSection>
-
-      <WizardSection number="5" title="Permission Matrix">
-        <div className="space-y-3">
-          {visibleModules.map((module) => (
-            <div key={module} className="rounded-xl bg-slate-50 p-3">
-              <p className="mb-2 text-sm font-extrabold text-slate-800">{roleLabel(module)}</p>
-              <CheckGrid values={allowedPermissionKeys} selected={allowedPermissionKeys.filter((key) => form.permissions[module]?.[key])} onToggle={(permission) => togglePermission(module, permission)} />
-            </div>
-          ))}
-        </div>
-      </WizardSection>
-
-      <WizardSection number="6" title="Workflow Permissions">
-        <div className="space-y-3">
-          {allowedWorkflows.map((workflow) => (
-            <div key={workflow} className="rounded-xl bg-slate-50 p-3">
-              <p className="mb-2 text-sm font-extrabold text-slate-800">{roleLabel(workflow)}</p>
-              <CheckGrid values={allowedWorkflowActions} selected={allowedWorkflowActions.filter((key) => form.workflowPermissions[workflow]?.[key])} onToggle={(permission) => toggleWorkflow(workflow, permission)} />
-            </div>
-          ))}
-        </div>
-      </WizardSection>
-
-      <WizardSection number="7" title="Dashboard Builder">
-        <CheckGrid values={allowedWidgets} selected={form.dashboardWidgets} onToggle={(value) => toggleArray('dashboardWidgets', value)} />
-      </WizardSection>
-
-      <WizardSection number="8" title="Sidebar Builder">
-        <CheckGrid values={allowedSidebar} selected={form.sidebar} onToggle={(value) => toggleArray('sidebar', value)} />
       </WizardSection>
 
       <div className="flex justify-end">
@@ -672,19 +616,6 @@ function Input({ label, value, onChange, type = 'text', disabled, showToggle = f
   )
 }
 
-function CheckGrid({ values, selected = [], onToggle }) {
-  return (
-    <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
-      {values.map((value) => (
-        <label key={value} className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-bold text-slate-700">
-          <input type="checkbox" checked={selected.includes(value)} onChange={() => onToggle(value)} className="accent-[#0d4697]" />
-          {roleLabel(value.replace(/^can/, ''))}
-        </label>
-      ))}
-    </div>
-  )
-}
-
 function AdminDetails({ admin, activity }) {
   const profile = admin.meta?.adminProfile || {}
   return (
@@ -693,11 +624,6 @@ function AdminDetails({ admin, activity }) {
         <h3 className="text-xl font-black text-slate-950">{admin.name}</h3>
         <p className="text-sm font-bold text-slate-500">{admin.email} • {roleLabel(admin.role)}</p>
         <p className="mt-2 text-sm font-semibold text-slate-600">Organization: {organizationLabel(profile.organization)}</p>
-      </div>
-      <div className="grid gap-3 md:grid-cols-3">
-        <Mini label="Modules" value={(profile.modules || []).length} />
-        <Mini label="Widgets" value={(profile.dashboardWidgets || []).length} />
-        <Mini label="Sidebar Items" value={(profile.sidebar || []).length} />
       </div>
       <section>
         <h4 className="mb-3 text-sm font-extrabold uppercase text-slate-500">Activity Timeline</h4>
@@ -710,12 +636,11 @@ function AdminDetails({ admin, activity }) {
   )
 }
 
-function Mini({ label, value }) {
-  return <div className="rounded-xl border border-slate-200 p-4"><p className="text-xs font-extrabold uppercase text-slate-400">{label}</p><p className="mt-1 text-2xl font-black text-slate-950">{value}</p></div>
-}
-
 function buildPayload(form, editing) {
-  const config = getRoleConfig(form.role)
+  const referralCode = form.referralCode?.trim().toUpperCase() || ''
+  const validatedReferralCode = form.referralValidation?.status === 'valid' && form.referralValidation?.code === referralCode
+    ? form.referralValidation.code
+    : ''
   const payload = {
     name: form.name,
     ...(editing ? {} : { email: form.email }),
@@ -723,12 +648,8 @@ function buildPayload(form, editing) {
     ...(!editing ? { password: form.password } : {}),
     role: form.role,
     customRoleName: form.customRoleName,
+    ...(!editing && form.role === ROLES.CUSTOMER && validatedReferralCode ? { referralCode: validatedReferralCode } : {}),
     organization: form.organization,
-    modules: (form.modules || []).filter((m) => config.modules.includes(m)),
-    permissions: filterPermissions(form.permissions, config),
-    workflowPermissions: filterWorkflowPermissions(form.workflowPermissions, config),
-    dashboardWidgets: (form.dashboardWidgets || []).filter((w) => config.widgets.includes(w)),
-    sidebar: (form.sidebar || []).filter((s) => config.sidebar.includes(s)),
     forcePasswordChange: form.forcePasswordChange,
     sessionTimeoutMinutes: form.sessionTimeoutMinutes,
   }
@@ -739,6 +660,10 @@ function buildPayload(form, editing) {
     if (value === undefined || value === null) return
     data.append(key, typeof value === 'object' ? JSON.stringify(value) : value)
   })
+  if (!editing && form.role === ROLES.CUSTOMER && validatedReferralCode) {
+    data.set('referralCode', validatedReferralCode)
+    data.set('referral_code', validatedReferralCode)
+  }
   data.append('avatar', form.avatar)
   return data
 }
@@ -751,10 +676,6 @@ function organizationLabel(organization = {}) {
     })
     .filter(Boolean)
     .join(' / ') || 'All Organization'
-}
-
-function toggleValue(values, value) {
-  return values.includes(value) ? values.filter((item) => item !== value) : [...values, value]
 }
 
 function SelectField({ label, value, onChange, placeholder, options = [], disabled, className = '', loading, error }) {

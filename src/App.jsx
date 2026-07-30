@@ -365,6 +365,10 @@ function App() {
               {/* Parameterized main dashboard sub-views */}
               <Route path="/member/dashboard" element={<MemberDashboard />} />
               <Route path="/member/dashboard/:tab" element={<MemberDashboard />} />
+              <Route path="/member/wall" element={<BusinessWall />} />
+              <Route path="/member/network" element={<CommunityPage scope="network" />} />
+              <Route path="/member/chat" element={<ChatSystem />} />
+              <Route path="/member/referrals" element={<ReferralsPipeline />} />
               <Route path="/member/training" element={<AssignedTrainingPage />} />
 
               {/* Protected Marketplace routes */}

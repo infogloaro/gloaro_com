@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useLocation } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import {
   AtSign,
+  CalendarDays,
   Filter,
   Heart,
   Image,
@@ -19,12 +21,23 @@ import { useAuth } from '../../../hooks/useAuth'
 import { formatDate } from '../../../utils/format'
 
 const postTypes = [
-  ['announcement', 'Announcement'],
   ['business_requirement', 'Requirement'],
   ['business_opportunity', 'Opportunity'],
+  ['business_promotion', 'Business Promotion'],
+  ['looking_for', 'Looking For'],
+  ['offer_deal', 'Offer / Deal'],
   ['achievement', 'Achievement'],
   ['success_story', 'Success Story'],
   ['event', 'Event'],
+  ['announcement', 'Announcement'],
+]
+
+const businessPostTypes = new Set(['business_promotion', 'looking_for', 'offer_deal'])
+
+const businessTargetOptions = [
+  ['business', 'Business'],
+  ['product', 'Product'],
+  ['service', 'Service'],
 ]
 
 const reactionTypes = [
@@ -91,16 +104,16 @@ const extractMentionIds = (text, members) => {
     .map((member) => member._id)
 }
 
-const getMentionSuggestions = (text, members) => {
+const appendMention = (text, member) => text.replace(/@([\w\s.-]*)$/, `@${member.name} `)
+
+const getActiveMentionQuery = (text) => {
   const match = text.match(/@([\w\s.-]*)$/)
-  if (!match) return []
-  const query = match[1].trim().toLowerCase()
-  return members
-    .filter((member) => member.name && (!query || member.name.toLowerCase().includes(query)))
-    .slice(0, 6)
+  return match ? match[1].trim() : null
 }
 
-const appendMention = (text, member) => text.replace(/@([\w\s.-]*)$/, `@${member.name} `)
+const formatMentionHierarchy = (member) => [member.chapterName, member.districtName, member.stateName, member.regionName].filter(Boolean).join(' • ')
+
+const mentionStillPresent = (content, member) => String(content || '').toLowerCase().includes(`@${String(member?.name || '').toLowerCase()}`)
 
 function StructuredContent({ post }) {
   const lines = String(post.content || '').split('\n').map((line) => line.trim()).filter(Boolean)
@@ -153,7 +166,7 @@ function CommunitySearch({ search, onSearch }) {
   )
 }
 
-function CommunityFilters({ scope, type, visibility, filters, locations, loadingLocations, onTypeChange, onVisibilityChange, onFilterChange }) {
+function CommunityFilters({ scope, type, visibility, dealStatus, filters, locations, loadingLocations, onTypeChange, onVisibilityChange, onDealStatusChange, onFilterChange }) {
   return (
     <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
       <div className="flex flex-wrap items-center gap-3">
@@ -165,6 +178,13 @@ function CommunityFilters({ scope, type, visibility, filters, locations, loading
           <option value="">All Posts</option>
           {postTypes.map(([key, label]) => <option key={key} value={key}>{label}</option>)}
         </select>
+        {type === 'offer_deal' && (
+          <select value={dealStatus} onChange={(event) => onDealStatusChange(event.target.value)} className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-extrabold text-slate-600 outline-none focus:border-[#0d4697]">
+            <option value="">All Deals</option>
+            <option value="active">Active Deals</option>
+            <option value="expired">Expired Deals</option>
+          </select>
+        )}
         {scope === 'network' && (
           <>
             <select value={visibility} onChange={(event) => onVisibilityChange(event.target.value)} className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-extrabold text-slate-600 outline-none focus:border-[#0d4697]">
@@ -212,19 +232,112 @@ function PostMedia({ media = [] }) {
   )
 }
 
-function PostComposer({ scope, members, onCreated }) {
+function BusinessPostInfo({ post }) {
+  if (!businessPostTypes.has(post.type)) return null
+
+  const business = post.businessProfile
+  const target = post.businessPost?.target
+  const targetLabel = businessTargetOptions.find(([key]) => key === target)?.[1]
+  const validUntil = post.offer?.validUntil ? formatDate(post.offer.validUntil) : ''
+  const expired = Boolean(post.offer?.isExpired)
+
+  return (
+    <div className="rounded-xl border border-blue-100 bg-blue-50/60 px-4 py-3">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="truncate text-sm font-black text-slate-900">{business?.businessName || (post.type === 'looking_for' ? 'Business Requirement' : 'Business Profile')}</p>
+          <p className="mt-0.5 text-xs font-bold text-slate-500">
+            {[business?.category?.name, targetLabel].filter(Boolean).join(' • ') || 'Gloaro Business Wall'}
+          </p>
+        </div>
+        {post.type === 'offer_deal' && (
+          <span className={`shrink-0 rounded-full border px-2.5 py-1 text-[10px] font-black uppercase ${expired ? 'border-red-100 bg-red-50 text-red-700' : 'border-emerald-100 bg-emerald-50 text-emerald-700'}`}>
+            {expired ? 'Expired' : 'Active'}{validUntil ? ` • Valid till ${validUntil}` : ''}
+          </span>
+        )}
+      </div>
+    </div>
+  )
+}
+
+function PostComposer({ scope, onCreated }) {
   const [content, setContent] = useState('')
   const [type, setType] = useState('announcement')
   const [visibility, setVisibility] = useState(scope === 'chapter' ? 'chapter' : 'global')
+  const [businessTarget, setBusinessTarget] = useState('business')
+  const [offerValidUntil, setOfferValidUntil] = useState('')
   const [media, setMedia] = useState([])
   const [publishing, setPublishing] = useState(false)
-  const mentionSuggestions = getMentionSuggestions(content, members)
+  const [mentionResults, setMentionResults] = useState([])
+  const [mentionPagination, setMentionPagination] = useState({ page: 1, totalPages: 1 })
+  const [mentionLoading, setMentionLoading] = useState(false)
+  const [selectedMentions, setSelectedMentions] = useState([])
+  const activeMentionQuery = getActiveMentionQuery(content)
+  const mentionDropdownOpen = activeMentionQuery !== null
+  const isBusinessPost = businessPostTypes.has(type)
+  const composerPlaceholder = type === 'business_promotion'
+    ? 'Promote your business, product, or service...'
+    : type === 'looking_for'
+      ? 'What business support are you looking for?'
+      : type === 'offer_deal'
+        ? 'Share your offer details...'
+        : scope === 'chapter' ? 'Share an update with your chapter...' : 'Share an update across the Gloaro network...'
 
   const handleFiles = (event) => {
     const files = Array.from(event.target.files || [])
     if (!files.length) return
     setMedia((current) => [...current, ...files])
     event.target.value = ''
+  }
+
+  useEffect(() => {
+    if (activeMentionQuery === null) {
+      return undefined
+    }
+
+    let mounted = true
+    const timer = setTimeout(() => {
+      setMentionLoading(true)
+      communityApi.getMentions({ scope, search: activeMentionQuery, page: 1, limit: 20 })
+        .then((response) => {
+          if (!mounted) return
+          setMentionResults(response.data?.data || [])
+          setMentionPagination(response.data?.pagination || { page: 1, totalPages: 1 })
+        })
+        .catch(() => {
+          if (mounted) toast.error('Unable to load mention suggestions')
+        })
+        .finally(() => {
+          if (mounted) setMentionLoading(false)
+        })
+    }, 220)
+
+    return () => {
+      mounted = false
+      clearTimeout(timer)
+    }
+  }, [activeMentionQuery, scope])
+
+  const loadMoreMentions = () => {
+    if (mentionLoading || mentionPagination.page >= mentionPagination.totalPages) return
+    const nextPage = mentionPagination.page + 1
+    setMentionLoading(true)
+    communityApi.getMentions({ scope, search: activeMentionQuery || '', page: nextPage, limit: 20 })
+      .then((response) => {
+        setMentionResults((current) => [...current, ...(response.data?.data || [])])
+        setMentionPagination(response.data?.pagination || { page: nextPage, totalPages: nextPage })
+      })
+      .catch(() => toast.error('Unable to load more mentions'))
+      .finally(() => setMentionLoading(false))
+  }
+
+  const selectMention = (member) => {
+    setContent((value) => appendMention(value, member))
+    setSelectedMentions((current) => {
+      if (current.some((item) => String(item._id) === String(member._id))) return current
+      return [...current, member]
+    })
+    setMentionResults([])
   }
 
   const handleSubmit = (event) => {
@@ -237,7 +350,9 @@ function PostComposer({ scope, members, onCreated }) {
     form.append('type', type)
     form.append('visibility', scope === 'chapter' ? 'chapter' : visibility)
     form.append('content', content.trim())
-    form.append('mentions', JSON.stringify(extractMentionIds(content, members)))
+    form.append('mentions', JSON.stringify(selectedMentions.filter((member) => mentionStillPresent(content, member)).map((member) => member._id)))
+    if (isBusinessPost) form.append('businessTarget', businessTarget)
+    if (type === 'offer_deal' && offerValidUntil) form.append('offerValidUntil', offerValidUntil)
     media.forEach((file) => form.append('media', file))
 
     communityApi.createPost(form)
@@ -245,6 +360,10 @@ function PostComposer({ scope, members, onCreated }) {
         toast.success(scope === 'chapter' ? 'Posted to Chapter Community' : 'Posted to Gloaro Network')
         setContent('')
         setMedia([])
+        setBusinessTarget('business')
+        setOfferValidUntil('')
+        setSelectedMentions([])
+        setMentionResults([])
         onCreated()
       })
       .catch(() => toast.error('Unable to publish post'))
@@ -257,7 +376,7 @@ function PostComposer({ scope, members, onCreated }) {
         <textarea
           value={content}
           onChange={(event) => setContent(event.target.value)}
-          placeholder={scope === 'chapter' ? 'Share an update with your chapter...' : 'Share an update across the Gloaro network...'}
+          placeholder={composerPlaceholder}
           rows={3}
           className="w-full resize-none rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-900 caret-[#0d4697] outline-none placeholder:text-slate-400 focus:border-[#0d4697]"
         />
@@ -279,6 +398,17 @@ function PostComposer({ scope, members, onCreated }) {
             <select value={type} onChange={(event) => setType(event.target.value)} className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-extrabold text-slate-600 outline-none">
               {postTypes.map(([key, label]) => <option key={key} value={key}>{label}</option>)}
             </select>
+            {isBusinessPost && (
+              <select value={businessTarget} onChange={(event) => setBusinessTarget(event.target.value)} className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-extrabold text-slate-600 outline-none">
+                {businessTargetOptions.map(([key, label]) => <option key={key} value={key}>{label}</option>)}
+              </select>
+            )}
+            {type === 'offer_deal' && (
+              <label className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-extrabold text-slate-600">
+                <CalendarDays className="h-4 w-4" />
+                <input type="date" value={offerValidUntil} onChange={(event) => setOfferValidUntil(event.target.value)} className="bg-transparent text-xs font-extrabold text-slate-700 outline-none" />
+              </label>
+            )}
             {scope === 'network' && (
               <select value={visibility} onChange={(event) => setVisibility(event.target.value)} className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-extrabold text-slate-600 outline-none">
                 {visibilityOptions.map(([key, label]) => <option key={key} value={key}>{label}</option>)}
@@ -299,13 +429,32 @@ function PostComposer({ scope, members, onCreated }) {
             {publishing ? 'Publishing...' : 'Publish'}
           </button>
         </div>
-        {!!mentionSuggestions.length && (
-          <div className="flex flex-wrap gap-2 rounded-xl bg-amber-50 p-3">
-            {mentionSuggestions.map((member) => (
-              <button key={member._id} type="button" onClick={() => setContent((value) => appendMention(value, member))} className="rounded-full bg-white px-3 py-1 text-xs font-black text-[#0d4697] shadow-sm">
-                @{member.name}
+        {mentionDropdownOpen && (
+          <div className="max-h-72 overflow-y-auto rounded-xl border border-amber-100 bg-amber-50 p-2 shadow-sm">
+            {mentionLoading && !mentionResults.length && (
+              <p className="px-3 py-3 text-xs font-bold text-slate-500">Loading members...</p>
+            )}
+            {!mentionLoading && !mentionResults.length && (
+              <p className="px-3 py-3 text-xs font-bold text-slate-500">No members found.</p>
+            )}
+            {mentionResults.map((member) => {
+              const hierarchy = formatMentionHierarchy(member)
+              return (
+                <button key={member._id} type="button" onClick={() => selectMention(member)} className="flex w-full items-start gap-3 rounded-lg px-3 py-2 text-left transition hover:bg-white">
+                  <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-white text-xs font-black text-[#0d4697]">{getAuthorInitial(member)}</span>
+                  <span className="min-w-0">
+                    <span className="block truncate text-xs font-black text-slate-900">{member.name}</span>
+                    <span className="block truncate text-[11px] font-bold text-slate-600">{member.role || 'Member'}</span>
+                    {hierarchy && <span className="mt-0.5 block truncate text-[10px] font-semibold text-slate-500">{hierarchy}</span>}
+                  </span>
+                </button>
+              )
+            })}
+            {mentionPagination.page < mentionPagination.totalPages && (
+              <button type="button" onClick={loadMoreMentions} disabled={mentionLoading} className="mt-1 w-full rounded-lg bg-white px-3 py-2 text-xs font-black text-[#0d4697] disabled:opacity-50">
+                {mentionLoading ? 'Loading...' : 'Load more'}
               </button>
-            ))}
+            )}
           </div>
         )}
       </form>
@@ -402,7 +551,7 @@ function CommentsSection({ post, members, onComment }) {
   )
 }
 
-function PostCard({ post, user, members, onRefresh }) {
+function PostCard({ post, user, members, onRefresh, highlighted }) {
   const [showComments, setShowComments] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const myReactions = getMyReactions(post, user)
@@ -436,7 +585,12 @@ function PostCard({ post, user, members, onRefresh }) {
   }
 
   return (
-    <article className="space-y-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+    <article
+      id={`community-post-${post._id}`}
+      className={`space-y-4 rounded-2xl border bg-white p-5 shadow-sm transition ${
+        highlighted ? 'border-[#ffbf1a] ring-2 ring-[#ffbf1a]/40' : 'border-slate-200'
+      }`}
+    >
       <header className="flex items-start justify-between gap-4">
         <div className="flex min-w-0 flex-1 items-center gap-3">
           {post.author?.avatar?.url ? (
@@ -469,6 +623,7 @@ function PostCard({ post, user, members, onRefresh }) {
           )}
         </div>
       </header>
+      <BusinessPostInfo post={post} />
       <StructuredContent post={post} />
       {!!post.mentions?.length && (
         <div className="flex flex-wrap gap-2">
@@ -486,7 +641,7 @@ function PostCard({ post, user, members, onRefresh }) {
   )
 }
 
-function CommunityFeed({ posts, user, members, onRefresh, searchActive }) {
+function CommunityFeed({ posts, user, members, onRefresh, searchActive, highlightedPostId }) {
   if (!posts.length) {
     return (
       <div className="rounded-2xl border border-dashed border-slate-200 bg-white p-10 text-center text-sm font-semibold text-slate-400">
@@ -497,7 +652,16 @@ function CommunityFeed({ posts, user, members, onRefresh, searchActive }) {
 
   return (
     <div className="space-y-4">
-      {posts.map((post) => <PostCard key={post._id} post={post} user={user} members={members} onRefresh={onRefresh} />)}
+      {posts.map((post) => (
+        <PostCard
+          key={post._id}
+          post={post}
+          user={user}
+          members={members}
+          onRefresh={onRefresh}
+          highlighted={String(post._id) === String(highlightedPostId || '')}
+        />
+      ))}
     </div>
   )
 }
@@ -562,6 +726,7 @@ function MemberDiscovery({ members, scope }) {
 
 export default function CommunityPage({ scope = 'chapter' }) {
   const { user } = useAuth()
+  const location = useLocation()
   const [posts, setPosts] = useState([])
   const [members, setMembers] = useState([])
   const [initialLoading, setInitialLoading] = useState(true)
@@ -570,6 +735,7 @@ export default function CommunityPage({ scope = 'chapter' }) {
   const [debouncedSearch, setDebouncedSearch] = useState('')
   const [type, setType] = useState('')
   const [visibility, setVisibility] = useState('')
+  const [dealStatus, setDealStatus] = useState('')
   const [filters, setFilters] = useState({ chapter: '', district: '', state: '', region: '' })
   const [locations, setLocations] = useState({ regions: [], states: [], districts: [], chapters: [] })
   const [loadingLocations, setLoadingLocations] = useState({ regions: false, states: false, districts: false, chapters: false })
@@ -577,6 +743,7 @@ export default function CommunityPage({ scope = 'chapter' }) {
   const [pagination, setPagination] = useState({ page: 1, limit: 10, total: 0, totalPages: 1 })
   const [refreshKey, setRefreshKey] = useState(0)
   const abortRef = useRef(null)
+  const highlightedPostId = useMemo(() => new URLSearchParams(location.search).get('post'), [location.search])
 
   const title = scope === 'chapter' ? 'Chapter Community' : 'Gloaro Network'
   const subtitle = scope === 'chapter'
@@ -596,6 +763,7 @@ export default function CommunityPage({ scope = 'chapter' }) {
     search: debouncedSearch || undefined,
     type: type || undefined,
     visibility: visibility || undefined,
+    dealStatus: type === 'offer_deal' ? dealStatus || undefined : undefined,
     chapter: filters.chapter || undefined,
     district: filters.district || undefined,
     state: filters.state || undefined,
@@ -603,7 +771,7 @@ export default function CommunityPage({ scope = 'chapter' }) {
     page,
     limit: 10,
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }), [scope, debouncedSearch, type, visibility, filters, page, refreshKey])
+  }), [scope, debouncedSearch, type, visibility, dealStatus, filters, page, refreshKey])
 
   const fetchCommunity = useCallback(() => {
     if (abortRef.current) abortRef.current.abort()
@@ -644,6 +812,16 @@ export default function CommunityPage({ scope = 'chapter' }) {
     run()
     return () => { cancelled = true }
   }, [fetchCommunity])
+
+  useEffect(() => {
+    if (!highlightedPostId || !posts.length) return
+    const element = document.getElementById(`community-post-${highlightedPostId}`)
+    if (!element) return
+    const timer = window.setTimeout(() => {
+      element.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    }, 100)
+    return () => window.clearTimeout(timer)
+  }, [highlightedPostId, posts])
 
   useEffect(() => {
     if (scope !== 'network') return
@@ -739,23 +917,25 @@ export default function CommunityPage({ scope = 'chapter' }) {
         scope={scope}
         type={type}
         visibility={visibility}
+        dealStatus={dealStatus}
         filters={filters}
         locations={locations}
         loadingLocations={loadingLocations}
-        onTypeChange={(v) => { setPage(1); setType(v) }}
+        onTypeChange={(v) => { setPage(1); setType(v); if (v !== 'offer_deal') setDealStatus('') }}
         onVisibilityChange={(v) => { setPage(1); setVisibility(v) }}
+        onDealStatusChange={(v) => { setPage(1); setDealStatus(v) }}
         onFilterChange={handleFilterChange}
       />
       <div className="grid min-h-0 flex-1 gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
         <main className="space-y-5 overflow-y-auto">
-          <PostComposer scope={scope} members={members} onCreated={() => { setPage(1); setRefreshKey((k) => k + 1) }} />
+          <PostComposer scope={scope} onCreated={() => { setPage(1); setRefreshKey((k) => k + 1) }} />
           {searching && (
             <div className="flex items-center justify-center gap-2 rounded-2xl border border-slate-100 bg-white py-3 text-xs font-bold text-slate-400">
               <span className="h-4 w-4 animate-spin rounded-full border-2 border-slate-300 border-t-[#0d4697]" />
               Searching...
             </div>
           )}
-          <CommunityFeed posts={posts} user={user} members={members} onRefresh={() => { setPage(1); setRefreshKey((k) => k + 1) }} searchActive={!!debouncedSearch} />
+          <CommunityFeed posts={posts} user={user} members={members} onRefresh={() => { setPage(1); setRefreshKey((k) => k + 1) }} searchActive={!!debouncedSearch} highlightedPostId={highlightedPostId} />
           {hasMore && !searching && (
             <button
               onClick={() => setPage((p) => p + 1)}
