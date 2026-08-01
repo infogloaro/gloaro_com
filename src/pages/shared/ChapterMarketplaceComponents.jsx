@@ -23,7 +23,6 @@ export function ChapterMarketplaceProducts({
   }, [])
 
   const filters = [
-    { key: 'status', label: 'Status', options: ['pending', 'approved', 'rejected', 'suspended'].map(s => ({ value: s, label: s.toUpperCase() })) },
     { key: 'category', label: 'Category', options: categories }
   ]
 
@@ -31,6 +30,7 @@ export function ChapterMarketplaceProducts({
     <>
       <ResourceListPage
         readOnly={true}
+        retainRowsOnEmptySearch={true}
         title={title}
         description={description}
         fetcher={adminApi.products}

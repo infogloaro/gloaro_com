@@ -1,4 +1,4 @@
-import { Bell, ChevronDown, ChevronLeft, Menu, Moon, Search, Sun, LogOut } from 'lucide-react'
+import { Bell, ChevronDown, ChevronLeft, Menu, Search, LogOut } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
@@ -22,7 +22,6 @@ export default function DashboardLayout({ navItems = [], title = 'Dashboard' }) 
   const [query, setQuery] = useState('')
   const [openGroups, setOpenGroups] = useState({})
   const [impersonating, setImpersonating] = useState(() => Boolean(sessionStorage.getItem('gloaro_superadmin_session')))
-  const [dark, setDark] = useState(() => localStorage.getItem('gloaro_theme') === 'dark')
   const [chatUnreadCount, setChatUnreadCount] = useState(0)
   const [notificationUnreadCount, setNotificationUnreadCount] = useState(0)
   const [notificationOpen, setNotificationOpen] = useState(false)
@@ -41,11 +40,6 @@ export default function DashboardLayout({ navItems = [], title = 'Dashboard' }) 
   const displayTitle = hasExplicitNavItems ? title : (navigation.title === 'Dashboard' ? title : navigation.title)
   const isVendorApplicant = navigationMode === NAVIGATION_MODES.ONLINE_VENDOR_APPLICANT || navigationMode === NAVIGATION_MODES.ONLINE_VENDOR_PENDING
   const isApprovedVendor = navigationMode === NAVIGATION_MODES.ONLINE_VENDOR_APPROVED
-
-  useEffect(() => {
-    document.documentElement.classList.toggle('dark', dark)
-    localStorage.setItem('gloaro_theme', dark ? 'dark' : 'light')
-  }, [dark])
 
   const refreshChatUnreadCount = useCallback(() => {
     if (!user?._id) return
@@ -445,11 +439,7 @@ export default function DashboardLayout({ navItems = [], title = 'Dashboard' }) 
                 </div>
               )}
             </div>
-            {!isSuperAdmin && (
-              <button onClick={() => setDark((value) => !value)} className="grid h-9 w-9 place-items-center rounded-md border border-slate-200 dark:border-slate-800" aria-label="Toggle theme">
-                {dark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-              </button>
-            )}
+
             {impersonating && <button onClick={returnToSuperAdmin} className="rounded-md border border-amber-200 bg-amber-50 px-4 py-2 text-sm font-bold text-amber-700">Return to Super Admin</button>}
             <button onClick={logout} className="rounded-md bg-[#0d4697] px-4 py-2 text-sm font-bold text-white">Logout</button>
           </div>

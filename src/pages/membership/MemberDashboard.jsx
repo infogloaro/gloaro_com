@@ -201,7 +201,7 @@ export default function MemberDashboard() {
                       <span className="text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">Approved</span>
                     </div>
                     <p className="text-xs font-black text-slate-800 truncate">Name: {app?.step2?.details?.businessName || 'Verified Vendor'}</p>
-                    <p className="text-xs font-semibold text-slate-500">Category: {app?.step2?.details?.businessCategory?.name || 'Local Trade'}</p>
+                    <p className="text-xs font-semibold text-slate-500">Category: {app?.step2?.details?.businessCategory?.name || 'Not provided'}</p>
                     <div className="flex justify-between items-center text-[10px] font-bold text-slate-400 mt-1">
                       <span>Profile: 100%</span>
                       <span>Rating: 4.8 ⭐</span>
@@ -261,23 +261,23 @@ export default function MemberDashboard() {
                   <div className="grid gap-4 grid-cols-2 md:grid-cols-5 text-slate-700 bg-slate-50/60 p-4 rounded-xl border border-slate-100 font-semibold text-xs leading-relaxed">
                     <div>
                       <p className="text-[10px] font-black uppercase text-slate-400">Business Name</p>
-                      <p className="font-extrabold text-slate-800 mt-0.5">{app?.step2?.details?.businessName || 'E-Commerce'}</p>
+                      <p className="font-extrabold text-slate-800 mt-0.5">{app?.step2?.details?.businessName || '—'}</p>
                     </div>
                     <div>
                       <p className="text-[10px] font-black uppercase text-slate-400">Category</p>
-                      <p className="font-extrabold text-slate-800 mt-0.5">{app?.step2?.details?.businessCategory?.name || 'Finance'}</p>
+                      <p className="font-extrabold text-slate-800 mt-0.5">{app?.step2?.details?.businessCategory?.name || '—'}</p>
                     </div>
                     <div>
                       <p className="text-[10px] font-black uppercase text-slate-400">Products</p>
-                      <p className="font-extrabold text-slate-800 mt-0.5">{vendorDashboardData?.stats?.productsCount || 12}</p>
+                      <p className="font-extrabold text-slate-800 mt-0.5">{vendorDashboardData?.stats?.productsCount ?? '—'}</p>
                     </div>
                     <div>
                       <p className="text-[10px] font-black uppercase text-slate-400">Services</p>
-                      <p className="font-extrabold text-slate-800 mt-0.5">{vendorDashboardData?.stats?.servicesCount || 5}</p>
+                      <p className="font-extrabold text-slate-800 mt-0.5">{vendorDashboardData?.stats?.servicesCount ?? '—'}</p>
                     </div>
                     <div>
                       <p className="text-[10px] font-black uppercase text-slate-400">Active Leads</p>
-                      <p className="font-extrabold text-slate-800 mt-0.5">{vendorDashboardData?.stats?.pendingLeads || 8}</p>
+                      <p className="font-extrabold text-slate-800 mt-0.5">{vendorDashboardData?.stats?.pendingLeads ?? '—'}</p>
                     </div>
                   </div>
                 </section>
@@ -375,12 +375,12 @@ export default function MemberDashboard() {
                     <div className="rounded-xl bg-slate-50 p-3.5 border border-slate-100">
                       <p className="text-[10px] font-black uppercase text-slate-400">Category / Type</p>
                       <p className="text-sm font-extrabold text-slate-800 mt-0.5">
-                        {app?.step2?.details?.businessCategory?.name || 'Local Trade'} / {app?.step2?.details?.businessType || 'B2B'}
+                        {app?.step2?.details?.businessCategory?.name || 'Not provided'} / {app?.step2?.details?.businessType || 'Not provided'}
                       </p>
                     </div>
                     <div className="rounded-xl bg-slate-50 p-3.5 border border-slate-100">
                       <p className="text-[10px] font-black uppercase text-slate-400">GSTIN / TAX ID</p>
-                      <p className="text-sm font-extrabold text-slate-800 mt-0.5">{app?.step3?.credentials?.businessRegistrationNumber || app?.step3?.credentials?.gstNumber || 'GST-IN2491580'}</p>
+                      <p className="text-sm font-extrabold text-slate-800 mt-0.5">{app?.step3?.credentials?.businessRegistrationNumber || app?.step3?.credentials?.gstNumber || 'Not provided'}</p>
                     </div>
                     <div className="rounded-xl bg-slate-50 p-3.5 border border-slate-100">
                       <p className="text-[10px] font-black uppercase text-slate-400">Business Email</p>

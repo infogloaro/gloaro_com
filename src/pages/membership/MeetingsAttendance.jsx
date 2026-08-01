@@ -17,6 +17,13 @@ import {
 import { formatDate } from '../../utils/format'
 import { useAuth } from '../../hooks/useAuth'
 
+const getVenueString = (venue) => {
+  if (!venue) return 'Venue not specified';
+  if (typeof venue === 'string') return venue;
+  const parts = [venue.name, venue.address, venue.city].filter(Boolean);
+  return parts.length > 0 ? parts.join(', ') : 'Venue not specified';
+};
+
 export default function MeetingsAttendance() {
   const { user } = useAuth()
   // Retrieve events mapped as meetings
@@ -108,7 +115,7 @@ export default function MeetingsAttendance() {
             {meetings.map((meeting, index) => {
               const event = meeting.event || meeting
               const registration = meeting.registration || event.attendees?.find((attendee) => attendee.user?._id === user?._id || attendee.user === user?._id)
-              if (meeting.event) Object.assign(meeting, event, { venue: event.venue?.name || event.venue })
+              if (meeting.event) Object.assign(meeting, event)
               const isAttended = registration ? registration.status === 'attended' : index > 0 // fallback for legacy records
               return (
                 <div key={event._id || index} className="flex justify-between items-center py-4 first:pt-0 last:pb-0">
@@ -119,7 +126,7 @@ export default function MeetingsAttendance() {
                     <div>
                       <p className="text-sm font-extrabold text-slate-800 leading-tight">{event.title || 'Weekly Chapter Meeting'}</p>
                       <p className="text-[10px] font-semibold text-slate-400 mt-1">
-                        {formatDate(meeting.startDate)} • Venue: {meeting.venue || 'Chapter Hall'}
+                        {formatDate(meeting.startDate)} • Venue: {getVenueString(meeting.venue)}
                       </p>
                     </div>
                   </div>
@@ -181,7 +188,7 @@ export default function MeetingsAttendance() {
             <div className="space-y-5 px-6 py-5">
               <div className="grid gap-3 sm:grid-cols-2">
                 <div className="rounded-xl bg-slate-50 p-3"><p className="text-[10px] font-extrabold uppercase text-slate-400">Date</p><p className="mt-1 text-sm font-bold text-slate-800">{formatDate(selectedMeeting.meeting.startDate)}</p></div>
-                <div className="rounded-xl bg-slate-50 p-3"><p className="text-[10px] font-extrabold uppercase text-slate-400">Venue</p><p className="mt-1 text-sm font-bold text-slate-800">{selectedMeeting.meeting.venue?.name || selectedMeeting.meeting.venue || 'Chapter Hall'}</p></div>
+                <div className="rounded-xl bg-slate-50 p-3"><p className="text-[10px] font-extrabold uppercase text-slate-400">Venue</p><p className="mt-1 text-sm font-bold text-slate-800">{getVenueString(selectedMeeting.meeting.venue)}</p></div>
                 <div className="rounded-xl bg-slate-50 p-3"><p className="text-[10px] font-extrabold uppercase text-slate-400">Meeting type</p><p className="mt-1 text-sm font-bold capitalize text-slate-800">{selectedMeeting.meeting.type || 'Chapter meeting'}</p></div>
                 <div className="rounded-xl bg-slate-50 p-3"><p className="text-[10px] font-extrabold uppercase text-slate-400">Time</p><p className="mt-1 text-sm font-bold text-slate-800">{selectedMeeting.meeting.startDate ? new Date(selectedMeeting.meeting.startDate).toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit' }) : '—'}</p></div>
               </div>

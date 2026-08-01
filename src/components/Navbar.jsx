@@ -1,4 +1,6 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import api from '../api/axios'
 import { useAuth } from '../hooks/useAuth'
 import { getDashboardRoute } from '../utils/permissions'
 import {
@@ -23,8 +25,7 @@ import brandIcon from '../assets/brand_icon.png'
 import nearMeIcon from '../assets/nearme_icon.png'
 import loginIcon from '../assets/login_icon.png'
 
-const SearchIcon = () => <svg viewBox="0 0 24 24" className="h-4 w-4 shrink-0 fill-none stroke-white stroke-[3.25]"><circle cx="11" cy="11" r="6" /><path d="m16 16 4 4" /></svg>
-const PinIcon = () => <svg viewBox="0 0 24 24" className="h-4 w-4 fill-current"><path d="M12 2a7 7 0 0 0-7 7c0 5.25 7 13 7 13s7-7.75 7-13a7 7 0 0 0-7-7Zm0 10a3 3 0 1 1 0-6 3 3 0 0 1 0 6Z" /></svg>
+const SearchIcon = () => <svg viewBox="0 0 24 24" className="h-4 w-4 shrink-0 fill-none stroke-current stroke-[3.25]"><circle cx="11" cy="11" r="6" /><path d="m16 16 4 4" /></svg>
 
 const networkMenu = [
   [Users, 'Membership', ['Join Gloaro Network', 'Membership Benefits', 'Yearly Subscription', 'Member Access']],
@@ -44,27 +45,100 @@ const networkHighlights = [
   [ShieldCheck, 'Verified Network', 'Trusted enterprise leaders'],
 ]
 
-const getNetworkLink = (section) => {
-  if (section === 'Membership') return '#membership'
-  if (section === 'Franchise') return '#marketplace'
-  if (section === 'Business Network') return '#marketplace'
-  if (section === 'Referral Program') return '#events'
-  if (section === 'Mobile App') return '#features'
-  if (section === 'Business Services') return '/services'
-  if (section === 'Events & Community') return '#events'
-  if (section === 'Leaders & Achievements') return '#leaders'
-  if (section === 'Help Center') return '#join'
-  return '#membership'
-}
-
 export default function Navbar() {
   const { isAuthenticated, user } = useAuth()
+  const navigate = useNavigate()
   const [open, setOpen] = useState(false)
   const [networkOpen, setNetworkOpen] = useState(false)
   const [mobileNetworkOpen, setMobileNetworkOpen] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [searchResults, setSearchResults] = useState([])
+  const [searchLoading, setSearchLoading] = useState(false)
+  const [searchOpen, setSearchOpen] = useState(false)
+
+  useEffect(() => {
+    if (!networkOpen) return undefined
+
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+
+    return () => {
+      document.body.style.overflow = previousOverflow
+    }
+  }, [networkOpen])
+
+  useEffect(() => {
+    const query = searchQuery.trim()
+    if (query.length < 2) {
+      setSearchResults([])
+      setSearchLoading(false)
+      return undefined
+    }
+
+    let active = true
+    setSearchLoading(true)
+    const timer = window.setTimeout(() => {
+      Promise.all([
+        api.get('/products', { params: { search: query, limit: 4 } }),
+        api.get('/services', { params: { search: query, limit: 4 } }),
+      ])
+        .then(([productsResponse, servicesResponse]) => {
+          if (!active) return
+          const products = (productsResponse.data?.data || []).map((item) => ({ ...item, searchType: 'product' }))
+          const services = (servicesResponse.data?.data || []).map((item) => ({ ...item, searchType: 'service' }))
+          setSearchResults([...products, ...services].slice(0, 6))
+        })
+        .catch(() => {
+          if (active) setSearchResults([])
+        })
+        .finally(() => {
+          if (active) setSearchLoading(false)
+        })
+    }, 300)
+
+    return () => {
+      active = false
+      window.clearTimeout(timer)
+    }
+  }, [searchQuery])
+
+  const openSearchResult = (item) => {
+    if (!item?._id) return
+    setSearchOpen(false)
+    setSearchQuery('')
+    setSearchResults([])
+    navigate(`/${item.searchType === 'service' ? 'services' : 'products'}/${item._id}`)
+  }
+
+  const submitSearch = async (event) => {
+    event.preventDefault()
+    const query = searchQuery.trim()
+    if (!query) return
+    if (searchResults.length) {
+      openSearchResult(searchResults[0])
+      return
+    }
+
+    setSearchLoading(true)
+    try {
+      const [productsResponse, servicesResponse] = await Promise.all([
+        api.get('/products', { params: { search: query, limit: 1 } }),
+        api.get('/services', { params: { search: query, limit: 1 } }),
+      ])
+      const firstProduct = productsResponse.data?.data?.[0]
+      const firstService = servicesResponse.data?.data?.[0]
+      if (firstProduct) openSearchResult({ ...firstProduct, searchType: 'product' })
+      else if (firstService) openSearchResult({ ...firstService, searchType: 'service' })
+      else setSearchOpen(true)
+    } catch {
+      setSearchOpen(true)
+    } finally {
+      setSearchLoading(false)
+    }
+  }
 
   const navItems = [
-    [nearMeIcon, 'Near Me', '/nearby', 'bg-slate-100 text-slate-700 hover:bg-slate-200'],
+    [nearMeIcon, 'Near Me', '/nearby', 'hidden bg-slate-100 text-slate-700 hover:bg-slate-200'],
     [shopIcon, 'Shop', '/products', 'bg-[#ffb20c] text-[#063a85] hover:brightness-95'],
     [brandIcon, 'Services', '/services', 'bg-[#10b981] text-white hover:bg-[#059669]', 'brightness-0 invert'],
     [b2bIcon, 'B2B Marketplace', '/vendors', 'bg-[#0b469e] text-white hover:bg-[#093a84]', 'brightness-0 invert'],
@@ -74,10 +148,10 @@ export default function Navbar() {
     <header className="sticky top-0 z-50 border-t-4 border-black bg-white font-jakarta shadow-sm">
       <div className="mx-auto max-w-[1440px] px-4 py-3 sm:px-7">
         <div className="flex items-center gap-2 xl:gap-3">
-          <a href="#top" className="flex w-24 shrink-0 items-center sm:w-28"><img src={logo} alt="Gloaro Business Network" className="h-auto w-full object-contain" /></a>
+          <a href="/" aria-label="Go to home page" className="flex w-24 shrink-0 items-center sm:w-28"><img src={logo} alt="Gloaro Business Network" className="h-auto w-full object-contain" /></a>
 
           <div className="hidden flex-1 items-center gap-3 lg:flex">
-            <div className="relative" onMouseEnter={() => setNetworkOpen(true)}>
+            <div className="relative">
               <button type="button" onClick={() => setNetworkOpen(true)} className="flex h-10 items-center gap-2 whitespace-nowrap rounded-full bg-[#0b469e] px-5 text-sm font-medium text-white shadow-sm transition hover:-translate-y-px" aria-expanded={networkOpen} aria-haspopup="true">
                 <img src={networkIcon} alt="" className="h-4 w-4 object-contain" />
                 Gloaro Network
@@ -89,7 +163,13 @@ export default function Navbar() {
 
           <div className="ml-auto hidden items-center gap-4 text-[#0b469e] lg:flex">
             {isAuthenticated ? (
-              <a href={getDashboardRoute(user?.role, user)} aria-label="Account" className="flex items-center gap-1 text-sm font-medium"><img src={loginIcon} alt="" className="h-5 w-5 object-contain" /> {user?.name || 'Account'}</a>
+              <a href={getDashboardRoute(user?.role, user)} aria-label="Open account dashboard" className="group flex h-10 items-center gap-2.5 rounded-full border border-[#0b469e]/20 bg-gradient-to-r from-white to-blue-50 px-2.5 pr-4 text-[#0b469e] shadow-sm transition hover:-translate-y-px hover:border-[#0b469e]/40 hover:shadow-md">
+                <span className="grid h-7 w-7 place-items-center rounded-full bg-[#0b469e] ring-2 ring-blue-100">
+                  <img src={loginIcon} alt="" className="h-4 w-4 object-contain brightness-0 invert" />
+                </span>
+                <span className="max-w-32 truncate text-sm font-bold">{user?.name || 'Account'}</span>
+                <span className="text-xs transition group-hover:translate-x-0.5">›</span>
+              </a>
             ) : (
               <>
                 <a href="/login" className="flex items-center gap-1.5 text-sm font-semibold transition hover:text-[#0b469e]">
@@ -101,24 +181,57 @@ export default function Navbar() {
                 </a>
               </>
             )}
-            <div className="relative">
-              <button onClick={() => setOpen(!open)} className="flex h-8 items-center gap-2 rounded-md bg-[#0b469e] px-3 text-xs font-medium text-white">
-                <PinIcon />
-                Kallakurichy
-                <span className="border-l border-white/40 pl-2">v</span>
-                <SearchIcon />
-              </button>
-              {open && <div className="absolute right-0 top-10 w-52 rounded-b-md bg-white p-3 shadow-xl"><p className="mb-2 flex items-center gap-1 text-xs font-medium text-[#f3a900]"><PinIcon /> Kallakurichy</p><input placeholder="Search City..." className="w-full rounded-md border border-slate-200 px-3 py-2 text-xs text-slate-600 outline-none focus:border-[#0b469e]" /></div>}
-            </div>
           </div>
 
           <button onClick={() => setOpen((value) => !value)} className="ml-auto rounded-md bg-[#0b469e] px-3 py-2 text-lg text-white lg:hidden" aria-label="Toggle menu">=</button>
         </div>
 
-        <div className="mt-3 flex items-center gap-3 lg:mt-4">
-          <label className="flex h-8 w-full max-w-[420px] items-center gap-3 rounded-lg bg-[#0b469e] px-5 text-white shadow-sm"><SearchIcon /><input className="w-full bg-transparent text-xs outline-none placeholder:text-white" placeholder="Search for Products, Services, Brands and More" /></label>
-          <button onClick={() => setOpen(!open)} className="ml-auto flex items-center gap-1 text-xs font-medium text-[#f3a900] lg:hidden"><PinIcon /> Kallakurichy</button>
-        </div>
+        <form onSubmit={submitSearch} className="relative mt-3 w-full max-w-[525px] lg:mt-4">
+          <label className="flex h-9 w-full items-center gap-3 rounded-lg border border-slate-300 bg-white px-5 text-[#0b469e] shadow-sm">
+            <SearchIcon />
+            <input
+              value={searchQuery}
+              onChange={(event) => {
+                setSearchQuery(event.target.value)
+                setSearchOpen(true)
+              }}
+              onFocus={() => setSearchOpen(true)}
+              onBlur={() => window.setTimeout(() => setSearchOpen(false), 150)}
+              className="w-full bg-transparent text-sm text-slate-800 outline-none placeholder:text-slate-500"
+              placeholder="Search for Products and Services"
+              aria-label="Search products and services"
+              autoComplete="off"
+            />
+          </label>
+
+          {searchOpen && searchQuery.trim().length >= 2 && (
+            <div className="absolute left-0 right-0 top-[calc(100%+6px)] z-[70] overflow-hidden rounded-lg border border-slate-200 bg-white shadow-xl">
+              {searchLoading ? (
+                <p className="px-4 py-3 text-sm font-medium text-slate-500">Searching products...</p>
+              ) : searchResults.length ? (
+                searchResults.map((product) => (
+                  <button
+                    key={product._id}
+                    type="button"
+                    onMouseDown={(event) => event.preventDefault()}
+                    onClick={() => openSearchResult(product)}
+                    className="flex w-full items-center gap-3 border-b border-slate-100 px-4 py-3 text-left last:border-0 hover:bg-slate-50"
+                  >
+                    <img src={product.images?.[0]?.url || product.gallery?.[0]?.url || '/logo.png'} alt="" className="h-10 w-10 rounded-md bg-slate-100 object-cover" />
+                    <span className="min-w-0">
+                      <span className="block truncate text-sm font-bold text-slate-900">{product.title}</span>
+                      <span className="block text-xs font-semibold text-[#0b469e]">
+                        {product.searchType === 'service' ? 'Service' : 'Product'} · ₹{product.pricing?.sellingPrice ?? product.pricing?.minPrice ?? 0}
+                      </span>
+                    </span>
+                  </button>
+                ))
+              ) : (
+                <p className="px-4 py-3 text-sm font-medium text-slate-500">No products or services found</p>
+              )}
+            </div>
+          )}
+        </form>
       </div>
 
       {open && (
@@ -147,7 +260,6 @@ export default function Navbar() {
             )}
             {navItems.map(([icon, label, href, colors, iconClass = '']) => <a onClick={() => setOpen(false)} key={label} href={href} className={`flex items-center rounded-lg px-4 py-3 font-medium ${colors}`}><img src={icon} alt="" className={`mr-2 h-4 w-4 object-contain ${iconClass}`} />{label}</a>)}
           </div>
-          <div className="mt-4 rounded-lg border border-slate-200 p-3"><p className="mb-2 flex items-center gap-1 text-xs font-medium text-[#f3a900]"><PinIcon /> Kallakurichy</p><input placeholder="Search City..." className="w-full rounded-md border border-slate-200 px-3 py-2 text-sm outline-none" /></div>
         </div>
       )}
     </header>
@@ -170,7 +282,13 @@ function MobileGloaroNetworkMenu({ onNavigate }) {
                 {title}
               </summary>
               <ul className="mt-3 space-y-2">
-                {links.map((link) => <li key={link}><a onClick={onNavigate} href={getNetworkLink(title)} className="block text-sm font-medium text-black hover:text-[#0b469e]">{link}</a></li>)}
+                {links.map((link) => (
+                  <li key={link} className="text-sm font-medium text-black">
+                    {link === 'Join Gloaro Network'
+                      ? <a href="/register" onClick={onNavigate} className="font-semibold text-[#0b469e] hover:underline">{link}</a>
+                      : link}
+                  </li>
+                ))}
               </ul>
             </details>
           ))}
@@ -190,7 +308,7 @@ function MobileGloaroNetworkMenu({ onNavigate }) {
             </div>
           ))}
         </div>
-        <a onClick={onNavigate} href="#membership" className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-[#0b469e] px-4 py-3 text-xs font-extrabold text-white shadow-lg shadow-blue-950/20">Explore Membership <span className="text-base leading-none">{'>'}</span></a>
+        <a href="/register" onClick={onNavigate} className="mt-5 block rounded-lg bg-[#0b469e] px-4 py-3 text-center text-xs font-extrabold text-white shadow-lg shadow-blue-950/20">Explore Membership</a>
       </aside>
     </div>
   )
@@ -198,8 +316,8 @@ function MobileGloaroNetworkMenu({ onNavigate }) {
 
 function GloaroNetworkMenu({ onClose }) {
   return (
-    <div className="absolute left-0 top-[calc(100%+10px)] hidden w-[min(1048px,calc(100vw-32px))] pb-4 lg:block">
-      <div className="grid overflow-hidden rounded-b-md bg-white shadow-2xl ring-1 ring-slate-200 lg:grid-cols-[1fr_180px]">
+    <div className="fixed inset-0 z-[100] hidden bg-slate-950/45 px-4 py-20 backdrop-blur-[1px] lg:flex lg:items-start lg:justify-center" role="dialog" aria-modal="true" aria-label="Gloaro Network information">
+      <div className="relative grid max-h-[calc(100vh-7rem)] w-full max-w-[1120px] overflow-y-auto rounded-md bg-white shadow-2xl ring-1 ring-slate-200 lg:grid-cols-[1fr_190px]">
         <button type="button" onClick={onClose} className="absolute right-3 top-3 z-10 grid h-8 w-8 place-items-center rounded-full bg-white text-slate-500 shadow-sm ring-1 ring-slate-200 hover:bg-slate-50 hover:text-[#0b469e]" aria-label="Close Gloaro Network menu">
           <X className="h-4 w-4" />
         </button>
@@ -213,7 +331,13 @@ function GloaroNetworkMenu({ onClose }) {
               <div key={title}>
                 <h3 className="flex items-center gap-2 font-playfair text-lg font-black italic text-[#0b469e]"><Icon className="h-4 w-4" />{title}</h3>
                 <ul className="mt-3 space-y-3">
-                  {links.map((link) => <li key={link}><a href={getNetworkLink(title)} className="text-sm font-medium text-black hover:text-[#0b469e]">{link}</a></li>)}
+                  {links.map((link) => (
+                    <li key={link} className="text-sm font-medium text-black">
+                      {link === 'Join Gloaro Network'
+                        ? <a href="/register" onClick={onClose} className="font-semibold text-[#0b469e] hover:underline">{link}</a>
+                        : link}
+                    </li>
+                  ))}
                 </ul>
               </div>
             ))}
@@ -233,7 +357,7 @@ function GloaroNetworkMenu({ onClose }) {
               </div>
             ))}
           </div>
-          <a href="#membership" className="mt-auto inline-flex items-center justify-center gap-2 rounded-lg bg-[#0b469e] px-4 py-3 text-xs font-extrabold text-white shadow-lg shadow-blue-950/20">Explore Membership <span className="text-base leading-none">{'>'}</span></a>
+          <a href="/register" onClick={onClose} className="mt-auto block rounded-lg bg-[#0b469e] px-4 py-3 text-center text-xs font-extrabold text-white shadow-lg shadow-blue-950/20">Explore Membership</a>
         </aside>
       </div>
     </div>

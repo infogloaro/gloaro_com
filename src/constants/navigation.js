@@ -67,13 +67,9 @@ export const adminNav = [
     children: [
       ['Admin Management', '/admin-management', Users],
       ['Assignments', '/assignments', Workflow],
-      ['Roles', '/roles', ShieldCheck],
-      ['Permissions', '/permissions', KeyRound],
       ['Feature Management', '/features', ToggleLeft],
       ['Dashboard Config', '/dashboard-config', LayoutGrid],
-      ['Module Config', '/module-config', Settings],
       ['Workflow Settings', '/membership-workflow', Workflow],
-      ['Workflow Engine', '/workflow-engine', Workflow],
       ['Tasks', '/tasks', Activity],
       ['Calendar', '/calendar', CalendarDays],
     ],
@@ -90,7 +86,7 @@ export const adminNav = [
     label: 'Membership',
     icon: CreditCard,
     children: [
-      ['Member Approval', '/applications/membership', ClipboardList],
+      ['Member Approval', '/membership-applications', ClipboardList],
       ['Members', '/members', Users],
       ['Attendance', '/attendance', Activity],
       ['Chapter Approvals', '/chapters', Network],
@@ -104,13 +100,13 @@ export const adminNav = [
       ['Vendor Settings', '/vendor-settings', Settings],
       ['Business', '/business', BriefcaseBusiness],
       ['Business Wall', '/business-wall', Network],
-      ['Categories', '/categories', ListTree],
     ],
   },
   {
     label: 'Marketplace',
     icon: ShoppingBag,
     children: [
+      ['Categories', '/marketplace/categories', ListTree],
       ['Vendors', '/vendors', Building2],
       ['Products', '/products', Package],
       ['Services', '/services', BriefcaseBusiness],
@@ -120,11 +116,14 @@ export const adminNav = [
   },
   ['Events', '/events', CalendarDays],
   ['Training', '/training', Star],
-  ['Testimonials', '/testimonials', FileText],
+
+  ['Success Stories', '/testimonials', FileText],
+  ['Banners', '/banners', FileText],
+
   ['FAQs', '/faqs', HelpCircle],
   ['Analytics', '/analytics', BarChart3],
   ['Notification Center', '/notifications', Bell],
-  ['Settings', '/settings', Settings],
+  ['Profile', '/profile', User],
   ['Audit Logs', '/audit-logs', FileText],
   ['System Logs', '/system-logs', Lock],
 ]
@@ -160,9 +159,8 @@ export const memberVendorNav = [
 ]
 
 export const applicantNav = [
-  ['Profile', '/member/profile', Users],
+  ['Profile', '/member/profile', User],
   ['Membership Application Status', '/member/membership-application-status', ClipboardCheck],
-  ['Settings', '/member/settings', Settings],
 ]
 
 export const vendorApplicantNav = [
@@ -182,13 +180,12 @@ export const vendorOnboardingNav = [
 export const memberOnboardingNav = [
   ['Membership Status', '/member/membership-application-status', ClipboardCheck],
   ['Profile', '/member/profile', User],
-  ['Account', '/member/settings', Settings],
 ]
 
 export const customerNav = [
   ['Home', '/', Home],
   ['Nearby', '/nearby', Building2],
-  ['Categories', '/categories', ListTree],
+  ['Categories', '/marketplace/categories', ListTree],
   ['Vendors', '/vendors', Building2],
   ['Products', '/products', ShoppingBag],
   ['Services', '/services', BriefcaseBusiness],
@@ -219,7 +216,7 @@ export const membershipNav = [
 ]
 
 export const memberNav = [['Assigned Courses', '/member/training', BookOpen]];
-export const secretaryNav = [{ label: 'Secretary Dashboard', icon: ClipboardList, children: [['Events', '/events', CalendarDays], ['Reports', '/reports', FileBarChart]] }];
+export const secretaryNav = [{ label: 'Secretary Dashboard', icon: ClipboardList, children: [['Events', '/events', CalendarDays]] }];
 export const stateDirectorNav = [];
 export const districtDirectorNav = [];
 export const chapterDirectorNav = [];
@@ -313,8 +310,7 @@ const commonModules = [
       ['Messages', '/chat', MessageSquare],
       ['Referrals', '/referrals', Handshake],
       ['Business Directory', '/directory', Users],
-      ['Leaderboard', '/leaderboard', Trophy],
-      ['Visitors', '/visitors', Ticket]
+      ['Leaderboard', '/leaderboard', Trophy]
     ]
   },
   {
@@ -337,60 +333,35 @@ const commonModules = [
     icon: CalendarDays,
     children: [
       ['Meetings', '/meetings', CalendarDays],
-      ['Attendance', '/attendance', ClipboardList],
-      ['One-to-Ones', '/one-to-ones', Clock]
+      ['Attendance', '/attendance', ClipboardList]
     ]
   },
   ['Training', '/member/training', BookOpen],
-  {
-    label: 'Chapter',
-    icon: Building2,
-    children: [
-      ['My Chapter', '/chapter', Building2],
-      ['AI Insights', '/ai-insights', Sparkles],
-      ['Digital Member Card', '/digital-card', QrCode]
-    ]
-  },
+  ['My Chapter', '/chapter', Building2],
   {
     label: 'Collaboration',
     icon: MessageSquare,
     children: [
       ['Tasks', '/tasks', ClipboardCheck],
-      ['Chat', '/chat', MessageSquare],
       ['Help Desk', '/help-desk', HelpCircle]
     ]
   },
-  {
-    label: 'Account',
-    icon: User,
-    children: [
-      ['Profile', '/profile', User],
-      ['Settings', '/settings', Settings]
-    ]
-  }
+  ['Profile', '/profile', User]
 ];
 
 const roleModules = {
   [ROLES.SECRETARY]: [
-    ['Members', '/members', Users],
-    ['Minutes', '/minutes', FileText],
-    ['Documents', '/documents', Folder],
-    ['Reports', '/reports', FileBarChart],
-    ['Meeting Records', '/meeting-records', ClipboardList]
+    ['Members', '/members', Users]
   ],
   [ROLES.VICE_PRESIDENT]: [
     ['Member Registration', '/register-member', Users],
     ['Membership Applications', '/membership-applications', ClipboardList],
     ['Approved Members', '/members', Users],
-    ['Secretaries', '/secretaries', Users],
-    ['Reports', '/reports', FileBarChart],
-    ['Announcements', '/announcements', Bell]
+    ['Secretaries', '/secretaries', Users]
   ],
   [ROLES.CHAPTER_PRESIDENT]: [
     ['Approved Members', '/members', Users],
-    ['Vice Presidents', '/vice-presidents', Users],
-    ['Chapter Reports', '/reports', FileBarChart],
-    ['Leadership', '/leadership', Award]
+    ['Vice Presidents', '/vice-presidents', Users]
   ],
   [ROLES.EXECUTIVE_DIRECTOR]: [
     ['Launch Directors', '/launch-directors', UserCheck],
@@ -408,19 +379,15 @@ const roleModules = {
   ],
   [ROLES.STATE_DIRECTOR]: [
     ['District Directors', '/district-directors', Users],
-    ['Approved Members', '/members', Users],
-    ['State Analytics', '/analytics', FileBarChart]
+    ['Approved Members', '/members', Users]
   ],
   [ROLES.REGION_DIRECTOR]: [
     ['State Directors', '/state-directors', Users],
-    ['Approved Members', '/members', Users],
-    ['Regional Analytics', '/analytics', FileBarChart]
+    ['Approved Members', '/members', Users]
   ],
   [ROLES.LAUNCH_DIRECTOR]: [
     ['Direct Consultants', '/direct-consultants', Users],
-    ['Approved Members', '/members', Users],
-    ['Launch Reports', '/launch-reports', FileBarChart],
-    ['Membership Reports', '/membership-reports', FileBarChart]
+    ['Approved Members', '/members', Users]
   ],
   [ROLES.DIRECT_CONSULTANT]: [
     ['Chapter Presidents', '/presidents', Users],
@@ -443,14 +410,61 @@ export function getSidebarNav(role, options = {}) {
         children: item.children.map(prefixPath)
       };
     };
-    return adminNav.map(prefixPath);
+
+    let filteredAdminNav = adminNav
+      .filter((item) => {
+        if (Array.isArray(item)) {
+          return item[0] !== 'Settings';
+        }
+        if (normalizedRole === ROLES.ADMIN && item.label === 'Super Admin') {
+          return false;
+        }
+        return true;
+      })
+      .map((item) => {
+        if (Array.isArray(item)) {
+          return item;
+        }
+
+        if (item.label === 'Directory') {
+          return {
+            ...item,
+            children: item.children.filter(
+              ([label]) => !['Users', 'Vendor Settings', 'Business', 'Business Wall'].includes(label)
+            ),
+          };
+        }
+
+        if (item.label === 'Super Admin') {
+          return {
+            ...item,
+            children: item.children.filter(
+              ([label]) => !['Assignments', 'Tasks'].includes(label)
+            ),
+          };
+        }
+
+        return item;
+      });
+
+    if (normalizedRole === ROLES.ADMIN) {
+      filteredAdminNav.push(['Calendar', '/calendar', CalendarDays]);
+    }
+
+    return filteredAdminNav.map(prefixPath);
   }
 
   const prefix = rolePrefixes[normalizedRole] || '/member/dashboard';
 
   const prefixItem = (item) => {
     if (Array.isArray(item)) {
-      const [label, to, icon] = item;
+      let [label, to, icon] = item;
+      if (to === '/chapter') {
+        if (normalizedRole === ROLES.REGION_DIRECTOR) label = 'My Region';
+        else if (normalizedRole === ROLES.STATE_DIRECTOR) label = 'My State';
+        else if (normalizedRole === ROLES.DISTRICT_DIRECTOR) label = 'My District';
+        else label = 'My Chapter';
+      }
       const memberReferralPath = label === 'Referrals' && to === '/referrals' && [ROLES.CUSTOMER, ROLES.USER, ROLES.VENDOR].includes(normalizedRole);
       const finalPath = memberReferralPath
         ? '/member/referrals'
@@ -488,23 +502,6 @@ export function getSidebarNav(role, options = {}) {
 
 
 let base = commonModules.map(item => {
-  if (item.label === 'Account') {
-    const children = [...item.children];
-
-    if ([ROLES.CUSTOMER, ROLES.USER, ROLES.VENDOR].includes(role)) {
-      children.splice(1, 0, [
-        'Membership Application Status',
-        '/member/membership-application-status',
-        ClipboardCheck,
-      ]);
-    }
-
-    return prefixItem({
-      ...item,
-      children,
-    });
-  }
-
   return prefixItem(item);
 });
 
@@ -518,7 +515,6 @@ if (
       ['Locations', '/locations', MapPinned],
     ].map(prefixItem),
   };
-
   if (normalizedRole === ROLES.DISTRICT_DIRECTOR) {
     base = [
       base[0], // Dashboard
@@ -526,9 +522,10 @@ if (
       base[2], // Marketplace
       base[3], // Meetings
       base[1], // Community
-      base[4], // Chapter
-      base[5], // Collaboration
-      base[6], // Account
+      base[4], // Training
+      base[5], // Chapter
+      base[6], // Collaboration
+      base[7], // Profile
     ];
   } else {
     base = [
@@ -537,9 +534,10 @@ if (
       base[2], // Marketplace
       base[3], // Meetings
       base[1], // Community
-      base[4], // Chapter
-      base[5], // Collaboration
-      base[6], // Account
+      base[4], // Training
+      base[5], // Chapter
+      base[6], // Collaboration
+      base[7], // Profile
     ];
   }
 }

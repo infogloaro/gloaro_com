@@ -16,15 +16,12 @@ export default function JurisdictionCard() {
   const district = org.assignedDistrict?.name || org.district?.name || org.district || ''
   const chapter = org.assignedChapter?.name || org.chapter?.name || org.chapter || ''
 
-  const [chapterDetails, setChapterDetails] = useState(null)
+  const [overview, setOverview] = useState(null)
 
   useEffect(() => {
-    const chapterId = org.chapter?._id || org.chapter
-    if (!chapterId) return
-
-    api.get(`/community/chapters/${chapterId}`)
+    api.get('/directory/scope-overview')
       .then(res => {
-        setChapterDetails(res.data?.data || null)
+        setOverview(res.data?.data || null)
       })
       .catch(() => {})
   }, [user])
@@ -86,11 +83,11 @@ export default function JurisdictionCard() {
           </div>
         )}
 
-        {chapterDetails && (
+        {overview?.leadership && (
           <div className="mt-3 grid grid-cols-1 gap-2 text-xs font-semibold text-slate-500 sm:grid-cols-3 border-t border-slate-100 pt-3">
-            <div>👑 President: {chapterDetails.metadata?.presidentName || 'Kishore Kumar'}</div>
-            <div>⚡ Vice President: {chapterDetails.metadata?.vicePresidentName || 'Arun Dev'}</div>
-            <div>📋 Secretary: {chapterDetails.metadata?.secretaryName || 'Meena S.'}</div>
+            <div>👑 President: {overview.leadership.president?.name || 'Not assigned'}</div>
+            <div>⚡ Vice President: {overview.leadership.vicePresident?.name || 'Not assigned'}</div>
+            <div>📋 Secretary: {overview.leadership.secretary?.name || 'Not assigned'}</div>
           </div>
         )}
       </div>
