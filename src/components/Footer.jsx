@@ -1,4 +1,5 @@
 import logo from '../assets/logo.png'
+import leastActionLogo from '../assets/least-action-company-logo.png'
 
 const links = {
   quick: [
@@ -6,14 +7,13 @@ const links = {
     ['Why Gloaro', '#why-gloaro'],
     ['Business Categories', '#business-categories'],
     ['Features', '#features'],
-    ['Testimonials', '#testimonials'],
+    ['Success Stories', '#testimonials'],
   ],
   useful: [
-    ['Membership', '#membership'],
-    ['Events', '#events'],
+    ['Membership', '/register'],
+    ['Events', '/#events'],
     ['Shop', '/products'],
     ['Services', '/services'],
-    ['Near Me', '/nearby'],
     ['B2B Marketplace', '/vendors'],
   ],
 }
@@ -32,9 +32,21 @@ export default function Footer() {
           <div><h2 className="mb-5 font-inter text-base font-bold">Quick Links</h2><ul className="space-y-4 text-xs text-slate-100">{links.quick.map(([label, href]) => <li key={label}><a className="hover:text-[#ffad16]" href={href}>{label}</a></li>)}</ul></div>
           <div><h2 className="mb-5 font-inter text-base font-bold">Useful Links</h2><ul className="space-y-4 text-xs text-slate-100">{links.useful.map(([label, href]) => <li key={label}><a className="hover:text-[#ffad16]" href={href}>{label}</a></li>)}</ul></div>
 
-          <div><h2 className="mb-5 font-inter text-base font-bold">Contact Us</h2><div className="space-y-4 text-xs leading-5 text-slate-100"><p className="flex gap-3"><span className="text-base">⌕</span>+91 7200073704</p><p className="flex gap-3"><span className="text-sm">✉</span>info@gloaro.com</p><p className="flex gap-3"><span className="text-base">●</span><span>151 Kamadhenu Nagar 2nd street<br />Neelamagalam Road Kallakurichy - 606202</span></p></div><h2 className="mb-4 mt-7 font-inter text-base font-normal">Newsletter</h2><p className="mb-3 text-[10px] leading-4 text-slate-100">Subscribe to our newsletter for updates and<br />latest opportunities.</p><form className="flex max-w-[228px]" onSubmit={(event) => event.preventDefault()}><input aria-label="Email address" placeholder="Enter your email" className="h-9 min-w-0 flex-1 rounded-l-md bg-[#2a3b60] px-3 text-xs text-white outline-none placeholder:text-slate-400" /><button aria-label="Subscribe" className="grid h-9 w-11 place-items-center rounded-r-md bg-[#ff741a] text-lg">➤</button></form></div>
+          <div><h2 className="mb-5 font-inter text-base font-bold">Contact Us</h2><div className="space-y-4 text-xs leading-5 text-slate-100"><p className="flex gap-3"><span className="text-base">⌕</span>+91 7200073704</p><p className="flex gap-3"><span className="text-sm">✉</span>info@gloaro.com</p><p className="flex gap-3"><span className="text-base">●</span><span>151 Kamadhenu Nagar 2nd street<br />Neelamagalam Road Kallakurichy - 606202</span></p></div></div>
         </div>
-        <div className="mt-10 border-t border-white/10 pt-5 text-center text-[11px] font-medium text-slate-500">© 2026 GLOARO. All rights reserved.</div>
+        <div className="mt-10 flex flex-col gap-4 border-t border-white/10 pt-5 text-center text-[11px] font-medium text-slate-400 lg:flex-row lg:items-center lg:justify-between lg:text-left">
+          <p>© 2026 GLOARO. All rights reserved.</p>
+          <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 lg:justify-end">
+            <span>Terms &amp; Conditions</span>
+            <span className="hidden h-4 w-px bg-white/20 sm:block" />
+            <span>Privacy Policy</span>
+            <span className="hidden h-4 w-px bg-white/20 sm:block" />
+            <a href="https://www.leastactioncompany.com/" target="_blank" rel="noopener noreferrer" className="group inline-flex items-center gap-2 text-slate-300 transition hover:text-[#ffad16]">
+              <span>Powered by</span>
+              <img src={leastActionLogo} alt="Least Action Company" className="h-11 w-auto rounded object-contain transition group-hover:scale-[1.03]" />
+            </a>
+          </div>
+        </div>
       </div>
     </footer>
   )

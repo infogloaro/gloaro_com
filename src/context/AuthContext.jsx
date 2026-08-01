@@ -215,7 +215,7 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     const token = storage.getAccessToken()
-    if (!token || !user) return undefined
+    if (!token || !user || isCustomerPortalSession(user)) return undefined
 
     const client = io(socketUrl, { auth: { token }, transports: ['websocket'] })
     client.on('notification', (notification) => toast(notification.title || notification.message || 'New notification'))

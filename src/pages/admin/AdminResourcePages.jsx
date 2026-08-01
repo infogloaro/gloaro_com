@@ -945,7 +945,7 @@ export function AdminBannersPage() {
 }
 
 export function AdminFaqsPage() {
-  return <ResourceListPage module="settings" section="faqs" title="FAQ Management" fetcher={adminApi.faqs} createAction={adminApi.createFaq} updateAction={adminApi.updateFaq} deleteAction={adminApi.deleteFaq} columns={[{ key: 'question', header: 'Question' }, { key: 'category', header: 'Category' }, { key: 'isActive', header: 'Status', render: (row) => <StatusBadge value={row.isActive ? 'active' : 'inactive'} /> }]} renderForm={(props) => <SimpleJsonForm {...props} fields={[{ name: 'question' }, { name: 'answer', type: 'textarea' }, { name: 'category' }]} />} />
+  return <ResourceListPage module="settings" section="faqs" title="FAQ Management" fetcher={adminApi.faqs} createAction={adminApi.createFaq} updateAction={adminApi.updateFaq} deleteAction={adminApi.deleteFaq} columns={[{ key: 'question', header: 'Question' }, { key: 'category', header: 'Category' }, { key: 'isActive', header: 'Status', render: (row) => <StatusBadge value={row.isActive ? 'active' : 'inactive'} /> }]} renderForm={(props) => <SimpleJsonForm {...props} fields={[{ name: 'question' }, { name: 'answer', type: 'textarea' }, { name: 'category' }, { name: 'isActive', label: 'Status', type: 'select', options: [{ value: 'true', label: 'Active' }, { value: 'false', label: 'Inactive' }] }]} />} />
 }
 
 export function AdminSettingsPage() {
