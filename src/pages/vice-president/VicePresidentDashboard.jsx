@@ -59,20 +59,20 @@ export default function VicePresidentDashboard() {
   const report = analytics.data || {}
 
   // Fetch chapter secretary count
-  const [secCount, setSecCount] = useState(1)
+  const secCount = stats.roleStats?.secretaries ?? 0;
   const [posts, setPosts] = useState([])
   const [referrals, setReferrals] = useState([])
   const [visitorsCount, setVisitorsCount] = useState(0)
   const [membershipApps, setMembershipApps] = useState([])
+  const [scopeOverview, setScopeOverview] = useState(null)
 
   useEffect(() => {
-    adminApi.adminAccounts({ role: ROLES.SECRETARY, limit: 1 })
-      .then(res => {
-        const pagination = res.data?.data?.pagination || res.data?.pagination || {}
-        setSecCount(pagination.total || res.data?.data?.total || 1)
-      })
+    api.get('/directory/scope-overview')
+      .then(res => setScopeOverview(res.data?.data || null))
       .catch(() => {})
+  }, [])
 
+  useEffect(() => {
     // Load recent posts
     api.get('/community/posts')
       .then(res => setPosts(res.data?.data?.slice(0, 3) || []))
@@ -122,14 +122,14 @@ export default function VicePresidentDashboard() {
 
   // Dynamic live statistics from API metrics
   const kpis = {
-    members: stats.roleStats?.registeredMembers || stats.totalUsers || 0,
-    activeMembers: stats.roleStats?.registeredMembers || stats.activeUsers || 0,
-    pendingRegs: stats.roleStats?.pendingRegistrations || stats.pendingMembershipApplications || 0,
-    attendanceRate: '100%',
-    referralsGiven: referrals.length || 0,
-    businessGen: formatCurrency(stats.revenue || 0),
-    visitorsThisMonth: visitorsCount || 0,
-    upcomingMeetings: stats.eventsCount || 0
+    members: stats.roleStats?.registeredMembers ?? stats.totalUsers ?? '—',
+    activeMembers: scopeOverview?.activeMembers ?? stats.activeUsers ?? '—',
+    pendingRegs: stats.roleStats?.pendingRegistrations ?? stats.pendingMembershipApplications ?? '—',
+    attendanceRate: '—', // no real backend data
+    referralsGiven: referrals.length > 0 ? referrals.length : '—',
+    businessGen: stats.revenue != null ? formatCurrency(stats.revenue) : '—',
+    visitorsThisMonth: visitorsCount > 0 ? visitorsCount : '—',
+    upcomingMeetings: stats.eventsCount ?? '—'
   }
 
   return (
@@ -189,15 +189,15 @@ export default function VicePresidentDashboard() {
             <div className="space-y-2.5 text-xs">
               <div className="flex justify-between border-b border-slate-100 pb-1.5">
                 <span className="font-semibold text-slate-500">Chapter President</span>
-                <span className="font-extrabold text-slate-850">Suresh Kumar</span>
+                <span className="font-extrabold text-slate-850">{scopeOverview?.president?.name || 'Not assigned'}</span>
               </div>
               <div className="flex justify-between border-b border-slate-100 pb-1.5">
                 <span className="font-semibold text-slate-500">Vice President</span>
-                <span className="font-extrabold text-slate-850">{user?.name || 'Kishore'}</span>
+                <span className="font-extrabold text-slate-850">{user?.name || 'Not assigned'}</span>
               </div>
               <div className="flex justify-between border-b border-slate-100 pb-1.5">
                 <span className="font-semibold text-slate-500">Secretary</span>
-                <span className="font-extrabold text-slate-850">Meena</span>
+                <span className="font-extrabold text-slate-850">{scopeOverview?.secretary?.name || 'Not assigned'}</span>
               </div>
               <div className="flex justify-between pb-1.5">
                 <span className="font-semibold text-slate-500">Members Count</span>
@@ -215,19 +215,19 @@ export default function VicePresidentDashboard() {
             <div className="space-y-2.5 text-xs">
               <div className="flex justify-between border-b border-slate-100 pb-1.5">
                 <span className="font-semibold text-slate-500">Meeting Day</span>
-                <span className="font-extrabold text-slate-850">Friday</span>
+                <span className="font-extrabold text-slate-850">Not configured</span>
               </div>
               <div className="flex justify-between border-b border-slate-100 pb-1.5">
                 <span className="font-semibold text-slate-500">Meeting Time</span>
-                <span className="font-extrabold text-slate-850">7:00 AM</span>
+                <span className="font-extrabold text-slate-850">Not configured</span>
               </div>
               <div className="flex justify-between border-b border-slate-100 pb-1.5">
                 <span className="font-semibold text-slate-500">Vendors Count</span>
-                <span className="font-extrabold text-slate-850">18</span>
+                <span className="font-extrabold text-slate-850">{stats.activeVendors ?? '—'}</span>
               </div>
               <div className="flex justify-between pb-1.5">
                 <span className="font-semibold text-slate-500">Average Attendance</span>
-                <span className="font-extrabold text-emerald-600">94.2%</span>
+                <span className="font-extrabold text-emerald-600">—</span>
               </div>
             </div>
           </div>
@@ -349,7 +349,23 @@ export default function VicePresidentDashboard() {
         </div>
       </section>
 
-
+      {/* 5. Chapter Performance Charts */}
+      <section className="grid gap-5 xl:grid-cols-2">
+        {report.monthlyUsers?.length ? (
+          <ChartCard title="Membership Growth" data={report.monthlyUsers.map((item) => ({ label: monthLabel(item), members: item.users }))} dataKey="members" />
+        ) : (
+          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm flex flex-col items-center justify-center min-h-[300px]">
+            <p className="text-sm font-semibold text-slate-500">No data available</p>
+          </div>
+        )}
+        {report.membershipSales?.length ? (
+          <ChartCard title="Business Generated" type="bar" data={report.membershipSales.map((item) => ({ label: item._id, sales: item.sales }))} dataKey="sales" />
+        ) : (
+          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm flex flex-col items-center justify-center min-h-[300px]">
+            <p className="text-sm font-semibold text-slate-500">No data available</p>
+          </div>
+        )}
+      </section>
 
       {/* 6. Upcoming Activities */}
       <section className="grid gap-6 md:grid-cols-2">
@@ -366,14 +382,7 @@ export default function VicePresidentDashboard() {
           <div className="space-y-3">
             <h4 className="text-xs font-black uppercase tracking-wider text-slate-400">Visitor Invitations</h4>
             <div className="text-xs space-y-2">
-              <div className="flex justify-between text-slate-800">
-                <span className="font-bold">Rahul Dravid (Guest)</span>
-                <span className="text-slate-500">Pending Attendance</span>
-              </div>
-              <div className="flex justify-between text-slate-800">
-                <span className="font-bold">Priya Sen (Vendor Guest)</span>
-                <span className="text-emerald-600 font-extrabold">Confirmed Friday</span>
-              </div>
+              <p className="text-xs font-semibold text-slate-500">No visitors confirmed.</p>
             </div>
           </div>
         </div>
@@ -420,127 +429,21 @@ export default function VicePresidentDashboard() {
           <Volume2 className="h-4 w-4 text-[#0d4697]" /> Latest Chapter Posts (Business Wall)
         </h3>
         <div className="grid gap-4 md:grid-cols-3">
-          <div className="bg-slate-50 border border-slate-100 rounded-xl p-4 space-y-3">
-            <div className="flex items-center gap-2">
-              <span className="inline-block text-[10px] font-black uppercase px-2 py-0.5 bg-blue-100 text-blue-800 rounded">Promotion</span>
-              <span className="text-[10px] font-semibold text-slate-400">1 hr ago</span>
-            </div>
-            <div className="text-xs font-extrabold text-slate-900">Custom Web Portals - 15% discount for members</div>
-            <p className="text-[11px] font-semibold text-slate-500">Offering exclusive portal packages for all Chennai district chapters.</p>
-            <div className="text-xs font-bold text-slate-600">Posted by: Karthik (Member)</div>
-          </div>
-
-          <div className="bg-slate-50 border border-slate-100 rounded-xl p-4 space-y-3">
-            <div className="flex items-center gap-2">
-              <span className="inline-block text-[10px] font-black uppercase px-2 py-0.5 bg-amber-100 text-amber-800 rounded">Requirement</span>
-              <span className="text-[10px] font-semibold text-slate-400">4 hr ago</span>
-            </div>
-            <div className="text-xs font-extrabold text-slate-900">Urgent need for local warehousing services</div>
-            <p className="text-[11px] font-semibold text-slate-500">Need warehousing space for FMCG distribution clients.</p>
-            <div className="text-xs font-bold text-slate-600">Posted by: Suresh (President)</div>
-          </div>
-
-          <div className="bg-slate-50 border border-slate-100 rounded-xl p-4 space-y-3">
-            <div className="flex items-center gap-2">
-              <span className="inline-block text-[10px] font-black uppercase px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded">Success Story</span>
-              <span className="text-[10px] font-semibold text-slate-400">Yesterday</span>
-            </div>
-            <div className="text-xs font-extrabold text-slate-900">Closed business worth 4.2 Lakhs via Referral</div>
-            <p className="text-[11px] font-semibold text-slate-500">A big thank you to Meena for warehousing introduction.</p>
-            <div className="text-xs font-bold text-slate-600">Posted by: Meena (Secretary)</div>
-          </div>
+          {posts.length > 0 ? (
+            posts.map(post => (
+              <div key={post._id} className="bg-slate-50 border border-slate-100 rounded-xl p-4 space-y-3">
+                <div className="text-xs font-extrabold text-slate-900">{post.title || 'Post'}</div>
+                <p className="text-[11px] font-semibold text-slate-500">{post.content || ''}</p>
+                <div className="text-xs font-bold text-slate-600">Posted by: {post.author?.name || 'Member'}</div>
+              </div>
+            ))
+          ) : (
+            <p className="text-sm font-semibold text-slate-500 col-span-3 text-center py-6">No recent posts found.</p>
+          )}
         </div>
       </section>
 
-      {/* 8. Referrals Pipeline */}
-      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h3 className="text-sm font-black uppercase text-slate-800 tracking-wider mb-6 flex items-center gap-2">
-          <Handshake className="h-4 w-4 text-[#0d4697]" /> Chapter Referrals Pipeline
-        </h3>
-        <div className="grid gap-4 grid-cols-2 md:grid-cols-5 relative">
-          {[
-            { stage: 'Created', count: 14, color: 'border-slate-300 text-slate-600 bg-slate-50' },
-            { stage: 'Accepted', count: 11, color: 'border-blue-200 text-blue-800 bg-blue-50' },
-            { stage: 'Contacted', count: 9, color: 'border-amber-200 text-amber-800 bg-amber-50' },
-            { stage: 'Proposal Sent', count: 6, color: 'border-indigo-200 text-indigo-800 bg-indigo-50' },
-            { stage: 'Business Closed', count: 4, color: 'border-emerald-200 text-emerald-800 bg-emerald-50' }
-          ].map((item, idx) => (
-            <div key={item.stage} className={`border rounded-xl p-4 text-center ${item.color}`}>
-              <div className="text-2xl font-black">{item.count}</div>
-              <div className="text-xs font-bold uppercase tracking-wider mt-1">{item.stage}</div>
-              <div className="text-[10px] text-slate-500 mt-0.5">Stage {idx + 1}</div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* 9. Top Performers */}
-      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h3 className="text-sm font-black uppercase text-slate-800 tracking-wider mb-4 flex items-center gap-2">
-          <Award className="h-4 w-4 text-[#0d4697]" /> Chapter Top Performers Standings
-        </h3>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-          <div className="border border-slate-100 rounded-xl p-4 text-center bg-slate-50/50">
-            <div className="font-extrabold text-xs text-slate-500 uppercase">Top Referrer</div>
-            <div className="font-black text-sm text-[#0d4697] mt-1.5">Suresh Kumar</div>
-            <div className="text-xs text-slate-600 mt-1 font-bold">14 referrals passed</div>
-          </div>
-          <div className="border border-slate-100 rounded-xl p-4 text-center bg-slate-50/50">
-            <div className="font-extrabold text-xs text-slate-500 uppercase">Top Attendance</div>
-            <div className="font-black text-sm text-[#0d4697] mt-1.5">Meena (Sec)</div>
-            <div className="text-xs text-slate-600 mt-1 font-bold">100% attendance</div>
-          </div>
-          <div className="border border-slate-100 rounded-xl p-4 text-center bg-slate-50/50">
-            <div className="font-extrabold text-xs text-slate-500 uppercase">Top Value Generated</div>
-            <div className="font-black text-sm text-[#0d4697] mt-1.5">Karthik Raja</div>
-            <div className="text-xs text-slate-600 mt-1 font-bold">4.2 Lakhs value</div>
-          </div>
-          <div className="border border-slate-100 rounded-xl p-4 text-center bg-slate-50/50">
-            <div className="font-extrabold text-xs text-slate-500 uppercase">Most One-to-Ones</div>
-            <div className="font-black text-sm text-[#0d4697] mt-1.5">Priya Sen</div>
-            <div className="text-xs text-slate-600 mt-1 font-bold">12 completed</div>
-          </div>
-          <div className="border border-slate-100 rounded-xl p-4 text-center bg-slate-50/50">
-            <div className="font-extrabold text-xs text-slate-500 uppercase">Top Inviter</div>
-            <div className="font-black text-sm text-[#0d4697] mt-1.5">Rahul Dravid</div>
-            <div className="text-xs text-slate-600 mt-1 font-bold">4 visitors invited</div>
-          </div>
-        </div>
-      </section>
-
-      {/* 10. Recent Activity */}
-      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h3 className="text-sm font-black uppercase text-slate-800 tracking-wider mb-4 flex items-center gap-2">
-          <Activity className="h-4 w-4 text-[#0d4697]" /> Recent Activities Log
-        </h3>
-        <div className="space-y-3">
-          <div className="flex items-center gap-3 text-xs">
-            <span className="h-2 w-2 rounded-full bg-emerald-500 shrink-0" />
-            <span className="font-extrabold text-slate-900">Member Registered:</span>
-            <span className="text-slate-500">Karthik Raja was successfully registered and assigned MEM-TN-CHN-000147 ID.</span>
-          </div>
-          <div className="flex items-center gap-3 text-xs">
-            <span className="h-2 w-2 rounded-full bg-[#0d4697] shrink-0" />
-            <span className="font-extrabold text-slate-900">Referral Passed:</span>
-            <span className="text-slate-500">Suresh Kumar passed a high-priority business referral to Priya Sen.</span>
-          </div>
-          <div className="flex items-center gap-3 text-xs">
-            <span className="h-2 w-2 rounded-full bg-amber-500 shrink-0" />
-            <span className="font-extrabold text-slate-900">Visitor Added:</span>
-            <span className="text-slate-500">Secretary Meena added Rahul Dravid as an upcoming visitor.</span>
-          </div>
-          <div className="flex items-center gap-3 text-xs">
-            <span className="h-2 w-2 rounded-full bg-slate-400 shrink-0" />
-            <span className="font-extrabold text-slate-900">Meeting Completed:</span>
-            <span className="text-slate-500">Weekly session completed with 95% attendance log accuracy.</span>
-          </div>
-          <div className="flex items-center gap-3 text-xs">
-            <span className="h-2 w-2 rounded-full bg-emerald-500 shrink-0" />
-            <span className="font-extrabold text-slate-900">Attendance Updated:</span>
-            <span className="text-slate-500">Meena marked Friday attendance list.</span>
-          </div>
-        </div>
-      </section>
+      {/* The Referrals Pipeline, Top Performers, and Activity mock sections have been removed per strict user request. */}
     </div>
   )
 }

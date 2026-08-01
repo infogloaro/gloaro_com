@@ -120,7 +120,7 @@ const ADMIN_ROUTE_RULES = [
   { path: '/vendor-settings', module: 'marketplace', section: 'vendor_settings' },
   { path: '/vendor-approval-workflow', module: 'marketplace', section: 'vendor_approval' },
   { path: '/vendor-category-approvals', module: 'marketplace', section: 'vendor_category_approvals' },
-  { path: '/categories', module: 'settings', section: 'categories' },
+  { path: '/marketplace/categories', module: 'settings', section: 'categories' },
   { path: '/business', module: 'business_wall', section: 'business' },
   { path: '/business-wall', module: 'business_wall', section: 'business_wall' },
   { path: '/products', module: 'marketplace', section: 'products' },

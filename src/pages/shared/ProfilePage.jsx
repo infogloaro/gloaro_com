@@ -24,9 +24,25 @@ const REPORTING_STRUCTURE = {
   [ROLES.SECRETARY]: 'Vice President',
 }
 
+const VIEW_ONLY_PROFILE_ROLES = [
+  ROLES.SUPERADMIN,
+  ROLES.ADMIN,
+  ROLES.REGION_DIRECTOR,
+  ROLES.STATE_DIRECTOR,
+  ROLES.DISTRICT_DIRECTOR,
+  ROLES.EXECUTIVE_DIRECTOR,
+  ROLES.LAUNCH_DIRECTOR,
+  ROLES.DIRECT_CONSULTANT,
+  ROLES.CHAPTER_PRESIDENT,
+  ROLES.VICE_PRESIDENT,
+  ROLES.SECRETARY,
+  ROLES.USER,
+]
+
 export default function ProfilePage() {
   const { data, loading, execute } = useApi(() => api.get('/users/profile'))
   const user = data?.data || data?.user || data
+  const isViewOnlyProfile = VIEW_ONLY_PROFILE_ROLES.includes(user?.role) && !user?.meta?.customerPortal?.isolated
   const [activity, setActivity] = useState([])
   const [loadingActivity, setLoadingActivity] = useState(false)
   const [updatingPassword, setUpdatingPassword] = useState(false)
@@ -118,51 +134,84 @@ export default function ProfilePage() {
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
-        {/* Left: Forms */}
+        {/* Left: Forms / Details */}
         <div className="space-y-6 lg:col-span-2">
-          {/* Personal Info Form */}
-          <form onSubmit={handleProfileSubmit(onUpdateProfile)} className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-            <h3 className="flex items-center gap-2 text-lg font-black text-slate-950 dark:text-white">
-              <User className="h-5 w-5 text-[#0d4697]" />
-              Personal Details
-            </h3>
-            <div className="mt-5 grid gap-4 sm:grid-cols-2">
-              <FormField label="Full Name">
-                <input {...regProfile('name')} className="h-11 w-full rounded-md border border-slate-300 px-3 outline-none focus:border-[#0d4697] dark:border-slate-700 dark:bg-slate-800" />
-              </FormField>
-              <FormField label="Email (Read-only)">
-                <input {...regProfile('email')} disabled className="h-11 w-full rounded-md border border-slate-300 bg-slate-50 px-3 outline-none dark:border-slate-800 dark:bg-slate-950 dark:text-slate-400" />
-              </FormField>
-              <FormField label="Mobile Number">
-                <input {...regProfile('phone')} className="h-11 w-full rounded-md border border-slate-300 px-3 outline-none focus:border-[#0d4697] dark:border-slate-700 dark:bg-slate-800" />
-              </FormField>
+          {isViewOnlyProfile ? (
+            <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+              <h3 className="flex items-center gap-2 text-lg font-black text-slate-950 dark:text-white">
+                <User className="h-5 w-5 text-[#0d4697]" />
+                Personal Details
+              </h3>
+              <div className="mt-5 grid gap-6 sm:grid-cols-2">
+                <div>
+                  <p className="text-[10px] font-extrabold uppercase tracking-wide text-slate-400">Full Name</p>
+                  <p className="mt-1 text-sm font-bold text-slate-850 dark:text-slate-200">{user?.name || '-'}</p>
+                </div>
+                <div>
+                  <p className="text-[10px] font-extrabold uppercase tracking-wide text-slate-400">Email Address</p>
+                  <p className="mt-1 text-sm font-bold text-slate-850 dark:text-slate-200">{user?.email || '-'}</p>
+                </div>
+                <div>
+                  <p className="text-[10px] font-extrabold uppercase tracking-wide text-slate-400">Mobile Number</p>
+                  <p className="mt-1 text-sm font-bold text-slate-850 dark:text-slate-200">{user?.phone || '-'}</p>
+                </div>
+                <div>
+                  <p className="text-[10px] font-extrabold uppercase tracking-wide text-slate-400">Official ID</p>
+                  <p className="mt-1 text-sm font-bold text-slate-850 dark:text-slate-200">{user?.officialId || '-'}</p>
+                </div>
+                <div>
+                  <p className="text-[10px] font-extrabold uppercase tracking-wide text-slate-400">Role</p>
+                  <p className="mt-1 text-sm font-bold text-slate-850 dark:text-slate-200">{roleLabel(user?.role)}</p>
+                </div>
+              </div>
             </div>
-            <button disabled={isSubmitting} type="submit" className="mt-5 h-11 rounded-md bg-[#0d4697] px-5 text-sm font-extrabold text-white hover:bg-blue-800">
-              Update Profile
-            </button>
-          </form>
+          ) : (
+            <>
+              {/* Personal Info Form */}
+              <form onSubmit={handleProfileSubmit(onUpdateProfile)} className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                <h3 className="flex items-center gap-2 text-lg font-black text-slate-950 dark:text-white">
+                  <User className="h-5 w-5 text-[#0d4697]" />
+                  Personal Details
+                </h3>
+                <div className="mt-5 grid gap-4 sm:grid-cols-2">
+                  <FormField label="Full Name">
+                    <input {...regProfile('name')} className="h-11 w-full rounded-md border border-slate-300 px-3 outline-none focus:border-[#0d4697] dark:border-slate-700 dark:bg-slate-800" />
+                  </FormField>
+                  <FormField label="Email (Read-only)">
+                    <input {...regProfile('email')} disabled className="h-11 w-full rounded-md border border-slate-300 bg-slate-50 px-3 outline-none dark:border-slate-800 dark:bg-slate-950 dark:text-slate-400" />
+                  </FormField>
+                  <FormField label="Mobile Number">
+                    <input {...regProfile('phone')} className="h-11 w-full rounded-md border border-slate-300 px-3 outline-none focus:border-[#0d4697] dark:border-slate-700 dark:bg-slate-800" />
+                  </FormField>
+                </div>
+                <button disabled={isSubmitting} type="submit" className="mt-5 h-11 rounded-md bg-[#0d4697] px-5 text-sm font-extrabold text-white hover:bg-blue-800">
+                  Update Profile
+                </button>
+              </form>
 
-          {/* Change Password Form */}
-          <form onSubmit={handlePasswordSubmit(onUpdatePassword)} className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-            <h3 className="flex items-center gap-2 text-lg font-black text-slate-950 dark:text-white">
-              <Lock className="h-5 w-5 text-[#0d4697]" />
-              Change Password
-            </h3>
-            <div className="mt-5 grid gap-4 sm:grid-cols-3">
-              <FormField label="Old Password">
-                <input type="password" {...regPassword('oldPassword', { required: true })} className="h-11 w-full rounded-md border border-slate-300 px-3 outline-none focus:border-[#0d4697] dark:border-slate-700 dark:bg-slate-800" />
-              </FormField>
-              <FormField label="New Password">
-                <input type="password" {...regPassword('newPassword', { required: true })} className="h-11 w-full rounded-md border border-slate-300 px-3 outline-none focus:border-[#0d4697] dark:border-slate-700 dark:bg-slate-800" />
-              </FormField>
-              <FormField label="Confirm New Password">
-                <input type="password" {...regPassword('confirmPassword', { required: true })} className="h-11 w-full rounded-md border border-slate-300 px-3 outline-none focus:border-[#0d4697] dark:border-slate-700 dark:bg-slate-800" />
-              </FormField>
-            </div>
-            <button disabled={updatingPassword} type="submit" className="mt-5 h-11 rounded-md bg-slate-950 px-5 text-sm font-extrabold text-white hover:bg-slate-800">
-              Change Password
-            </button>
-          </form>
+              {/* Change Password Form */}
+              <form onSubmit={handlePasswordSubmit(onUpdatePassword)} className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                <h3 className="flex items-center gap-2 text-lg font-black text-slate-950 dark:text-white">
+                  <Lock className="h-5 w-5 text-[#0d4697]" />
+                  Change Password
+                </h3>
+                <div className="mt-5 grid gap-4 sm:grid-cols-3">
+                  <FormField label="Old Password">
+                    <input type="password" {...regPassword('oldPassword', { required: true })} className="h-11 w-full rounded-md border border-slate-300 px-3 outline-none focus:border-[#0d4697] dark:border-slate-700 dark:bg-slate-800" />
+                  </FormField>
+                  <FormField label="New Password">
+                    <input type="password" {...regPassword('newPassword', { required: true })} className="h-11 w-full rounded-md border border-slate-300 px-3 outline-none focus:border-[#0d4697] dark:border-slate-700 dark:bg-slate-800" />
+                  </FormField>
+                  <FormField label="Confirm New Password">
+                    <input type="password" {...regPassword('confirmPassword', { required: true })} className="h-11 w-full rounded-md border border-slate-300 px-3 outline-none focus:border-[#0d4697] dark:border-slate-700 dark:bg-slate-800" />
+                  </FormField>
+                </div>
+                <button disabled={updatingPassword} type="submit" className="mt-5 h-11 rounded-md bg-slate-950 px-5 text-sm font-extrabold text-white hover:bg-slate-800">
+                  Change Password
+                </button>
+              </form>
+            </>
+          )}
         </div>
 
         {/* Right: metadata & Timeline */}
