@@ -57,7 +57,7 @@ export function resolveNavigation({ user, marketplaceAccess, navItems = [], onbo
   if (isAdministrativeRole(role)) {
     return {
       mode: NAVIGATION_MODES.ROLE_BASED,
-      items: getRoleBasedSidebarNav(user.role),
+      items: getRoleBasedSidebarNav(user.role, user),
       title: 'Dashboard',
     }
   }
@@ -105,7 +105,7 @@ export function resolveNavigation({ user, marketplaceAccess, navItems = [], onbo
   if (account.isMemberVendor) {
     return {
       mode: NAVIGATION_MODES.MEMBER_VENDOR,
-      items: getMemberVendorSidebarNav(user.role),
+      items: getMemberVendorSidebarNav(user.role, user),
       title: 'Dashboard',
     }
   }
@@ -113,14 +113,14 @@ export function resolveNavigation({ user, marketplaceAccess, navItems = [], onbo
   if (account.isMemberOnly) {
     return {
       mode: NAVIGATION_MODES.MEMBER,
-      items: getMemberSidebarNav(user.role),
+      items: getMemberSidebarNav(user.role, user),
       title: 'Dashboard',
     }
   }
 
   return {
     mode: NAVIGATION_MODES.ROLE_BASED,
-    items: getRoleBasedSidebarNav(user.role),
+    items: getRoleBasedSidebarNav(user.role, user),
     title: 'Dashboard',
   }
 }

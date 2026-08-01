@@ -14,7 +14,9 @@ export const communityApi = {
   getReferrals: () => api.get('/community/referrals'),
   createReferral: (payload) => api.post('/community/referrals', payload),
   updateReferralStatus: (id, payload) => api.patch(`/community/referrals/${id}`, payload),
-  getMySignupReferrals: () => api.get('/referrals/my'),
+  getMySignupReferrals: (params) => api.get('/referrals/my', { params }),
+  getMyReferralCode: () => api.get('/referrals/my/code'),
+  getMySignupReferralDetail: (id) => api.get(`/referrals/my/${id}`),
 
   // 3. One-to-Ones
   getOneToOnes: () => api.get('/community/one-to-ones'),
@@ -30,6 +32,7 @@ export const communityApi = {
 
   // 6. Business Directory Search
   getDirectory: (params) => api.get('/community/directory', { params }),
+  getMentions: (params) => api.get('/community/mentions', { params }),
 
   // 6b. Organization filters
   getRegions: (scope) => api.get('/organization/regions', { params: scope ? { scope } : undefined }),

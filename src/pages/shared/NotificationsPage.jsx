@@ -1,9 +1,12 @@
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { notificationApi } from '../../api/notification'
 import LoadingScreen from '../../components/common/LoadingScreen'
 import { useAuth } from '../../hooks/useAuth'
+import { getCommunityNotificationPath } from '../../utils/communityNotifications'
 import {
+  AtSign,
   Bell,
   Check,
   CheckCircle2,
@@ -17,7 +20,8 @@ import {
 import { formatDate } from '../../utils/format'
 
 export default function NotificationsPage() {
-  const { socket } = useAuth()
+  const { socket, user } = useAuth()
+  const navigate = useNavigate()
   const [notifications, setNotifications] = useState([])
   const [loading, setLoading] = useState(true)
   const [unreadCount, setUnreadCount] = useState(0)
@@ -39,7 +43,10 @@ export default function NotificationsPage() {
   }
 
   useEffect(() => {
-    loadNotifications()
+    const timer = window.setTimeout(() => {
+      loadNotifications()
+    }, 0)
+    return () => window.clearTimeout(timer)
   }, [])
 
   // Listen to real-time notifications via Socket.IO
@@ -49,7 +56,7 @@ export default function NotificationsPage() {
     const handleNewNotification = (notification) => {
       setNotifications((prev) => [notification, ...prev])
       setUnreadCount((prev) => prev + 1)
-      toast((t) => (
+      toast(() => (
         <span className="flex items-center gap-2">
           <Bell className="h-4 w-4 text-[#0d4697]" />
           <span>{notification.title || notification.message}</span>
@@ -71,9 +78,27 @@ export default function NotificationsPage() {
         prev.map((item) => (item._id === id ? { ...item, isRead: true } : item))
       )
       setUnreadCount((prev) => Math.max(0, prev - 1))
+      window.dispatchEvent(new Event('gloaro:notification-unread-refresh'))
       toast.success('Notification marked as read')
     } catch {
       toast.error('Failed to mark notification as read')
+    }
+  }
+
+  const handleOpenNotification = async (item) => {
+    const targetPath = getCommunityNotificationPath(item, user)
+    try {
+      if (!item.isRead) {
+        await notificationApi.markRead(item._id)
+        setNotifications((prev) =>
+          prev.map((notification) => (notification._id === item._id ? { ...notification, isRead: true } : notification))
+        )
+        setUnreadCount((prev) => Math.max(0, prev - 1))
+        window.dispatchEvent(new Event('gloaro:notification-unread-refresh'))
+      }
+      if (targetPath) navigate(targetPath)
+    } catch {
+      toast.error('Failed to open notification')
     }
   }
 
@@ -82,6 +107,7 @@ export default function NotificationsPage() {
       await notificationApi.readAll()
       setNotifications((prev) => prev.map((item) => ({ ...item, isRead: true })))
       setUnreadCount(0)
+      window.dispatchEvent(new Event('gloaro:notification-unread-refresh'))
       toast.success('All notifications marked as read')
     } catch {
       toast.error('Failed to mark all as read')
@@ -92,6 +118,7 @@ export default function NotificationsPage() {
     try {
       await notificationApi.remove(id)
       setNotifications((prev) => prev.filter((item) => item._id !== id))
+      window.dispatchEvent(new Event('gloaro:notification-unread-refresh'))
       toast.success('Notification removed')
     } catch {
       toast.error('Failed to remove notification')
@@ -111,6 +138,10 @@ export default function NotificationsPage() {
         return <CheckCircle2 className="h-5 w-5 text-emerald-500" />
       case 'membership_rejected':
         return <XCircle className="h-5 w-5 text-red-500" />
+      case 'community_post':
+        return <Bell className="h-5 w-5 text-[#0d4697]" />
+      case 'community_mention':
+        return <AtSign className="h-5 w-5 text-amber-500" />
       default:
         return <Info className="h-5 w-5 text-slate-500" />
     }
@@ -152,11 +183,23 @@ export default function NotificationsPage() {
             notifications.map((item) => (
               <div
                 key={item._id}
+                role={getCommunityNotificationPath(item, user) ? 'button' : undefined}
+                tabIndex={getCommunityNotificationPath(item, user) ? 0 : undefined}
+                onClick={() => {
+                  if (getCommunityNotificationPath(item, user)) handleOpenNotification(item)
+                }}
+                onKeyDown={(event) => {
+                  if (!getCommunityNotificationPath(item, user)) return
+                  if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault()
+                    handleOpenNotification(item)
+                  }
+                }}
                 className={`flex items-start justify-between gap-4 rounded-xl border p-4 transition hover:shadow-md ${
                   item.isRead
                     ? 'border-slate-100 bg-white'
                     : 'border-blue-100 bg-blue-50/40'
-                }`}
+                } ${getCommunityNotificationPath(item, user) ? 'cursor-pointer' : ''}`}
               >
                 <div className="flex items-start gap-3 min-w-0">
                   <div className="mt-1 shrink-0">{getIcon(item.type)}</div>
@@ -176,7 +219,10 @@ export default function NotificationsPage() {
                 <div className="flex items-center gap-2 shrink-0">
                   {!item.isRead && (
                     <button
-                      onClick={() => handleMarkAsRead(item._id)}
+                      onClick={(event) => {
+                        event.stopPropagation()
+                        handleMarkAsRead(item._id)
+                      }}
                       className="grid h-8 w-8 place-items-center rounded bg-white text-slate-600 border border-slate-200 hover:bg-blue-50 hover:text-[#0d4697]"
                       title="Mark as read"
                     >
@@ -184,7 +230,10 @@ export default function NotificationsPage() {
                     </button>
                   )}
                   <button
-                    onClick={() => handleDelete(item._id)}
+                    onClick={(event) => {
+                      event.stopPropagation()
+                      handleDelete(item._id)
+                    }}
                     className="grid h-8 w-8 place-items-center rounded bg-white text-slate-400 border border-slate-200 hover:bg-red-50 hover:text-red-600"
                     title="Delete notification"
                   >

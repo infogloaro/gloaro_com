@@ -215,14 +215,7 @@ function App() {
     { path: '/meetings', element: <MeetingManagementPage /> },
     { path: '/chapters', element: <ChapterManagementPage />, roles: [ROLES.ADMIN, ROLES.SUPERADMIN] },
     { path: '/chapter-dashboard', element: <ChapterDashboardPage /> },
-    { path: '/applications', element: <AdminMembershipApplicationsPage /> },
-    { path: '/applications/membership', element: <AdminMembershipApplicationsPage /> },
-    { path: '/applications/franchise', element: <AdminModuleApplicationsPage title="Franchise Applications" /> },
-    { path: '/applications/business-network', element: <AdminModuleApplicationsPage title="Business Network Applications" /> },
-    { path: '/applications/vendor', element: <AdminVendorApplicationsPage /> },
     { path: '/membership-applications', element: <AdminMembershipApplicationsPage /> },
-    { path: '/plans', element: <AdminPlansPage /> },
-    { path: '/meeting-settings', element: <MeetingManagementPage /> },
     { path: '/events', element: <AdminEventsPage /> },
     { path: '/training', element: <TrainingManagementPage /> },
     { path: '/testimonials', element: <TestimonialsManagementPage /> },
@@ -230,24 +223,13 @@ function App() {
     { path: '/referrals-table', element: <AdminReferralsPage /> },
     { path: '/payments', element: <AdminPaymentsPage /> },
     { path: '/reviews', element: <AdminReviewsPage /> },
-    { path: '/banners', element: <AdminBannersPage /> },
     { path: '/faqs', element: <AdminFaqsPage /> },
     { path: '/settings', element: <AdminSettingsPage /> },
-    { path: '/support', element: <AdminSupportPage /> },
-    { path: '/reports', element: <EnterpriseReportBuilderPage /> },
-    { path: '/reports-center', element: <ReportsCenterPage /> },
     { path: '/analytics', element: <EnterpriseAnalyticsPage /> },
     { path: '/legacy-analytics', element: <AdminAnalytics /> },
-    { path: '/scorecards', element: <PerformanceScorecardPage /> },
-    { path: '/executive-dashboard', element: <ExecutiveDashboardPage /> },
-    { path: '/activity', element: <ActivityCenterPage /> },
-    { path: '/global-search', element: <GlobalSearchPage /> },
     { path: '/notifications', element: <NotificationsConfigPage /> },
-    { path: '/notification-automation', element: <NotificationAutomationPage /> },
     { path: '/tasks', element: <TaskManagementPage /> },
     { path: '/calendar', element: <EnterpriseCalendarPage /> },
-    { path: '/member-journey', element: <MemberJourneyPage /> },
-    { path: '/ai-insights', element: <AIInsightsPage /> },
     { path: '/broadcast-notifications', element: <AdminNotifications /> },
     { path: '/audit-logs', element: <AuditLogsPage /> },
     { path: '/system-logs', element: <SystemLogsPage />, roles: [ROLES.SUPERADMIN] },
@@ -371,6 +353,10 @@ function App() {
               {/* Parameterized main dashboard sub-views */}
               <Route path="/member/dashboard" element={<MemberDashboard />} />
               <Route path="/member/dashboard/:tab" element={<MemberDashboard />} />
+              <Route path="/member/wall" element={<BusinessWall />} />
+              <Route path="/member/network" element={<CommunityPage scope="network" />} />
+              <Route path="/member/chat" element={<ChatSystem />} />
+              <Route path="/member/referrals" element={<ReferralsPipeline />} />
               <Route path="/member/training" element={<AssignedTrainingPage />} />
               <Route path="/member/attendance" element={<AttendancePage />} />
               <Route path="/member/dashboard/attendance" element={<AttendancePage />} />
