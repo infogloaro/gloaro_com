@@ -31,4 +31,5 @@ export const vendorApi = {
   renew: (data) => api.post('/memberships/renew', data),
   payments: (params) => api.get('/vendors/me/payments', { params }),
   subscriptions: (params) => api.get('/vendors/me/subscriptions', { params }),
+  updateOrderStatus: (id, data) => api.patch(`/vendors/me/orders/${id}/status`, data),
 }

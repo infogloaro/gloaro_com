@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
 import api from '../../api/axios'
 import toast from 'react-hot-toast'
 import { vendorApi } from '../../api/vendor'
@@ -23,6 +24,15 @@ const buildApprovedCategoryOptions = (categories = [], approvedCategories = []) 
     .filter((category) => category?.isActive !== false && approvedIds.has(String(category?._id || '')))
     .map((category) => ({ value: category._id, label: category.name }))
 }
+
+const ORDER_STATUS_OPTIONS = [
+  { value: 'placed', label: 'Placed' },
+  { value: 'confirmed', label: 'Confirmed' },
+  { value: 'processing', label: 'Processing' },
+  { value: 'shipped', label: 'Shipped' },
+  { value: 'delivered', label: 'Delivered' },
+  { value: 'cancelled', label: 'Cancelled' },
+]
 
 export function VendorProfilePage() {
   return (
@@ -492,6 +502,8 @@ export function VendorOrdersPage() {
   const [activeTab, setActiveTab] = useState('all')
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedOrderId, setSelectedOrderId] = useState(null)
+  const [statusDraft, setStatusDraft] = useState('')
+  const [savingStatus, setSavingStatus] = useState(false)
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
 
@@ -591,6 +603,34 @@ export function VendorOrdersPage() {
   }, [filteredOrders, selectedOrderId])
 
   const selectedOrder = filteredOrders.find((order) => order._id === selectedOrderId) || filteredOrders[0] || null
+
+  useEffect(() => {
+    setStatusDraft(selectedOrder?.status || '')
+  }, [selectedOrder?._id, selectedOrder?.status])
+
+  const handleStatusChange = async (orderId, nextStatus) => {
+    if (!orderId || !nextStatus || !selectedOrder) return
+    if (nextStatus === selectedOrder.status) {
+      toast('Order already has that status')
+      return
+    }
+
+    setSavingStatus(true)
+    try {
+      const response = await vendorApi.updateOrderStatus(orderId, { status: nextStatus })
+      const updatedOrder = response.data?.data || response.data || null
+      if (updatedOrder?._id) {
+        setOrders((current) => current.map((order) => (order._id === updatedOrder._id ? updatedOrder : order)))
+      }
+      setStatusDraft(nextStatus)
+      toast.success('Order status updated')
+      loadOrders({ silent: true })
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to update order status')
+    } finally {
+      setSavingStatus(false)
+    }
+  }
 
   const stats = useMemo(() => {
     const totalRevenue = filteredOrders.reduce((sum, order) => sum + Number(order.total || 0), 0)
@@ -757,7 +797,7 @@ export function VendorOrdersPage() {
           <OrderDetailPanel order={selectedOrder} onCopyOrderNumber={() => {
             if (!selectedOrder?.orderNumber) return
             navigator.clipboard?.writeText(selectedOrder.orderNumber).then(() => toast.success('Order number copied')).catch(() => {})
-          }} />
+          }} statusDraft={statusDraft} statusOptions={ORDER_STATUS_OPTIONS} onStatusDraftChange={setStatusDraft} onStatusChange={handleStatusChange} savingStatus={savingStatus} />
 
           <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
             <div className="flex items-center justify-between">
@@ -962,13 +1002,13 @@ function MetricCard({ label, value, helper, icon: Icon, accent = 'slate' }) {
         </div>
         <span className="text-[10px] font-black uppercase tracking-wide text-slate-400">{label}</span>
       </div>
-      <p className="mt-4 text-2xl font-black text-slate-900">{value ?? 0}</p>
+      <p className="mt-4 text-2xl font-black text-slate-900">{displayValue(value)}</p>
       {helper && <p className="mt-1 text-xs font-semibold text-slate-500">{helper}</p>}
     </div>
   )
 }
 
-function OrderDetailPanel({ order, onCopyOrderNumber }) {
+function OrderDetailPanel({ order, onCopyOrderNumber, statusDraft, statusOptions, onStatusDraftChange, onStatusChange, savingStatus }) {
   if (!order) {
     return (
       <div className="rounded-3xl border border-dashed border-slate-200 bg-white p-8 shadow-sm">
@@ -1002,6 +1042,37 @@ function OrderDetailPanel({ order, onCopyOrderNumber }) {
         <InfoTile label="Phone" value={order.customerSnapshot?.phone || order.user?.phone || '-'} />
         <InfoTile label="Payment" value={order.paymentMethod || 'razorpay'} />
         <InfoTile label="Total" value={formatCurrency(order.total)} />
+      </div>
+
+      <div className="mt-4 rounded-2xl border border-slate-100 bg-slate-50 p-4">
+        <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+          <label className="flex-1">
+            <span className="block text-[10px] font-black uppercase tracking-wide text-slate-400">Update Status</span>
+            <select
+              value={statusDraft || order.status}
+              onChange={(event) => onStatusDraftChange?.(event.target.value)}
+              className="mt-1 h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold outline-none focus:border-[#0d4697]"
+            >
+              {statusOptions?.map((status) => (
+                <option key={status.value} value={status.value}>
+                  {status.label}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <button
+            type="button"
+            onClick={() => onStatusChange?.(order._id, statusDraft || order.status)}
+            disabled={savingStatus || !statusDraft || statusDraft === order.status}
+            className="inline-flex h-11 items-center justify-center rounded-xl bg-[#0d4697] px-4 text-xs font-black text-white transition hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {savingStatus ? 'Saving...' : 'Save Status'}
+          </button>
+        </div>
+        <p className="mt-3 text-xs font-semibold text-slate-500">
+          This updates the vendor order stage and will sync to the customer order page automatically.
+        </p>
       </div>
 
       <div className="mt-4 rounded-2xl bg-slate-50 p-4">
@@ -1120,80 +1191,300 @@ function displayValue(value) {
 export function VendorPaymentsPage() {
   const [payments, setPayments] = useState([])
   const [activeTab, setActiveTab] = useState('earnings')
+  const [loading, setLoading] = useState(true)
+  const [refreshing, setRefreshing] = useState(false)
+
+  const loadPayments = async ({ silent = false } = {}) => {
+    if (silent) setRefreshing(true)
+    else setLoading(true)
+
+    try {
+      const [dashboardRes, paymentsRes] = await Promise.allSettled([
+        vendorApi.dashboard(),
+        vendorApi.payments({ page: 1, limit: 100, sortBy: '-createdAt' }),
+      ])
+
+      const dashboardData = dashboardRes.status === 'fulfilled' ? (dashboardRes.value.data?.data || dashboardRes.value.data || {}) : {}
+      const paymentRows = paymentsRes.status === 'fulfilled' ? (paymentsRes.value.data?.data || paymentsRes.value.data || []) : []
+      const merged = mergePayments([...paymentRows, ...(dashboardData.recentPayments || [])])
+      setPayments(merged)
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to load vendor payments')
+    } finally {
+      if (silent) setRefreshing(false)
+      else setLoading(false)
+    }
+  }
 
   useEffect(() => {
-    vendorApi.payments()
-      .then(res => setPayments(res.data?.data || res.data || []))
-      .catch(() => {})
+    loadPayments()
   }, [])
+
+  const stats = useMemo(() => {
+    const completedPayments = payments.filter((payment) => payment.status === 'completed')
+    const pendingPayments = payments.filter((payment) => payment.status === 'pending')
+    const refundedPayments = payments.filter((payment) => ['refunded', 'partially_refunded'].includes(payment.status))
+    const grossSales = payments.reduce((sum, payment) => sum + Number(payment.amount || 0), 0)
+    const completedAmount = completedPayments.reduce((sum, payment) => sum + Number(payment.amount || 0), 0)
+    const commission = Math.round(completedAmount * 0.05)
+
+    return {
+      grossSales,
+      commission,
+      netEarnings: Math.max(0, completedAmount - commission),
+      completedCount: completedPayments.length,
+      pendingCount: pendingPayments.length,
+      refundedCount: refundedPayments.length,
+      recentCompleted: completedPayments.slice(0, 5),
+    }
+  }, [payments])
 
   return (
     <div className="space-y-6">
       <div>
         <h2 className="text-2xl font-black text-slate-900">Payments & Commission Settle</h2>
-        <p className="text-sm font-semibold text-slate-500">Track transaction records, overall earnings, and chapter settlements.</p>
+        <p className="text-sm font-semibold text-slate-500">Track transaction records, earnings, and settlement activity from the backend.</p>
       </div>
 
-      <div className="flex gap-2 border-b border-slate-200 pb-px">
-        {['earnings', 'settlement', 'transactions'].map((tab) => (
-          <button
-            key={tab}
-            onClick={() => setActiveTab(tab)}
-            className={`border-b-2 px-4 py-2 text-xs font-extrabold capitalize transition-all ${
-              activeTab === tab
-                ? 'border-[#0d4697] text-[#0d4697]'
-                : 'border-transparent text-slate-500 hover:text-slate-800'
-            }`}
-          >
-            {tab}
-          </button>
-        ))}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex gap-2 border-b border-slate-200 pb-px">
+          {['earnings', 'settlement', 'transactions'].map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`border-b-2 px-4 py-2 text-xs font-extrabold capitalize transition-all ${
+                activeTab === tab
+                  ? 'border-[#0d4697] text-[#0d4697]'
+                  : 'border-transparent text-slate-500 hover:text-slate-800'
+              }`}
+            >
+              {tab}
+            </button>
+          ))}
+        </div>
+
+        <button
+          type="button"
+          onClick={() => loadPayments({ silent: true })}
+          className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-black text-slate-700 hover:border-[#0d4697] hover:text-[#0d4697]"
+        >
+          <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
+          Refresh
+        </button>
       </div>
 
       {activeTab === 'earnings' && (
         <div className="grid gap-4 sm:grid-cols-3">
           <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm text-left">
             <p className="text-[10px] font-black uppercase text-slate-400">Gross Sales</p>
-            <p className="text-xl font-black text-slate-800 mt-2">₹4,85,250</p>
+            <p className="text-xl font-black text-slate-800 mt-2">{formatCurrency(stats.grossSales)}</p>
           </div>
           <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm text-left">
             <p className="text-[10px] font-black uppercase text-slate-400">Commission Deducted (5%)</p>
-            <p className="text-xl font-black text-[#0d4697] mt-2">₹24,260</p>
+            <p className="text-xl font-black text-[#0d4697] mt-2">{formatCurrency(stats.commission)}</p>
           </div>
           <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm text-left">
             <p className="text-[10px] font-black uppercase text-[#ffbf1a]">Net Earnings</p>
-            <p className="text-xl font-black text-emerald-700 mt-2">₹4,60,990</p>
+            <p className="text-xl font-black text-emerald-700 mt-2">{formatCurrency(stats.netEarnings)}</p>
           </div>
         </div>
       )}
 
       {activeTab === 'settlement' && (
         <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm space-y-4 text-left">
-          <h3 className="text-xs font-black uppercase text-slate-800">Monthly Settle Ledger</h3>
-          <div className="space-y-3">
-            <div className="flex justify-between items-center text-xs border-b border-slate-100 pb-2">
-              <span>Settle Period: July 2026</span>
-              <span className="font-extrabold text-emerald-700">Settled (₹1,45,280)</span>
+          <h3 className="text-xs font-black uppercase text-slate-800">Settlement Ledger</h3>
+          {loading ? (
+            <p className="text-sm font-semibold text-slate-500">Loading settlement records...</p>
+          ) : stats.recentCompleted.length === 0 ? (
+            <p className="text-sm font-semibold text-slate-500">No completed settlements found yet.</p>
+          ) : (
+            <div className="space-y-3">
+              {stats.recentCompleted.map((payment) => (
+                <div key={payment._id || payment.id} className="flex items-center justify-between gap-3 border-b border-slate-100 pb-2 text-xs">
+                  <span>Invoice {payment.invoiceNumber || payment._id}</span>
+                  <span className="font-extrabold text-emerald-700">Settled ({formatCurrency(payment.amount, payment.currency)})</span>
+                </div>
+              ))}
             </div>
-            <div className="flex justify-between items-center text-xs border-b border-slate-100 pb-2">
-              <span>Settle Period: June 2026</span>
-              <span className="font-extrabold text-emerald-700">Settled (₹3,15,710)</span>
-            </div>
-          </div>
+          )}
         </div>
       )}
 
       {activeTab === 'transactions' && (
-        <DataTable
-          columns={[
-            { key: 'type', header: 'Type' },
-            { key: 'amount', header: 'Amount', render: (row) => formatCurrency(row.amount, row.currency) },
-            { key: 'gateway', header: 'Gateway' },
-            { key: 'status', header: 'Status', render: (row) => <StatusBadge value={row.status} /> },
-          ]}
-          rows={payments}
-        />
+        <div className="space-y-4">
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm text-left">
+              <p className="text-[10px] font-black uppercase text-slate-400">Completed</p>
+              <p className="mt-2 text-2xl font-black text-slate-900">{stats.completedCount}</p>
+            </div>
+            <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm text-left">
+              <p className="text-[10px] font-black uppercase text-slate-400">Pending</p>
+              <p className="mt-2 text-2xl font-black text-slate-900">{stats.pendingCount}</p>
+            </div>
+            <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm text-left">
+              <p className="text-[10px] font-black uppercase text-slate-400">Refunded</p>
+              <p className="mt-2 text-2xl font-black text-slate-900">{stats.refundedCount}</p>
+            </div>
+            <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm text-left">
+              <p className="text-[10px] font-black uppercase text-slate-400">Total</p>
+              <p className="mt-2 text-2xl font-black text-slate-900">{payments.length}</p>
+            </div>
+          </div>
+
+          <DataTable
+            loading={loading}
+            columns={[
+              { key: 'invoiceNumber', header: 'Invoice', render: (row) => row.invoiceNumber || row._id },
+              { key: 'type', header: 'Type' },
+              { key: 'amount', header: 'Amount', render: (row) => formatCurrency(row.amount, row.currency) },
+              { key: 'gateway', header: 'Gateway' },
+              { key: 'paidAt', header: 'Paid On', render: (row) => formatDate(row.paidAt || row.createdAt) },
+              { key: 'status', header: 'Status', render: (row) => <StatusBadge value={row.status} /> },
+            ]}
+            rows={payments}
+          />
+        </div>
       )}
+    </div>
+  )
+}
+
+export function VendorAnalyticsPage() {
+  const [dashboard, setDashboard] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [refreshing, setRefreshing] = useState(false)
+
+  const loadAnalytics = async ({ silent = false } = {}) => {
+    if (silent) setRefreshing(true)
+    else setLoading(true)
+
+    try {
+      const response = await vendorApi.dashboard()
+      setDashboard(response.data?.data || response.data || {})
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to load vendor analytics')
+    } finally {
+      if (silent) setRefreshing(false)
+      else setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    loadAnalytics()
+  }, [])
+
+  const stats = dashboard?.stats || {}
+  const recentOrders = dashboard?.recentOrders || []
+  const recentPayments = dashboard?.recentPayments || []
+  const recentLeads = dashboard?.recentLeads || []
+
+  const summaryCards = [
+    { label: 'Products', value: stats.productsCount || 0, helper: 'Approved catalog items', icon: Package },
+    { label: 'Services', value: stats.servicesCount || 0, helper: 'Active service listings', icon: BriefcaseBusiness },
+    { label: 'Orders', value: stats.totalOrders || 0, helper: 'All placed orders', icon: ShoppingBag },
+    { label: 'Pending Orders', value: stats.pendingOrders || 0, helper: 'Needs action', icon: Clock3 },
+    { label: 'Revenue', value: formatCurrency(stats.monthlyRevenue || 0), helper: 'Current month', icon: Banknote },
+    { label: 'Reviews', value: stats.totalReviews || 0, helper: `Average ${Number(stats.avgRating || 0).toFixed(1)} stars`, icon: Star },
+  ]
+
+  return (
+    <div className="space-y-6">
+      <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <p className="text-[10px] font-black uppercase tracking-[0.28em] text-slate-400">Vendor Analytics</p>
+            <h2 className="mt-1 text-3xl font-black text-slate-900">Marketplace Performance</h2>
+            <p className="mt-2 max-w-2xl text-sm font-semibold text-slate-500">
+              Track catalog health, orders, revenue, leads, and recent seller activity from the backend.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => loadAnalytics({ silent: true })}
+            className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-black text-slate-700 hover:border-[#0d4697] hover:text-[#0d4697]"
+          >
+            <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
+            Refresh
+          </button>
+        </div>
+
+        <div className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+          {summaryCards.map((card) => (
+            <MetricCard
+              key={card.label}
+              label={card.label}
+              value={card.value}
+              helper={card.helper}
+              icon={card.icon}
+            />
+          ))}
+        </div>
+      </section>
+
+      <section className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
+        <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <h3 className="text-xl font-black text-slate-900">Recent Orders</h3>
+              <p className="text-sm font-semibold text-slate-500">Latest customer purchases across your catalog.</p>
+            </div>
+            <Link to="/vendor/orders" className="text-sm font-black text-[#0d4697]">View orders</Link>
+          </div>
+          <div className="mt-4">
+            <DataTable
+              loading={loading}
+              columns={[
+                { key: 'orderNumber', header: 'Order #', render: (row) => row.orderNumber || row._id },
+                { key: 'customer', header: 'Customer', render: (row) => row.customerSnapshot?.name || 'Guest' },
+                { key: 'amount', header: 'Amount', render: (row) => formatCurrency(row.total) },
+                { key: 'status', header: 'Status', render: (row) => <StatusBadge value={row.status} /> },
+                { key: 'paymentStatus', header: 'Payment', render: (row) => <StatusBadge value={row.paymentStatus} /> },
+              ]}
+              rows={recentOrders}
+            />
+          </div>
+        </div>
+
+        <div className="space-y-6">
+          <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <h3 className="text-xl font-black text-slate-900">Recent Payments</h3>
+                <p className="text-sm font-semibold text-slate-500">Latest vendor settlements and captured payments.</p>
+              </div>
+              <Link to="/vendor/payments" className="text-sm font-black text-[#0d4697]">View payments</Link>
+            </div>
+            <div className="mt-4 space-y-3">
+              {recentPayments.length ? recentPayments.map((payment) => (
+                <div key={payment._id || payment.id} className="flex items-center justify-between gap-3 rounded-2xl border border-slate-100 bg-slate-50 p-3">
+                  <div>
+                    <p className="text-sm font-black text-slate-900">{formatCurrency(payment.amount, payment.currency)}</p>
+                    <p className="text-xs font-semibold text-slate-500">{payment.type || payment.gateway} • {formatDate(payment.paidAt || payment.createdAt)}</p>
+                  </div>
+                  <StatusBadge value={payment.status} />
+                </div>
+              )) : (
+                <p className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-4 text-sm font-semibold text-slate-500">No recent payments yet.</p>
+              )}
+            </div>
+          </div>
+
+          <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+            <h3 className="text-xl font-black text-slate-900">Recent Leads</h3>
+            <p className="text-sm font-semibold text-slate-500">Customer enquiries and business requests.</p>
+            <div className="mt-4 space-y-3">
+              {recentLeads.length ? recentLeads.map((lead) => (
+                <div key={lead._id} className="rounded-2xl border border-slate-100 bg-slate-50 p-3">
+                  <p className="text-sm font-black text-slate-900">{lead.name || lead.subject || 'Lead'}</p>
+                  <p className="text-xs font-semibold text-slate-500">{lead.phone || lead.status || 'No phone'}</p>
+                </div>
+              )) : (
+                <p className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-4 text-sm font-semibold text-slate-500">No recent leads yet.</p>
+              )}
+            </div>
+          </div>
+        </div>
+      </section>
     </div>
   )
 }
@@ -1204,4 +1495,14 @@ export function VendorNotificationsPage() {
 
 export function VendorSupportPage() {
   return <ResourceListPage title="Support Tickets" fetcher={customerApi.support} createAction={async (data) => { await customerApi.createTicket(data); toast.success('Ticket created') }} columns={[{ key: 'ticketNumber', header: 'Ticket' }, { key: 'subject', header: 'Subject' }, { key: 'priority', header: 'Priority' }, { key: 'status', header: 'Status', render: (row) => <StatusBadge value={row.status} /> }]} renderForm={(props) => <SimpleJsonForm {...props} fields={[{ name: 'subject' }, { name: 'description', type: 'textarea' }, { name: 'category' }, { name: 'priority', type: 'select', options: ['low', 'medium', 'high', 'critical'].map((value) => ({ value, label: value })) }]} />} />
+}
+
+function mergePayments(items = []) {
+  const seen = new Set()
+  return items.filter((payment) => {
+    const key = String(payment?._id || payment?.id || '')
+    if (!key || seen.has(key)) return false
+    seen.add(key)
+    return true
+  })
 }

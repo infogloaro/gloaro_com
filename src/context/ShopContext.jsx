@@ -176,6 +176,37 @@ const mergeUniqueByKey = (items = [], incoming = [], keyField = 'lineKey') => {
   return [...map.values()]
 }
 
+const CANCELABLE_ORDER_STATUSES = new Set(['placed', 'confirmed'])
+const RETURNABLE_ORDER_STATUSES = new Set(['delivered'])
+
+const canCancelOrder = (order) => Boolean(order?._id) && CANCELABLE_ORDER_STATUSES.has(order.status) && !order.returnRequest
+const canReturnOrder = (order) => Boolean(order?._id) && RETURNABLE_ORDER_STATUSES.has(order.status) && !order.returnRequest
+
+const mergeOrdersById = (currentOrders = [], incomingOrders = []) => {
+  const map = new Map()
+
+  currentOrders.forEach((order) => {
+    if (order?._id) {
+      map.set(String(order._id), order)
+    }
+  })
+
+  incomingOrders.forEach((order) => {
+    if (!order?._id) return
+    const key = String(order._id)
+    const existing = map.get(key)
+    map.set(key, {
+      ...existing,
+      ...order,
+      returnRequest: order.returnRequest ?? existing?.returnRequest ?? null,
+      refund: order.refund ?? existing?.refund ?? null,
+      tracking: Array.isArray(order.tracking) && order.tracking.length ? order.tracking : existing?.tracking || [],
+    })
+  })
+
+  return [...map.values()].sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
+}
+
 const buildOrderNumber = () => `GLO-${Date.now().toString(36).toUpperCase()}`
 
 const computeTotals = (cart, activeCoupon, deliveryMethod) => {
@@ -246,7 +277,7 @@ const createLocalOrder = ({ cart, address, deliveryMethod, activeCoupon, notes }
 }
 
 export function ShopProvider({ children }) {
-  const { user } = useAuth()
+  const { user, socket } = useAuth()
   const storageKey = useMemo(() => createStorageKey(user?._id), [user?._id])
   const guestKey = useMemo(() => createStorageKey(null), [])
   const [state, setState] = useState(() => loadState(storageKey))
@@ -284,6 +315,62 @@ export function ShopProvider({ children }) {
   useEffect(() => {
     persistState(storageKey, state)
   }, [state, storageKey])
+
+  useEffect(() => {
+    if (!socket) return undefined
+
+    const handleOrderUpdated = (payload = {}) => {
+      const orderId = payload.orderId || payload._id
+      if (!orderId) return
+
+      setState((current) => ({
+        ...current,
+        orders: current.orders.map((order) => {
+          if (String(order._id) !== String(orderId)) return order
+          return {
+            ...order,
+            status: payload.status || order.status,
+            tracking: Array.isArray(payload.tracking) && payload.tracking.length ? payload.tracking : order.tracking,
+            updatedAt: new Date().toISOString(),
+          }
+        }),
+      }))
+    }
+
+    socket.on('order_updated', handleOrderUpdated)
+    return () => {
+      socket.off('order_updated', handleOrderUpdated)
+    }
+  }, [socket])
+
+  useEffect(() => {
+    if (!user?._id) return undefined
+
+    let mounted = true
+
+    const syncOrders = async () => {
+      try {
+        const response = await ordersApi.orders({ page: 1, limit: 200, status: 'all', paymentStatus: 'all' })
+        const remoteOrders = response.data?.data || response.data || []
+        if (!mounted || !Array.isArray(remoteOrders)) return
+
+        setState((current) => ({
+          ...current,
+          orders: mergeOrdersById(current.orders, remoteOrders),
+        }))
+      } catch {
+        // Keep the locally cached order list if the backend sync is temporarily unavailable.
+      }
+    }
+
+    syncOrders()
+    const timer = window.setInterval(syncOrders, 15000)
+
+    return () => {
+      mounted = false
+      window.clearInterval(timer)
+    }
+  }, [user?._id])
 
   const upsertCartLine = useCallback((product, variant, quantity = 1) => {
     if (!product?._id) return
@@ -515,6 +602,11 @@ export function ShopProvider({ children }) {
       toast.error('Please complete all required fields')
       return false
     }
+    const currentOrder = state.orders.find((order) => String(order._id) === String(orderId))
+    if (!canReturnOrder(currentOrder)) {
+      toast.error('Returns are available only after delivery')
+      return false
+    }
     const now = new Date().toISOString()
     const returnId = crypto.randomUUID()
     const returnRequest = {
@@ -562,7 +654,7 @@ export function ShopProvider({ children }) {
     }))
     toast.success('Return request submitted successfully')
     return returnRequest
-  }, [])
+  }, [state.orders])
 
   const submitRefundRequest = useCallback((orderId, { reason, reasonLabel, details, refundMethod, evidence = [] }) => {
     if (!orderId || !reason) {
@@ -607,21 +699,32 @@ export function ShopProvider({ children }) {
   }, [])
 
   const cancelOrder = useCallback((orderId) => {
+    const currentOrder = state.orders.find((order) => String(order._id) === String(orderId))
+    if (!canCancelOrder(currentOrder)) {
+      toast.error('You can only cancel an order before it ships')
+      return false
+    }
+
     setState((current) => ({
       ...current,
       orders: current.orders.map((order) => {
         if (order._id !== orderId) return order
-        if (['shipped', 'delivered'].includes(order.status)) return order
+        if (!canCancelOrder(order)) return order
         return {
           ...order,
           status: 'cancelled',
+          paymentStatus: order.paymentStatus === 'paid' ? 'refunded' : order.paymentStatus,
           updatedAt: new Date().toISOString(),
-          tracking: order.tracking.map((step) => (step.status === 'placed' ? { ...step, label: 'Cancelled' } : step)),
+          tracking: [
+            ...order.tracking.map((step) => (step.status === 'placed' ? { ...step, label: 'Cancelled', at: step.at || new Date().toISOString() } : step)),
+            { status: 'cancelled', label: 'Order cancelled', at: new Date().toISOString() },
+          ],
         }
       }),
     }))
     toast.success('Order cancelled')
-  }, [])
+    return true
+  }, [state.orders])
 
   const downloadInvoice = useCallback((order) => {
     const blob = new Blob([JSON.stringify(order, null, 2)], { type: 'application/json' })
@@ -676,6 +779,8 @@ export function ShopProvider({ children }) {
     submitReturnRequest,
     submitRefundRequest,
     cancelOrder,
+    canCancelOrder,
+    canReturnOrder,
     downloadInvoice,
     createRazorpayPayment,
   }), [

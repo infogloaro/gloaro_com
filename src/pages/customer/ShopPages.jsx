@@ -11,7 +11,6 @@ import {
   CreditCard,
   Heart,
   HeartOff,
-  ImageUp,
   Minus,
   Package,
   Plus,
@@ -32,7 +31,7 @@ import LoadingSpinner from '../../components/common/LoadingSpinner'
 import StatusBadge from '../../components/common/StatusBadge'
 import { useApi } from '../../hooks/useApi'
 import { useAuth } from '../../hooks/useAuth'
-import { useShop, RETURN_REASONS, REFUND_REASONS, RETURN_METHODS, REFUND_METHODS, RETURN_STATUS_FLOW, REFUND_STATUS_FLOW } from '../../context/ShopContext'
+import { useShop, RETURN_REASONS, RETURN_METHODS, REFUND_METHODS, RETURN_STATUS_FLOW, REFUND_STATUS_FLOW } from '../../context/ShopContext'
 import { formatCurrency, formatDate, getList } from '../../utils/format'
 
 const SORT_OPTIONS = [
@@ -1223,17 +1222,7 @@ export function OrdersPage() {
   const { orders, cancelOrder, downloadInvoice } = useShop()
   const [status, setStatus] = useState('all')
   const [returnModalOrder, setReturnModalOrder] = useState(null)
-  const [refundModalOrder, setRefundModalOrder] = useState(null)
   const filteredOrders = status === 'all' ? orders : orders.filter((order) => order.status === status)
-
-  const getReturnStatusColor = (returnReq) => {
-    if (!returnReq) return ''
-    const s = returnReq.status
-    if (['refund_completed', 'completed'].includes(s)) return 'bg-emerald-100 text-emerald-800'
-    if (s === 'rejected') return 'bg-rose-100 text-rose-800'
-    if (['approved', 'pickup_scheduled', 'picked_up', 'processing', 'initiated'].includes(s)) return 'bg-amber-100 text-amber-800'
-    return 'bg-blue-100 text-blue-800'
-  }
 
   return (
     <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
@@ -1247,6 +1236,8 @@ export function OrdersPage() {
             <option value="all">All orders</option>
             <option value="placed">Placed</option>
             <option value="confirmed">Confirmed</option>
+            <option value="processing">Processing</option>
+            <option value="shipped">Shipped</option>
             <option value="cancelled">Cancelled</option>
             <option value="delivered">Delivered</option>
           </select>
@@ -1256,54 +1247,87 @@ export function OrdersPage() {
           {!filteredOrders.length ? (
             <EmptyState title="No orders yet" description="Your completed orders will appear here for tracking, refunds, and invoices." />
           ) : filteredOrders.map((order) => (
-            <article key={order._id} className="rounded-2xl border border-slate-100 p-5 transition hover:border-slate-200 hover:shadow-sm">
-              <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-                <div>
-                  <p className="font-jakarta text-[10px] font-black uppercase tracking-[0.24em] text-slate-400">{order.orderNumber}</p>
-                  <h2 className="mt-1 font-playfair text-2xl font-black text-navy">{formatCurrency(order.total)}</h2>
-                  <p className="mt-1 text-sm font-medium text-slate-500">{formatDate(order.createdAt)} · {order.deliveryMethod}</p>
-                </div>
-                <div className="flex flex-wrap items-center gap-2">
-                  <StatusBadge value={order.status} />
-                  {order.returnRequest && (
-                    <span className={`rounded-lg px-2.5 py-1 text-[10px] font-black uppercase tracking-wide ${getReturnStatusColor(order.returnRequest)}`}>
-                      Return: {order.returnRequest.status.replace(/_/g, ' ')}
-                    </span>
-                  )}
-                  {order.refund && (
-                    <span className={`rounded-lg px-2.5 py-1 text-[10px] font-black uppercase tracking-wide ${getReturnStatusColor(order.refund)}`}>
-                      Refund: {order.refund.status}
-                    </span>
-                  )}
-                </div>
-              </div>
-              <div className="mt-3 flex flex-wrap items-center gap-3">
-                <button onClick={() => downloadInvoice(order)} className="rounded-lg bg-slate-100 px-3 py-1.5 text-xs font-black text-slate-600 transition hover:bg-slate-200">Invoice</button>
-                {['placed', 'confirmed'].includes(order.status) && (
-                  <button onClick={() => cancelOrder(order._id)} className="rounded-lg bg-rose-50 px-3 py-1.5 text-xs font-black text-rose-600 transition hover:bg-rose-100">Cancel</button>
-                )}
-                {order.status === 'delivered' && !order.returnRequest && (
-                  <button onClick={() => setReturnModalOrder(order)} className="rounded-lg bg-amber-50 px-3 py-1.5 text-xs font-black text-amber-600 transition hover:bg-amber-100">Start Return</button>
-                )}
-                {order.paymentStatus === 'paid' && !order.refund && (
-                  <button onClick={() => setRefundModalOrder(order)} className="rounded-lg bg-emerald-50 px-3 py-1.5 text-xs font-black text-emerald-600 transition hover:bg-emerald-100">Request Refund</button>
-                )}
-                <Link to={`/orders/${order._id}`} className="rounded-lg bg-navy px-3 py-1.5 text-xs font-black text-white">Details</Link>
-              </div>
-              <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-                {order.items.slice(0, 4).map((item) => (
-                  <div key={`${order._id}-${item.productId}`} className="rounded-xl bg-slate-50 p-3">
-                    <p className="text-sm font-bold text-navy">{item.productSnapshot?.title}</p>
-                    <p className="text-xs font-medium text-slate-500">Qty {item.quantity} · {formatCurrency(item.lineTotal)}</p>
-                  </div>
-                ))}
-              </div>
-              {order.returnRequest && (
-                <ReturnStatusBar returnRequest={order.returnRequest} />
-              )}
-              {order.refund && (
-                <RefundStatusBar refund={order.refund} />
-              )}
+            <article key={order._id} className="rounded-[2rem] border border-slate-200/80 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-[0_16px_40px_rgba(11,36,81,0.08)]">
+              {(() => {
+                const stages = ['placed', 'confirmed', 'processing', 'shipped', 'delivered']
+                const currentIndex = Math.max(0, stages.findIndex((stage) => stage === order.status))
+                const progress = Math.round(((currentIndex + 1) / stages.length) * 100)
+                const orderDate = formatDate(order.createdAt)
+                const eta = order.estimatedDeliveryDate ? formatDate(order.estimatedDeliveryDate) : 'To be updated'
+
+                return (
+                  <>
+                    <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+                      <div className="space-y-3">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <p className="font-jakarta text-[10px] font-black uppercase tracking-[0.24em] text-slate-400">{order.orderNumber}</p>
+                          <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-black uppercase tracking-wide text-slate-600">
+                            {orderDate}
+                          </span>
+                          <StatusBadge value={order.status} />
+                          <StatusBadge value={order.paymentStatus} />
+                        </div>
+
+                        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                          <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4">
+                            <p className="text-[10px] font-black uppercase tracking-[0.24em] text-slate-400">Total</p>
+                            <p className="mt-1 text-2xl font-black text-navy">{formatCurrency(order.total)}</p>
+                          </div>
+                          <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4">
+                            <p className="text-[10px] font-black uppercase tracking-[0.24em] text-slate-400">Delivery</p>
+                            <p className="mt-1 text-sm font-semibold capitalize text-slate-700">{order.deliveryMethod}</p>
+                          </div>
+                          <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4">
+                            <p className="text-[10px] font-black uppercase tracking-[0.24em] text-slate-400">ETA</p>
+                            <p className="mt-1 text-sm font-semibold text-slate-700">{eta}</p>
+                          </div>
+                          <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4">
+                            <p className="text-[10px] font-black uppercase tracking-[0.24em] text-slate-400">Progress</p>
+                            <p className="mt-1 text-sm font-black text-navy">{progress}%</p>
+                            <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-slate-200">
+                              <div className="h-full rounded-full bg-gradient-to-r from-navy to-royal" style={{ width: `${progress}%` }} />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4 xl:min-w-72">
+                        <p className="text-[10px] font-black uppercase tracking-[0.24em] text-slate-400">Manage Order</p>
+                        <div className="mt-2 flex flex-wrap gap-2">
+                          <button onClick={() => downloadInvoice(order)} className="rounded-lg bg-white px-3 py-2 text-xs font-black text-slate-700 transition hover:bg-slate-100">Invoice</button>
+                          {['placed', 'confirmed'].includes(order.status) && (
+                            <button onClick={() => cancelOrder(order._id)} className="rounded-lg border border-rose-200 bg-white px-3 py-2 text-xs font-black text-rose-600 transition hover:bg-rose-50">Cancel</button>
+                          )}
+                          {order.status === 'delivered' && !order.returnRequest && (
+                            <button onClick={() => setReturnModalOrder(order)} className="rounded-lg bg-amber-500 px-3 py-2 text-xs font-black text-white transition hover:bg-amber-600">Start Return</button>
+                          )}
+                          <Link to={`/orders/${order._id}`} className="rounded-lg bg-navy px-3 py-2 text-xs font-black text-white">Details</Link>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+                      {order.items.slice(0, 4).map((item) => (
+                        <div key={`${order._id}-${item.productId}`} className="rounded-xl bg-slate-50 p-3">
+                          <p className="text-sm font-bold text-navy">{item.productSnapshot?.title}</p>
+                          <p className="text-xs font-medium text-slate-500">Qty {item.quantity} · {formatCurrency(item.lineTotal)}</p>
+                        </div>
+                      ))}
+                    </div>
+
+                    {order.returnRequest && (
+                      <div className="mt-4">
+                        <ReturnStatusBar returnRequest={order.returnRequest} />
+                      </div>
+                    )}
+                    {order.refund && (
+                      <div className="mt-4">
+                        <RefundStatusBar refund={order.refund} />
+                      </div>
+                    )}
+                  </>
+                )
+              })()}
             </article>
           ))}
         </div>
@@ -1313,12 +1337,6 @@ export function OrdersPage() {
         <ReturnRequestModal
           order={returnModalOrder}
           onClose={() => setReturnModalOrder(null)}
-        />
-      )}
-      {refundModalOrder && (
-        <RefundRequestModal
-          order={refundModalOrder}
-          onClose={() => setRefundModalOrder(null)}
         />
       )}
     </main>
@@ -1364,9 +1382,9 @@ function RefundStatusBar({ refund }) {
 
 export function OrderDetailPage() {
   const { orderId } = useParams()
-  const { orders, cancelOrder, downloadInvoice } = useShop()
+  const { orders, cancelOrder, canCancelOrder, canReturnOrder, downloadInvoice } = useShop()
   const [showReturnModal, setShowReturnModal] = useState(false)
-  const [showRefundModal, setShowRefundModal] = useState(false)
+  const [returnModalItems, setReturnModalItems] = useState([])
   const order = orders.find((entry) => entry._id === orderId)
 
   if (!order) {
@@ -1374,11 +1392,25 @@ export function OrderDetailPage() {
   }
 
   const deliveryTimeline = [
-    { title: 'Placed', note: 'Order accepted by the shop', active: true },
-    { title: 'Processing', note: 'Warehouse packing in progress', active: ['confirmed', 'shipped', 'delivered'].includes(order.status) },
-    { title: 'Shipped', note: 'Courier hand-off completed', active: ['shipped', 'delivered'].includes(order.status) },
-    { title: 'Delivered', note: 'Delivered to the selected address', active: order.status === 'delivered' },
+    { key: 'placed', title: 'Placed', note: 'Order accepted by the shop' },
+    { key: 'confirmed', title: 'Confirmed', note: 'Seller confirmed your order' },
+    { key: 'processing', title: 'Processing', note: 'Warehouse packing in progress' },
+    { key: 'shipped', title: 'Shipped', note: 'Courier hand-off completed' },
+    { key: 'delivered', title: 'Delivered', note: 'Delivered to the selected address' },
   ]
+  const currentStepIndex = Math.max(0, deliveryTimeline.findIndex((step) => step.key === order.status))
+  const progressPercent = Math.round(((currentStepIndex + 1) / deliveryTimeline.length) * 100)
+  const estimatedDelivery = order.estimatedDeliveryDate ? formatDate(order.estimatedDeliveryDate) : 'To be updated'
+  const orderSummary = [
+    { label: 'Status', value: order.status },
+    { label: 'Payment', value: order.paymentStatus },
+    { label: 'Method', value: order.deliveryMethod },
+    { label: 'ETA', value: estimatedDelivery },
+  ]
+  const openReturnModal = (items = []) => {
+    setReturnModalItems(items.length ? items : order.items)
+    setShowReturnModal(true)
+  }
 
   return (
     <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
@@ -1396,14 +1428,47 @@ export function OrderDetailPage() {
             </div>
           </div>
 
+          <div className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            {orderSummary.map((entry) => (
+              <div key={entry.label} className="rounded-2xl border border-slate-100 bg-slate-50 p-4">
+                <p className="text-[10px] font-black uppercase tracking-[0.24em] text-slate-400">{entry.label}</p>
+                <p className="mt-1 text-sm font-bold capitalize text-navy">{entry.value}</p>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-5 rounded-2xl border border-slate-100 bg-slate-50 p-4">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-[0.24em] text-slate-400">Fulfillment Progress</p>
+                <p className="mt-1 text-sm font-semibold text-slate-600">Track the same order journey your vendor sees.</p>
+              </div>
+              <p className="text-sm font-black text-navy">{progressPercent}%</p>
+            </div>
+            <div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-200">
+              <div className="h-full rounded-full bg-gradient-to-r from-navy to-royal transition-all" style={{ width: `${progressPercent}%` }} />
+            </div>
+          </div>
+
           <div className="mt-6 space-y-4">
-            {deliveryTimeline.map((step) => (
-              <TimelineStep key={step.title} title={step.title} note={step.note} active={step.active} />
+            {deliveryTimeline.map((step, index) => (
+              <TimelineStep key={step.key} title={step.title} note={step.note} active={index <= currentStepIndex} />
             ))}
           </div>
 
           <div className="mt-6 rounded-2xl bg-gradient-to-r from-slate-50 to-slate-100/50 p-4">
-            <h2 className="font-playfair text-xl font-black text-navy">Items</h2>
+            <div className="flex items-center justify-between gap-3">
+              <h2 className="font-playfair text-xl font-black text-navy">Items</h2>
+              {canReturnOrder(order) && (
+                <button
+                  type="button"
+                  onClick={() => openReturnModal(order.items)}
+                  className="rounded-xl bg-emerald-600 px-4 py-2 text-xs font-black text-white transition hover:bg-emerald-700"
+                >
+                  Return items
+                </button>
+              )}
+            </div>
             <div className="mt-3 space-y-3">
               {order.items.map((item) => (
                 <div key={`${order._id}-${item.productId}`} className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-white p-4 shadow-sm">
@@ -1418,7 +1483,18 @@ export function OrderDetailPage() {
                       <p className="text-sm font-medium text-slate-500">{item.variant?.display || item.variant?.option || 'Default'} · Qty {item.quantity}</p>
                     </div>
                   </div>
-                  <p className="font-bold text-navy">{formatCurrency(item.lineTotal)}</p>
+                  <div className="flex items-center gap-3">
+                    <p className="font-bold text-navy">{formatCurrency(item.lineTotal)}</p>
+                    {canReturnOrder(order) && (
+                      <button
+                        type="button"
+                        onClick={() => openReturnModal([item])}
+                        className="rounded-lg border border-slate-200 px-3 py-2 text-xs font-black text-slate-600 transition hover:border-navy/30 hover:text-navy"
+                      >
+                        Return item
+                      </button>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>
@@ -1483,37 +1559,77 @@ export function OrderDetailPage() {
 
         <aside className="space-y-4">
           <div className="rounded-[2.5rem] border border-slate-200/80 bg-white p-6 shadow-[0_15px_50px_rgba(11,36,81,0.08)]">
-            <h2 className="font-playfair text-2xl font-black text-navy">Delivery</h2>
-            <p className="mt-3 text-sm font-medium text-slate-600">{formatAddress(order.address)}</p>
-            <p className="mt-2 text-sm font-medium text-slate-600">Method: {order.deliveryMethod}</p>
-            <p className="mt-2 text-sm font-medium text-slate-600">Payment: {order.paymentMethod} · {order.paymentStatus}</p>
-          </div>
+            <p className="font-jakarta text-[10px] font-black uppercase tracking-[0.28em] text-slate-400">Manage Order</p>
+            <h2 className="mt-1 font-playfair text-2xl font-black text-navy">Everything in one place</h2>
 
-          <div className="rounded-[2.5rem] border border-slate-200/80 bg-white p-6 shadow-[0_15px_50px_rgba(11,36,81,0.08)]">
-            <h2 className="font-playfair text-2xl font-black text-navy">Support</h2>
-            <div className="mt-4 space-y-3">
-              {order.status === 'delivered' && !order.returnRequest && (
-                <button onClick={() => setShowReturnModal(true)} className="w-full rounded-xl bg-amber-500 px-4 py-3 text-sm font-black text-white shadow-md transition hover:bg-amber-600">
+            <div className="mt-5 grid gap-3">
+              <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4">
+                <p className="text-[10px] font-black uppercase tracking-[0.24em] text-slate-400">Delivery Address</p>
+                <p className="mt-1 text-sm font-semibold leading-6 text-slate-700">{formatAddress(order.address)}</p>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4">
+                  <p className="text-[10px] font-black uppercase tracking-[0.24em] text-slate-400">Delivery Method</p>
+                  <p className="mt-1 text-sm font-semibold capitalize text-slate-700">{order.deliveryMethod}</p>
+                </div>
+                <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4">
+                  <p className="text-[10px] font-black uppercase tracking-[0.24em] text-slate-400">Payment</p>
+                  <p className="mt-1 text-sm font-semibold capitalize text-slate-700">{order.paymentMethod} · {order.paymentStatus}</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-5 space-y-3">
+              <button onClick={() => downloadInvoice(order)} className="w-full rounded-xl bg-slate-100 px-4 py-3 text-sm font-black text-slate-700 transition hover:bg-slate-200">
+                Invoice
+              </button>
+              {canReturnOrder(order) && (
+                <button onClick={() => openReturnModal(order.items)} className="w-full rounded-xl bg-amber-500 px-4 py-3 text-sm font-black text-white shadow-md transition hover:bg-amber-600">
                   <RotateCcw className="mr-2 inline h-4 w-4" />Start Return
                 </button>
               )}
-              {order.paymentStatus === 'paid' && !order.refund && (
-                <button onClick={() => setShowRefundModal(true)} className="w-full rounded-xl bg-gradient-to-r from-navy to-royal px-4 py-3 text-sm font-black text-white shadow-md transition hover:from-navy/90 hover:to-royal/90">
-                  <Banknote className="mr-2 inline h-4 w-4" />Request Refund
-                </button>
-              )}
-              <button onClick={() => cancelOrder(order._id)} className="w-full rounded-xl border border-rose-200 px-4 py-3 text-sm font-black text-rose-600 transition hover:bg-rose-50">Cancel Order</button>
+              <button
+                onClick={() => cancelOrder(order._id)}
+                disabled={!canCancelOrder(order)}
+                className="w-full rounded-xl border border-rose-200 px-4 py-3 text-sm font-black text-rose-600 transition hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {canCancelOrder(order) ? 'Cancel Order' : 'Cancellation Unavailable'}
+              </button>
             </div>
-            {order.returnRequest && (
-              <div className="mt-4 rounded-xl bg-amber-50 p-3 text-xs font-medium text-amber-800">
-                <RotateCcw className="mr-1 inline h-3.5 w-3.5" />
-                Return {order.returnRequest.status.replace(/_/g, ' ')}
-              </div>
-            )}
-            {order.refund && (
-              <div className="mt-4 rounded-xl bg-emerald-50 p-3 text-xs font-medium text-emerald-800">
-                <Banknote className="mr-1 inline h-3.5 w-3.5" />
-                Refund {order.refund.status}
+
+            <div className="mt-5 flex flex-wrap gap-2">
+              <StatusBadge value={order.status} />
+              <StatusBadge value={order.paymentStatus} />
+              {order.returnRequest && (
+                <span className="rounded-full bg-amber-50 px-3 py-1 text-xs font-black uppercase tracking-wide text-amber-700 ring-1 ring-amber-200">
+                  Return in progress
+                </span>
+              )}
+              {order.refund && (
+                <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-black uppercase tracking-wide text-emerald-700 ring-1 ring-emerald-200">
+                  Refund tracked
+                </span>
+              )}
+            </div>
+
+            {(order.returnRequest || order.refund) && (
+              <div className="mt-5 space-y-3">
+                {order.returnRequest && (
+                  <div className="rounded-2xl border border-amber-200 bg-amber-50/70 p-4">
+                    <p className="text-[10px] font-black uppercase tracking-[0.24em] text-amber-700">Return Request</p>
+                    <p className="mt-1 text-sm font-semibold text-amber-900">
+                      {order.returnRequest.status.replace(/_/g, ' ')}
+                    </p>
+                  </div>
+                )}
+                {order.refund && (
+                  <div className="rounded-2xl border border-emerald-200 bg-emerald-50/70 p-4">
+                    <p className="text-[10px] font-black uppercase tracking-[0.24em] text-emerald-700">Refund Status</p>
+                    <p className="mt-1 text-sm font-semibold text-emerald-900">
+                      {order.refund.status}
+                    </p>
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -1523,13 +1639,8 @@ export function OrderDetailPage() {
       {showReturnModal && (
         <ReturnRequestModal
           order={order}
+          initialItems={returnModalItems}
           onClose={() => setShowReturnModal(false)}
-        />
-      )}
-      {showRefundModal && (
-        <RefundRequestModal
-          order={order}
-          onClose={() => setShowRefundModal(false)}
         />
       )}
     </main>
@@ -2087,10 +2198,10 @@ function TimelineStep({ title, note, active }) {
   )
 }
 
-function ReturnRequestModal({ order, onClose }) {
+function ReturnRequestModal({ order, onClose, initialItems = [] }) {
   const { submitReturnRequest } = useShop()
   const [step, setStep] = useState(0)
-  const [selectedItems, setSelectedItems] = useState([])
+  const [selectedItems, setSelectedItems] = useState(() => initialItems)
   const [reason, setReason] = useState('')
   const [reasonLabel, setReasonLabel] = useState('')
   const [details, setDetails] = useState('')
@@ -2392,156 +2503,6 @@ function ReturnRequestModal({ order, onClose }) {
               {submitting ? 'Submitting...' : 'Submit Return Request'}
             </button>
           )}
-        </div>
-      </div>
-    </div>
-  )
-}
-
-function RefundRequestModal({ order, onClose }) {
-  const { submitRefundRequest } = useShop()
-  const [reason, setReason] = useState('')
-  const [reasonLabel, setReasonLabel] = useState('')
-  const [details, setDetails] = useState('')
-  const [refundMethod, setRefundMethod] = useState('original')
-  const [evidence, setEvidence] = useState([])
-  const [submitting, setSubmitting] = useState(false)
-
-  const handleEvidenceUpload = (event) => {
-    const files = Array.from(event.target.files || [])
-    files.forEach((file) => {
-      const reader = new FileReader()
-      reader.onload = (e) => {
-        setEvidence((prev) => [...prev, e.target.result])
-      }
-      reader.readAsDataURL(file)
-    })
-  }
-
-  const removeEvidence = (index) => {
-    setEvidence((prev) => prev.filter((_, i) => i !== index))
-  }
-
-  const handleSubmit = async () => {
-    if (!reason) {
-      toast.error('Please select a reason')
-      return
-    }
-    setSubmitting(true)
-    const result = submitRefundRequest(order._id, {
-      reason,
-      reasonLabel,
-      details,
-      refundMethod,
-      evidence,
-    })
-    setSubmitting(false)
-    if (result) {
-      toast.success('Refund request submitted successfully')
-      onClose()
-    }
-  }
-
-  return (
-    <div className="fixed inset-0 z-[90] grid place-items-center bg-navy/30 px-4 py-8 backdrop-blur-sm">
-      <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-[2.5rem] border border-slate-200/80 bg-white shadow-2xl">
-        <div className="sticky top-0 flex items-center justify-between border-b border-slate-100 bg-white p-6">
-          <h2 className="font-playfair text-2xl font-black text-navy">Request a Refund</h2>
-          <button onClick={onClose} className="grid h-9 w-9 place-items-center rounded-full bg-slate-100 text-slate-500 transition hover:bg-slate-200">
-            <X className="h-4 w-4" />
-          </button>
-        </div>
-
-        <div className="p-6 space-y-6">
-          <div>
-            <p className="mb-4 text-sm font-medium text-slate-600">Why are you requesting a refund?</p>
-            <div className="space-y-2 max-h-48 overflow-y-auto">
-              {REFUND_REASONS.map((r) => (
-                <label
-                  key={r.value}
-                  className={`flex cursor-pointer items-center gap-3 rounded-xl border p-3 transition ${reason === r.value ? 'border-navy bg-navy/5' : 'border-slate-200 hover:border-slate-300'}`}
-                >
-                  <input
-                    type="radio"
-                    name="refund-reason"
-                    value={r.value}
-                    checked={reason === r.value}
-                    onChange={() => { setReason(r.value); setReasonLabel(r.label) }}
-                    className="accent-navy"
-                  />
-                  <span className="text-sm font-medium text-slate-700">{r.label}</span>
-                </label>
-              ))}
-            </div>
-          </div>
-
-          <div>
-            <p className="mb-4 text-sm font-medium text-slate-600">Additional details (optional):</p>
-            <textarea
-              value={details}
-              onChange={(e) => setDetails(e.target.value)}
-              rows={4}
-              className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm font-medium outline-none transition focus:border-navy/40"
-              placeholder="Describe the issue..."
-            />
-          </div>
-
-          <div>
-            <p className="mb-4 text-sm font-medium text-slate-600">Refund method:</p>
-            <div className="space-y-3">
-              {REFUND_METHODS.map((m) => (
-                <label
-                  key={m.value}
-                  className={`flex cursor-pointer items-start gap-4 rounded-xl border p-4 transition ${refundMethod === m.value ? 'border-navy bg-navy/5' : 'border-slate-200 hover:border-slate-300'}`}
-                >
-                  <input
-                    type="radio"
-                    name="refund-method-modal"
-                    value={m.value}
-                    checked={refundMethod === m.value}
-                    onChange={() => setRefundMethod(m.value)}
-                    className="accent-navy mt-1"
-                  />
-                  <div>
-                    <p className="text-sm font-bold text-navy">{m.label}</p>
-                    <p className="mt-0.5 text-xs text-slate-500">{m.description}</p>
-                  </div>
-                </label>
-              ))}
-            </div>
-          </div>
-
-          <div>
-            <p className="mb-4 text-sm font-medium text-slate-600">Attach evidence (optional):</p>
-            <label className="flex cursor-pointer flex-col items-center gap-3 rounded-xl border-2 border-dashed border-slate-300 p-6 transition hover:border-navy/40">
-              <ImageUp className="h-6 w-6 text-slate-400" />
-              <span className="text-sm font-medium text-slate-500">Upload screenshots or documents</span>
-              <input type="file" accept="image/*" multiple onChange={handleEvidenceUpload} className="hidden" />
-            </label>
-            {evidence.length > 0 && (
-              <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
-                {evidence.map((src, i) => (
-                  <div key={i} className="group relative overflow-hidden rounded-lg border border-slate-200">
-                    <img src={src} alt="" className="h-16 w-full object-cover" />
-                    <button onClick={() => removeEvidence(i)} className="absolute right-1 top-1 grid h-5 w-5 place-items-center rounded-full bg-black/50 text-white opacity-0 transition group-hover:opacity-100">
-                      <X className="h-3 w-3" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-
-        <div className="sticky bottom-0 flex justify-between border-t border-slate-100 bg-white p-6">
-          <button onClick={onClose} className="rounded-xl border border-slate-200 px-5 py-2.5 text-sm font-black text-slate-600 transition hover:border-navy/30 hover:text-navy">Cancel</button>
-          <button
-            onClick={handleSubmit}
-            disabled={submitting || !reason}
-            className="rounded-xl bg-gradient-to-r from-navy to-royal px-6 py-2.5 text-sm font-black text-white shadow-md transition hover:from-navy/90 hover:to-royal/90 disabled:opacity-60"
-          >
-            {submitting ? 'Submitting...' : 'Submit Refund Request'}
-          </button>
         </div>
       </div>
     </div>
