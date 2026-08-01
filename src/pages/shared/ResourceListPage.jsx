@@ -24,12 +24,14 @@ export default function ResourceListPage({
   renderForm,
   defaultParams = {},
   readOnly = false,
+  retainRowsOnEmptySearch = false,
 }) {
   const { hasSection, hasOperation } = useAuth()
   const [payload, setPayload] = useState(null)
   const [loading, setLoading] = useState(true)
   const [page, setPage] = useState(1)
   const [search, setSearch] = useState('')
+  const [debouncedSearch, setDebouncedSearch] = useState('')
   const [filterValues, setFilterValues] = useState(defaultParams)
   const [editing, setEditing] = useState(null)
   const [formOpen, setFormOpen] = useState(false)
@@ -50,7 +52,12 @@ export default function ResourceListPage({
     })
   }, [module, section, title, fetcher])
 
-  const params = useMemo(() => ({ page, limit: 10, search: search || undefined, ...filterValues }), [page, search, filterValues])
+  useEffect(() => {
+    const timer = window.setTimeout(() => setDebouncedSearch(search.trim()), 300)
+    return () => window.clearTimeout(timer)
+  }, [search])
+
+  const params = useMemo(() => ({ page, limit: 10, search: debouncedSearch || undefined, ...filterValues }), [page, debouncedSearch, filterValues])
 
   const load = useCallback(async () => {
     if (!canViewSection) {
@@ -61,11 +68,15 @@ export default function ResourceListPage({
     setLoading(true)
     try {
       const response = await fetcher(params)
-      setPayload(response.data)
+      const nextPayload = response.data
+      setPayload((current) => {
+        const shouldRetainRows = retainRowsOnEmptySearch && debouncedSearch && current && getList(nextPayload).length === 0
+        return shouldRetainRows ? current : nextPayload
+      })
     } finally {
       setLoading(false)
     }
-  }, [canViewSection, fetcher, params])
+  }, [canViewSection, debouncedSearch, fetcher, params, retainRowsOnEmptySearch])
 
   useEffect(() => {
     if (!canViewSection) return undefined
@@ -132,7 +143,7 @@ export default function ResourceListPage({
       <DataTable
         columns={tableColumns}
         rows={rows}
-        loading={loading}
+        loading={loading && !payload}
         pagination={pagination}
         onPageChange={setPage}
         actions={hasActions ? (row) => (

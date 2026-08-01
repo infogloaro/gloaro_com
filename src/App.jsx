@@ -37,7 +37,6 @@ import { buildAdminRoute } from './utils/permissions'
 import {
   ActivityCenterPage,
   AIInsightsPage,
-  AttendanceEnginePage,
   BusinessWallManagementPage,
   BusinessNetworkingPage,
   ChapterManagementPage,
@@ -101,7 +100,6 @@ import {
 import {
   CategoriesPage,
   CustomerNotificationsPage,
-  CustomerProfilePage,
   CustomerSupportPage,
   DetailPage,
   EventsPage,
@@ -113,6 +111,11 @@ import {
   VendorsPage,
   WishlistPage,
 } from './pages/customer/ListingPages'
+import {
+  CustomerAddressesPage,
+  CustomerDashboardPage,
+  CustomerProfileFoundationPage,
+} from './pages/customer/CustomerFoundationPages'
 import NotificationsPage from './pages/shared/NotificationsPage'
 import ProfilePage from './pages/shared/ProfilePage'
 import Home from './pages/Home'
@@ -206,7 +209,10 @@ function App() {
     { path: '/services', element: <AdminServicesPage /> },
     { path: '/marketplace-approval', element: <MarketplaceApprovalPage /> },
     { path: '/members', element: <AdminMembersPage /> },
-    { path: '/attendance', element: <AttendanceEnginePage /> },
+    { path: '/visitors', element: <VisitorManagementPage /> },
+    { path: '/visitor-conversion', element: <VisitorConversionEnginePage /> },
+    { path: '/attendance', element: <AttendancePage /> },
+    { path: '/meetings', element: <MeetingManagementPage /> },
     { path: '/chapters', element: <ChapterManagementPage />, roles: [ROLES.ADMIN, ROLES.SUPERADMIN] },
     { path: '/chapter-dashboard', element: <ChapterDashboardPage /> },
     { path: '/membership-applications', element: <AdminMembershipApplicationsPage /> },
@@ -314,10 +320,12 @@ function App() {
 
             {/* Customer Portal Route Group */}
             <Route element={<ProtectedRoute roles={[ROLES.CUSTOMER, ROLES.USER]} />}>
+              <Route path="/customer/dashboard" element={<CustomerDashboardPage />} />
+              <Route path="/customer/addresses" element={<CustomerAddressesPage />} />
               <Route path="/customer/wishlist" element={<WishlistPage />} />
               <Route path="/customer/referral" element={<ReferralPage />} />
               <Route path="/customer/notifications" element={<CustomerNotificationsPage />} />
-              <Route path="/customer/profile" element={<CustomerProfilePage />} />
+              <Route path="/customer/profile" element={<CustomerProfileFoundationPage />} />
               <Route path="/customer/support" element={<CustomerSupportPage />} />
               <Route path="/customer/events" element={<EventsPage />} />
             </Route>
@@ -332,6 +340,7 @@ function App() {
               <Route path="/membership/training" element={<AssignedTrainingPage />} />
               <Route path="/membership/profile" element={<MembershipProfilePage />} />
               <Route path="/membership/support" element={<MembershipSupportPage />} />
+              <Route path="/attendance" element={<AttendancePage />} />
             </Route>
 
             {/* Member Console Route Group */}
@@ -349,6 +358,8 @@ function App() {
               <Route path="/member/chat" element={<ChatSystem />} />
               <Route path="/member/referrals" element={<ReferralsPipeline />} />
               <Route path="/member/training" element={<AssignedTrainingPage />} />
+              <Route path="/member/attendance" element={<AttendancePage />} />
+              <Route path="/member/dashboard/attendance" element={<AttendancePage />} />
 
               {/* Protected Marketplace routes */}
               <Route element={<MarketplaceRoute />}>
@@ -426,6 +437,7 @@ function App() {
               <Route path="/region-director/chat" element={<ChatSystem />} />
               <Route path="/region-director/referrals" element={<ReferralsPipeline />} />
               <Route path="/region-director/meetings" element={<MeetingsAttendance />} />
+              <Route path="/region-director/attendance" element={<MeetingsAttendance />} />
               <Route path="/region-director/one-to-ones" element={<OneToOnesPage />} />
               <Route path="/region-director/visitors" element={<VisitorsPage />} />
               <Route path="/region-director/directory" element={<BusinessDirectory />} />
@@ -454,6 +466,7 @@ function App() {
               <Route path="/state-director/chat" element={<ChatSystem />} />
               <Route path="/state-director/referrals" element={<ReferralsPipeline />} />
               <Route path="/state-director/meetings" element={<MeetingsAttendance />} />
+              <Route path="/state-director/attendance" element={<MeetingsAttendance />} />
               <Route path="/state-director/one-to-ones" element={<OneToOnesPage />} />
               <Route path="/state-director/visitors" element={<VisitorsPage />} />
               <Route path="/state-director/directory" element={<BusinessDirectory />} />
@@ -480,6 +493,7 @@ function App() {
               <Route path="/district-director/chat" element={<ChatSystem />} />
               <Route path="/district-director/referrals" element={<ReferralsPipeline />} />
               <Route path="/district-director/meetings" element={<MeetingsAttendance />} />
+              <Route path="/district-director/attendance" element={<MeetingsAttendance />} />
               <Route path="/district-director/one-to-ones" element={<OneToOnesPage />} />
               <Route path="/district-director/visitors" element={<VisitorsPage />} />
               <Route path="/district-director/directory" element={<BusinessDirectory />} />
@@ -546,6 +560,7 @@ function App() {
               <Route path="/president/chat" element={<ChatSystem />} />
               <Route path="/president/referrals" element={<ReferralsPipeline />} />
               <Route path="/president/meetings" element={<MeetingsAttendance />} />
+              <Route path="/president/attendance" element={<MeetingsAttendance />} />
               <Route path="/president/one-to-ones" element={<OneToOnesPage />} />
               <Route path="/president/visitors" element={<VisitorsPage />} />
               <Route path="/president/directory" element={<BusinessDirectory />} />
@@ -577,6 +592,7 @@ function App() {
               <Route path="/vice-president/chat" element={<ChatSystem />} />
               <Route path="/vice-president/referrals" element={<ReferralsPipeline />} />
               <Route path="/vice-president/meetings" element={<MeetingsAttendance />} />
+              <Route path="/vice-president/attendance" element={<MeetingsAttendance />} />
               <Route path="/vice-president/one-to-ones" element={<OneToOnesPage />} />
               <Route path="/vice-president/visitors" element={<VisitorsPage />} />
               <Route path="/vice-president/directory" element={<BusinessDirectory />} />
@@ -599,6 +615,7 @@ function App() {
               <Route path="/launch-director/chat" element={<ChatSystem />} />
               <Route path="/launch-director/referrals" element={<ReferralsPipeline />} />
               <Route path="/launch-director/meetings" element={<MeetingsAttendance />} />
+              <Route path="/launch-director/attendance" element={<MeetingsAttendance />} />
               <Route path="/launch-director/one-to-ones" element={<OneToOnesPage />} />
               <Route path="/launch-director/visitors" element={<VisitorsPage />} />
               <Route path="/launch-director/directory" element={<BusinessDirectory />} />
@@ -628,6 +645,7 @@ function App() {
               <Route path="/direct-consultant/chat" element={<ChatSystem />} />
               <Route path="/direct-consultant/referrals" element={<ReferralsPipeline />} />
               <Route path="/direct-consultant/meetings" element={<MeetingsAttendance />} />
+              <Route path="/direct-consultant/attendance" element={<MeetingsAttendance />} />
               <Route path="/direct-consultant/one-to-ones" element={<OneToOnesPage />} />
               <Route path="/direct-consultant/visitors" element={<VisitorsPage />} />
               <Route path="/direct-consultant/directory" element={<BusinessDirectory />} />

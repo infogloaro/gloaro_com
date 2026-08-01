@@ -90,10 +90,7 @@ export default function SignIn() {
                 <input name="email" type="email" value={formData.email} onChange={updateField} placeholder="name@company.com" required className="mt-1 h-11 w-full rounded-md border border-[#aeb4c0] px-3 text-sm font-medium outline-none transition placeholder:text-[#7a8291] focus:border-[#0d4697]" />
               </label>
               <label className="block">
-                <span className="flex items-center justify-between text-sm font-semibold text-[#151515]">
-                  <span>Password</span>
-                  <a href="#forgot-password" className="text-xs font-extrabold text-[#0d4697]">Forgot Password?</a>
-                </span>
+                <span className="text-sm font-semibold text-[#151515]">Password</span>
                 <span className="mt-1 flex h-11 items-center rounded-md border border-[#aeb4c0] px-3 focus-within:border-[#0d4697]">
                   <input name="password" type="password" value={formData.password} onChange={updateField} placeholder="••••••" required className="min-w-0 flex-1 text-sm font-medium outline-none placeholder:text-[#7a8291]" />
                   <button type="button" aria-label="Show password" className="text-[#283547]"><EyeIcon /></button>

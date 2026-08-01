@@ -113,7 +113,10 @@ export const adminNav = [
   },
   ['Events', '/events', CalendarDays],
   ['Training', '/training', Star],
-  ['Testimonials', '/testimonials', FileText],
+
+  ['Success Stories', '/testimonials', FileText],
+  ['Banners', '/banners', FileText],
+
   ['FAQs', '/faqs', HelpCircle],
   ['Analytics', '/analytics', BarChart3],
   ['Notification Center', '/notifications', Bell],

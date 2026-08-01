@@ -34,6 +34,20 @@ export default function Register() {
       password: '',
     },
   })
+  const nameField = register('name', {
+    required: 'Name is required',
+    pattern: {
+      value: /^[\p{L}\s]+$/u,
+      message: 'Name can contain letters and spaces only',
+    },
+  })
+  const phoneField = register('phone', {
+    required: 'Phone is required',
+    pattern: {
+      value: /^\d{10}$/,
+      message: 'Phone number must contain exactly 10 digits',
+    },
+  })
 
   const title = useMemo(() => {
     if (role === 'online_vendor') return 'Create Vendor Account'
@@ -126,7 +140,12 @@ export default function Register() {
 
         <FormField label="Name" error={errors.name?.message}>
           <input
-            {...register('name', { required: 'Name is required' })}
+            {...nameField}
+            onChange={(event) => {
+              event.target.value = event.target.value.replace(/[^\p{L}\s]/gu, '')
+              nameField.onChange(event)
+            }}
+            autoComplete="name"
             className="h-11 w-full rounded-md border border-slate-300 px-3 outline-none focus:border-[#0d4697]"
           />
         </FormField>
@@ -141,7 +160,15 @@ export default function Register() {
 
         <FormField label="Phone" error={errors.phone?.message}>
           <input
-            {...register('phone', { required: 'Phone is required' })}
+            {...phoneField}
+            onChange={(event) => {
+              event.target.value = event.target.value.replace(/\D/g, '').slice(0, 10)
+              phoneField.onChange(event)
+            }}
+            type="tel"
+            inputMode="numeric"
+            maxLength={10}
+            autoComplete="tel"
             className="h-11 w-full rounded-md border border-slate-300 px-3 outline-none focus:border-[#0d4697]"
           />
         </FormField>
