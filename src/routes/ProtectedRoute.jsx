@@ -47,7 +47,6 @@ export default function ProtectedRoute({ roles, requirePathAccess = false, fallb
       memberRoutes.qualification,
       memberRoutes.status,
       '/member/profile',
-      '/member/settings',
     ].includes(location.pathname)
 
     if (!isAllowedApplicantPath) {

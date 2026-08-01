@@ -24,9 +24,7 @@ import {
   AuditLogsPage,
   DashboardConfigurationPage,
   FeatureManagementPage,
-  ModuleConfigurationPage,
   NotificationsConfigPage,
-  PermissionMatrixPage,
   ReportsCenterPage,
   SuperAdminDashboardPage,
   SuperAdminModulePage,
@@ -157,6 +155,8 @@ import StateDirectorDashboard from './pages/state-director/StateDirectorDashboar
 import DistrictDirectorDashboard from './pages/district-director/DistrictDirectorDashboard'
 import ChapterDirectorDashboard from './pages/chapter-director/ChapterDirectorDashboard'
 import { ChapterDirectorProductsPage, ChapterDirectorServicesPage, ChapterDirectorVendorsPage } from './pages/chapter-director/ChapterDirectorPages'
+import LaunchDirectorDashboard from './pages/launch-director/LaunchDirectorDashboard'
+import DirectConsultantDashboard from './pages/direct-consultant/DirectConsultantDashboard'
 import PresidentDashboard from './pages/president/PresidentDashboard'
 import VicePresidentDashboard from './pages/vice-president/VicePresidentDashboard'
 import DynamicDashboard from './pages/shared/DynamicDashboard'
@@ -173,10 +173,11 @@ import VisitorsPage from './pages/membership/VisitorsPage'
 import BusinessDirectory from './pages/membership/BusinessDirectory'
 import Leaderboard from './pages/membership/Leaderboard'
 import { ROLES } from './constants/roleConfig.js'
-import { getAccountClassification } from './utils/permissions'
+import { getAccountClassification, normalizeRole } from './utils/permissions'
 
 function App() {
-  const { role, permissionsLoading, canAccessPath } = useAuth()
+  const { role: rawRole, permissionsLoading, canAccessPath } = useAuth()
+  const role = normalizeRole(rawRole)
   const isAdminSession = [ROLES.SUPERADMIN, ROLES.ADMIN, ROLES.FRANCHISE_ADMIN, ROLES.ECOMMERCE_ADMIN, ROLES.MARKETPLACE_ADMIN, ROLES.DIGITAL_MARKETING_ADMIN, ROLES.TRAINING_ADMIN, ROLES.FINANCE_ADMIN, ROLES.REGION_DIRECTOR, ROLES.STATE_DIRECTOR, ROLES.DISTRICT_DIRECTOR, ROLES.EXECUTIVE_DIRECTOR, ROLES.LAUNCH_DIRECTOR, ROLES.DIRECT_CONSULTANT, ROLES.CHAPTER_PRESIDENT, ROLES.VICE_PRESIDENT, ROLES.SECRETARY, ROLES.OPERATION_VICE_PRESIDENT, ROLES.MEMBERSHIP_VERIFICATION_ADMIN, ROLES.CUSTOM_ADMIN].includes(role)
 
   const adminRouteDefs = [
@@ -185,13 +186,9 @@ function App() {
     { path: '/admin-management', element: <AdminManagementPage />, roles: [ROLES.SUPERADMIN] },
     { path: '/organization', element: <OrganizationManagementPage />, roles: [ROLES.SUPERADMIN] },
     { path: '/assignments', element: <HierarchyAssignmentPage />, roles: [ROLES.SUPERADMIN] },
-    { path: '/roles', element: <SuperAdminModulePage {...superAdminModuleConfigs.roles} />, roles: [ROLES.SUPERADMIN] },
-    { path: '/permissions', element: <PermissionMatrixPage />, roles: [ROLES.SUPERADMIN] },
     { path: '/features', element: <FeatureManagementPage />, roles: [ROLES.SUPERADMIN] },
     { path: '/dashboard-config', element: <DashboardConfigurationPage />, roles: [ROLES.SUPERADMIN] },
-    { path: '/module-config', element: <ModuleConfigurationPage />, roles: [ROLES.SUPERADMIN] },
     { path: '/membership-workflow', element: <WorkflowEnginePage />, roles: [ROLES.SUPERADMIN] },
-    { path: '/workflow-engine', element: <WorkflowEnginePage />, roles: [ROLES.SUPERADMIN] },
     { path: '/users', element: <AdminManagementPage /> },
     { path: '/vendors', element: <ApprovedVendorsPage /> },
     { path: '/approved-vendors', element: <ApprovedVendorsPage /> },
@@ -199,7 +196,7 @@ function App() {
     { path: '/vendor-approval-workflow', element: <VendorApprovalWorkflowPage /> },
     { path: '/vendor-category-approvals', element: <AdminVendorCategoryApprovalsPage /> },
     { path: '/locations', element: <LocationsManagementPage /> },
-    { path: '/categories', element: <AdminCategoriesPage /> },
+    { path: '/marketplace/categories', element: <AdminCategoriesPage /> },
     { path: '/business', element: <BusinessNetworkingPage /> },
     { path: '/business-wall', element: <BusinessWallManagementPage /> },
     { path: '/products', element: <AdminProductsPage /> },
@@ -226,10 +223,12 @@ function App() {
     { path: '/calendar', element: <EnterpriseCalendarPage /> },
     { path: '/broadcast-notifications', element: <AdminNotifications /> },
     { path: '/audit-logs', element: <AuditLogsPage /> },
-    { path: '/system-logs', element: <SystemLogsPage />, roles: [ROLES.SUPERADMIN] },
+    { path: '/system-logs', element: <SystemLogsPage />, roles: [ROLES.SUPERADMIN, ROLES.ADMIN] },
+    { path: '/profile', element: <MembershipProfilePage /> },
   ]
 
   const superAdminRoutes = adminRouteDefs.filter((route) => {
+    if (route.path === '/settings') return false
     if (route.roles?.length && !route.roles.includes(role)) return false
     return canAccessPath(buildAdminRoute(ROLES.SUPERADMIN, route.path))
   }).map((route) => ({
@@ -238,6 +237,7 @@ function App() {
   }))
 
   const regularAdminRoutes = adminRouteDefs.filter((route) => {
+    if (route.path === '/settings') return false
     if (route.roles?.length && !route.roles.includes(role)) return false
     return canAccessPath(buildAdminRoute(ROLES.ADMIN, route.path))
   }).map((route) => ({
@@ -339,7 +339,6 @@ function App() {
               <Route path="/member/vendor-application" element={<VendorApplicationForm />} />
               <Route path="/member/vendor-application-status" element={<VendorApplicationStatus />} />
               <Route path="/member/profile" element={<MembershipProfilePage />} />
-              <Route path="/member/settings" element={<ProfilePage />} />
               
               {/* Parameterized main dashboard sub-views */}
               <Route path="/member/dashboard" element={<MemberDashboard />} />
@@ -467,9 +466,10 @@ function App() {
             {/* District Director Console */}
             <Route element={<ProtectedRoute roles={[ROLES.DISTRICT_DIRECTOR]} />}>
               <Route path="/district-director" element={<Navigate to="/district-director/dashboard" replace />} />
-              <Route path="/district-director/dashboard" element={<DynamicDashboard />} />
+              <Route path="/district-director/dashboard" element={<DistrictDirectorDashboard />} />
               <Route path="/district-director/chapters" element={<LocationsManagementPage />} />
               <Route path="/district-director/locations" element={<LocationsManagementPage />} />
+              <Route path="/district-director/chapter" element={<MyChapter />} />
               <Route path="/district-director/executive-directors" element={<AdminManagementPage role={ROLES.EXECUTIVE_DIRECTOR} />} />
               <Route path="/district-director/reports" element={<EnterpriseReportBuilderPage />} />
               <Route path="/district-director/settings" element={<AdminSettingsPage />} />
@@ -496,7 +496,7 @@ function App() {
             {/* Chapter Director Console */}
             <Route element={<ProtectedRoute roles={[ROLES.EXECUTIVE_DIRECTOR]} />}>
               <Route path="/chapter-director" element={<Navigate to="/chapter-director/dashboard" replace />} />
-              <Route path="/chapter-director/dashboard" element={<DynamicDashboard />} />
+              <Route path="/chapter-director/dashboard" element={<ChapterDirectorDashboard />} />
               <Route path="/chapter-director/vendor-category-approvals" element={<AdminVendorCategoryApprovalsPage />} />
               <Route path="/chapter-director/president" element={<AdminManagementPage />} />
               <Route path="/chapter-director/members" element={<AdminMembersPage />} />
@@ -590,7 +590,7 @@ function App() {
             {/* Launch Director Console */}
             <Route element={<ProtectedRoute roles={[ROLES.LAUNCH_DIRECTOR]} />}>
               <Route path="/launch-director" element={<Navigate to="/launch-director/dashboard" replace />} />
-              <Route path="/launch-director/dashboard" element={<DynamicDashboard />} />
+              <Route path="/launch-director/dashboard" element={<LaunchDirectorDashboard />} />
               
               {/* Inherited Base Member Modules */}
               <Route path="/launch-director/chapter" element={<MyChapter />} />
@@ -607,7 +607,6 @@ function App() {
               <Route path="/launch-director/services" element={<LaunchDirectorServicesPage />} />
               <Route path="/launch-director/vendors" element={<LaunchDirectorVendorsPage />} />
               <Route path="/launch-director/profile" element={<MembershipProfilePage />} />
-              <Route path="/launch-director/settings" element={<MembershipProfilePage />} />
 
               {/* Launch Director Specific Modules */}
               <Route path="/launch-director/members" element={<AdminManagementPage role={ROLES.CUSTOMER} />} />
@@ -619,7 +618,7 @@ function App() {
             {/* Direct Consultant Console */}
             <Route element={<ProtectedRoute roles={[ROLES.DIRECT_CONSULTANT]} />}>
               <Route path="/direct-consultant" element={<Navigate to="/direct-consultant/dashboard" replace />} />
-              <Route path="/direct-consultant/dashboard" element={<DynamicDashboard />} />
+              <Route path="/direct-consultant/dashboard" element={<DirectConsultantDashboard />} />
               
               {/* Inherited Base Member Modules */}
               <Route path="/direct-consultant/chapter" element={<MyChapter />} />
@@ -636,7 +635,6 @@ function App() {
               <Route path="/direct-consultant/services" element={<DirectConsultantServicesPage />} />
               <Route path="/direct-consultant/vendors" element={<DirectConsultantVendorsPage />} />
               <Route path="/direct-consultant/profile" element={<MembershipProfilePage />} />
-              <Route path="/direct-consultant/settings" element={<MembershipProfilePage />} />
 
               {/* Direct Consultant Specific Modules */}
               <Route path="/direct-consultant/members" element={<AdminManagementPage role={ROLES.CUSTOMER} />} />

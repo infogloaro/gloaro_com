@@ -233,23 +233,6 @@ export function FeatureManagementPage() {
   )
 }
 
-export function PermissionMatrixPage() {
-  const { user } = useAuth()
-  if (user?.role !== ROLES.SUPERADMIN) return <SuperAdminOnlyNotice title="Permission Matrix is Super Admin only" />
-
-  const rows = roles.flatMap((role) => permissions.map((permission, index) => ({
-    role,
-    module: permission,
-    status: index % 4 !== 0,
-  })))
-
-  return (
-    <section className="space-y-6">
-      <EnterpriseHeader eyebrow="Access Control" title="Permission Matrix" description="Configure view, create, edit, delete, approve, export, reports, dashboard, settings, and notifications per role." icon={KeyRound} />
-      <ConfigTable title="Role Permission Matrix" rows={rows} detailed />
-    </section>
-  )
-}
 
 export function DashboardConfigurationPage() {
   const { user } = useAuth()
@@ -316,18 +299,6 @@ export function DashboardConfigurationPage() {
   )
 }
 
-export function ModuleConfigurationPage() {
-  const { user } = useAuth()
-  if (user?.role !== ROLES.SUPERADMIN) return <SuperAdminOnlyNotice title="Module Configuration is Super Admin only" />
-
-  const rows = modules.map((module, index) => ({ role: 'Global Module', module, status: index !== 5 }))
-  return (
-    <section className="space-y-6">
-      <EnterpriseHeader eyebrow="Module Controls" title="Module Configuration" description="Enable module, hide sidebar, hide dashboard cards, notifications, exports, reports, and read-only mode." icon={Settings} />
-      <ConfigTable title="Global Module Settings" rows={rows} detailed />
-    </section>
-  )
-}
 
 export function MembershipWorkflowPage() {
   const { user } = useAuth()
@@ -446,8 +417,6 @@ export function AuditLogsPage() {
       columns={[
         { key: ROLES.USER, header: 'User', render: (row) => row.user?.name || row.user?.email || '-' },
         { key: 'action', header: 'Action', render: (row) => row.action?.replaceAll('_', ' ').toUpperCase() },
-        { key: 'module', header: 'Module' },
-        { key: 'ipAddress', header: 'IP Address' },
         { key: 'createdAt', header: 'Date', render: (row) => formatDate(row.createdAt) },
       ]}
     />
@@ -464,9 +433,6 @@ export function SystemLogsPage() {
       columns={[
         { key: 'action', header: 'Action' },
         { key: 'resource', header: 'Module' },
-        { key: 'method', header: 'Method' },
-        { key: 'endpoint', header: 'Endpoint' },
-        { key: 'statusCode', header: 'Status' },
         { key: 'isSuccess', header: 'Result', render: (row) => <StatusBadge value={row.isSuccess ? 'success' : 'failed'} /> },
         { key: 'createdAt', header: 'Date', render: (row) => formatDate(row.createdAt) },
       ]}

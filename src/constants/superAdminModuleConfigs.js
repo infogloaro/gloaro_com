@@ -29,17 +29,7 @@ export const superAdminModuleConfigs = {
       ['Hierarchy Tree', 'Visualize organization hierarchy from region to chapter.', LayoutGrid],
     ],
   },
-  roles: {
-    title: 'Roles',
-    description: 'Create roles, edit roles, clone roles, assign users, and manage the permission matrix.',
-    icon: ShieldCheck,
-    sections: [
-      ['Create Role', 'Add a new administrative role with scoped access.', Plus],
-      ['Assign Users', 'Attach admins and directors to configured roles.', Users],
-      ['Clone Role', 'Duplicate access from one role to another.', Workflow],
-      ['Role Activity', 'Review role changes and assignments.', Activity],
-    ],
-  },
+
   meetings: {
     title: 'Meeting Settings',
     description: 'Configure meeting types, attendance rules, late rules, guest rules, QR attendance, duration, and templates.',
