@@ -156,31 +156,7 @@ export default function AdminDashboard() {
           </section>
 
           <section className="mt-5 grid gap-5 xl:grid-cols-[1.4fr_.9fr]">
-            <Card className="p-5">
-              <div className="flex items-center justify-between gap-4">
-                <div>
-                  <h2 className="text-lg font-extrabold text-[#101827]">Growth Snapshot</h2>
-                  <p className="text-sm font-semibold text-slate-500">Users, vendors, and leads across the current period</p>
-                </div>
-                <select className="h-9 rounded-md border border-slate-200 bg-white px-3 text-sm font-bold text-slate-700 outline-none">
-                  <option>Last 30 days</option>
-                  <option>Last quarter</option>
-                </select>
-              </div>
 
-              <div className="mt-7 grid h-64 grid-cols-12 items-end gap-2 border-b border-l border-slate-200 px-2 pb-2">
-                {[42, 55, 48, 64, 72, 60, 88, 76, 93, 84, 112, 126].map((height, index) => (
-                  <div key={height + index} className="flex h-full items-end">
-                    <div className="w-full rounded-t bg-[#1558b0]" style={{ height: `${height / 1.35}%` }} />
-                  </div>
-                ))}
-              </div>
-              <div className="mt-3 grid grid-cols-3 gap-3 text-sm font-bold text-slate-600">
-                <span>Users +18%</span>
-                <span className="text-[#0f9f6e]">Vendors +12%</span>
-                <span className="text-[#d6a744]">Revenue +9%</span>
-              </div>
-            </Card>
 
             <Card className="p-5">
               <h2 className="text-lg font-extrabold text-[#101827]">Lead Pipeline</h2>

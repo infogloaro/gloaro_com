@@ -15,6 +15,7 @@ export const secretaryApi = {
   deleteMember: (id) => api.delete(`/secretary/members/${id}`),
   events: (params) => api.get('/secretary/events', { params }),
   createEvent: (payload) => api.post('/secretary/events', payload),
+  updateEvent: (id, payload) => api.patch(`/secretary/events/${id}`, payload),
   assignEventMember: (id, payload) => api.post(`/secretary/events/${id}/members`, payload),
   markEventAttendance: (id, attendeeId, payload) => api.patch(`/secretary/events/${id}/attendees/${attendeeId}/attendance`, payload),
 }
