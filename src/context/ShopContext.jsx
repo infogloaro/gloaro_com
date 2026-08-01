@@ -4,6 +4,7 @@ import toast from 'react-hot-toast'
 import { useAuth } from '../hooks/useAuth'
 import { customerApi } from '../api/customer'
 import { paymentApi } from '../api/payment'
+import { ordersApi } from '../api/orders'
 
 const ShopContext = createContext(null)
 
@@ -451,21 +452,35 @@ export function ShopProvider({ children }) {
     setState((current) => ({ ...current, ...payload }))
   }, [])
 
-  const placeLocalOrder = useCallback(({ address, deliveryMethod, notes, paymentMethod = 'razorpay' } = {}) => {
+  const placeLocalOrder = useCallback(async ({ address, deliveryMethod, notes, paymentMethod = 'razorpay' } = {}) => {
     if (!state.cart.length) {
       toast.error('Your cart is empty')
       return null
     }
-    const order = createLocalOrder({
+    const localDraft = createLocalOrder({
       cart: state.cart,
       address,
       deliveryMethod: deliveryMethod || state.deliveryMethod,
       activeCoupon: state.activeCoupon,
       notes: notes ?? state.checkoutNotes,
     })
-    order.paymentMethod = paymentMethod
-    order.status = paymentMethod === 'cod' ? 'confirmed' : 'placed'
-    order.paymentStatus = paymentMethod === 'cod' ? 'pending' : 'pending'
+    let order = localDraft
+
+    const response = await ordersApi.createOrder({
+      cart: state.cart,
+      address,
+      deliveryMethod: deliveryMethod || state.deliveryMethod,
+      notes: notes ?? state.checkoutNotes,
+      paymentMethod,
+      activeCoupon: state.activeCoupon,
+    })
+    order = response.data?.data || response.data || localDraft
+
+    order = {
+      ...order,
+      paymentMethod,
+      paymentStatus: order.paymentStatus || 'pending',
+    }
 
     setState((current) => ({
       ...current,

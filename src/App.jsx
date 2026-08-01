@@ -71,6 +71,7 @@ import {
   AdminMembershipsPage,
   AdminMembersPage,
   AdminPaymentsPage,
+  AdminOrdersPage,
   AdminPlansPage,
   AdminProductsPage,
   AdminReferralsPage,
@@ -108,7 +109,7 @@ import {
   VendorsPage,
 } from './pages/customer/ListingPages'
 import { CartPage, CheckoutPage, DetailPage, OrderDetailPage, OrdersPage, ProductsPage, WishlistPage as ShopWishlistPage } from './pages/customer/ShopPages'
-import { CustomerAddressesPage, CustomerDashboardPage } from './pages/customer/CustomerFoundationPages'
+import { CustomerAddressesPage, CustomerDashboardPage, CustomerProfileFoundationPage } from './pages/customer/CustomerFoundationPages'
 import NotificationsPage from './pages/shared/NotificationsPage'
 import ProfilePage from './pages/shared/ProfilePage'
 import Home from './pages/Home'
@@ -224,6 +225,7 @@ function App() {
     { path: '/referrals', element: <ReferralPipelinePage /> },
     { path: '/referrals-table', element: <AdminReferralsPage /> },
     { path: '/payments', element: <AdminPaymentsPage /> },
+    { path: '/orders', element: <AdminOrdersPage /> },
     { path: '/reviews', element: <AdminReviewsPage /> },
     { path: '/faqs', element: <AdminFaqsPage /> },
     { path: '/settings', element: <AdminSettingsPage /> },
@@ -334,7 +336,7 @@ function App() {
             <Route element={<ProtectedRoute roles={[ROLES.CUSTOMER, ROLES.USER]} />}>
               <Route path="/customer/dashboard" element={<CustomerDashboardPage />} />
               <Route path="/customer/addresses" element={<CustomerAddressesPage />} />
-              <Route path="/customer/wishlist" element={<WishlistPage />} />
+              <Route path="/customer/wishlist" element={<ShopWishlistPage />} />
               <Route path="/customer/referral" element={<ReferralPage />} />
               <Route path="/customer/notifications" element={<CustomerNotificationsPage />} />
               <Route path="/customer/profile" element={<CustomerProfileFoundationPage />} />

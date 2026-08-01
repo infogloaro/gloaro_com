@@ -373,6 +373,74 @@ export function AdminProductsPage() {
   )
 }
 
+export function AdminOrdersPage() {
+  return (
+    <ResourceListPage
+      module="orders"
+      section="list"
+      title="Order Management"
+      description="Track customer purchases created from the shop checkout flow."
+      fetcher={adminApi.orders}
+      detailFetcher={adminApi.order}
+      filters={[
+        { key: 'status', label: 'Status', options: ['all', 'placed', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled', 'refunded'].map((value) => ({ value, label: value })) },
+        { key: 'paymentStatus', label: 'Payment', options: ['all', 'pending', 'paid', 'failed', 'refunded'].map((value) => ({ value, label: value })) },
+      ]}
+      columns={[
+        { key: 'orderNumber', header: 'Order #', render: (row) => row.orderNumber || row._id },
+        { key: 'customer', header: 'Customer', render: (row) => row.customerSnapshot?.name || row.user?.name || row.customerSnapshot?.email || 'Guest' },
+        { key: 'phone', header: 'Phone', render: (row) => row.customerSnapshot?.phone || row.user?.phone || '-' },
+        { key: 'amount', header: 'Amount', render: (row) => formatCurrency(row.total, row.currency) },
+        { key: 'paymentStatus', header: 'Payment', render: (row) => <StatusBadge value={row.paymentStatus} /> },
+        { key: 'status', header: 'Order Status', render: (row) => <StatusBadge value={row.status} /> },
+        { key: 'createdAt', header: 'Created', render: (row) => formatDate(row.createdAt) },
+      ]}
+      renderDetails={(order) => (
+        <div className="space-y-4 text-sm">
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="rounded-lg border border-slate-200 p-3">
+              <p className="text-[10px] font-black uppercase text-slate-400">Customer</p>
+              <p className="mt-1 font-bold text-slate-900">{order.customerSnapshot?.name || order.user?.name || 'Guest'}</p>
+              <p className="text-xs font-medium text-slate-500">{order.customerSnapshot?.email || order.user?.email || '-'}</p>
+              <p className="text-xs font-medium text-slate-500">{order.customerSnapshot?.phone || order.user?.phone || '-'}</p>
+            </div>
+            <div className="rounded-lg border border-slate-200 p-3">
+              <p className="text-[10px] font-black uppercase text-slate-400">Order</p>
+              <p className="mt-1 font-bold text-slate-900">{order.orderNumber}</p>
+              <p className="text-xs font-medium text-slate-500">{formatDate(order.createdAt)}</p>
+              <p className="text-xs font-medium text-slate-500">Payment: {order.paymentStatus}</p>
+            </div>
+          </div>
+          <div className="rounded-lg border border-slate-200 p-3">
+            <p className="text-[10px] font-black uppercase text-slate-400">Shipping Address</p>
+            <p className="mt-1 text-xs font-medium text-slate-600">
+              {[order.address?.fullName, order.address?.line1, order.address?.line2, order.address?.city, order.address?.state, order.address?.pincode].filter(Boolean).join(', ') || 'Address unavailable'}
+            </p>
+          </div>
+          <div className="rounded-lg border border-slate-200 p-3">
+            <p className="text-[10px] font-black uppercase text-slate-400">Items</p>
+            <div className="mt-3 space-y-3">
+              {order.items?.map((item) => (
+                <div key={`${order._id}-${item.productId}`} className="flex items-center justify-between gap-4 rounded-md bg-slate-50 px-3 py-2">
+                  <div>
+                    <p className="font-bold text-slate-800">{item.productSnapshot?.title || 'Product'}</p>
+                    <p className="text-xs text-slate-500">Qty {item.quantity}</p>
+                  </div>
+                  <p className="font-bold text-slate-900">{formatCurrency(item.lineTotal)}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3 text-xs">
+            <div className="rounded-md bg-slate-50 p-3">Subtotal: {formatCurrency(order.subtotal)}</div>
+            <div className="rounded-md bg-slate-50 p-3">Total: {formatCurrency(order.total)}</div>
+          </div>
+        </div>
+      )}
+    />
+  )
+}
+
 export function AdminServicesPage() {
   const [selectedService, setSelectedService] = useState(null)
 
@@ -543,7 +611,9 @@ export function AdminMembershipApplicationsPage() {
       await adminApi.updateMembershipApplicationStatus(row._id, { status, adminNotes: row.adminNotes || '' })
       toast.success(`Application marked ${status.replaceAll('_', ' ')}`)
       reload?.()
-    } catch (_) {}
+    } catch (error) {
+      void error
+    }
   }
 
   return (

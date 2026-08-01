@@ -21,6 +21,7 @@ export const vendorApi = {
   leads: (params) => api.get('/leads', { params }),
   updateLead: (id, data) => api.patch(`/leads/${id}/status`, data),
   addLeadNote: (id, data) => api.post(`/leads/${id}/notes`, data),
+  orders: (params) => api.get('/vendors/me/orders', { params }),
   reviews: (params) => api.get('/vendors/me/reviews', { params }),
   replyReview: (id, data) => api.post(`/reviews/${id}/reply`, data),
   membership: () => api.get('/memberships/my'),

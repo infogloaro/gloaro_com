@@ -1,13 +1,13 @@
 import {
   ArrowRight,
   BarChart3,
-  Bell,
   BriefcaseBusiness,
   Building2,
   CalendarClock,
   CreditCard,
   MapPin,
   Package,
+  ShoppingBag,
   Plus,
   Star,
   Ticket,
@@ -81,7 +81,7 @@ export default function VendorDashboard() {
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-6">
         <VendorMetric label="Products" value={stats.productsCount} icon={Package} to={routeFor('/products')} />
         <VendorMetric label="Services" value={stats.servicesCount} icon={BriefcaseBusiness} to={routeFor('/services')} />
-        <VendorMetric label="Orders" value={stats.pendingOrders || stats.ordersCount || 0} helper={`${stats.totalOrders || 0} total orders`} icon={Ticket} to={routeFor('/orders')} />
+        <VendorMetric label="Orders" value={stats.pendingOrders || stats.ordersCount || 0} helper={`${stats.totalOrders || 0} total orders`} icon={ShoppingBag} to={routeFor('/orders')} />
         <VendorMetric label="Leads" value={stats.pendingLeads} helper={`${stats.totalLeads || 0} total leads`} icon={Ticket} to={routeFor('/leads')} />
         <VendorMetric label="Reviews" value={Number(stats.avgRating || 0).toFixed(1)} helper={`${stats.totalReviews || 0} reviews`} icon={Star} to={routeFor('/reviews')} />
         <VendorMetric label="Payments" value={formatCurrency(stats.monthlyRevenue)} helper="This month" icon={Wallet} to={routeFor('/payments')} />
@@ -92,21 +92,22 @@ export default function VendorDashboard() {
         <div className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <h2 className="text-xl font-extrabold text-slate-950">Lead Inbox</h2>
-              <p className="mt-1 text-sm font-semibold text-slate-500">Latest customer enquiries for your business.</p>
+              <h2 className="text-xl font-extrabold text-slate-950">Recent Orders</h2>
+              <p className="mt-1 text-sm font-semibold text-slate-500">Latest customer purchases for your business.</p>
             </div>
-            <Link to={routeFor('/leads')} className="text-sm font-extrabold text-[#0d4697]">View all</Link>
+            <Link to={routeFor('/orders')} className="text-sm font-extrabold text-[#0d4697]">View all</Link>
           </div>
           <div className="mt-4">
             <DataTable
               columns={[
-                { key: 'name', header: 'Customer' },
-                { key: 'phone', header: 'Phone' },
-                { key: 'subject', header: 'Subject' },
-                { key: 'createdAt', header: 'Received', render: (row) => formatDate(row.createdAt) },
+                { key: 'orderNumber', header: 'Order #', render: (row) => row.orderNumber || row._id },
+                { key: 'customer', header: 'Customer', render: (row) => row.customerSnapshot?.name || row.user?.name || 'Guest' },
+                { key: 'amount', header: 'Amount', render: (row) => formatCurrency(row.total, row.currency) },
+                { key: 'createdAt', header: 'Placed', render: (row) => formatDate(row.createdAt) },
+                { key: 'paymentStatus', header: 'Payment', render: (row) => <StatusBadge value={row.paymentStatus} /> },
                 { key: 'status', header: 'Status', render: (row) => <StatusBadge value={row.status} /> },
               ]}
-              rows={data.recentLeads || []}
+              rows={data.recentOrders || []}
             />
           </div>
         </div>
@@ -161,7 +162,7 @@ function VendorSetupState({ routeFor = () => '' }) {
           <ArrowRight className="h-4 w-4 text-slate-300" />
         </div>
         <p className="mt-4 text-sm font-extrabold text-slate-500">{label}</p>
-        <p className="mt-1 text-2xl font-black text-slate-950">{value ?? 0}</p>
+        <p className="mt-1 text-2xl font-black text-slate-950">{displayValue(value)}</p>
         {helper && <p className="mt-1 text-xs font-bold text-slate-400">{helper}</p>}
       </Link>
     )
@@ -230,4 +231,23 @@ function VendorPanel({ title, icon: Icon, action, to, children }) {
       <Link to={to} className="mt-4 inline-flex items-center gap-2 text-sm font-extrabold text-[#0d4697]">{action} <ArrowRight className="h-4 w-4" /></Link>
     </div>
   )
+}
+
+function displayValue(value) {
+  if (value === null || value === undefined || value === '') return '0'
+  if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') return String(value)
+  if (Array.isArray(value)) return String(value.length)
+  if (typeof value === 'object') {
+    return String(
+      value.orderNumber ||
+      value.title ||
+      value.name ||
+      value.label ||
+      value.value ||
+      value._id ||
+      value.id ||
+      '0'
+    )
+  }
+  return String(value)
 }

@@ -958,7 +958,7 @@ export function CheckoutPage() {
     }
     setSubmitting(true)
     try {
-      const draftOrder = placeLocalOrder({
+      const draftOrder = await placeLocalOrder({
         address: user?._id ? address : guestForm,
         deliveryMethod,
         notes: checkoutNotes,

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import api from '../../api/axios'
 import toast from 'react-hot-toast'
 import { vendorApi } from '../../api/vendor'
@@ -13,7 +13,8 @@ import DataTable from '../../components/tables/DataTable'
 import { 
   Package, Star, ToggleLeft, ShoppingBag, BriefcaseBusiness, Heart, 
   PlusCircle, TrendingUp, ClipboardList, LayoutDashboard, Building2, 
-  Users, FileText, HelpCircle, FileBarChart, CreditCard 
+  Users, FileText, HelpCircle, FileBarChart, CreditCard,
+  Search, Filter, RefreshCw, ChevronRight, MapPin, Truck, Clock3, Banknote, ReceiptText, Copy, Eye, CircleDashed
 } from 'lucide-react'
 
 const buildApprovedCategoryOptions = (categories = [], approvedCategories = []) => {
@@ -486,113 +487,293 @@ export function VendorLeadsPage() {
 }
 
 export function VendorOrdersPage() {
-  const [leads, setLeads] = useState([])
-  const [activeTab, setActiveTab] = useState('processing')
+  const [orders, setOrders] = useState([])
+  const [dashboard, setDashboard] = useState(null)
+  const [activeTab, setActiveTab] = useState('all')
+  const [searchQuery, setSearchQuery] = useState('')
+  const [selectedOrderId, setSelectedOrderId] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [refreshing, setRefreshing] = useState(false)
 
-  useEffect(() => {
-    vendorApi.leads()
-      .then(res => setLeads(res.data?.data || res.data || []))
-      .catch(() => {})
-  }, [])
+  const loadOrders = async ({ silent = false } = {}) => {
+    if (silent) {
+      setRefreshing(true)
+    } else {
+      setLoading(true)
+    }
 
-  const getStatusList = () => {
-    if (activeTab === 'pending') return leads.filter(l => l.status === 'new')
-    if (activeTab === 'processing') return leads.filter(l => ['contacted', 'qualified', 'proposal_sent'].includes(l.status))
-    if (activeTab === 'completed') return leads.filter(l => l.status === 'won')
-    if (activeTab === 'cancelled') return leads.filter(l => l.status === 'lost')
-    return []
+    try {
+      const [dashboardRes, ordersRes] = await Promise.allSettled([
+        vendorApi.dashboard(),
+        vendorApi.orders({ page: 1, limit: 100, status: 'all', paymentStatus: 'all' }),
+      ])
+
+      const dashboardData = dashboardRes.status === 'fulfilled' ? (dashboardRes.value.data?.data || dashboardRes.value.data || {}) : {}
+      const apiOrders = ordersRes.status === 'fulfilled' ? (ordersRes.value.data?.data || ordersRes.value.data || []) : []
+      const recentOrders = dashboardData.recentOrders || []
+      const merged = mergeOrders([...recentOrders, ...apiOrders])
+
+      setDashboard(dashboardData)
+      setOrders(merged)
+      if (!selectedOrderId && merged[0]?._id) {
+        setSelectedOrderId(merged[0]._id)
+      }
+      if (!merged.length && ordersRes.status === 'rejected') {
+        toast.error(ordersRes.reason?.response?.data?.message || 'Failed to load vendor orders')
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to load vendor orders')
+    } finally {
+      if (silent) setRefreshing(false)
+      else setLoading(false)
+    }
   }
 
-  const list = getStatusList()
+  useEffect(() => {
+    loadOrders()
+    const timer = window.setInterval(() => {
+      loadOrders({ silent: true })
+    }, 15000)
+    return () => window.clearInterval(timer)
+  }, [])
+
+  const tabs = [
+    { key: 'all', label: 'All' },
+    { key: 'pending', label: 'Pending' },
+    { key: 'processing', label: 'Processing' },
+    { key: 'completed', label: 'Completed' },
+    { key: 'cancelled', label: 'Cancelled' },
+  ]
+
+  const filteredOrders = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase()
+    return orders.filter((order) => {
+      const statusMatch =
+        activeTab === 'all'
+          ? true
+          : activeTab === 'pending'
+            ? ['placed', 'confirmed'].includes(order.status)
+            : activeTab === 'processing'
+              ? ['processing', 'shipped'].includes(order.status)
+              : activeTab === 'completed'
+                ? order.status === 'delivered'
+                : activeTab === 'cancelled'
+                  ? order.status === 'cancelled'
+                  : true
+
+      if (!statusMatch) return false
+      if (!query) return true
+
+      const haystack = [
+        order.orderNumber,
+        order.invoiceNumber,
+        order.customerSnapshot?.name,
+        order.customerSnapshot?.email,
+        order.customerSnapshot?.phone,
+        order.status,
+        order.paymentStatus,
+        order.deliveryMethod,
+        ...(order.items || []).map((item) => item.productSnapshot?.title),
+      ].filter(Boolean).join(' ').toLowerCase()
+
+      return haystack.includes(query)
+    })
+  }, [activeTab, orders, searchQuery])
+
+  useEffect(() => {
+    if (!filteredOrders.length) {
+      setSelectedOrderId(null)
+      return
+    }
+    if (!filteredOrders.some((order) => order._id === selectedOrderId)) {
+      setSelectedOrderId(filteredOrders[0]._id)
+    }
+  }, [filteredOrders, selectedOrderId])
+
+  const selectedOrder = filteredOrders.find((order) => order._id === selectedOrderId) || filteredOrders[0] || null
+
+  const stats = useMemo(() => {
+    const totalRevenue = filteredOrders.reduce((sum, order) => sum + Number(order.total || 0), 0)
+    return {
+      totalOrders: orders.length,
+      pendingOrders: orders.filter((order) => ['placed', 'confirmed'].includes(order.status)).length,
+      processingOrders: orders.filter((order) => ['processing', 'shipped'].includes(order.status)).length,
+      deliveredOrders: orders.filter((order) => order.status === 'delivered').length,
+      cancelledOrders: orders.filter((order) => order.status === 'cancelled').length,
+      totalRevenue,
+      avgOrderValue: orders.length ? Math.round(totalRevenue / orders.length) : 0,
+      dashboardOrders: dashboard?.stats?.totalOrders || 0,
+    }
+  }, [dashboard?.stats?.totalOrders, filteredOrders, orders])
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-black text-slate-900">Orders & Bookings</h2>
-        <p className="text-sm font-semibold text-slate-500">Track purchase transactions, processing states, and download invoices.</p>
-      </div>
-
-      <div className="flex gap-2 border-b border-slate-200 pb-px">
-        {['pending', 'processing', 'completed', 'cancelled', 'invoice'].map((tab) => (
-          <button
-            key={tab}
-            onClick={() => setActiveTab(tab)}
-            className={`border-b-2 px-4 py-2 text-xs font-extrabold capitalize transition-all ${
-              activeTab === tab
-                ? 'border-[#0d4697] text-[#0d4697]'
-                : 'border-transparent text-slate-500 hover:text-slate-800'
-            }`}
-          >
-            {tab}
-          </button>
-        ))}
-      </div>
-
-      {activeTab === 'invoice' ? (
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm max-w-2xl text-left space-y-4">
-          <div className="flex justify-between border-b border-slate-100 pb-4">
-            <div>
-              <p className="font-playfair text-2xl font-bold text-[#0d4697]">GLOARO INVOICE</p>
-              <p className="text-xs font-semibold text-slate-400 mt-1">Invoice #: INV-2026-00419</p>
-            </div>
-            <div className="text-right">
-              <p className="text-xs font-extrabold text-slate-800">Gloaro Verified Business</p>
-              <p className="text-[10px] font-semibold text-slate-500 mt-1">Commission Settle Ledger</p>
-            </div>
+      <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
+          <div>
+            <p className="text-[10px] font-black uppercase tracking-[0.28em] text-slate-400">Orders & Bookings</p>
+            <h2 className="mt-1 text-3xl font-black text-slate-900">Vendor Order Center</h2>
+            <p className="mt-2 max-w-2xl text-sm font-semibold text-slate-500">
+              See every customer order placed for your products, track the current fulfillment stage, and open each order like a marketplace seller panel.
+            </p>
           </div>
-          <div className="grid grid-cols-2 gap-4 text-xs">
-            <div>
-              <p className="font-bold text-slate-400">Billed To:</p>
-              <p className="font-extrabold text-slate-800 mt-1">Premium Customer</p>
-              <p className="text-slate-500 mt-0.5">Chennai District Chapter</p>
-            </div>
-            <div>
-              <p className="font-bold text-slate-400">Date Issued:</p>
-              <p className="font-extrabold text-slate-800 mt-1">{new Date().toLocaleDateString()}</p>
-            </div>
-          </div>
-          <table className="w-full text-left text-xs border-collapse">
-            <thead>
-              <tr className="border-b border-slate-200">
-                <th className="py-2 font-black text-slate-600">Product / Service</th>
-                <th className="py-2 font-black text-slate-600 text-right">Price</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr className="border-b border-slate-100">
-                <td className="py-3 font-semibold text-slate-700">Corporate Consultation Deal</td>
-                <td className="py-3 font-extrabold text-slate-800 text-right">₹45,000</td>
-              </tr>
-            </tbody>
-          </table>
-          <div className="flex justify-end pt-4">
-            <button
-              onClick={() => { toast.success('Invoice PDF downloading...') }}
-              className="rounded-lg bg-[#0d4697] px-4 py-2 text-xs font-extrabold text-white hover:bg-blue-800"
-            >
-              Download PDF Invoice
+
+          <div className="flex flex-wrap gap-2">
+            <button type="button" onClick={() => loadOrders({ silent: false })} className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-black text-slate-700 hover:border-[#0d4697] hover:text-[#0d4697]">
+              <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
+              Refresh
+            </button>
+            <button type="button" onClick={() => { toast.success('Invoice export coming next'); }} className="inline-flex items-center gap-2 rounded-xl bg-[#0d4697] px-4 py-2 text-xs font-black text-white hover:bg-blue-800">
+              <ReceiptText className="h-4 w-4" />
+              Export
             </button>
           </div>
         </div>
-      ) : (
-        <DataTable
-          columns={[
-            { key: 'name', header: 'Customer' },
-            { key: 'phone', header: 'Phone' },
-            { key: 'subject', header: 'Enquiry / Product' },
-            { key: 'status', header: 'Status', render: (row) => <StatusBadge value={row.status} /> },
-            { key: 'action', header: 'Invoice', render: (row) => (
+
+        <div className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-6">
+          <MetricCard label="Total Orders" value={stats.totalOrders} helper="Across all statuses" icon={ShoppingBag} />
+          <MetricCard label="Pending" value={stats.pendingOrders} helper="Placed / confirmed" icon={Clock3} accent="amber" />
+          <MetricCard label="Processing" value={stats.processingOrders} helper="Packed / shipped" icon={Truck} accent="blue" />
+          <MetricCard label="Delivered" value={stats.deliveredOrders} helper="Completed orders" icon={CircleDashed} accent="emerald" />
+          <MetricCard label="Revenue" value={formatCurrency(stats.totalRevenue)} helper="Visible orders" icon={Banknote} accent="slate" />
+          <MetricCard label="AOV" value={formatCurrency(stats.avgOrderValue)} helper="Average order value" icon={Banknote} accent="violet" />
+        </div>
+      </section>
+
+      <section className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
+        <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <h3 className="text-xl font-black text-slate-900">Order Timeline</h3>
+              <p className="mt-1 text-sm font-semibold text-slate-500">Auto-refreshes every 15 seconds so new orders show up quickly.</p>
+            </div>
+
+            <div className="flex flex-wrap gap-2">
+              <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
+                <Search className="h-4 w-4 text-slate-400" />
+                <input
+                  value={searchQuery}
+                  onChange={(event) => setSearchQuery(event.target.value)}
+                  placeholder="Search order, customer, product..."
+                  className="w-64 bg-transparent text-xs font-semibold outline-none placeholder:text-slate-400"
+                />
+              </div>
+              <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-black text-slate-600">
+                <Filter className="h-4 w-4" />
+                Filter
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-4 flex gap-2 overflow-x-auto border-b border-slate-200 pb-px">
+            {tabs.map((tab) => (
               <button
-                onClick={() => setActiveTab('invoice')}
-                className="text-xs font-extrabold text-[#0d4697] hover:underline"
+                key={tab.key}
+                type="button"
+                onClick={() => setActiveTab(tab.key)}
+                className={`border-b-2 px-4 py-2 text-xs font-black capitalize transition-all ${
+                  activeTab === tab.key
+                    ? 'border-[#0d4697] text-[#0d4697]'
+                    : 'border-transparent text-slate-500 hover:text-slate-800'
+                }`}
               >
-                View Invoice
+                {tab.label}
               </button>
+            ))}
+          </div>
+
+          <div className="mt-5 space-y-4">
+            {loading ? (
+              <div className="grid min-h-80 place-items-center rounded-2xl border border-dashed border-slate-200 bg-slate-50">
+                <div className="text-center">
+                  <RefreshCw className="mx-auto h-8 w-8 animate-spin text-[#0d4697]" />
+                  <p className="mt-3 text-sm font-semibold text-slate-500">Loading your vendor orders...</p>
+                </div>
+              </div>
+            ) : filteredOrders.length === 0 ? (
+              <div className="grid min-h-80 place-items-center rounded-2xl border border-dashed border-slate-200 bg-slate-50 text-center">
+                <div>
+                  <ShoppingBag className="mx-auto h-10 w-10 text-slate-300" />
+                  <h4 className="mt-3 text-lg font-black text-slate-800">No orders yet</h4>
+                  <p className="mt-1 max-w-md text-sm font-semibold text-slate-500">
+                    When a customer places an order for your products, it will appear here with the customer details, items, payment state, and fulfillment timeline.
+                  </p>
+                </div>
+              </div>
+            ) : (
+              filteredOrders.map((order) => (
+                <button
+                  key={order._id}
+                  type="button"
+                  onClick={() => setSelectedOrderId(order._id)}
+                  className={`w-full rounded-2xl border p-4 text-left transition hover:shadow-sm ${
+                    selectedOrderId === order._id
+                      ? 'border-[#0d4697] bg-[#eef4ff]'
+                      : 'border-slate-200 bg-white hover:border-slate-300'
+                  }`}
+                >
+                  <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                    <div className="space-y-2">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <p className="text-sm font-black text-slate-900">{order.orderNumber || order._id}</p>
+                        <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-black uppercase tracking-wide text-slate-600">
+                          {formatDate(order.createdAt)}
+                        </span>
+                        <StatusBadge value={order.status} />
+                        <StatusBadge value={order.paymentStatus} />
+                      </div>
+                      <p className="text-sm font-semibold text-slate-600">
+                        {order.customerSnapshot?.name || order.user?.name || 'Guest'} • {order.customerSnapshot?.phone || order.user?.phone || 'No phone'}
+                      </p>
+                      <p className="text-xs font-medium text-slate-500">
+                        {order.items?.length || 0} item(s) • {order.deliveryMethod || 'standard'} delivery • {formatCurrency(order.total)}
+                      </p>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                      <div className="rounded-xl bg-slate-50 px-3 py-2 text-right">
+                        <p className="text-[10px] font-black uppercase tracking-wide text-slate-400">Total</p>
+                        <p className="text-sm font-black text-slate-900">{formatCurrency(order.total)}</p>
+                      </div>
+                      <ChevronRight className="h-5 w-5 text-slate-300" />
+                    </div>
+                  </div>
+
+                  <div className="mt-4 grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
+                    {(order.items || []).slice(0, 3).map((item) => (
+                      <div key={`${order._id}-${item.productId || item.productSnapshot?._id}`} className="rounded-xl bg-slate-50 p-3">
+                        <p className="line-clamp-1 text-sm font-bold text-slate-900">{item.productSnapshot?.title || 'Product'}</p>
+                        <p className="text-xs font-semibold text-slate-500">Qty {item.quantity} • {formatCurrency(item.lineTotal)}</p>
+                      </div>
+                    ))}
+                  </div>
+                </button>
+              ))
             )}
-          ]}
-          rows={list}
-        />
-      )}
+          </div>
+        </div>
+
+        <div className="space-y-6">
+          <OrderDetailPanel order={selectedOrder} onCopyOrderNumber={() => {
+            if (!selectedOrder?.orderNumber) return
+            navigator.clipboard?.writeText(selectedOrder.orderNumber).then(() => toast.success('Order number copied')).catch(() => {})
+          }} />
+
+          <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+            <div className="flex items-center justify-between">
+              <div>
+                <h4 className="text-lg font-black text-slate-900">Seller Notes</h4>
+                <p className="text-sm font-semibold text-slate-500">Use this space for fulfillment reminders or packing instructions.</p>
+              </div>
+            </div>
+            <textarea
+              rows={5}
+              className="mt-4 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium outline-none focus:border-[#0d4697]"
+              placeholder="Add private notes for your team..."
+            />
+          </div>
+        </div>
+      </section>
     </div>
   )
 }
@@ -752,6 +933,188 @@ export function VendorMembershipPage() {
       )}
     </div>
   )
+}
+
+function mergeOrders(items = []) {
+  const seen = new Set()
+  return items.filter((order) => {
+    const key = String(order?._id || '')
+    if (!key || seen.has(key)) return false
+    seen.add(key)
+    return true
+  })
+}
+
+function MetricCard({ label, value, helper, icon: Icon, accent = 'slate' }) {
+  const accentMap = {
+    amber: 'bg-amber-50 text-amber-700',
+    blue: 'bg-blue-50 text-blue-700',
+    emerald: 'bg-emerald-50 text-emerald-700',
+    violet: 'bg-violet-50 text-violet-700',
+    slate: 'bg-slate-50 text-slate-700',
+  }
+
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+      <div className="flex items-center justify-between gap-3">
+        <div className={`grid h-10 w-10 place-items-center rounded-xl ${accentMap[accent] || accentMap.slate}`}>
+          <Icon className="h-5 w-5" />
+        </div>
+        <span className="text-[10px] font-black uppercase tracking-wide text-slate-400">{label}</span>
+      </div>
+      <p className="mt-4 text-2xl font-black text-slate-900">{value ?? 0}</p>
+      {helper && <p className="mt-1 text-xs font-semibold text-slate-500">{helper}</p>}
+    </div>
+  )
+}
+
+function OrderDetailPanel({ order, onCopyOrderNumber }) {
+  if (!order) {
+    return (
+      <div className="rounded-3xl border border-dashed border-slate-200 bg-white p-8 shadow-sm">
+        <div className="text-center">
+          <ReceiptText className="mx-auto h-10 w-10 text-slate-300" />
+          <h4 className="mt-3 text-lg font-black text-slate-900">Select an order</h4>
+          <p className="mt-1 text-sm font-semibold text-slate-500">Pick an order from the list to inspect customer details, payment state, and fulfillment progress.</p>
+        </div>
+      </div>
+    )
+  }
+
+  const tracking = order.tracking?.length ? order.tracking : buildFallbackTracking(order.status)
+
+  return (
+    <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+      <div className="flex items-start justify-between gap-3 border-b border-slate-100 pb-4">
+        <div>
+          <p className="text-[10px] font-black uppercase tracking-[0.28em] text-slate-400">Order Details</p>
+          <h4 className="mt-1 text-2xl font-black text-slate-900">{order.orderNumber || order._id}</h4>
+          <p className="mt-1 text-sm font-semibold text-slate-500">{formatDate(order.createdAt)} • {displayValue(order.deliveryMethod || 'standard')} delivery</p>
+        </div>
+        <div className="flex flex-col items-end gap-2">
+          <StatusBadge value={order.status} />
+          <StatusBadge value={order.paymentStatus} />
+        </div>
+      </div>
+
+      <div className="mt-4 grid gap-3 sm:grid-cols-2">
+        <InfoTile label="Customer" value={order.customerSnapshot?.name || order.user?.name || 'Guest'} />
+        <InfoTile label="Phone" value={order.customerSnapshot?.phone || order.user?.phone || '-'} />
+        <InfoTile label="Payment" value={order.paymentMethod || 'razorpay'} />
+        <InfoTile label="Total" value={formatCurrency(order.total)} />
+      </div>
+
+      <div className="mt-4 rounded-2xl bg-slate-50 p-4">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <p className="text-[10px] font-black uppercase tracking-wide text-slate-400">Delivery Address</p>
+            <p className="mt-1 text-sm font-semibold text-slate-700">{displayValue(formatOrderAddress(order.address))}</p>
+          </div>
+          <button type="button" onClick={onCopyOrderNumber} className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-3 py-2 text-[11px] font-black text-slate-700 hover:border-[#0d4697] hover:text-[#0d4697]">
+            <Copy className="h-3.5 w-3.5" />
+            Copy
+          </button>
+        </div>
+      </div>
+
+      <div className="mt-4">
+        <p className="text-[10px] font-black uppercase tracking-wide text-slate-400">Items</p>
+        <div className="mt-3 space-y-3">
+          {(order.items || []).map((item) => (
+            <div key={`${order._id}-${item.productId || item.productSnapshot?._id}`} className="flex items-center justify-between gap-3 rounded-2xl border border-slate-100 p-3">
+              <div className="flex items-center gap-3">
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-slate-100">
+                  <ShoppingBag className="h-5 w-5 text-slate-400" />
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-slate-900">{displayValue(item.productSnapshot?.title || 'Product')}</p>
+                  <p className="text-xs font-semibold text-slate-500">Qty {displayValue(item.quantity)} • {displayValue(item.variant?.option || item.variant?.name || 'Default')}</p>
+                </div>
+              </div>
+              <p className="text-sm font-black text-slate-900">{formatCurrency(item.lineTotal)}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="mt-4 rounded-2xl border border-slate-100 p-4">
+        <p className="text-[10px] font-black uppercase tracking-wide text-slate-400">Fulfillment Timeline</p>
+        <div className="mt-4 space-y-3">
+          {tracking.map((step, index) => (
+            <div key={step.status || index} className="flex items-start gap-3">
+              <div className={`mt-1 h-3 w-3 rounded-full ${step.at ? 'bg-emerald-500' : 'bg-slate-300'}`} />
+              <div>
+                <p className="text-sm font-bold text-slate-900">{displayValue(step.label || step.status)}</p>
+                <p className="text-xs font-semibold text-slate-500">
+                  {step.at ? formatDate(step.at) : 'Waiting'}
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {order.notes && (
+        <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 p-4">
+          <p className="text-[10px] font-black uppercase tracking-wide text-amber-700">Customer Notes</p>
+          <p className="mt-1 text-sm font-semibold text-amber-900">{displayValue(order.notes)}</p>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function InfoTile({ label, value }) {
+  return (
+    <div className="rounded-2xl border border-slate-100 bg-slate-50 p-3">
+      <p className="text-[10px] font-black uppercase tracking-wide text-slate-400">{label}</p>
+      <p className="mt-1 text-sm font-bold text-slate-900">{displayValue(value)}</p>
+    </div>
+  )
+}
+
+function formatOrderAddress(address) {
+  if (!address) return 'Address unavailable'
+  if (typeof address === 'string') return address
+  if (Array.isArray(address)) return address.map(displayValue).filter(Boolean).join(', ')
+  if (typeof address !== 'object') return displayValue(address)
+  return [
+    address.fullName,
+    address.line1,
+    address.line2,
+    address.landmark,
+    address.city,
+    address.state,
+    address.pincode,
+  ].filter(Boolean).join(', ')
+}
+
+function buildFallbackTracking(status) {
+  return [
+    { status: 'placed', label: 'Order placed', at: status ? new Date().toISOString() : null },
+    { status: 'processing', label: 'Packed by seller', at: ['processing', 'shipped', 'delivered'].includes(status) ? new Date().toISOString() : null },
+    { status: 'shipped', label: 'Out for delivery', at: ['shipped', 'delivered'].includes(status) ? new Date().toISOString() : null },
+    { status: 'delivered', label: 'Delivered', at: status === 'delivered' ? new Date().toISOString() : null },
+  ]
+}
+
+function displayValue(value) {
+  if (value === null || value === undefined || value === '') return '-'
+  if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') return String(value)
+  if (Array.isArray(value)) return value.map(displayValue).filter(Boolean).join(', ')
+  if (value instanceof Date) return formatDate(value)
+  if (typeof value === 'object') {
+    const preferredKeys = ['name', 'title', 'label', 'value', 'orderNumber', 'phone', 'email']
+    for (const key of preferredKeys) {
+      if (value[key] !== undefined && value[key] !== null) return displayValue(value[key])
+    }
+    try {
+      return JSON.stringify(value)
+    } catch {
+      return '[object]'
+    }
+  }
+  return String(value)
 }
 
 export function VendorPaymentsPage() {

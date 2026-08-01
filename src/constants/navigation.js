@@ -99,6 +99,7 @@ export const adminNav = [
       ['Vendors', '/vendors', Building2],
       ['Products', '/products', Package],
       ['Services', '/services', BriefcaseBusiness],
+      ['Orders', '/orders', ShoppingBag],
       ['Marketplace Approval', '/marketplace-approval', Workflow],
       ['Vendor Category Requests', '/vendor-category-approvals', Workflow],
     ],
