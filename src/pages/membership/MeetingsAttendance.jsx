@@ -1,16 +1,10 @@
-import { useEffect, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { customerApi } from '../../api/customer'
 import { useApi } from '../../hooks/useApi'
 import LoadingScreen from '../../components/common/LoadingScreen'
 import toast from 'react-hot-toast'
 import {
-  CalendarDays,
-  CheckCircle,
-  XCircle,
   Eye,
-  FileText,
-  UserCheck,
-  Building,
   PlusCircle,
   ClipboardList
 } from 'lucide-react'
@@ -28,19 +22,13 @@ export default function MeetingsAttendance() {
   const { user } = useAuth()
   // Retrieve events mapped as meetings
   const { data, loading } = useApi(() => customerApi.events({ limit: 12 }))
-  const [meetings, setMeetings] = useState([])
   const [showLeaveModal, setShowLeaveModal] = useState(false)
   const [leaveReason, setLeaveReason] = useState('')
   const [leaveMeetingId, setLeaveMeetingId] = useState('')
   const [leaveRequests, setLeaveRequests] = useState([])
   const [selectedMeeting, setSelectedMeeting] = useState(null)
 
-  useEffect(() => {
-    if (data) {
-      // Filter meetings from events or use all events as community sessions
-      setMeetings(data.data || data || [])
-    }
-  }, [data])
+  const meetings = useMemo(() => data?.data || data || [], [data])
 
   const handleApplyLeave = (e) => {
     e.preventDefault()
@@ -121,7 +109,7 @@ export default function MeetingsAttendance() {
                 <div key={event._id || index} className="flex justify-between items-center py-4 first:pt-0 last:pb-0">
                   <div className="flex items-start gap-3">
                     <span className="grid h-9 w-9 place-items-center rounded-lg bg-blue-50 text-xs font-black text-[#0d4697]">
-                      {new Date(event.startDate || Date.now()).getDate()}
+                      {event.startDate ? new Date(event.startDate).getDate() : '—'}
                     </span>
                     <div>
                       <p className="text-sm font-extrabold text-slate-800 leading-tight">{event.title || 'Weekly Chapter Meeting'}</p>
@@ -273,4 +261,3 @@ export default function MeetingsAttendance() {
     </div>
   )
 }
-export { default } from '../shared/AttendanceHistoryPage'
