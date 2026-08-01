@@ -75,6 +75,14 @@ export const adminNav = [
     ],
   },
   {
+    label: 'Referrals',
+    icon: Handshake,
+    children: [
+      ['My Referrals', '/my-referrals', User],
+      ['Referral Management', '/referral-management', Handshake],
+    ],
+  },
+  {
     label: 'Membership',
     icon: CreditCard,
     children: [
@@ -82,7 +90,6 @@ export const adminNav = [
       ['Members', '/members', Users],
       ['Attendance', '/attendance', Activity],
       ['Chapter Approvals', '/chapters', Network],
-      ['Referrals', '/referrals', Ticket],
     ],
   },
   {

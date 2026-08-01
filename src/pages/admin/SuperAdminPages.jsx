@@ -6,12 +6,14 @@ import {
   CalendarDays,
   CheckCircle2,
   ClipboardList,
+  Clock,
   CreditCard,
   Download,
   FileBarChart,
   Filter,
   Globe,
   GraduationCap,
+  Handshake,
   KeyRound,
   Landmark,
   LayoutGrid,
@@ -24,8 +26,11 @@ import {
   ShoppingBag,
   Store,
   ToggleLeft,
+  TrendingUp,
+  UserCheck,
   Users,
   Workflow,
+  XCircle,
 } from 'lucide-react'
 import { adminApi } from '../../api/admin'
 import { notificationApi } from '../../api/notification'
@@ -641,4 +646,330 @@ function formatLabel(value = '') {
   return String(value)
     .replace(/_/g, ' ')
     .replace(/\b\w/g, (char) => char.toUpperCase())
+}
+
+function StatCard({ title, value, icon: Icon, color, subtitle }) {
+  return (
+    <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-sm font-bold text-slate-500">{title}</p>
+          <p className="mt-1 text-2xl font-black text-slate-900">{value ?? '-'}</p>
+          {subtitle && <p className="mt-0.5 text-xs font-semibold text-slate-400">{subtitle}</p>}
+        </div>
+        <div className={`rounded-lg p-3 ${color || 'bg-blue-50'}`}>
+          {Icon && <Icon className={`h-6 w-6 ${color ? 'text-white' : 'text-[#0d4697]'}`} />}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function ReferralDetailModal({ referral, onClose }) {
+  if (!referral) return null
+  const ref = referral.referrer || {}
+  const mem = referral.referred || {}
+  const stages = [
+    { key: 'referral_code_used', label: 'Referral Code Used' },
+    { key: 'registration_started', label: 'Registration Started' },
+    { key: 'registered', label: 'Registered' },
+    { key: 'application_submitted', label: 'Application Submitted' },
+    { key: 'pending_approval', label: 'Pending Approval' },
+    { key: 'approved', label: 'Approved' },
+    { key: 'member_joined', label: 'Member Joined' },
+    { key: 'rejected', label: 'Rejected' },
+  ]
+  const sortedTimeline = [...(referral.timeline || [])].sort((a, b) => new Date(a.at) - new Date(b.at))
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={onClose}>
+      <div className="mx-auto max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-white p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between border-b border-slate-200 pb-4">
+          <h2 className="text-xl font-black text-slate-900">Referral Details</h2>
+          <button onClick={onClose} className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600">
+            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+          </button>
+        </div>
+
+        <div className="mt-5 grid grid-cols-2 gap-4">
+          <div className="rounded-lg bg-slate-50 p-4">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500">Referral Owner</h3>
+            <p className="mt-1 text-sm font-bold text-slate-900">{ref.name || 'N/A'}</p>
+            <p className="text-xs text-slate-500">{ref.email}</p>
+            <p className="text-xs font-mono text-[#0d4697]">{ref.referralCode}</p>
+          </div>
+          <div className="rounded-lg bg-slate-50 p-4">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500">Referred Member</h3>
+            <p className="mt-1 text-sm font-bold text-slate-900">{mem.name || referral.name || 'N/A'}</p>
+            <p className="text-xs text-slate-500">{mem.email || referral.email}</p>
+            <p className="text-xs text-slate-500">{mem.phone || referral.mobileNumber}</p>
+          </div>
+        </div>
+
+        <div className="mt-4 grid grid-cols-3 gap-3 rounded-lg bg-slate-50 p-4">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-wider text-slate-500">Referral Code</p>
+            <p className="mt-0.5 text-sm font-bold text-[#0d4697]">{referral.usedReferralCode || referral.code}</p>
+          </div>
+          <div>
+            <p className="text-xs font-bold uppercase tracking-wider text-slate-500">Status</p>
+            <StatusBadge status={referral.currentStage || referral.status} />
+          </div>
+          <div>
+            <p className="text-xs font-bold uppercase tracking-wider text-slate-500">Type</p>
+            <p className="mt-0.5 text-sm font-bold text-slate-900">{referral.type || 'signup'}</p>
+          </div>
+        </div>
+
+        {referral.applicationNumber && (
+          <div className="mt-4 rounded-lg bg-slate-50 p-4">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500">Membership Application</h3>
+            <p className="mt-0.5 text-sm font-bold text-slate-900">{referral.applicationNumber}</p>
+          </div>
+        )}
+
+        <div className="mt-5">
+          <h3 className="text-sm font-bold uppercase tracking-wider text-slate-500">Timeline</h3>
+          <div className="mt-3 space-y-0">
+            {stages.map((stage, idx) => {
+              const event = sortedTimeline.find((t) => t.stage === stage.key)
+              const isActive = event || referral.currentStage === stage.key
+              const isRejected = stage.key === 'rejected'
+              return (
+                <div key={stage.key} className="flex gap-3">
+                  <div className="flex flex-col items-center">
+                    <div className={`h-3 w-3 rounded-full border-2 ${isActive ? (isRejected ? 'border-red-500 bg-red-100' : 'border-[#0d4697] bg-[#0d4697]') : 'border-slate-300 bg-white'}`} />
+                    {idx < stages.length - 1 && <div className="w-0.5 flex-1 bg-slate-200" />}
+                  </div>
+                  <div className={`pb-5 ${isActive ? '' : 'opacity-40'}`}>
+                    <p className={`text-sm font-bold ${isActive ? (isRejected ? 'text-red-600' : 'text-slate-900') : 'text-slate-400'}`}>{stage.label}</p>
+                    {event && (
+                      <p className="text-xs text-slate-500">
+                        {new Date(event.at).toLocaleDateString()} {event.at ? new Date(event.at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
+                        {event.remarks && ` - ${event.remarks}`}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+export function ReferralManagementPage() {
+  const { role } = useAuth()
+  const [loading, setLoading] = useState(true)
+  const [dashboard, setDashboard] = useState(null)
+  const [referrals, setReferrals] = useState([])
+  const [pagination, setPagination] = useState({ page: 1, limit: 15, total: 0 })
+  const [filters, setFilters] = useState({ status: 'all', ownerId: '', referralCode: '', startDate: '', endDate: '', regionId: '', stateId: '', districtId: '', chapterId: '' })
+  const [search, setSearch] = useState('')
+  const [selectedReferral, setSelectedReferral] = useState(null)
+  const [exporting, setExporting] = useState(false)
+
+  const fetchDashboard = async () => {
+    try {
+      const res = await adminApi.referralDashboard()
+      setDashboard(res.data.data)
+    } catch { /* ignore */ }
+  }
+
+  const fetchReferrals = async (page = 1) => {
+    setLoading(true)
+    try {
+      const params = { page, limit: pagination.limit, ...filters }
+      if (search.trim()) params.referralCode = search.trim()
+      Object.keys(params).forEach((k) => { if (!params[k] || params[k] === 'all') delete params[k] })
+      const res = await adminApi.referralAll(params)
+      setReferrals(res.data.data || [])
+      setPagination((prev) => ({ ...prev, page, total: res.data.pagination?.total || res.data.total || 0 }))
+    } catch { /* ignore */ }
+    setLoading(false)
+  }
+
+  useEffect(() => { fetchDashboard(); fetchReferrals() }, [])
+
+  const handleFilterChange = (key, value) => {
+    setFilters((prev) => ({ ...prev, [key]: value }))
+  }
+
+  const applyFilters = () => fetchReferrals(1)
+
+  const resetFilters = () => {
+    setFilters({ status: 'all', ownerId: '', referralCode: '', startDate: '', endDate: '', regionId: '', stateId: '', districtId: '', chapterId: '' })
+    setSearch('')
+    fetchReferrals(1)
+  }
+
+  const exportCSV = async () => {
+    setExporting(true)
+    try {
+      const params = { limit: 10000, ...filters }
+      if (search.trim()) params.referralCode = search.trim()
+      Object.keys(params).forEach((k) => { if (!params[k] || params[k] === 'all') delete params[k] })
+      const res = await adminApi.referralAll(params)
+      const data = res.data.data || []
+      if (!data.length) { toast.error('No data to export'); setExporting(false); return }
+      const headers = ['Code', 'Owner', 'Owner Email', 'Referred Member', 'Referred Email', 'Chapter', 'Stage', 'Registration Date']
+      const rows = data.map((r) => [
+        r.usedReferralCode || r.code || '',
+        r.referrer?.name || '',
+        r.referrer?.email || '',
+        r.referred?.name || r.name || '',
+        r.referred?.email || r.email || '',
+        r.chapterName || '',
+        r.currentStage || '',
+        r.createdAt ? new Date(r.createdAt).toLocaleDateString() : '',
+      ].map((v) => `"${String(v).replace(/"/g, '""')}"`).join(','))
+      const csv = [headers.join(','), ...rows].join('\n')
+      const blob = new Blob([csv], { type: 'text/csv' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `referrals_export_${Date.now()}.csv`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+      toast.success('Referrals exported to CSV')
+    } catch { toast.error('Failed to export CSV') }
+    setExporting(false)
+  }
+
+  const columns = [
+    { key: 'sno', label: '#', render: (_, idx) => (pagination.page - 1) * pagination.limit + idx + 1 },
+    { key: 'usedReferralCode', label: 'Code', render: (r) => <span className="font-mono text-xs text-[#0d4697]">{r.usedReferralCode || r.code}</span> },
+    { key: 'referrer', label: 'Owner', render: (r) => <span className="text-sm font-bold text-slate-900">{r.referrer?.name || 'N/A'}</span> },
+    { key: 'referred', label: 'Referred Member', render: (r) => <span className="text-sm text-slate-700">{r.referred?.name || r.name || 'N/A'}</span> },
+    { key: 'chapterName', label: 'Chapter', render: (r) => <span className="text-xs text-slate-500">{r.chapterName || r.districtName || '-'}</span> },
+    { key: 'createdAt', label: 'Date', render: (r) => <span className="text-xs text-slate-500">{formatDate(r.createdAt)}</span> },
+    { key: 'currentStage', label: 'Stage', render: (r) => <StatusBadge status={r.currentStage} /> },
+    { key: 'status', label: 'Status', render: (r) => {
+      const s = r.currentStage === 'rejected' ? 'Rejected' : ['approved', 'member_joined'].includes(r.currentStage) ? 'Approved' : 'Pending'
+      const c = s === 'Approved' ? 'bg-green-100 text-green-700' : s === 'Rejected' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'
+      return <span className={`rounded-full px-2.5 py-0.5 text-xs font-bold ${c}`}>{s}</span>
+    }},
+    { key: 'actions', label: '', render: (r) => (
+      <button onClick={() => setSelectedReferral(r)} className="rounded-lg bg-[#0d4697] px-3 py-1.5 text-xs font-bold text-white hover:bg-[#0a3575]">
+        View
+      </button>
+    )},
+  ]
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-black text-slate-900">Referral Management</h1>
+          <p className="mt-1 text-sm font-semibold text-slate-500">
+            {role === 'superadmin' ? 'Full system referral overview and management' : 'Referrals within your organization hierarchy'}
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <button onClick={exportCSV} disabled={exporting} className="flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-bold text-slate-700 hover:bg-slate-50 disabled:opacity-50">
+            <Download className="h-4 w-4" />
+            {exporting ? 'Exporting...' : 'Export CSV'}
+          </button>
+        </div>
+      </div>
+
+      {/* Dashboard Stats */}
+      {dashboard && (
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-7">
+          <StatCard title="Total Referrals" value={dashboard.totalReferrals} icon={Handshake} color="bg-[#0d4697]" />
+          <StatCard title="Referrers" value={dashboard.totalReferrers} icon={Users} color="bg-purple-600" />
+          <StatCard title="Pending" value={dashboard.pending} icon={Clock} color="bg-yellow-500" />
+          <StatCard title="Approved" value={dashboard.approved} icon={CheckCircle2} color="bg-green-600" />
+          <StatCard title="Joined" value={dashboard.joined} icon={UserCheck} color="bg-blue-600" />
+          <StatCard title="Rejected" value={dashboard.rejected} icon={XCircle} color="bg-red-600" />
+          <StatCard title="Conversion" value={`${dashboard.conversionRate}%`} icon={TrendingUp} color="bg-teal-600" />
+        </div>
+      )}
+
+      {/* Filters */}
+      <div className="rounded-xl border border-slate-200 bg-white p-4">
+        <div className="flex flex-wrap items-end gap-3">
+          <div className="min-w-[160px] flex-1">
+            <label className="block text-xs font-bold uppercase tracking-wider text-slate-500">Status</label>
+            <select value={filters.status} onChange={(e) => handleFilterChange('status', e.target.value)} className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-700">
+              <option value="all">All Statuses</option>
+              <option value="pending">Pending</option>
+              <option value="approved">Approved</option>
+              <option value="joined">Joined</option>
+              <option value="rejected">Rejected</option>
+            </select>
+          </div>
+          <div className="min-w-[160px] flex-1">
+            <label className="block text-xs font-bold uppercase tracking-wider text-slate-500">Owner ID</label>
+            <input type="text" value={filters.ownerId} onChange={(e) => handleFilterChange('ownerId', e.target.value)} placeholder="User ID" className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-700" />
+          </div>
+          <div className="min-w-[160px] flex-1">
+            <label className="block text-xs font-bold uppercase tracking-wider text-slate-500">Referral Code</label>
+            <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search code..." className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-700" />
+          </div>
+          <div className="min-w-[140px]">
+            <label className="block text-xs font-bold uppercase tracking-wider text-slate-500">From</label>
+            <input type="date" value={filters.startDate} onChange={(e) => handleFilterChange('startDate', e.target.value)} className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-700" />
+          </div>
+          <div className="min-w-[140px]">
+            <label className="block text-xs font-bold uppercase tracking-wider text-slate-500">To</label>
+            <input type="date" value={filters.endDate} onChange={(e) => handleFilterChange('endDate', e.target.value)} className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-700" />
+          </div>
+          <div className="flex gap-2">
+            <button onClick={applyFilters} className="rounded-lg bg-[#0d4697] px-4 py-2 text-sm font-bold text-white hover:bg-[#0a3575]">Apply</button>
+            <button onClick={resetFilters} className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-bold text-slate-600 hover:bg-slate-50">Reset</button>
+          </div>
+        </div>
+      </div>
+
+      {/* Table */}
+      <div className="rounded-xl border border-slate-200 bg-white shadow-sm">
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr className="border-b border-slate-200 bg-slate-50">
+                {columns.map((col) => (
+                  <th key={col.key} className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">{col.label}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {loading ? (
+                <tr><td colSpan={columns.length} className="px-4 py-12 text-center text-sm text-slate-500">Loading referrals...</td></tr>
+              ) : referrals.length === 0 ? (
+                <tr><td colSpan={columns.length} className="px-4 py-12 text-center text-sm text-slate-500">No referrals found</td></tr>
+              ) : (
+                referrals.map((r, idx) => (
+                  <tr key={r._id} className="hover:bg-slate-50">
+                    {columns.map((col) => (
+                      <td key={col.key} className="px-4 py-3">{col.render ? col.render(r, idx) : r[col.key]}</td>
+                    ))}
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+        {pagination.total > pagination.limit && (
+          <div className="flex items-center justify-between border-t border-slate-200 px-4 py-3">
+            <p className="text-sm text-slate-500">Showing {(pagination.page - 1) * pagination.limit + 1} to {Math.min(pagination.page * pagination.limit, pagination.total)} of {pagination.total}</p>
+            <div className="flex gap-2">
+              <button disabled={pagination.page <= 1} onClick={() => fetchReferrals(pagination.page - 1)} className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-bold text-slate-600 hover:bg-slate-50 disabled:opacity-40">Previous</button>
+              <button disabled={pagination.page * pagination.limit >= pagination.total} onClick={() => fetchReferrals(pagination.page + 1)} className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-bold text-slate-600 hover:bg-slate-50 disabled:opacity-40">Next</button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {selectedReferral && <ReferralDetailModal referral={selectedReferral} onClose={() => setSelectedReferral(null)} />}
+    </div>
+  )
+}
+
+export function AdminReferralTrackingPage() {
+  return <ReferralManagementPage />
 }

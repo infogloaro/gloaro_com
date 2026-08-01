@@ -21,10 +21,14 @@ import AdminVendorApplicationsPage from './pages/admin/AdminVendorApplicationsPa
 import AdminVendorCategoryApprovalsPage from './pages/admin/AdminVendorCategoryApprovalsPage'
 import ApprovedVendorsPage from './pages/shared/ApprovedVendorsPage'
 import {
+  AdminReferralTrackingPage,
   AuditLogsPage,
   DashboardConfigurationPage,
   FeatureManagementPage,
   NotificationsConfigPage,
+  PermissionMatrixPage,
+  ReferralManagementPage,
+
   ReportsCenterPage,
   SuperAdminDashboardPage,
   SuperAdminModulePage,
@@ -216,6 +220,9 @@ function App() {
     { path: '/events', element: <AdminEventsPage /> },
     { path: '/training', element: <TrainingManagementPage /> },
     { path: '/testimonials', element: <TestimonialsManagementPage /> },
+    { path: '/my-referrals', element: <ReferralsPipeline /> },
+    { path: '/referral-management', element: <ReferralManagementPage />, roles: [ROLES.SUPERADMIN] },
+    { path: '/referral-management', element: <AdminReferralTrackingPage /> },
     { path: '/referrals', element: <ReferralPipelinePage /> },
     { path: '/referrals-table', element: <AdminReferralsPage /> },
     { path: '/payments', element: <AdminPaymentsPage /> },
