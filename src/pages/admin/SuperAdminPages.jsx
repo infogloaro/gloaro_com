@@ -6,11 +6,14 @@ import {
   CalendarDays,
   CheckCircle2,
   ClipboardList,
+  CreditCard,
   Download,
   FileBarChart,
   Filter,
+  Globe,
   GraduationCap,
   KeyRound,
+  Landmark,
   LayoutGrid,
   MapPinned,
   Plus,
@@ -18,6 +21,7 @@ import {
   Search,
   Settings,
   ShieldCheck,
+  ShoppingBag,
   Store,
   ToggleLeft,
   Users,
@@ -68,16 +72,18 @@ export function SuperAdminDashboardPage() {
   const report = analytics.data || {}
 
   const topCards = [
-    ['members', 'Total Members', stats.totalUsers, `${stats.newUsersToday || 0} today`, Users],
-    ['members', 'Active Members', stats.activeUsers || stats.totalUsers, 'Verified network', CheckCircle2],
-    ['approvals', 'Pending Membership', stats.pendingMembershipApplications || 0, 'Needs review', ClipboardList],
-    ['members', 'Total Chapters', stats.totalChapters || 0, 'Organization', MapPinned],
-    ['vendors', 'Total Vendors', stats.totalVendors, `${stats.pendingVendors || 0} pending`, Building2],
-    ['marketplace', 'Marketplace Listings', Number(stats.productsCount || 0) + Number(stats.servicesCount || 0), 'Products + services', Store],
-    ['referrals', 'Referrals', stats.referralsCount || 0, 'Network growth', Workflow],
-    ['business', 'Business Generated', formatCurrency(stats.revenue), 'Platform revenue', FileBarChart],
-    ['events', 'Upcoming Events', stats.upcomingEvents || stats.eventsCount || 0, 'Calendar', CalendarDays],
-    ['attendance', 'Attendance %', stats.attendancePercent || '0%', 'Attendance', Activity],
+    ['members', 'Total Members', (stats.totalUsers ?? stats.roleStats?.totalMembers ?? 0).toLocaleString(), `${stats.newUsersToday || 0} today`, Users],
+    ['members', 'Active Members', (stats.activeUsers ?? stats.roleStats?.approvedMemberships ?? stats.totalUsers ?? 0).toLocaleString(), 'Verified network', CheckCircle2],
+    ['approvals', 'Pending Memberships', (stats.pendingMembershipApplications ?? stats.roleStats?.pendingMemberships ?? 0).toLocaleString(), 'Needs review', ClipboardList],
+    ['members', 'Total Chapters', (stats.totalChapters ?? stats.roleStats?.totalChapters ?? 0).toLocaleString(), 'Organization', MapPinned],
+    ['members', 'Total Regions', (stats.totalRegions ?? stats.roleStats?.totalRegions ?? 0).toLocaleString(), 'Regional zones', Globe],
+    ['members', 'Total States', (stats.totalStates ?? stats.roleStats?.totalStates ?? 0).toLocaleString(), 'State coverage', Landmark],
+    ['vendors', 'Total Vendors', (stats.totalVendors ?? 0).toLocaleString(), `${stats.pendingVendors || 0} pending`, Building2],
+    ['vendors', 'Pending Vendor Approvals', (stats.pendingVendors ?? 0).toLocaleString(), 'Needs review', Store],
+    ['marketplace', 'Marketplace Listings', (Number(stats.productsCount || 0) + Number(stats.servicesCount || 0)).toLocaleString(), 'Products + services', ShoppingBag],
+    ['events', 'Upcoming Events', (stats.upcomingEvents ?? stats.eventsCount ?? 0).toLocaleString(), 'Calendar', CalendarDays],
+    ['reports', 'Total Business Generated', formatCurrency(stats.revenue ?? 0), 'Platform revenue', FileBarChart],
+    ['reports', 'Membership Revenue', formatCurrency(stats.membershipRevenue ?? 0), 'Membership fees', CreditCard],
   ].filter(([widget]) => hasWidget(widget))
 
   return (
@@ -92,12 +98,6 @@ export function SuperAdminDashboardPage() {
         {topCards.map(([, label, value, helper, Icon]) => <GlassStat key={label} label={label} value={value} helper={helper} icon={Icon} />)}
       </div>}
 
-      {hasSection('dashboard', 'analytics') && <section className="grid gap-5 xl:grid-cols-2">
-        <ChartCard title="Membership Growth" data={(report.monthlyUsers || []).map((item) => ({ label: monthLabel(item), members: item.users }))} dataKey="members" />
-        <ChartCard title="Vendor Growth" type="bar" data={(report.monthlyVendors || []).map((item) => ({ label: monthLabel(item), vendors: item.vendors }))} dataKey="vendors" />
-        <ChartCard title="Business Growth" data={(report.monthlyRevenue || []).map((item) => ({ label: monthLabel(item), revenue: item.revenue }))} dataKey="revenue" />
-        <ChartCard title="Membership Sales" type="bar" data={(report.membershipSales || []).map((item) => ({ label: item._id, sales: item.sales }))} dataKey="sales" />
-      </section>}
 
       {hasSection('dashboard', 'payments') && <section className="grid gap-5 xl:grid-cols-[1.2fr_0.8fr]">
         <DataTable
@@ -555,10 +555,6 @@ function EnterpriseHeader({ eyebrow, title, description, icon: Icon = ShieldChec
           <h1 className="mt-3 text-3xl font-black text-slate-950">{title}</h1>
           <p className="mt-2 max-w-4xl text-sm font-semibold leading-6 text-slate-500">{description}</p>
         </div>
-        <button type="button" className="inline-flex h-11 items-center justify-center gap-2 rounded-md bg-[#0d4697] px-4 text-sm font-extrabold text-white">
-          <Plus className="h-4 w-4" />
-          Quick Action
-        </button>
       </div>
     </header>
   )
@@ -582,12 +578,12 @@ function Toolbar() {
 
 function GlassStat({ label, value, helper, icon: Icon }) {
   return (
-    <article className="rounded-2xl border border-white/60 bg-white/90 p-5 shadow-sm backdrop-blur">
+    <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <p className="text-sm font-bold text-slate-500">{label}</p>
-          <p className="mt-2 text-3xl font-extrabold text-slate-950">{value ?? 0}</p>
-          <p className="mt-2 text-xs font-extrabold text-emerald-600">{helper}</p>
+          <p className="text-xs font-extrabold uppercase tracking-wider text-slate-600">{label}</p>
+          <p className="mt-2 text-3xl font-black text-slate-950">{value ?? 0}</p>
+          <p className="mt-2 text-xs font-bold text-[#0d4697]">{helper}</p>
         </div>
         <span className="grid h-11 w-11 place-items-center rounded-xl bg-[#eef4ff] text-[#1558b0]"><Icon className="h-5 w-5" /></span>
       </div>

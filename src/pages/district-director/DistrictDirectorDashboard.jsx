@@ -211,11 +211,7 @@ export default function DistrictDirectorDashboard() {
         </div>
       </section>
 
-      {/* Analytics Growth Charts */}
-      <section className="grid gap-5 xl:grid-cols-2">
-        <ChartCard title="Membership Growth" data={(report.monthlyUsers || []).map((item) => ({ label: monthLabel(item), members: item.users }))} dataKey="members" />
-        <ChartCard title="Membership Sales" type="bar" data={(report.membershipSales || []).map((item) => ({ label: item._id, sales: item.sales }))} dataKey="sales" />
-      </section>
+
 
       {/* Recent Applications & Activity */}
       <section className="grid gap-5 xl:grid-cols-[1.2fr_0.8fr]">
