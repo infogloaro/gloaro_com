@@ -21,6 +21,8 @@ import rocketIcon from '../assets/rocket.png'
 import whyImage from '../assets/why_img.png'
 import awardsImage from '../assets/awards_img.png'
 import api from '../api/axios'
+import leader1 from '../assets/leader1.png'
+import leader2 from '../assets/leader2.png'
 
 import leaderImage1 from '../assets/ceo.jpeg'
 import leaderImage2 from '../assets/Digital_Network.png'
@@ -90,21 +92,111 @@ const eventCards = [
   ['TRAINING', 'Compliance Essentials', 'Certified training module on regional B2B regulations and trade laws.', 'Certified learning • Trade compliance', 'https://images.unsplash.com/photo-1551836022-d5d88e9218df?auto=format&fit=crop&w=600&q=80'],
 ]
 
+const networkDetailGroups = [
+  {
+    title: 'Membership',
+    eyebrow: 'Connect & belong',
+    items: [
+      ['membership-benefits-detail', 'Membership Benefits', 'One-to-one referrals, verified networking, business promotion, digital support, training, leadership development, expos and recognition programs.'],
+      ['membership-investment', 'Yearly Subscription', 'Annual membership is ₹30,000 plus ₹5,400 GST (18%), totaling ₹35,400. It includes the referral network, meetings, training, community access, digital support and business promotion.'],
+      ['member-access', 'Member Access', 'Approved members enter a verified community with business directory visibility, structured meetings, referral opportunities and digital growth resources.'],
+    ],
+  },
+  {
+    title: 'Business Network',
+    eyebrow: 'One complete ecosystem',
+    items: [
+      ['gloaro-360-network', '360 Gloaro Network', 'A unified ecosystem connecting entrepreneurs, businesses, technology, referrals, digital opportunities, marketplace access and community growth.'],
+      ['global-business-network', 'Global Business Network', 'GLOARO is building toward international business communities and global visits with industry leaders as part of its future expansion.'],
+      ['business-growth', 'Business Growth', 'Trusted relationships, qualified referrals, digital promotion, training, technology and marketplace visibility work together to support long-term growth.'],
+      ['business-opportunities', 'Business Opportunities', 'Members can discover collaborations, strategic partnerships, marketplace opportunities, franchise growth and business expansion pathways.'],
+    ],
+  },
+  {
+    title: 'Referral Program',
+    eyebrow: 'Trust-led opportunities',
+    items: [
+      ['referral-meeting', 'Referral Meeting', 'Members attend structured weekly and one-to-one business meetings designed to build trusted relationships and qualified opportunities.'],
+      ['referral-join', 'Referral Join', 'A prospective member is referred by an existing verified member, completes offline verification and receives membership approval before joining.'],
+      ['referral-benefits', 'Referral Benefits', 'The referral engine creates genuine introductions, business relationships, qualified leads and ongoing community support.'],
+    ],
+  },
+  {
+    title: 'Mobile App',
+    eyebrow: 'Business on the move',
+    items: [
+      ['gloaro-app', 'Gloaro App', 'A planned mobile ecosystem for networking, referrals, community participation and access to GLOARO digital opportunities.'],
+      ['member-app', 'Member App', 'A member-focused experience for profiles, connections, meeting updates, referrals and recognition activity.'],
+      ['business-management-app', 'Business Management App', 'A proposed workspace to organize business activity, opportunities, customer follow-ups and performance insights.'],
+    ],
+  },
+  {
+    title: 'Business Services',
+    eyebrow: 'Digital growth solutions',
+    items: [
+      ['technology-development', 'Technology Development', 'GLOARO supports digital transformation through websites, applications, e-commerce solutions and technology-led business enablement.'],
+      ['mobile-app-development', 'Mobile App Development', 'Mobile application support helps businesses create accessible digital experiences and new sales channels.'],
+      ['digital-marketing', 'Digital Marketing', 'Full-service digital growth support includes social media promotion, branding, promotional campaigns and marketplace visibility.'],
+      ['it-solutions', 'IT Solutions', 'Practical technology solutions help businesses improve their digital presence, operations and customer reach.'],
+      ['saas-solution', 'SaaS Solution', 'Scalable software solutions are planned to help growing businesses manage workflows, collaboration and performance.'],
+    ],
+  },
+  {
+    title: 'Events & Community',
+    eyebrow: 'Learn & grow together',
+    items: [
+      ['monthly-meetings', 'Monthly Meetings', 'Regular networking meetings create space for referrals, learning, accountability and trusted business relationships.'],
+      ['business-expo', 'Business Expo', 'Business expos and trade events give members opportunities to showcase, connect and discover new markets.'],
+      ['social-events', 'Social Events', 'Community and cultural events strengthen relationships beyond formal business meetings.'],
+      ['district-community', 'District Community', 'The district model supports five chapters per district, with approximately 45–70 members in each chapter.'],
+      ['tamil-nadu-community', 'Tamil Nadu Community', 'A growing regional community connecting verified entrepreneurs and business leaders across Tamil Nadu districts.'],
+      ['global-community', 'Global Community', 'The future roadmap includes international business communities, global visits and smart digital networking.'],
+    ],
+  },
+  {
+    title: 'Franchise',
+    eyebrow: 'Lead regional expansion',
+    items: [
+      ['available-locations', 'Available Locations', 'District-wise expansion is planned across India, with regional opportunities organized around scalable local chapters.'],
+      ['apply-franchise', 'Apply Franchise', 'The district franchise model is ₹21.30 lakhs, royalty-free, with a one-year agreement and 35% franchise commission.'],
+      ['franchise-partners', 'Franchise Partners', 'Partners receive district control, chapter expansion opportunities, website access, regional leadership and recurring member-revenue potential.'],
+    ],
+  },
+  {
+    title: 'Leaders & Achievements',
+    eyebrow: 'Recognize excellence',
+    items: [
+      ['network-leaders', 'Leaders', 'A structured multi-tier leadership ecosystem supports accountability, chapter growth, learning and community direction.'],
+      ['network-coordinators', 'Coordinators', 'Community coordinators help organize meetings, member communication and local business activities.'],
+      ['business-runner', 'Business Runner', 'A recognition pathway for members who demonstrate consistent participation, collaboration and business momentum.'],
+      ['goal-achiever', 'Goal Achiever', 'A milestone-based recognition for members who make measurable progress toward referral, leadership and growth goals.'],
+      ['member-achievements', 'Member Achievements', 'Programs include the Mr. 360° Lead Champion Award, Referral Excellence Awards, leadership recognition and Business Achievement Awards.'],
+    ],
+  },
+  {
+    title: 'Help Center',
+    eyebrow: 'Support when needed',
+    items: [
+      ['ai-assistant', 'AI Assistant', 'A planned digital assistant to help members find platform information, services and common support answers.'],
+      ['contact-support', 'Contact Support', 'Contact the GLOARO team at info@gloaro.com or +91 72002 38737 for membership and platform assistance.'],
+      ['social-media-links', 'Social Media Links', 'Follow GLOARO social channels for business updates, event announcements, member stories and community news.'],
+    ],
+  },
+]
+
 const leaders = [
   {
     name: 'G.MANI VANNAN',
-    role: 'Founder & CEO',
+    role: 'FOUNDER AND MANAGING DIRECTOR',
     bio: 'Visionary leader with 15+ years of experience in business strategy and growth.',
-    image: leaderImage1,
+    image: leader2,
   },
   {
     name: 'Yuvaraj',
-    role: 'Digital Network Director',
+    role: 'Co-Founder and CEO',
     bio: 'Operations expert focused on delivering excellence and scaling impact.',
-    image: leaderImage2,
+    image: leader1,
   },
-  
-  
 ]
 
 export default function Home() {
@@ -145,6 +237,10 @@ export default function Home() {
     if (!targetId) return
 
     const scrollToTarget = () => {
+      if (targetId === 'top') {
+        window.scrollTo({ top: 0, left: 0, behavior: 'auto' })
+        return
+      }
       document.getElementById(targetId)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
     }
 
@@ -301,6 +397,40 @@ export default function Home() {
               <span className="mt-2 inline-flex items-center gap-2 font-urbanist text-xs font-extrabold text-[#1366d6]">{action} <span className="transition group-hover:translate-x-1">→</span></span>
             </a>
           ))}
+        </div>
+      </div>
+    </section>
+
+    <section id="network-details" className="border-y border-slate-200 bg-white px-5 py-14 sm:py-18 lg:px-8 lg:py-20">
+      <div className="mx-auto max-w-7xl">
+        <div className="mx-auto max-w-3xl text-center">
+          <p className="font-inter text-xs font-extrabold uppercase tracking-[0.2em] text-[#ff9500]">One platform. Complete business ecosystem.</p>
+          <h2 className="mt-3 font-playfair text-4xl font-semibold italic text-[#0d4697] sm:text-5xl">Explore the GLOARO Network</h2>
+          <p className="mt-4 font-urbanist text-base font-medium leading-7 text-slate-600 sm:text-lg">Discover how membership, trusted referrals, digital solutions, community and leadership work together to create lasting business growth.</p>
+        </div>
+
+        <div className="mt-10 grid items-start gap-6 md:grid-cols-2 xl:grid-cols-3">
+          {networkDetailGroups.map((group, groupIndex) => (
+            <article key={group.title} className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_10px_35px_rgba(15,23,42,0.07)]">
+              <header className="border-b border-slate-100 bg-gradient-to-r from-[#0b469e] to-[#07377c] px-6 py-5 text-white">
+                <p className="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[#ffc24b]">{group.eyebrow}</p>
+                <h3 className="mt-1 font-playfair text-2xl font-bold italic">{String(groupIndex + 1).padStart(2, '0')}. {group.title}</h3>
+              </header>
+              <div className="divide-y divide-slate-100 px-6">
+                {group.items.map(([id, title, description]) => (
+                  <div id={id} key={id} className="scroll-mt-48 py-5 lg:scroll-mt-44">
+                    <h4 className="font-urbanist text-base font-extrabold text-slate-950">{title}</h4>
+                    <p className="mt-1.5 font-urbanist text-sm font-medium leading-6 text-slate-600">{description}</p>
+                  </div>
+                ))}
+              </div>
+            </article>
+          ))}
+        </div>
+
+        <div className="mt-10 flex flex-col items-center justify-between gap-5 rounded-2xl bg-[#fff6df] px-6 py-7 text-center sm:flex-row sm:px-8 sm:text-left">
+          <div><h3 className="font-playfair text-2xl font-bold text-[#0b469e]">Ready to grow with GLOARO?</h3><p className="mt-1 font-urbanist text-sm font-semibold text-slate-700">Join a verified ecosystem where relationships create opportunities.</p></div>
+          <a href="/register" className="shrink-0 rounded-lg bg-[#0b469e] px-7 py-3 font-urbanist text-sm font-extrabold text-white shadow-md transition hover:-translate-y-0.5 hover:bg-[#07377c]">Join Gloaro Network</a>
         </div>
       </div>
     </section>

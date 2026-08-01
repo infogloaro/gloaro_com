@@ -121,6 +121,7 @@ import MembershipAgreement from './pages/public/MembershipAgreement'
 import MembershipApplication from './pages/public/MembershipApplication'
 import MembershipQualification from './pages/public/MembershipQualification'
 import MembershipApplicationTrack from './pages/public/MembershipApplicationTrack'
+import LegalPage from './pages/public/LegalPage'
 import MembershipDashboard from './pages/membership/MembershipDashboard'
 import MemberDashboard from './pages/membership/MemberDashboard'
 import VendorApplicationForm from './pages/membership/VendorApplicationForm'
@@ -283,6 +284,8 @@ function App() {
           <Route path="/membership-applications" element={<MembershipApplicationsRedirect />} />
           <Route path="/membership-qualification" element={<MembershipQualification />} />
           <Route path="/membership-application/track" element={<MembershipApplicationTrack />} />
+          <Route path="/terms-and-conditions" element={<LegalPage type="terms" />} />
+          <Route path="/privacy-policy" element={<LegalPage type="privacy" />} />
         </Route>
 
         <Route element={<ProtectedRoute roles={[ROLES.ADMIN, ROLES.SUPERADMIN, ROLES.REGION_DIRECTOR, ROLES.STATE_DIRECTOR, ROLES.DISTRICT_DIRECTOR, ROLES.EXECUTIVE_DIRECTOR, ROLES.LAUNCH_DIRECTOR, ROLES.DIRECT_CONSULTANT, ROLES.CHAPTER_PRESIDENT, ROLES.VICE_PRESIDENT, ROLES.SECRETARY, ROLES.CUSTOMER, ROLES.USER, ROLES.VENDOR]} />}>
