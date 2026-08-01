@@ -849,6 +849,17 @@ export function TestimonialsManagementPage() {
     setFormOpen(true)
   }
 
+  const deleteStory = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this success story?')) return
+    try {
+      await adminApi.deleteEnterpriseRecord(id)
+      toast.success('Success story deleted')
+      loadDatabaseStories()
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Unable to delete success story')
+    }
+  }
+
   const selectProfileImage = (event) => {
     const file = event.target.files?.[0]
     if (!file) return
@@ -913,7 +924,12 @@ export function TestimonialsManagementPage() {
         ]}
         rows={rows}
         loading={false}
-        actions={(row) => <button type="button" onClick={() => openEditStory(row)} className="rounded-md border border-[#0d4697]/25 bg-blue-50 px-3 py-1.5 text-xs font-extrabold text-[#0d4697] hover:bg-blue-100">Edit</button>}
+        actions={(row) => (
+          <div className="flex gap-2">
+            <button type="button" onClick={() => openEditStory(row)} className="rounded-md border border-[#0d4697]/25 bg-blue-50 px-3 py-1.5 text-xs font-extrabold text-[#0d4697] hover:bg-blue-100">Edit</button>
+            <button type="button" onClick={() => deleteStory(row._id)} className="rounded-md border border-red-500/25 bg-red-50 px-3 py-1.5 text-xs font-extrabold text-red-600 hover:bg-red-100">Delete</button>
+          </div>
+        )}
       />
       <Modal open={formOpen} title={editingStory ? 'Edit Success Story' : 'Add Success Story'} onClose={() => { setFormOpen(false); setEditingStory(null) }}>
         <form onSubmit={submitStory} className="space-y-4">
@@ -1121,6 +1137,7 @@ export function AIInsightsPage() {
 function EnterpriseRecordsPage({ module, config: overrideConfig, extraPanel, wizardTitle }) {
   const { hasSection, hasOperation } = useAuth()
   const config = overrideConfig || moduleConfig[module] || moduleConfig.organization
+  const activeStatusOptions = module === 'training' ? ['draft', 'active', 'inactive', 'completed'] : statusOptions
   const [payload, setPayload] = useState(null)
   const [stats, setStats] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -1173,7 +1190,6 @@ function EnterpriseRecordsPage({ module, config: overrideConfig, extraPanel, wiz
   const canEdit = hasOperation(module, 'edit')
   const canDelete = hasOperation(module, 'delete')
   const canApprove = hasOperation(module, 'approve')
-  const canExport = hasOperation(module, 'export')
   const showStats = hasSection(module, 'stats')
   const showList = hasSection(module, 'list')
   const showFilters = hasSection(module, 'filters')
@@ -1221,14 +1237,6 @@ function EnterpriseRecordsPage({ module, config: overrideConfig, extraPanel, wiz
     toast.success('Mark saved')
   }
 
-  const importSample = async () => {
-    const name = window.prompt('Record name to import')
-    if (!name) return
-    await adminApi.importEnterpriseRecords(module, [{ name, type: config.types[0], status: 'active' }])
-    toast.success('Import completed')
-    load()
-  }
-
   return (
     <section className="space-y-6">
       <EnterpriseHeader title={config.title} description={config.description} icon={config.icon} />
@@ -1245,12 +1253,10 @@ function EnterpriseRecordsPage({ module, config: overrideConfig, extraPanel, wiz
             </select>
             <select value={status} onChange={(event) => { setStatus(event.target.value); setPage(1) }} className="h-10 rounded-md border border-slate-200 bg-white px-3 text-sm font-bold">
               <option value="">All Status</option>
-              {statusOptions.map((item) => <option key={item} value={item}>{formatLabel(item)}</option>)}
+              {activeStatusOptions.map((item) => <option key={item} value={item}>{formatLabel(item)}</option>)}
             </select>
           </div>
           <div className="flex flex-wrap gap-2">
-            {canCreate && <button type="button" onClick={importSample} className="inline-flex h-10 items-center gap-2 rounded-md border border-slate-200 px-3 text-xs font-extrabold text-slate-700"><Upload className="h-4 w-4" />Import Excel</button>}
-            {canExport && <button type="button" onClick={() => toast.success('Export prepared')} className="inline-flex h-10 items-center gap-2 rounded-md border border-slate-200 px-3 text-xs font-extrabold text-slate-700"><Download className="h-4 w-4" />Export Excel</button>}
             {canCreate && <button type="button" onClick={() => { setEditing(null); setFormOpen(true) }} className="inline-flex h-10 items-center gap-2 rounded-md bg-[#0d4697] px-4 text-xs font-extrabold text-white"><Plus className="h-4 w-4" />Add</button>}
           </div>
         </div>
@@ -1266,7 +1272,7 @@ function EnterpriseRecordsPage({ module, config: overrideConfig, extraPanel, wiz
             {module === 'training' && <button type="button" onClick={() => viewTraining(row)} className="rounded-md border border-[#0d4697] px-3 py-1.5 text-xs font-bold text-[#0d4697]">View</button>}
             {canEdit && <button type="button" onClick={() => { setEditing(row); setFormOpen(true) }} className="rounded-md border border-slate-200 px-3 py-1.5 text-xs font-bold">Edit</button>}
             {canApprove && <select value={row.status} onChange={(event) => changeStatus(row, event.target.value)} className="h-8 rounded-md border border-slate-200 bg-white px-2 text-xs font-bold">
-              {statusOptions.map((item) => <option key={item} value={item}>{formatLabel(item)}</option>)}
+              {activeStatusOptions.map((item) => <option key={item} value={item}>{formatLabel(item)}</option>)}
             </select>}
             {canDelete && <button type="button" onClick={() => remove(row)} className="rounded-md border border-red-200 px-3 py-1.5 text-xs font-bold text-red-600">Delete</button>}
           </div>
@@ -1274,17 +1280,17 @@ function EnterpriseRecordsPage({ module, config: overrideConfig, extraPanel, wiz
       />}
       <Modal open={Boolean(viewingTraining)} title={viewingTraining?.name || 'Training details'} onClose={() => setViewingTraining(null)}>
         {viewingTraining && <div className="space-y-5 text-sm">
-          <div className="grid gap-3 sm:grid-cols-3">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             <div className="rounded-lg bg-slate-50 p-3"><p className="text-[10px] font-extrabold uppercase text-slate-400">Type</p><p className="mt-1 font-bold capitalize text-slate-800">{formatLabel(viewingTraining.type)}</p></div>
             <div className="rounded-lg bg-slate-50 p-3"><p className="text-[10px] font-extrabold uppercase text-slate-400">Status</p><p className="mt-1 font-bold capitalize text-slate-800">{viewingTraining.status}</p></div>
             <div className="rounded-lg bg-slate-50 p-3"><p className="text-[10px] font-extrabold uppercase text-slate-400">Assigned members</p><p className="mt-1 font-bold text-slate-800">{viewingTraining.metadata?.assignedMemberIds?.length || 0}</p></div>
           </div>
           <div><p className="text-xs font-extrabold uppercase tracking-wider text-slate-400">Description</p><p className="mt-2 text-slate-600">{viewingTraining.metadata?.description || 'No description available.'}</p></div>
-          <div className="border-t border-slate-100 pt-4"><p className="text-xs font-extrabold uppercase tracking-wider text-slate-400">Assignments and member status</p>{viewingTraining.metadata?.assignments?.length ? <div className="mt-3 space-y-3">{viewingTraining.metadata.assignments.map((assignment, index) => { const members = (viewingTraining.assignmentProgress || []).filter((item) => item.assignmentIndex === index); return <div key={`${assignment.link}-${index}`} className="rounded-lg border border-slate-200 p-3"><a href={assignment.link} target="_blank" rel="noreferrer" className="flex items-center justify-between hover:underline"><span><span className="block font-extrabold text-slate-800">{assignment.name || `Assignment ${index + 1}`}</span><span className="mt-1 block text-xs font-semibold text-[#0d4697]">{assignment.link}</span></span><span className="text-xs font-extrabold text-[#0d4697]">View</span></a>{members.length ? <div className="mt-3 space-y-1 border-t border-slate-100 pt-2">{members.map((member) => <div key={member._id} className="flex flex-wrap items-center justify-between gap-2 text-xs"><span className="font-semibold text-slate-600">{member.member?.name || member.member?.email || 'Member'}</span><span className={member.status === 'completed' ? 'font-extrabold text-emerald-700' : 'font-extrabold text-amber-700'}>{member.status === 'completed' ? 'Completed' : 'Pending'}</span><input type="number" min="0" max="999" step="1" value={member.marks || ''} onChange={(event) => setViewingTraining((course) => ({ ...course, assignmentProgress: course.assignmentProgress.map((item) => item._id === member._id ? { ...item, marks: event.target.value.slice(0, 3) } : item) }))} placeholder="0–999" className="h-8 w-24 rounded border border-slate-300 bg-white px-2 text-xs font-bold text-slate-800 outline-none focus:border-[#0d4697]" /><button type="button" onClick={() => saveTrainingMark(member)} className="rounded bg-[#0d4697] px-2 py-1 text-[10px] font-extrabold text-white">Save</button></div>)}</div> : <p className="mt-2 text-xs font-semibold text-slate-400">No completion recorded yet.</p>}</div> })}</div> : <p className="mt-2 text-slate-500">No assignments added.</p>}</div>
+          <div className="border-t border-slate-100 pt-4"><p className="text-xs font-extrabold uppercase tracking-wider text-slate-400">Assignments and member status</p>{viewingTraining.metadata?.assignments?.length ? <div className="mt-3 space-y-3">{viewingTraining.metadata.assignments.map((assignment, index) => { const members = (viewingTraining.assignmentProgress || []).filter((item) => item.assignmentIndex === index); return <div key={`${assignment.link}-${index}`} className="rounded-lg border border-slate-200 p-3"><a href={assignment.link} target="_blank" rel="noreferrer" className="flex items-center justify-between hover:underline"><span><span className="block font-extrabold text-slate-800">{assignment.name || `Assignment ${index + 1}`}</span><span className="mt-1 block text-xs font-semibold text-[#0d4697]">{assignment.link}</span></span><span className="text-xs font-extrabold text-[#0d4697]">View</span></a>{members.length ? <div className="mt-3 space-y-1 border-t border-slate-100 pt-2">{members.map((member) => <div key={member._id} className="flex flex-wrap items-center justify-between gap-2 text-xs"><span className="font-semibold text-slate-600">{member.member?.name || member.member?.email || 'Member'}</span><span className={member.status === 'completed' ? 'font-extrabold text-emerald-700' : 'font-extrabold text-amber-700'}>{member.status === 'completed' ? 'Completed' : 'Pending'}</span><input type="number" min="0" max="999" step="1" value={member.marks || ''} onChange={(event) => setViewingTraining((course) => ({ ...course, assignmentProgress: course.assignmentProgress.map((item) => item._id === member._id ? { ...item, marks: event.target.value.slice(0, 3) } : item) }))} placeholder="0-999" className="h-8 w-24 rounded border border-slate-300 bg-white px-2 text-xs font-bold text-slate-800 outline-none focus:border-[#0d4697]" /><button type="button" onClick={() => saveTrainingMark(member)} className="rounded bg-[#0d4697] px-2 py-1 text-[10px] font-extrabold text-white">Save</button></div>)}</div> : <p className="mt-2 text-xs font-semibold text-slate-400">No completion recorded yet.</p>}</div> })}</div> : <p className="mt-2 text-slate-500">No assignments added.</p>}</div>
         </div>}
       </Modal>
-      <Modal open={formOpen && (canCreate || canEdit)} title={editing ? `Edit ${config.title}` : `Add ${config.title}`} onClose={() => setFormOpen(false)}>
-        <SimpleJsonForm initialValues={editing ? flattenRecord(editing) : { type: config.types[0], status: 'active' }} fields={enterpriseFields(config, trainingMembers)} onSubmit={submit} />
+      <Modal open={formOpen && (canCreate || canEdit)} title={editing ? `Edit ${config.title}` : `Add ${config.title}`} onClose={() => { setFormOpen(false); setEditing(null) }}>
+        <SimpleJsonForm initialValues={editing ? flattenRecord(editing) : { type: config.types[0], status: 'active' }} fields={enterpriseFields(config, trainingMembers, module)} onSubmit={submit} />
       </Modal>
     </section>
   )
@@ -1620,12 +1626,14 @@ function enterpriseColumns() {
   ]
 }
 
-function enterpriseFields(config, trainingMembers = []) {
+function enterpriseFields(config, trainingMembers = [], module = '') {
+  const activeStatusOptions = module === 'training' ? ['draft', 'active', 'inactive', 'completed'] : statusOptions
+
   const base = [
     { name: 'name', label: config.title === 'Training Management' ? 'Course Name' : 'Name', rules: { required: true } },
     ...(config.title === 'Training Management' ? [] : [{ name: 'code', label: 'Code' }]),
     { name: 'type', label: 'Type', type: 'select', options: config.types.map((value) => ({ value, label: formatLabel(value) })) },
-    { name: 'status', label: 'Status', type: 'select', options: statusOptions.map((value) => ({ value, label: formatLabel(value) })) },
+    { name: 'status', label: 'Status', type: 'select', options: activeStatusOptions.map((value) => ({ value, label: formatLabel(value) })) },
   ]
   const extras = config.fields
     .filter((field) => !['code', 'type'].includes(field))

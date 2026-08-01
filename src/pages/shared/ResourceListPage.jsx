@@ -5,6 +5,7 @@ import SearchBar from '../../components/common/SearchBar'
 import StatusBadge from '../../components/common/StatusBadge'
 import DataTable from '../../components/tables/DataTable'
 import { useAuth } from '../../hooks/useAuth'
+import { ROLES } from '../../constants/roleConfig.js'
 import { getList, getPagination, formatDate } from '../../utils/format'
 
 export default function ResourceListPage({
@@ -26,7 +27,8 @@ export default function ResourceListPage({
   readOnly = false,
   retainRowsOnEmptySearch = false,
 }) {
-  const { hasSection, hasOperation } = useAuth()
+  const { hasSection, hasOperation, user } = useAuth()
+  const isSuperAdmin = user?.role === ROLES.SUPERADMIN
   const [payload, setPayload] = useState(null)
   const [loading, setLoading] = useState(true)
   const [page, setPage] = useState(1)
@@ -126,7 +128,7 @@ export default function ResourceListPage({
     <section>
       <div className="mb-5 flex flex-col justify-between gap-4 lg:flex-row lg:items-end">
         <div>
-          <h2 className="text-2xl font-extrabold text-slate-950 dark:text-white">{title}</h2>
+          <h2 className={isSuperAdmin ? 'text-2xl font-extrabold text-slate-950' : 'text-2xl font-extrabold text-slate-950 dark:text-white'}>{title}</h2>
           {description && <p className="mt-1 text-sm font-semibold text-slate-500">{description}</p>}
         </div>
         <div className="flex flex-col gap-2 sm:flex-row">

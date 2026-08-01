@@ -51,9 +51,9 @@ const permissions = ['View', 'Create', 'Edit', 'Delete', 'Approve', 'Export', 'P
 
 function SuperAdminOnlyNotice({ title = 'Super Admin access required' }) {
   return (
-    <section className="rounded-2xl border border-amber-200 bg-amber-50 p-6">
-      <h1 className="text-xl font-black text-amber-950">{title}</h1>
-      <p className="mt-2 text-sm font-semibold text-amber-800">This configuration is global and can only be managed by a Super Admin.</p>
+    <section className="rounded-2xl border border-amber-200 bg-white p-6 shadow-sm">
+      <h1 className="text-xl font-black text-slate-900">{title}</h1>
+      <p className="mt-2 text-sm font-semibold text-slate-600">This configuration is global and can only be managed by a Super Admin.</p>
     </section>
   )
 }
@@ -605,7 +605,7 @@ function ActivityTimeline() {
     return (
       <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
         <h2 className="text-lg font-extrabold text-slate-950">Activity Timeline</h2>
-        <div className="mt-5 text-sm font-semibold text-slate-450">Loading activity...</div>
+        <div className="mt-5 text-sm font-semibold text-slate-500">Loading activity...</div>
       </section>
     );
   }
@@ -682,7 +682,7 @@ function ReferralDetailModal({ referral, onClose }) {
   const sortedTimeline = [...(referral.timeline || [])].sort((a, b) => new Date(a.at) - new Date(b.at))
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-200/80 p-4 backdrop-blur-sm" onClick={onClose}>
       <div className="mx-auto max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-white p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between border-b border-slate-200 pb-4">
           <h2 className="text-xl font-black text-slate-900">Referral Details</h2>

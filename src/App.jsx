@@ -294,13 +294,6 @@ function App() {
 
         <Route element={<ProtectedRoute roles={[ROLES.ADMIN, ROLES.SUPERADMIN, ROLES.REGION_DIRECTOR, ROLES.STATE_DIRECTOR, ROLES.DISTRICT_DIRECTOR, ROLES.EXECUTIVE_DIRECTOR, ROLES.LAUNCH_DIRECTOR, ROLES.DIRECT_CONSULTANT, ROLES.CHAPTER_PRESIDENT, ROLES.VICE_PRESIDENT, ROLES.SECRETARY, ROLES.CUSTOMER, ROLES.USER, ROLES.VENDOR]} />}>
           <Route element={<DashboardLayout title="Gloaro Portal" />}>
-            
-            {/* Super Admin Console Route Group */}
-            <Route element={<ProtectedRoute roles={[ROLES.SUPERADMIN]} />}>
-              {superAdminRoutes.map((route) => <Route key={route.path} path={route.path} element={route.element} />)}
-              <Route path="/super-admin/*" element={<Navigate to="/super-admin/dashboard" replace />} />
-            </Route>
-
             {/* Admin Console Route Group */}
             <Route element={<ProtectedRoute roles={[ROLES.ADMIN, ROLES.REGION_DIRECTOR, ROLES.STATE_DIRECTOR, ROLES.DISTRICT_DIRECTOR, ROLES.EXECUTIVE_DIRECTOR, ROLES.LAUNCH_DIRECTOR, ROLES.DIRECT_CONSULTANT, ROLES.CHAPTER_PRESIDENT, ROLES.VICE_PRESIDENT, ROLES.SECRETARY]} />}>
               {regularAdminRoutes.map((route) => <Route key={route.path} path={route.path} element={route.element} />)}
@@ -666,6 +659,13 @@ function App() {
               <Route path="/direct-consultant/presidents" element={<AdminManagementPage role={ROLES.CHAPTER_PRESIDENT} />} />
             </Route>
 
+          </Route>
+
+          <Route element={<DashboardLayout title="Gloaro Portal" theme="light" />}>
+            <Route element={<ProtectedRoute roles={[ROLES.SUPERADMIN]} />}>
+              {superAdminRoutes.map((route) => <Route key={route.path} path={route.path} element={route.element} />)}
+              <Route path="/super-admin/*" element={<Navigate to="/super-admin/dashboard" replace />} />
+            </Route>
           </Route>
         </Route>
 

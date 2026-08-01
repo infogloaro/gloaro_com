@@ -141,7 +141,6 @@ export default function Navbar() {
     [nearMeIcon, 'Near Me', '/nearby', 'hidden bg-slate-100 text-slate-700 hover:bg-slate-200'],
     [shopIcon, 'Shop', '/products', 'bg-[#ffb20c] text-[#063a85] hover:brightness-95'],
     [brandIcon, 'Services', '/services', 'bg-[#10b981] text-white hover:bg-[#059669]', 'brightness-0 invert'],
-    [b2bIcon, 'B2B Marketplace', '/vendors', 'bg-[#0b469e] text-white hover:bg-[#093a84]', 'brightness-0 invert'],
   ]
 
   return (

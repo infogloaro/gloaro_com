@@ -67,9 +67,6 @@ export const adminNav = [
     children: [
       ['Admin Management', '/admin-management', Users],
       ['Assignments', '/assignments', Workflow],
-      ['Feature Management', '/features', ToggleLeft],
-      ['Dashboard Config', '/dashboard-config', LayoutGrid],
-      ['Workflow Settings', '/membership-workflow', Workflow],
       ['Tasks', '/tasks', Activity],
       ['Calendar', '/calendar', CalendarDays],
     ],
@@ -118,8 +115,6 @@ export const adminNav = [
   ['Training', '/training', Star],
 
   ['Success Stories', '/testimonials', FileText],
-  ['Banners', '/banners', FileText],
-
   ['FAQs', '/faqs', HelpCircle],
   ['Analytics', '/analytics', BarChart3],
   ['Notification Center', '/notifications', Bell],
