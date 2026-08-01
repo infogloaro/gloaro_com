@@ -1,5 +1,5 @@
 /* eslint-disable react-hooks/set-state-in-effect, react-hooks/purity */
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import {
@@ -123,6 +123,19 @@ function getReviewCount(product) {
   return Number(product.stats?.totalReviews || product.vendor?.stats?.totalReviews || 0)
 }
 
+function getAverageReviewRating(reviews = [], fallback = 0) {
+  if (!reviews.length) return Number(fallback || 0)
+  const total = reviews.reduce((sum, review) => sum + Number(review.rating || 0), 0)
+  return total / reviews.length
+}
+
+function getPopularityScore(product) {
+  const sales = Number(product.stats?.orders || product.stats?.sales || product.stats?.totalOrders || product.stats?.sold || 0)
+  const views = Number(product.stats?.views || product.stats?.totalViews || 0)
+  const reviews = getReviewCount(product)
+  return (sales * 1000) + (views * 10) + (reviews * 25) + (getRating(product) * 100)
+}
+
 function isWishlisted(wishlist = [], productId) {
   return wishlist.some((item) => String(item.productId) === String(productId))
 }
@@ -210,15 +223,40 @@ function getCategoryChips(products) {
 function getRecommended(products, sourceProduct) {
   if (!sourceProduct) return products.slice(0, 4)
   const sourceCategory = String(sourceProduct.category?._id || sourceProduct.category || '')
+  const sourceSubcategory = String(sourceProduct.subcategory?._id || sourceProduct.subcategory || sourceProduct.category?.parent?._id || sourceProduct.category?.parent || '')
   const sourceBrand = getBrand(sourceProduct)
+  const sourceVendor = String(sourceProduct.vendor?._id || sourceProduct.vendor || '')
   return products
     .filter((product) => product._id !== sourceProduct._id)
     .sort((a, b) => {
-      const scoreA = (String(a.category?._id || a.category) === sourceCategory ? 3 : 0) + (getBrand(a) === sourceBrand ? 2 : 0) + getRating(a)
-      const scoreB = (String(b.category?._id || b.category) === sourceCategory ? 3 : 0) + (getBrand(b) === sourceBrand ? 2 : 0) + getRating(b)
+      const scoreA =
+        (String(a.category?._id || a.category) === sourceCategory ? 5 : 0) +
+        (String(a.subcategory?._id || a.subcategory || a.category?.parent?._id || a.category?.parent || '') === sourceSubcategory ? 3 : 0) +
+        (getBrand(a) === sourceBrand ? 2 : 0) +
+        (String(a.vendor?._id || a.vendor || '') === sourceVendor ? 1 : 0) +
+        (getPopularityScore(a) / 1000)
+      const scoreB =
+        (String(b.category?._id || b.category) === sourceCategory ? 5 : 0) +
+        (String(b.subcategory?._id || b.subcategory || b.category?.parent?._id || b.category?.parent || '') === sourceSubcategory ? 3 : 0) +
+        (getBrand(b) === sourceBrand ? 2 : 0) +
+        (String(b.vendor?._id || b.vendor || '') === sourceVendor ? 1 : 0) +
+        (getPopularityScore(b) / 1000)
       return scoreB - scoreA
     })
     .slice(0, 6)
+}
+
+function takeUniqueProducts(products, limit = 4, excludedIds = new Set()) {
+  const seen = new Set(excludedIds)
+  const list = []
+  for (const product of products) {
+    const id = String(product?._id || '')
+    if (!id || seen.has(id)) continue
+    seen.add(id)
+    list.push(product)
+    if (list.length >= limit) break
+  }
+  return list
 }
 
 export function ProductsPage() {
@@ -307,15 +345,62 @@ export function ProductsPage() {
   const filteredProducts = useMemo(() => sortProducts(products.filter((product) => matchesFilters(product, { ...filterState, search: debouncedSearch })), filterState.sortBy), [debouncedSearch, filterState, products])
   const allCategories = getList(categories.data)
   const categoryChips = useMemo(() => getCategoryChips(products), [products])
-  const featuredProducts = useMemo(() => filteredProducts.filter((product) => product.isFeatured).slice(0, 4), [filteredProducts])
-  const bestSellers = useMemo(() => [...filteredProducts].sort((a, b) => getReviewCount(b) - getReviewCount(a)).slice(0, 4), [filteredProducts])
-  const newArrivals = useMemo(() => filteredProducts.filter((product) => {
-    const daysOld = (Date.now() - new Date(product.createdAt).getTime()) / (1000 * 60 * 60 * 24)
-    return daysOld <= 21
-  }).slice(0, 4), [filteredProducts])
-  const discountProducts = useMemo(() => filteredProducts.filter((product) => getDiscount(product) > 0).slice(0, 4), [filteredProducts])
-  const recentlyViewed = shop.recentlyViewed
-  const recommendedProducts = useMemo(() => getRecommended(products, selectedProduct).slice(0, 4), [products, selectedProduct])
+  const featuredProducts = useMemo(
+    () => filteredProducts.filter((product) => product.isFeatured).sort((a, b) => getPopularityScore(b) - getPopularityScore(a)),
+    [filteredProducts],
+  )
+  const bestSellerPool = useMemo(
+    () => [...filteredProducts].sort((a, b) => getPopularityScore(b) - getPopularityScore(a)).filter((product) => !product.isFeatured),
+    [filteredProducts],
+  )
+  const newArrivalPool = useMemo(
+    () => filteredProducts.filter((product) => {
+      const daysOld = (Date.now() - new Date(product.createdAt).getTime()) / (1000 * 60 * 60 * 24)
+      return daysOld <= 21
+    }).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()),
+    [filteredProducts],
+  )
+  const discountPool = useMemo(
+    () => [...filteredProducts].filter((product) => getDiscount(product) > 0).sort((a, b) => getDiscount(b) - getDiscount(a)),
+    [filteredProducts],
+  )
+  const recentlyViewedPool = useMemo(() => shop.recentlyViewed || [], [shop.recentlyViewed])
+  const recommendationSeed = selectedProduct || recentlyViewedPool[0]?.productSnapshot || filteredProducts[0] || null
+  const recommendedPool = useMemo(() => getRecommended(products, recommendationSeed), [products, recommendationSeed])
+
+  const { curatedFeatured, bestSellers, discountProducts, newArrivals, recommendedProducts, recentlyViewed } = useMemo(() => {
+    const used = new Set()
+    const pick = (pool, limit = 4, extraExclusions = []) => {
+      const items = takeUniqueProducts(pool, limit, new Set([...used, ...extraExclusions]))
+      items.forEach((item) => used.add(String(item._id)))
+      return items
+    }
+
+    const curatedFeatured = pick(featuredProducts, 4)
+    const bestSellers = pick(bestSellerPool, 4)
+    const discountProducts = pick(discountPool, 4)
+    const newArrivals = pick(newArrivalPool, 4)
+    const recommendedProducts = pick(recommendedPool, 4)
+    const recentlyViewed = takeUniqueProducts(
+      recentlyViewedPool
+        .filter((entry) => entry?.productSnapshot?._id || entry?.productId)
+        .map((entry) => ({
+          productId: entry.productId || entry.productSnapshot?._id,
+          productSnapshot: entry.productSnapshot,
+          _id: entry.productId || entry.productSnapshot?._id,
+          createdAt: entry.createdAt,
+        }))
+        .reverse(),
+      4,
+      used,
+    ).map((entry) => ({
+      ...entry.productSnapshot,
+      _id: entry.productId,
+      productId: entry.productId,
+    }))
+
+    return { curatedFeatured, bestSellers, discountProducts, newArrivals, recommendedProducts, recentlyViewed }
+  }, [bestSellerPool, discountPool, featuredProducts, newArrivalPool, recentlyViewedPool, recommendedPool])
   const pageSize = 12
   const totalPages = Math.max(1, Math.ceil(filteredProducts.length / pageSize))
   const pagedProducts = filteredProducts.slice((page - 1) * pageSize, page * pageSize)
@@ -330,9 +415,9 @@ export function ProductsPage() {
       <div className="px-4 py-6 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-7xl">
           <section className="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-[#0B2451] via-[#0d3a6e] to-[#1558B0] text-white shadow-[0_40px_100px_-20px_rgba(11,36,81,0.5)]">
-            <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4wMyI+PGNpcmNsZSBjeD0iMzAiIGN5PSIzMCIgcj0iMiIvPjwvZz48L2c+PC9zdmc+')] opacity-40" />
-            <div className="absolute -right-32 -top-32 h-96 w-96 rounded-full bg-[#D6A744]/10 blur-3xl" />
-            <div className="absolute -bottom-32 -left-32 h-96 w-96 rounded-full bg-white/5 blur-3xl" />
+            <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4wMyI+PGNpcmNsZSBjeD0iMzAiIGN5PSIzMCIgcj0iMiIvPjwvZz48L2c+PC9zdmc+')] opacity-40" />
+            <div aria-hidden="true" className="pointer-events-none absolute -right-32 -top-32 h-96 w-96 rounded-full bg-[#D6A744]/10 blur-3xl" />
+            <div aria-hidden="true" className="pointer-events-none absolute -bottom-32 -left-32 h-96 w-96 rounded-full bg-white/5 blur-3xl" />
             <div className="relative grid gap-8 px-6 py-10 sm:px-8 lg:grid-cols-[1.3fr_0.7fr] lg:px-12 lg:py-12">
               <div>
                 <div className="inline-flex items-center gap-2 rounded-full border border-[#D6A744]/30 bg-[#D6A744]/10 px-4 py-1.5">
@@ -380,11 +465,11 @@ export function ProductsPage() {
                   ))}
                 </div>
                 <div className="mt-5 flex flex-wrap gap-3">
-                  <Link to="/cart" className="flex min-h-12 w-full items-center justify-center gap-1 rounded-xl border-2 border-navy px-4 py-3 text-sm font-black text-navy transition hover:bg-navy/5 sm:flex-1">
+                <Link to="/cart" className="relative z-10 flex min-h-12 w-full items-center justify-center gap-1 rounded-xl border-2 border-navy px-4 py-3 text-sm font-black text-navy transition hover:bg-navy/5 sm:flex-1">
                     <span>Cart ({shop.cart.length})</span>
                     <ArrowRight className="h-3.5 w-3.5 transition" />
                   </Link>
-                  <Link to="/checkout" className="flex min-h-12 w-full items-center justify-center rounded-xl bg-gradient-to-r from-navy to-royal px-4 py-3 text-sm font-black text-white shadow-lg shadow-navy/20 transition hover:from-navy/90 hover:to-royal/90 sm:flex-1">
+                <Link to="/checkout" className="relative z-10 flex min-h-12 w-full items-center justify-center rounded-xl bg-gradient-to-r from-navy to-royal px-4 py-3 text-sm font-black text-white shadow-lg shadow-navy/20 transition hover:from-navy/90 hover:to-royal/90 sm:flex-1">
                     Checkout
                   </Link>
                 </div>
@@ -404,15 +489,15 @@ export function ProductsPage() {
                 />
               </label>
               <div className="flex items-center gap-2">
-                <Link to="/cart" className="rounded-lg bg-navy px-4 py-2.5 text-xs font-black text-white transition hover:bg-navy/90">Cart {shop.cart.length}</Link>
-                <Link to="/orders" className="rounded-lg border border-slate-200 px-4 py-2.5 text-xs font-black text-slate-700 transition hover:border-navy/30 hover:text-navy">Orders</Link>
-                <Link to="/wishlist" className="rounded-lg border border-slate-200 px-4 py-2.5 text-xs font-black text-slate-700 transition hover:border-navy/30 hover:text-navy">Wishlist</Link>
+                <Link to="/cart" className="relative z-10 inline-flex items-center justify-center rounded-lg bg-navy px-4 py-2.5 text-xs font-black text-white transition hover:bg-navy/90">Cart {shop.cart.length}</Link>
+                <Link to="/orders" className="relative z-10 inline-flex items-center justify-center rounded-lg border border-slate-200 px-4 py-2.5 text-xs font-black text-slate-700 transition hover:border-navy/30 hover:text-navy">Orders</Link>
+                <Link to="/wishlist" className="relative z-10 inline-flex items-center justify-center rounded-lg border border-slate-200 px-4 py-2.5 text-xs font-black text-slate-700 transition hover:border-navy/30 hover:text-navy">Wishlist</Link>
               </div>
             </div>
 
             <div className="mt-4 flex flex-wrap gap-2">
               {categoryChips.map(([name, id]) => (
-                <button key={name} type="button" onClick={() => setFilterState((current) => ({ ...current, category: id }))} className={`rounded-lg px-4 py-2 text-xs font-black transition-all ${filterState.category === id ? 'bg-navy text-white shadow-md' : 'bg-slate-100/70 text-slate-600 hover:bg-slate-200'}`}>
+                  <button key={name} type="button" onClick={() => setFilterState((current) => ({ ...current, category: id }))} className={`relative z-10 rounded-lg px-4 py-2 text-xs font-black transition-all ${filterState.category === id ? 'bg-navy text-white shadow-md' : 'bg-slate-100/70 text-slate-600 hover:bg-slate-200'}`}>
                   {name}
                 </button>
               ))}
@@ -487,23 +572,83 @@ export function ProductsPage() {
               )}
             </section>
 
-            {featuredProducts.length > 0 && (
-              <CollectionStrip title="Featured Products" items={featuredProducts} />
+            {curatedFeatured.length > 0 && (
+              <ProductRailSection
+                title="Featured Products"
+                description="Handpicked products with standout quality and trust."
+                items={curatedFeatured}
+                onSeeAll={() => {
+                  setFilterState((current) => ({ ...current, featured: 'true', discount: '', newArrivals: '', sortBy: 'relevance' }))
+                  setPage(1)
+                  window.scrollTo({ top: 0, behavior: 'smooth' })
+                }}
+                accent="text-navy"
+              />
             )}
             {bestSellers.length > 0 && (
-              <CollectionStrip title="Best Sellers" items={bestSellers} />
+              <ProductRailSection
+                title="Best Sellers"
+                description="Top-performing products based on popularity and demand."
+                items={bestSellers}
+                onSeeAll={() => {
+                  setFilterState((current) => ({ ...current, featured: '', discount: '', newArrivals: '', sortBy: 'popular' }))
+                  setPage(1)
+                  window.scrollTo({ top: 0, behavior: 'smooth' })
+                }}
+                accent="text-amber-700"
+              />
             )}
             {discountProducts.length > 0 && (
-              <CollectionStrip title="Discounted Deals" items={discountProducts} accent="text-emerald-700" />
+              <ProductRailSection
+                title="Discounted Deals"
+                description="Best value picks with strong markdowns."
+                items={discountProducts}
+                onSeeAll={() => {
+                  setFilterState((current) => ({ ...current, featured: '', discount: 'discounted', newArrivals: '', sortBy: 'discount_desc' }))
+                  setPage(1)
+                  window.scrollTo({ top: 0, behavior: 'smooth' })
+                }}
+                accent="text-emerald-700"
+              />
             )}
             {newArrivals.length > 0 && (
-              <CollectionStrip title="New Arrivals" items={newArrivals} accent="text-navy" />
+              <ProductRailSection
+                title="New Arrivals"
+                description="Freshly listed products from trusted sellers."
+                items={newArrivals}
+                onSeeAll={() => {
+                  setFilterState((current) => ({ ...current, featured: '', discount: '', newArrivals: 'true', sortBy: 'latest' }))
+                  setPage(1)
+                  window.scrollTo({ top: 0, behavior: 'smooth' })
+                }}
+                accent="text-navy"
+              />
             )}
             {recommendedProducts.length > 0 && (
-              <CollectionStrip title="Recommended for You" items={recommendedProducts} accent="text-[#D6A744]" />
+              <ProductRailSection
+                title="Recommended for You"
+                description="Based on your browsing and product similarity."
+                items={recommendedProducts}
+                onSeeAll={() => {
+                  setFilterState((current) => ({ ...current, featured: '', discount: '', newArrivals: '', sortBy: 'relevance' }))
+                  setPage(1)
+                  window.scrollTo({ top: 0, behavior: 'smooth' })
+                }}
+                accent="text-[#D6A744]"
+              />
             )}
             {recentlyViewed.length > 0 && (
-              <RecentlyViewedStrip items={recentlyViewed} />
+              <ProductRailSection
+                title="Recently Viewed"
+                description="Pick up where you left off."
+                items={recentlyViewed}
+                onSeeAll={() => {
+                  setFilterState({ search: '', category: '', brand: '', sortBy: 'relevance', minPrice: '', maxPrice: '', rating: '', availability: '', discount: '', featured: '', newArrivals: '', size: '', color: '', material: '' })
+                  setPage(1)
+                  window.scrollTo({ top: 0, behavior: 'smooth' })
+                }}
+                accent="text-slate-700"
+              />
             )}
           </div>
         </div>
@@ -540,6 +685,13 @@ export function DetailPage({ type }) {
   const [relatedItems, setRelatedItems] = useState([])
   const [reviews, setReviews] = useState([])
   const item = data
+  const productReviews = useMemo(() => {
+    if (type !== 'products') return reviews
+    const matched = reviews.filter((review) => String(review.product?._id || review.product || '') === String(item?._id))
+    return matched.length ? matched : reviews
+  }, [item?._id, reviews, type])
+  const reviewAverage = useMemo(() => getAverageReviewRating(productReviews, getRating(item)), [item, productReviews])
+  const reviewCount = useMemo(() => (productReviews.length || getReviewCount(item)), [item, productReviews.length])
 
   useEffect(() => {
     if (!item) return
@@ -569,7 +721,7 @@ export function DetailPage({ type }) {
           <div className="p-6">
             <h1 className="font-playfair text-4xl font-black text-navy">{item.businessName}</h1>
             <p className="mt-3 max-w-3xl text-base leading-7 text-slate-600">{item.description}</p>
-            <button onClick={() => toggleWishlist({ _id: item._id, title: item.businessName, images: [item.logo].filter(Boolean), vendor: item })} className="mt-6 rounded-xl bg-navy px-5 py-3 text-sm font-black text-white">Add to Wishlist</button>
+            <button type="button" onClick={() => toggleWishlist({ _id: item._id, title: item.businessName, images: [item.logo].filter(Boolean), vendor: item })} className="mt-6 rounded-xl bg-navy px-5 py-3 text-sm font-black text-white">Add to Wishlist</button>
           </div>
         </div>
       </section>
@@ -650,7 +802,7 @@ export function DetailPage({ type }) {
           </div>
 
           <SpecsSection item={item} />
-          <ReviewsSection reviews={reviews} vendor={vendor} />
+          <ReviewsSection reviews={productReviews} vendor={vendor} productId={item._id} />
           <FrequentlyBoughtTogether products={relatedItems} />
           {relatedItems.length > 0 && (
             <RelatedStrip items={relatedItems} />
@@ -664,8 +816,11 @@ export function DetailPage({ type }) {
                 <p className="font-jakarta text-[10px] font-black uppercase tracking-[0.28em] text-slate-400">Price</p>
                 <h2 className="mt-1 font-playfair text-3xl font-black text-navy">{formatCurrency(price)}</h2>
               </div>
-              <div className="rounded-lg bg-amber-50 px-3 py-1.5 text-sm font-black text-amber-700">
-                {getRating(item).toFixed(1)} <Star className="inline h-3.5 w-3.5 fill-current" />
+              <div className="rounded-lg bg-amber-50 px-3 py-1.5 text-right text-sm font-black text-amber-700">
+                <div>
+                  {reviewAverage.toFixed(1)} <Star className="inline h-3.5 w-3.5 fill-current" />
+                </div>
+                <p className="text-[11px] font-semibold text-amber-700/80">{reviewCount} review{reviewCount === 1 ? '' : 's'}</p>
               </div>
             </div>
 
@@ -689,10 +844,10 @@ export function DetailPage({ type }) {
               <QuantitySelector disabled={outOfStock} />
 
               <div className="flex flex-wrap gap-3">
-                <button disabled={outOfStock} onClick={() => upsertCartLine(item, selectedVariant, 1)} className="flex-1 rounded-xl border-2 border-navy px-4 py-3 text-sm font-black text-navy transition hover:bg-navy/5 disabled:cursor-not-allowed disabled:opacity-50">
+                <button type="button" disabled={outOfStock} onClick={() => upsertCartLine(item, selectedVariant, 1)} className="flex-1 rounded-xl border-2 border-navy px-4 py-3 text-sm font-black text-navy transition hover:bg-navy/5 disabled:cursor-not-allowed disabled:opacity-50">
                   Add to Cart
                 </button>
-                <button disabled={outOfStock} onClick={handleBuyNow} className="flex-1 rounded-xl bg-gradient-to-r from-navy to-royal px-4 py-3 text-sm font-black text-white shadow-lg shadow-navy/20 transition hover:from-navy/90 hover:to-royal/90 disabled:cursor-not-allowed disabled:opacity-50">
+                <button type="button" disabled={outOfStock} onClick={handleBuyNow} className="flex-1 rounded-xl bg-gradient-to-r from-navy to-royal px-4 py-3 text-sm font-black text-white shadow-lg shadow-navy/20 transition hover:from-navy/90 hover:to-royal/90 disabled:cursor-not-allowed disabled:opacity-50">
                   Buy Now
                 </button>
               </div>
@@ -1170,6 +1325,7 @@ export function CheckoutPage() {
             )}
 
             <button
+              type="button"
               disabled={submitting || (paymentMethod === 'razorpay' && !checkoutReady) || !canProceedToPayment || loadingAddresses}
               onClick={placeOrder}
               className={`mt-5 w-full rounded-xl px-4 py-3.5 text-sm font-black text-white shadow-lg transition-all ${
@@ -1294,12 +1450,12 @@ export function OrdersPage() {
                       <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4 xl:min-w-72">
                         <p className="text-[10px] font-black uppercase tracking-[0.24em] text-slate-400">Manage Order</p>
                         <div className="mt-2 flex flex-wrap gap-2">
-                          <button onClick={() => downloadInvoice(order)} className="rounded-lg bg-white px-3 py-2 text-xs font-black text-slate-700 transition hover:bg-slate-100">Invoice</button>
+                          <button type="button" onClick={() => downloadInvoice(order)} className="rounded-lg bg-white px-3 py-2 text-xs font-black text-slate-700 transition hover:bg-slate-100">Invoice</button>
                           {['placed', 'confirmed'].includes(order.status) && (
-                            <button onClick={() => cancelOrder(order._id)} className="rounded-lg border border-rose-200 bg-white px-3 py-2 text-xs font-black text-rose-600 transition hover:bg-rose-50">Cancel</button>
+                            <button type="button" onClick={() => cancelOrder(order._id)} className="rounded-lg border border-rose-200 bg-white px-3 py-2 text-xs font-black text-rose-600 transition hover:bg-rose-50">Cancel</button>
                           )}
                           {order.status === 'delivered' && !order.returnRequest && (
-                            <button onClick={() => setReturnModalOrder(order)} className="rounded-lg bg-amber-500 px-3 py-2 text-xs font-black text-white transition hover:bg-amber-600">Start Return</button>
+                            <button type="button" onClick={() => setReturnModalOrder(order)} className="rounded-lg bg-amber-500 px-3 py-2 text-xs font-black text-white transition hover:bg-amber-600">Start Return</button>
                           )}
                           <Link to={`/orders/${order._id}`} className="rounded-lg bg-navy px-3 py-2 text-xs font-black text-white">Details</Link>
                         </div>
@@ -1424,7 +1580,7 @@ export function OrderDetailPage() {
             </div>
             <div className="flex flex-wrap gap-2">
               <StatusBadge value={order.status} />
-              <button onClick={() => downloadInvoice(order)} className="rounded-lg bg-slate-100 px-3 py-1.5 text-xs font-black text-slate-600 transition hover:bg-slate-200">Invoice</button>
+              <button type="button" onClick={() => downloadInvoice(order)} className="rounded-lg bg-slate-100 px-3 py-1.5 text-xs font-black text-slate-600 transition hover:bg-slate-200">Invoice</button>
             </div>
           </div>
 
@@ -1580,15 +1736,16 @@ export function OrderDetailPage() {
             </div>
 
             <div className="mt-5 space-y-3">
-              <button onClick={() => downloadInvoice(order)} className="w-full rounded-xl bg-slate-100 px-4 py-3 text-sm font-black text-slate-700 transition hover:bg-slate-200">
+              <button type="button" onClick={() => downloadInvoice(order)} className="w-full rounded-xl bg-slate-100 px-4 py-3 text-sm font-black text-slate-700 transition hover:bg-slate-200">
                 Invoice
               </button>
               {canReturnOrder(order) && (
-                <button onClick={() => openReturnModal(order.items)} className="w-full rounded-xl bg-amber-500 px-4 py-3 text-sm font-black text-white shadow-md transition hover:bg-amber-600">
+                <button type="button" onClick={() => openReturnModal(order.items)} className="w-full rounded-xl bg-amber-500 px-4 py-3 text-sm font-black text-white shadow-md transition hover:bg-amber-600">
                   <RotateCcw className="mr-2 inline h-4 w-4" />Start Return
                 </button>
               )}
               <button
+                type="button"
                 onClick={() => cancelOrder(order._id)}
                 disabled={!canCancelOrder(order)}
                 className="w-full rounded-xl border border-rose-200 px-4 py-3 text-sm font-black text-rose-600 transition hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-50"
@@ -1667,21 +1824,21 @@ function ProductCard({ product, wishlisted, onQuickView, onWishlist, onAddToCart
           type="button"
           aria-pressed={wishlisted}
           onClick={() => onWishlist(product)}
-          className={`absolute right-3 top-3 grid h-9 w-9 place-items-center rounded-full shadow-lg backdrop-blur-sm transition hover:scale-110 ${
+          className={`absolute right-3 top-3 z-20 grid h-9 w-9 place-items-center rounded-full shadow-lg backdrop-blur-sm transition hover:scale-110 ${
             wishlisted ? 'bg-pink-100 text-pink-600' : 'bg-white/90 text-rose-500'
           }`}
         >
           <Heart className={`h-4 w-4 transition ${wishlisted ? 'fill-pink-500 text-pink-500' : ''}`} />
         </button>
         {stockStatus === 'Out of stock' && (
-          <div className="absolute inset-0 flex items-center justify-center bg-white/60 backdrop-blur-[2px]">
+          <div aria-hidden="true" className="pointer-events-none absolute inset-0 flex items-center justify-center bg-white/60 backdrop-blur-[2px]">
             <span className="rounded-lg bg-slate-900/90 px-4 py-2 text-xs font-black uppercase tracking-[0.2em] text-white">Out of Stock</span>
           </div>
         )}
       </div>
-      <div className="p-5">
+      <div className="relative z-10 p-5">
         <p className="font-jakarta text-[10px] font-black uppercase tracking-[0.24em] text-navy">{product.category?.name || 'Product'}</p>
-        <button type="button" onClick={onOpen} className="mt-1.5 text-left font-playfair text-lg font-bold text-navy transition group-hover:text-royal">{product.title}</button>
+        <button type="button" onClick={onOpen} className="mt-1.5 block w-full text-left font-playfair text-lg font-bold text-navy transition group-hover:text-royal">{product.title}</button>
         <p className="mt-1 text-xs font-medium text-slate-500">{getBrand(product)}</p>
         <div className="mt-4 flex items-center gap-3">
           <p className="font-playfair text-xl font-black text-navy">{formatCurrency(price)}</p>
@@ -1695,11 +1852,11 @@ function ProductCard({ product, wishlisted, onQuickView, onWishlist, onAddToCart
           <span className={`font-semibold ${stockStatus === 'In stock' ? 'text-emerald-600' : stockStatus === 'Limited stock' ? 'text-amber-600' : 'text-rose-500'}`}>{stockStatus}</span>
         </div>
                 <div className="mt-5 grid grid-cols-3 gap-1.5 sm:gap-2">
-                  <button onClick={() => onQuickView(product)} className="rounded-xl border border-slate-200 px-1.5 py-2.5 text-[10px] font-black text-slate-600 transition hover:border-navy/30 hover:text-navy sm:px-2 sm:text-xs">Quick View</button>
-                  <button onClick={() => onAddToCart(product)} disabled={stockStatus === 'Out of stock'} className="rounded-xl bg-navy px-1.5 py-2.5 text-[10px] font-black text-white transition hover:bg-navy/90 disabled:cursor-not-allowed disabled:opacity-50 sm:px-2 sm:text-xs">
+                  <button type="button" onClick={() => onQuickView(product)} className="rounded-xl border border-slate-200 px-1.5 py-2.5 text-[10px] font-black text-slate-600 transition hover:border-navy/30 hover:text-navy sm:px-2 sm:text-xs">Quick View</button>
+                  <button type="button" onClick={() => onAddToCart(product)} disabled={stockStatus === 'Out of stock'} className="rounded-xl bg-navy px-1.5 py-2.5 text-[10px] font-black text-white transition hover:bg-navy/90 disabled:cursor-not-allowed disabled:opacity-50 sm:px-2 sm:text-xs">
                     {stockStatus === 'Out of stock' ? 'Unavailable' : 'Cart'}
                   </button>
-                  <Link to={`/products/${product._id}`} className="flex items-center justify-center rounded-xl bg-slate-900 px-1.5 py-2.5 text-center text-[10px] font-black text-white transition hover:bg-slate-800 sm:px-2 sm:text-xs">
+                  <Link to={`/products/${product._id}`} className="inline-flex items-center justify-center rounded-xl bg-slate-900 px-1.5 py-2.5 text-center text-[10px] font-black text-white transition hover:bg-slate-800 sm:px-2 sm:text-xs">
                     Details
                   </Link>
                 </div>
@@ -1820,14 +1977,14 @@ function QuickViewModal({ product, selectedVariant, onSelectVariant, onAddToCart
             <p className="mt-3 text-sm font-medium leading-7 text-slate-600">{product.shortDescription || product.description}</p>
             <div className="mt-4 flex flex-wrap gap-2">
               {getVariantOptions(product).map((variant) => (
-                <button key={`${variant.name}-${variant.option}-${variant.sku}`} onClick={() => onSelectVariant(variant)} className={`rounded-lg px-4 py-2 text-xs font-black transition-all ${selectedVariant?.sku === variant.sku ? 'bg-navy text-white shadow-md' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>
+                <button type="button" key={`${variant.name}-${variant.option}-${variant.sku}`} onClick={() => onSelectVariant(variant)} className={`rounded-lg px-4 py-2 text-xs font-black transition-all ${selectedVariant?.sku === variant.sku ? 'bg-navy text-white shadow-md' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>
                   {variant.display}
                 </button>
               ))}
             </div>
             <div className="mt-6 flex flex-wrap gap-3">
-              <button onClick={onAddToCart} className="flex-1 rounded-xl border-2 border-navy px-4 py-3 text-sm font-black text-navy transition hover:bg-navy/5">Add to Cart</button>
-              <button onClick={onBuyNow} className="flex-1 rounded-xl bg-gradient-to-r from-navy to-royal px-4 py-3 text-sm font-black text-white shadow-lg shadow-navy/20">Buy Now</button>
+              <button type="button" onClick={onAddToCart} className="flex-1 rounded-xl border-2 border-navy px-4 py-3 text-sm font-black text-navy transition hover:bg-navy/5">Add to Cart</button>
+              <button type="button" onClick={onBuyNow} className="flex-1 rounded-xl bg-gradient-to-r from-navy to-royal px-4 py-3 text-sm font-black text-white shadow-lg shadow-navy/20">Buy Now</button>
             </div>
           </div>
         </div>
@@ -1841,7 +1998,7 @@ function FiltersPanel({ filterState, setFilterState, categories, onReset }) {
     <div className="rounded-[2rem] border border-slate-200/80 bg-white/80 p-5 shadow-[0_8px_30px_rgba(11,36,81,0.06)] backdrop-blur-sm">
       <div className="flex items-center justify-between">
         <h2 className="font-playfair text-lg font-black text-navy">Filters</h2>
-        <button onClick={onReset} className="text-xs font-black text-navy underline underline-offset-2">Reset</button>
+        <button type="button" onClick={onReset} className="text-xs font-black text-navy underline underline-offset-2">Reset</button>
       </div>
       <div className="mt-4 space-y-4">
         <FieldGroup label="Category">
@@ -1926,48 +2083,66 @@ function SummaryPanel({ featured, totals }) {
   )
 }
 
-function CollectionStrip({ title, items, accent = 'text-navy' }) {
+function ProductRailSection({ title, description, items, onSeeAll, accent = 'text-navy' }) {
+  const railRef = useRef(null)
+
+  const scrollRail = (direction) => {
+    railRef.current?.scrollBy({ left: direction * 360, behavior: 'smooth' })
+  }
+
   return (
     <section className="rounded-[2rem] border border-slate-200/80 bg-white/80 p-5 shadow-[0_8px_30px_rgba(11,36,81,0.06)] backdrop-blur-sm">
-      <h2 className={`font-playfair text-2xl font-black ${accent}`}>{title}</h2>
-      <div className="mt-4 grid grid-cols-2 gap-5 xl:grid-cols-4">
-        {items.map((product) => <MiniProductCard key={product._id} product={product} />)}
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <p className="font-jakarta text-[10px] font-black uppercase tracking-[0.28em] text-slate-400">Curated shelf</p>
+          <h2 className={`mt-1 font-playfair text-2xl font-black ${accent}`}>{title}</h2>
+          {description && <p className="mt-1 max-w-2xl text-sm font-medium leading-6 text-slate-500">{description}</p>}
+        </div>
+        <div className="flex items-center gap-2">
+          <button type="button" onClick={() => scrollRail(-1)} className="grid h-10 w-10 place-items-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:border-navy/30 hover:text-navy">
+            <ChevronLeft className="h-4 w-4" />
+          </button>
+          <button type="button" onClick={() => scrollRail(1)} className="grid h-10 w-10 place-items-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:border-navy/30 hover:text-navy">
+            <ChevronRight className="h-4 w-4" />
+          </button>
+          <button type="button" onClick={onSeeAll} className="inline-flex items-center gap-1 rounded-full border border-slate-200 px-4 py-2 text-xs font-black text-slate-600 transition hover:border-navy/30 hover:text-navy">
+            See all
+            <ArrowRight className="h-3.5 w-3.5" />
+          </button>
+        </div>
+      </div>
+      <div
+        ref={railRef}
+        className="mt-5 flex gap-4 overflow-x-auto scroll-smooth pb-2 pr-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      >
+        {items.map((product) => (
+          <div key={product._id} className="w-[180px] shrink-0 snap-start sm:w-[205px]">
+            <MiniProductCard product={product} rail />
+          </div>
+        ))}
       </div>
     </section>
   )
 }
 
-function MiniProductCard({ product }) {
+function MiniProductCard({ product, rail = false }) {
   const variant = getVariantOptions(product)[0] || null
   return (
-    <Link to={`/products/${product._id}`} className="group overflow-hidden rounded-xl border border-slate-100 bg-slate-50/50 transition-all hover:-translate-y-0.5 hover:border-slate-200 hover:shadow-md">
+    <Link
+      to={`/products/${product._id}`}
+      className={`group overflow-hidden rounded-xl border border-slate-100 bg-slate-50/50 transition-all hover:-translate-y-0.5 hover:border-slate-200 hover:shadow-md ${
+        rail ? 'flex h-full w-full flex-col' : 'block h-full'
+      }`}
+    >
       <div className="overflow-hidden">
-        <img src={getProductImage(product, variant)} alt="" className="h-28 w-full object-cover transition duration-300 group-hover:scale-105 sm:h-36" />
+        <img src={getProductImage(product, variant)} alt="" className={`w-full object-cover transition duration-300 group-hover:scale-105 ${rail ? 'h-32 sm:h-36' : 'h-28 sm:h-36'}`} />
       </div>
-      <div className="p-4">
+      <div className={rail ? 'flex-1 p-4' : 'p-4'}>
         <p className="font-jakarta text-[10px] font-black uppercase tracking-[0.22em] text-navy">{product.category?.name || 'Product'}</p>
         <p className="mt-1 line-clamp-1 font-playfair text-sm font-bold text-slate-900">{product.title}</p>
         <p className="mt-1 font-bold text-navy">{formatCurrency(getPrice(product, variant))}</p>
       </div>
     </Link>
-  )
-}
-
-function RecentlyViewedStrip({ items }) {
-  return (
-    <section className="rounded-[2rem] border border-slate-200/80 bg-white/80 p-5 shadow-[0_8px_30px_rgba(11,36,81,0.06)] backdrop-blur-sm">
-      <h2 className="font-playfair text-2xl font-black text-navy">Recently Viewed</h2>
-      <div className="mt-4 grid grid-cols-2 gap-5 xl:grid-cols-4">
-        {items.map((entry) => (
-          <Link key={entry.productId} to={`/products/${entry.productId}`} className="overflow-hidden rounded-xl border border-slate-100 transition hover:border-slate-200 hover:shadow-md">
-            <img src={entry.productSnapshot?.images?.[0]?.url || '/logo.png'} alt="" className="h-28 w-full object-cover sm:h-36" />
-            <div className="p-4">
-              <p className="font-playfair text-sm font-bold text-slate-900">{entry.productSnapshot?.title}</p>
-            </div>
-          </Link>
-        ))}
-      </div>
-    </section>
   )
 }
 
@@ -2019,7 +2194,7 @@ function SpecsSection({ item }) {
   )
 }
 
-function ReviewsSection({ reviews, vendor }) {
+function ReviewsSection({ reviews, vendor, productId = null }) {
   return (
     <section className="rounded-[2.5rem] border border-slate-200/80 bg-white p-6 shadow-[0_15px_50px_rgba(11,36,81,0.08)]">
       <h2 className="font-playfair text-2xl font-black text-navy">Customer reviews</h2>
@@ -2034,29 +2209,47 @@ function ReviewsSection({ reviews, vendor }) {
           </div>
         )) : <EmptyState title="No reviews yet" description={`Be the first to review ${vendor.businessName || 'this store'}.`} />}
       </div>
-      <ReviewBox vendor={vendor?._id} />
+      <ReviewBox vendor={vendor?._id} productId={productId} />
     </section>
   )
 }
 
-function ReviewBox({ vendor }) {
+function ReviewBox({ vendor, productId = null }) {
   const [form, setForm] = useState({ rating: '5', title: '', comment: '' })
+  const [submitting, setSubmitting] = useState(false)
   const submit = async (event) => {
     event.preventDefault()
     if (!vendor) return
-    await customerApi.createReview({ vendor, rating: Number(form.rating), title: form.title, comment: form.comment })
-    toast.success('Review submitted')
-    setForm({ rating: '5', title: '', comment: '' })
+    if (Number(form.rating) < 1 || Number(form.rating) > 5) {
+      toast.error('Please choose a rating between 1 and 5')
+      return
+    }
+    if (form.comment.trim().length < 10) {
+      toast.error('Comment must be at least 10 characters')
+      return
+    }
+    setSubmitting(true)
+    try {
+      await customerApi.createReview({ vendor, product: productId || undefined, rating: Number(form.rating), title: form.title, comment: form.comment })
+      toast.success('Review submitted')
+      setForm({ rating: '5', title: '', comment: '' })
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Unable to submit review')
+    } finally {
+      setSubmitting(false)
+    }
   }
   return (
     <form onSubmit={submit} className="mt-5 rounded-xl border border-slate-200 p-4">
       <h3 className="font-playfair text-lg font-bold text-navy">Write a review</h3>
       <div className="mt-3 grid gap-3 md:grid-cols-3">
-        <input value={form.rating} onChange={(event) => setForm((current) => ({ ...current, rating: event.target.value }))} type="number" min="1" max="5" className="h-11 rounded-xl border border-slate-200 px-3 text-sm font-semibold outline-none transition focus:border-navy/40" />
+        <input value={form.rating} onChange={(event) => setForm((current) => ({ ...current, rating: event.target.value }))} type="number" min="1" max="5" step="1" className="h-11 rounded-xl border border-slate-200 px-3 text-sm font-semibold outline-none transition focus:border-navy/40" />
         <input value={form.title} onChange={(event) => setForm((current) => ({ ...current, title: event.target.value }))} placeholder="Review title" className="h-11 rounded-xl border border-slate-200 px-3 text-sm font-semibold outline-none transition focus:border-navy/40" />
         <input value={form.comment} onChange={(event) => setForm((current) => ({ ...current, comment: event.target.value }))} placeholder="Share your experience" className="h-11 rounded-xl border border-slate-200 px-3 text-sm font-semibold outline-none transition focus:border-navy/40" />
       </div>
-      <button className="mt-4 rounded-xl bg-gradient-to-r from-navy to-royal px-4 py-3 text-sm font-black text-white shadow-md transition hover:from-navy/90 hover:to-royal/90">Submit Review</button>
+      <button type="submit" disabled={submitting} className="mt-4 rounded-xl bg-gradient-to-r from-navy to-royal px-4 py-3 text-sm font-black text-white shadow-md transition hover:from-navy/90 hover:to-royal/90 disabled:opacity-60">
+        {submitting ? 'Submitting...' : 'Submit Review'}
+      </button>
     </form>
   )
 }
@@ -2097,9 +2290,9 @@ function QuantitySelector({ disabled = false }) {
   const [qty, setQty] = useState(1)
   return (
     <div className="flex items-center gap-3 rounded-xl border border-slate-200 px-3 py-2">
-      <button disabled={disabled} onClick={() => setQty((current) => Math.max(1, current - 1))} className="grid h-9 w-9 place-items-center rounded-lg bg-slate-100 text-slate-600 transition hover:bg-slate-200 disabled:opacity-50"><Minus className="h-4 w-4" /></button>
+      <button type="button" disabled={disabled} onClick={() => setQty((current) => Math.max(1, current - 1))} className="grid h-9 w-9 place-items-center rounded-lg bg-slate-100 text-slate-600 transition hover:bg-slate-200 disabled:opacity-50"><Minus className="h-4 w-4" /></button>
       <span className="min-w-8 text-center font-playfair text-lg font-black text-navy">{qty}</span>
-      <button disabled={disabled} onClick={() => setQty((current) => current + 1)} className="grid h-9 w-9 place-items-center rounded-lg bg-slate-100 text-slate-600 transition hover:bg-slate-200 disabled:opacity-50"><Plus className="h-4 w-4" /></button>
+      <button type="button" disabled={disabled} onClick={() => setQty((current) => current + 1)} className="grid h-9 w-9 place-items-center rounded-lg bg-slate-100 text-slate-600 transition hover:bg-slate-200 disabled:opacity-50"><Plus className="h-4 w-4" /></button>
     </div>
   )
 }
@@ -2107,9 +2300,9 @@ function QuantitySelector({ disabled = false }) {
 function QuantityButtons({ value, onChange, max }) {
   return (
     <div className="inline-flex items-center rounded-lg border border-slate-200">
-      <button onClick={() => onChange(Math.max(1, value - 1))} className="grid h-9 w-9 place-items-center text-slate-500 transition hover:bg-slate-100"><Minus className="h-3.5 w-3.5" /></button>
+      <button type="button" onClick={() => onChange(Math.max(1, value - 1))} className="grid h-9 w-9 place-items-center text-slate-500 transition hover:bg-slate-100"><Minus className="h-3.5 w-3.5" /></button>
       <span className="min-w-10 text-center font-playfair text-sm font-black text-navy">{value}</span>
-      <button onClick={() => onChange(Math.min(max || 99, value + 1))} className="grid h-9 w-9 place-items-center text-slate-500 transition hover:bg-slate-100"><Plus className="h-3.5 w-3.5" /></button>
+      <button type="button" onClick={() => onChange(Math.min(max || 99, value + 1))} className="grid h-9 w-9 place-items-center text-slate-500 transition hover:bg-slate-100"><Plus className="h-3.5 w-3.5" /></button>
     </div>
   )
 }
@@ -2117,9 +2310,9 @@ function QuantityButtons({ value, onChange, max }) {
 function PaginationBar({ page, totalPages, onChange }) {
   return (
     <div className="inline-flex items-center gap-1 rounded-xl border border-slate-200 bg-white p-1 shadow-sm">
-      <button disabled={page <= 1} onClick={() => onChange((current) => Math.max(1, current - 1))} className="grid h-9 w-9 place-items-center rounded-lg text-slate-500 transition hover:bg-slate-100 disabled:opacity-40"><ChevronLeft className="h-4 w-4" /></button>
+      <button type="button" disabled={page <= 1} onClick={() => onChange((current) => Math.max(1, current - 1))} className="grid h-9 w-9 place-items-center rounded-lg text-slate-500 transition hover:bg-slate-100 disabled:opacity-40"><ChevronLeft className="h-4 w-4" /></button>
       <span className="min-w-20 text-center font-playfair text-sm font-black text-navy">{page} / {totalPages}</span>
-      <button disabled={page >= totalPages} onClick={() => onChange((current) => Math.min(totalPages, current + 1))} className="grid h-9 w-9 place-items-center rounded-lg text-slate-500 transition hover:bg-slate-100 disabled:opacity-40"><ChevronRight className="h-4 w-4" /></button>
+      <button type="button" disabled={page >= totalPages} onClick={() => onChange((current) => Math.min(totalPages, current + 1))} className="grid h-9 w-9 place-items-center rounded-lg text-slate-500 transition hover:bg-slate-100 disabled:opacity-40"><ChevronRight className="h-4 w-4" /></button>
     </div>
   )
 }
@@ -2403,6 +2596,7 @@ function ReturnRequestModal({ order, onClose, initialItems = [] }) {
                   <div key={i} className="group relative overflow-hidden rounded-lg border border-slate-200">
                     <img src={src} alt="" className="h-20 w-full object-cover" />
                     <button
+                      type="button"
                       onClick={() => removeEvidence(i)}
                       className="absolute right-1 top-1 grid h-5 w-5 place-items-center rounded-full bg-black/50 text-white opacity-0 transition group-hover:opacity-100"
                     >
@@ -2474,7 +2668,7 @@ function ReturnRequestModal({ order, onClose, initialItems = [] }) {
               ))}
             </div>
           </div>
-          <button onClick={onClose} className="grid h-9 w-9 place-items-center rounded-full bg-slate-100 text-slate-500 transition hover:bg-slate-200">
+          <button type="button" onClick={onClose} className="grid h-9 w-9 place-items-center rounded-full bg-slate-100 text-slate-500 transition hover:bg-slate-200">
             <X className="h-4 w-4" />
           </button>
         </div>
@@ -2485,17 +2679,19 @@ function ReturnRequestModal({ order, onClose, initialItems = [] }) {
 
         <div className="sticky bottom-0 flex justify-between border-t border-slate-100 bg-white p-6">
           <button
+            type="button"
             onClick={() => step === 0 ? onClose() : setStep((prev) => prev - 1)}
             className="rounded-xl border border-slate-200 px-5 py-2.5 text-sm font-black text-slate-600 transition hover:border-navy/30 hover:text-navy"
           >
             {step === 0 ? 'Cancel' : 'Back'}
           </button>
           {step < steps.length - 1 ? (
-            <button onClick={handleNext} className="rounded-xl bg-navy px-6 py-2.5 text-sm font-black text-white shadow-md transition hover:bg-navy/90">
+            <button type="button" onClick={handleNext} className="rounded-xl bg-navy px-6 py-2.5 text-sm font-black text-white shadow-md transition hover:bg-navy/90">
               Next
             </button>
           ) : (
             <button
+              type="button"
               onClick={handleSubmit}
               disabled={submitting}
               className="rounded-xl bg-gradient-to-r from-navy to-royal px-6 py-2.5 text-sm font-black text-white shadow-md transition hover:from-navy/90 hover:to-royal/90 disabled:opacity-60"

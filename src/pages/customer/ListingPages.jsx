@@ -969,21 +969,33 @@ export function DetailPage({ type }) {
   )}
 
 function ReviewBox({ vendor }) {
-  const { register, handleSubmit, reset } = useForm()
+  const { register, handleSubmit, reset, formState: { errors } } = useForm()
+  const [submitting, setSubmitting] = useState(false)
   const onSubmit = async (values) => {
-    await customerApi.createReview({ ...values, vendor, rating: Number(values.rating) })
-    toast.success('Review submitted')
-    reset()
+    setSubmitting(true)
+    try {
+      await customerApi.createReview({ ...values, vendor, rating: Number(values.rating) })
+      toast.success('Review submitted')
+      reset()
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Unable to submit review')
+    } finally {
+      setSubmitting(false)
+    }
   }
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="mt-8 rounded-lg border border-slate-200 bg-white p-5">
       <h2 className="text-xl font-extrabold">Write a Review</h2>
       <div className="mt-4 grid gap-3 sm:grid-cols-3">
-        <FormField label="Rating"><input {...register('rating', { required: true })} type="number" min="1" max="5" className="h-10 w-full rounded-md border px-3" /></FormField>
+        <FormField label="Rating"><input {...register('rating', { required: 'Rating is required', min: { value: 1, message: 'Rating must be at least 1' }, max: { value: 5, message: 'Rating must be at most 5' } })} type="number" min="1" max="5" step="1" className="h-10 w-full rounded-md border px-3" /></FormField>
         <FormField label="Title"><input {...register('title')} className="h-10 w-full rounded-md border px-3" /></FormField>
-        <FormField label="Comment"><input {...register('comment', { required: true })} className="h-10 w-full rounded-md border px-3" /></FormField>
+        <FormField label="Comment"><input {...register('comment', { required: 'Comment is required', minLength: { value: 10, message: 'Comment must be at least 10 characters' } })} className="h-10 w-full rounded-md border px-3" /></FormField>
       </div>
-      <button className="mt-4 rounded-md bg-[#0d4697] px-4 py-2 font-bold text-white">Submit Review</button>
+      <div className="mt-3 space-y-1 text-xs font-semibold text-rose-600">
+        {errors.rating && <p>{errors.rating.message}</p>}
+        {errors.comment && <p>{errors.comment.message}</p>}
+      </div>
+      <button type="submit" disabled={submitting} className="mt-4 rounded-md bg-[#0d4697] px-4 py-2 font-bold text-white disabled:opacity-60">{submitting ? 'Submitting...' : 'Submit Review'}</button>
     </form>
   )
 }
