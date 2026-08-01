@@ -26,7 +26,7 @@ import {
   DashboardConfigurationPage,
   FeatureManagementPage,
   NotificationsConfigPage,
-  PermissionMatrixPage,
+  // PermissionMatrixPage,
   ReferralManagementPage,
 
   ReportsCenterPage,
