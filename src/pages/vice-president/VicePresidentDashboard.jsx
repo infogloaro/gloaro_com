@@ -349,35 +349,7 @@ export default function VicePresidentDashboard() {
         </div>
       </section>
 
-      {/* 5. Chapter Performance Charts */}
-      <section className="grid gap-5 xl:grid-cols-2">
-        <ChartCard title="Membership Growth" data={(report.monthlyUsers || []).map((item) => ({ label: monthLabel(item), members: item.users }))} dataKey="members" />
-        <ChartCard title="Chapter Attendance %" data={[
-          { label: 'Week 1', attendance: 92 },
-          { label: 'Week 2', attendance: 94 },
-          { label: 'Week 3', attendance: 96 },
-          { label: 'Week 4', attendance: 95 }
-        ]} dataKey="attendance" />
-        <ChartCard title="Referrals Trend" data={[
-          { label: 'Week 1', referrals: 24 },
-          { label: 'Week 2', referrals: 32 },
-          { label: 'Week 3', referrals: 29 },
-          { label: 'Week 4', referrals: 35 }
-        ]} dataKey="referrals" />
-        <ChartCard title="Business Generated" type="bar" data={(report.membershipSales || []).map((item) => ({ label: item._id, sales: item.sales }))} dataKey="sales" />
-        <ChartCard title="Visitors Count" type="bar" data={[
-          { label: 'April', visitors: 6 },
-          { label: 'May', visitors: 8 },
-          { label: 'June', visitors: 11 },
-          { label: 'July', visitors: 9 }
-        ]} dataKey="visitors" />
-        <ChartCard title="One-to-Ones Completed" data={[
-          { label: 'April', meetings: 12 },
-          { label: 'May', meetings: 18 },
-          { label: 'June', meetings: 24 },
-          { label: 'July', meetings: 21 }
-        ]} dataKey="meetings" />
-      </section>
+
 
       {/* 6. Upcoming Activities */}
       <section className="grid gap-6 md:grid-cols-2">
