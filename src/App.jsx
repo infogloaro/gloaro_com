@@ -25,9 +25,7 @@ import {
   AuditLogsPage,
   DashboardConfigurationPage,
   FeatureManagementPage,
-  ModuleConfigurationPage,
   NotificationsConfigPage,
-  PermissionMatrixPage,
   ReportsCenterPage,
   SuperAdminDashboardPage,
   SuperAdminModulePage,
@@ -38,7 +36,6 @@ import { buildAdminRoute } from './utils/permissions'
 import {
   ActivityCenterPage,
   AIInsightsPage,
-  AttendanceEnginePage,
   BusinessWallManagementPage,
   BusinessNetworkingPage,
   ChapterManagementPage,
@@ -102,7 +99,6 @@ import {
 import {
   CategoriesPage,
   CustomerNotificationsPage,
-  CustomerProfilePage,
   CustomerSupportPage,
   EventsPage,
   NearbyPage,
@@ -157,6 +153,8 @@ import StateDirectorDashboard from './pages/state-director/StateDirectorDashboar
 import DistrictDirectorDashboard from './pages/district-director/DistrictDirectorDashboard'
 import ChapterDirectorDashboard from './pages/chapter-director/ChapterDirectorDashboard'
 import { ChapterDirectorProductsPage, ChapterDirectorServicesPage, ChapterDirectorVendorsPage } from './pages/chapter-director/ChapterDirectorPages'
+import LaunchDirectorDashboard from './pages/launch-director/LaunchDirectorDashboard'
+import DirectConsultantDashboard from './pages/direct-consultant/DirectConsultantDashboard'
 import PresidentDashboard from './pages/president/PresidentDashboard'
 import VicePresidentDashboard from './pages/vice-president/VicePresidentDashboard'
 import DynamicDashboard from './pages/shared/DynamicDashboard'
@@ -173,7 +171,7 @@ import VisitorsPage from './pages/membership/VisitorsPage'
 import BusinessDirectory from './pages/membership/BusinessDirectory'
 import Leaderboard from './pages/membership/Leaderboard'
 import { ROLES } from './constants/roleConfig.js'
-import { getAccountClassification } from './utils/permissions'
+import { getAccountClassification, normalizeRole } from './utils/permissions'
 
 function ScrollToTop() {
   const { pathname } = useLocation()
@@ -186,7 +184,8 @@ function ScrollToTop() {
 }
 
 function App() {
-  const { role, permissionsLoading, canAccessPath } = useAuth()
+  const { role: rawRole, permissionsLoading, canAccessPath } = useAuth()
+  const role = normalizeRole(rawRole)
   const isAdminSession = [ROLES.SUPERADMIN, ROLES.ADMIN, ROLES.FRANCHISE_ADMIN, ROLES.ECOMMERCE_ADMIN, ROLES.MARKETPLACE_ADMIN, ROLES.DIGITAL_MARKETING_ADMIN, ROLES.TRAINING_ADMIN, ROLES.FINANCE_ADMIN, ROLES.REGION_DIRECTOR, ROLES.STATE_DIRECTOR, ROLES.DISTRICT_DIRECTOR, ROLES.EXECUTIVE_DIRECTOR, ROLES.LAUNCH_DIRECTOR, ROLES.DIRECT_CONSULTANT, ROLES.CHAPTER_PRESIDENT, ROLES.VICE_PRESIDENT, ROLES.SECRETARY, ROLES.OPERATION_VICE_PRESIDENT, ROLES.MEMBERSHIP_VERIFICATION_ADMIN, ROLES.CUSTOM_ADMIN].includes(role)
 
   const adminRouteDefs = [
@@ -195,13 +194,9 @@ function App() {
     { path: '/admin-management', element: <AdminManagementPage />, roles: [ROLES.SUPERADMIN] },
     { path: '/organization', element: <OrganizationManagementPage />, roles: [ROLES.SUPERADMIN] },
     { path: '/assignments', element: <HierarchyAssignmentPage />, roles: [ROLES.SUPERADMIN] },
-    { path: '/roles', element: <SuperAdminModulePage {...superAdminModuleConfigs.roles} />, roles: [ROLES.SUPERADMIN] },
-    { path: '/permissions', element: <PermissionMatrixPage />, roles: [ROLES.SUPERADMIN] },
     { path: '/features', element: <FeatureManagementPage />, roles: [ROLES.SUPERADMIN] },
     { path: '/dashboard-config', element: <DashboardConfigurationPage />, roles: [ROLES.SUPERADMIN] },
-    { path: '/module-config', element: <ModuleConfigurationPage />, roles: [ROLES.SUPERADMIN] },
     { path: '/membership-workflow', element: <WorkflowEnginePage />, roles: [ROLES.SUPERADMIN] },
-    { path: '/workflow-engine', element: <WorkflowEnginePage />, roles: [ROLES.SUPERADMIN] },
     { path: '/users', element: <AdminManagementPage /> },
     { path: '/vendors', element: <ApprovedVendorsPage /> },
     { path: '/approved-vendors', element: <ApprovedVendorsPage /> },
@@ -209,14 +204,17 @@ function App() {
     { path: '/vendor-approval-workflow', element: <VendorApprovalWorkflowPage /> },
     { path: '/vendor-category-approvals', element: <AdminVendorCategoryApprovalsPage /> },
     { path: '/locations', element: <LocationsManagementPage /> },
-    { path: '/categories', element: <AdminCategoriesPage /> },
+    { path: '/marketplace/categories', element: <AdminCategoriesPage /> },
     { path: '/business', element: <BusinessNetworkingPage /> },
     { path: '/business-wall', element: <BusinessWallManagementPage /> },
     { path: '/products', element: <AdminProductsPage /> },
     { path: '/services', element: <AdminServicesPage /> },
     { path: '/marketplace-approval', element: <MarketplaceApprovalPage /> },
     { path: '/members', element: <AdminMembersPage /> },
-    { path: '/attendance', element: <AttendanceEnginePage /> },
+    { path: '/visitors', element: <VisitorManagementPage /> },
+    { path: '/visitor-conversion', element: <VisitorConversionEnginePage /> },
+    { path: '/attendance', element: <AttendancePage /> },
+    { path: '/meetings', element: <MeetingManagementPage /> },
     { path: '/chapters', element: <ChapterManagementPage />, roles: [ROLES.ADMIN, ROLES.SUPERADMIN] },
     { path: '/chapter-dashboard', element: <ChapterDashboardPage /> },
     { path: '/membership-applications', element: <AdminMembershipApplicationsPage /> },
@@ -236,10 +234,12 @@ function App() {
     { path: '/calendar', element: <EnterpriseCalendarPage /> },
     { path: '/broadcast-notifications', element: <AdminNotifications /> },
     { path: '/audit-logs', element: <AuditLogsPage /> },
-    { path: '/system-logs', element: <SystemLogsPage />, roles: [ROLES.SUPERADMIN] },
+    { path: '/system-logs', element: <SystemLogsPage />, roles: [ROLES.SUPERADMIN, ROLES.ADMIN] },
+    { path: '/profile', element: <MembershipProfilePage /> },
   ]
 
   const superAdminRoutes = adminRouteDefs.filter((route) => {
+    if (route.path === '/settings') return false
     if (route.roles?.length && !route.roles.includes(role)) return false
     return canAccessPath(buildAdminRoute(ROLES.SUPERADMIN, route.path))
   }).map((route) => ({
@@ -248,6 +248,7 @@ function App() {
   }))
 
   const regularAdminRoutes = adminRouteDefs.filter((route) => {
+    if (route.path === '/settings') return false
     if (route.roles?.length && !route.roles.includes(role)) return false
     return canAccessPath(buildAdminRoute(ROLES.ADMIN, route.path))
   }).map((route) => ({
@@ -333,9 +334,10 @@ function App() {
             <Route element={<ProtectedRoute roles={[ROLES.CUSTOMER, ROLES.USER]} />}>
               <Route path="/customer/dashboard" element={<CustomerDashboardPage />} />
               <Route path="/customer/addresses" element={<CustomerAddressesPage />} />
+              <Route path="/customer/wishlist" element={<WishlistPage />} />
               <Route path="/customer/referral" element={<ReferralPage />} />
               <Route path="/customer/notifications" element={<CustomerNotificationsPage />} />
-              <Route path="/customer/profile" element={<CustomerProfilePage />} />
+              <Route path="/customer/profile" element={<CustomerProfileFoundationPage />} />
               <Route path="/customer/support" element={<CustomerSupportPage />} />
               <Route path="/customer/events" element={<EventsPage />} />
             </Route>
@@ -350,6 +352,7 @@ function App() {
               <Route path="/membership/training" element={<AssignedTrainingPage />} />
               <Route path="/membership/profile" element={<MembershipProfilePage />} />
               <Route path="/membership/support" element={<MembershipSupportPage />} />
+              <Route path="/attendance" element={<AttendancePage />} />
             </Route>
 
             {/* Member Console Route Group */}
@@ -357,7 +360,6 @@ function App() {
               <Route path="/member/vendor-application" element={<VendorApplicationForm />} />
               <Route path="/member/vendor-application-status" element={<VendorApplicationStatus />} />
               <Route path="/member/profile" element={<MembershipProfilePage />} />
-              <Route path="/member/settings" element={<ProfilePage />} />
               
               {/* Parameterized main dashboard sub-views */}
               <Route path="/member/dashboard" element={<MemberDashboard />} />
@@ -367,6 +369,8 @@ function App() {
               <Route path="/member/chat" element={<ChatSystem />} />
               <Route path="/member/referrals" element={<ReferralsPipeline />} />
               <Route path="/member/training" element={<AssignedTrainingPage />} />
+              <Route path="/member/attendance" element={<AttendancePage />} />
+              <Route path="/member/dashboard/attendance" element={<AttendancePage />} />
 
               {/* Protected Marketplace routes */}
               <Route element={<MarketplaceRoute />}>
@@ -444,6 +448,7 @@ function App() {
               <Route path="/region-director/chat" element={<ChatSystem />} />
               <Route path="/region-director/referrals" element={<ReferralsPipeline />} />
               <Route path="/region-director/meetings" element={<MeetingsAttendance />} />
+              <Route path="/region-director/attendance" element={<MeetingsAttendance />} />
               <Route path="/region-director/one-to-ones" element={<OneToOnesPage />} />
               <Route path="/region-director/visitors" element={<VisitorsPage />} />
               <Route path="/region-director/directory" element={<BusinessDirectory />} />
@@ -472,6 +477,7 @@ function App() {
               <Route path="/state-director/chat" element={<ChatSystem />} />
               <Route path="/state-director/referrals" element={<ReferralsPipeline />} />
               <Route path="/state-director/meetings" element={<MeetingsAttendance />} />
+              <Route path="/state-director/attendance" element={<MeetingsAttendance />} />
               <Route path="/state-director/one-to-ones" element={<OneToOnesPage />} />
               <Route path="/state-director/visitors" element={<VisitorsPage />} />
               <Route path="/state-director/directory" element={<BusinessDirectory />} />
@@ -485,9 +491,10 @@ function App() {
             {/* District Director Console */}
             <Route element={<ProtectedRoute roles={[ROLES.DISTRICT_DIRECTOR]} />}>
               <Route path="/district-director" element={<Navigate to="/district-director/dashboard" replace />} />
-              <Route path="/district-director/dashboard" element={<DynamicDashboard />} />
+              <Route path="/district-director/dashboard" element={<DistrictDirectorDashboard />} />
               <Route path="/district-director/chapters" element={<LocationsManagementPage />} />
               <Route path="/district-director/locations" element={<LocationsManagementPage />} />
+              <Route path="/district-director/chapter" element={<MyChapter />} />
               <Route path="/district-director/executive-directors" element={<AdminManagementPage role={ROLES.EXECUTIVE_DIRECTOR} />} />
               <Route path="/district-director/reports" element={<EnterpriseReportBuilderPage />} />
               <Route path="/district-director/settings" element={<AdminSettingsPage />} />
@@ -498,6 +505,7 @@ function App() {
               <Route path="/district-director/chat" element={<ChatSystem />} />
               <Route path="/district-director/referrals" element={<ReferralsPipeline />} />
               <Route path="/district-director/meetings" element={<MeetingsAttendance />} />
+              <Route path="/district-director/attendance" element={<MeetingsAttendance />} />
               <Route path="/district-director/one-to-ones" element={<OneToOnesPage />} />
               <Route path="/district-director/visitors" element={<VisitorsPage />} />
               <Route path="/district-director/directory" element={<BusinessDirectory />} />
@@ -514,7 +522,7 @@ function App() {
             {/* Chapter Director Console */}
             <Route element={<ProtectedRoute roles={[ROLES.EXECUTIVE_DIRECTOR]} />}>
               <Route path="/chapter-director" element={<Navigate to="/chapter-director/dashboard" replace />} />
-              <Route path="/chapter-director/dashboard" element={<DynamicDashboard />} />
+              <Route path="/chapter-director/dashboard" element={<ChapterDirectorDashboard />} />
               <Route path="/chapter-director/vendor-category-approvals" element={<AdminVendorCategoryApprovalsPage />} />
               <Route path="/chapter-director/president" element={<AdminManagementPage />} />
               <Route path="/chapter-director/members" element={<AdminMembersPage />} />
@@ -564,6 +572,7 @@ function App() {
               <Route path="/president/chat" element={<ChatSystem />} />
               <Route path="/president/referrals" element={<ReferralsPipeline />} />
               <Route path="/president/meetings" element={<MeetingsAttendance />} />
+              <Route path="/president/attendance" element={<MeetingsAttendance />} />
               <Route path="/president/one-to-ones" element={<OneToOnesPage />} />
               <Route path="/president/visitors" element={<VisitorsPage />} />
               <Route path="/president/directory" element={<BusinessDirectory />} />
@@ -595,6 +604,7 @@ function App() {
               <Route path="/vice-president/chat" element={<ChatSystem />} />
               <Route path="/vice-president/referrals" element={<ReferralsPipeline />} />
               <Route path="/vice-president/meetings" element={<MeetingsAttendance />} />
+              <Route path="/vice-president/attendance" element={<MeetingsAttendance />} />
               <Route path="/vice-president/one-to-ones" element={<OneToOnesPage />} />
               <Route path="/vice-president/visitors" element={<VisitorsPage />} />
               <Route path="/vice-president/directory" element={<BusinessDirectory />} />
@@ -608,7 +618,7 @@ function App() {
             {/* Launch Director Console */}
             <Route element={<ProtectedRoute roles={[ROLES.LAUNCH_DIRECTOR]} />}>
               <Route path="/launch-director" element={<Navigate to="/launch-director/dashboard" replace />} />
-              <Route path="/launch-director/dashboard" element={<DynamicDashboard />} />
+              <Route path="/launch-director/dashboard" element={<LaunchDirectorDashboard />} />
               
               {/* Inherited Base Member Modules */}
               <Route path="/launch-director/chapter" element={<MyChapter />} />
@@ -617,6 +627,7 @@ function App() {
               <Route path="/launch-director/chat" element={<ChatSystem />} />
               <Route path="/launch-director/referrals" element={<ReferralsPipeline />} />
               <Route path="/launch-director/meetings" element={<MeetingsAttendance />} />
+              <Route path="/launch-director/attendance" element={<MeetingsAttendance />} />
               <Route path="/launch-director/one-to-ones" element={<OneToOnesPage />} />
               <Route path="/launch-director/visitors" element={<VisitorsPage />} />
               <Route path="/launch-director/directory" element={<BusinessDirectory />} />
@@ -625,7 +636,6 @@ function App() {
               <Route path="/launch-director/services" element={<LaunchDirectorServicesPage />} />
               <Route path="/launch-director/vendors" element={<LaunchDirectorVendorsPage />} />
               <Route path="/launch-director/profile" element={<MembershipProfilePage />} />
-              <Route path="/launch-director/settings" element={<MembershipProfilePage />} />
 
               {/* Launch Director Specific Modules */}
               <Route path="/launch-director/members" element={<AdminManagementPage role={ROLES.CUSTOMER} />} />
@@ -637,7 +647,7 @@ function App() {
             {/* Direct Consultant Console */}
             <Route element={<ProtectedRoute roles={[ROLES.DIRECT_CONSULTANT]} />}>
               <Route path="/direct-consultant" element={<Navigate to="/direct-consultant/dashboard" replace />} />
-              <Route path="/direct-consultant/dashboard" element={<DynamicDashboard />} />
+              <Route path="/direct-consultant/dashboard" element={<DirectConsultantDashboard />} />
               
               {/* Inherited Base Member Modules */}
               <Route path="/direct-consultant/chapter" element={<MyChapter />} />
@@ -646,6 +656,7 @@ function App() {
               <Route path="/direct-consultant/chat" element={<ChatSystem />} />
               <Route path="/direct-consultant/referrals" element={<ReferralsPipeline />} />
               <Route path="/direct-consultant/meetings" element={<MeetingsAttendance />} />
+              <Route path="/direct-consultant/attendance" element={<MeetingsAttendance />} />
               <Route path="/direct-consultant/one-to-ones" element={<OneToOnesPage />} />
               <Route path="/direct-consultant/visitors" element={<VisitorsPage />} />
               <Route path="/direct-consultant/directory" element={<BusinessDirectory />} />
@@ -654,7 +665,6 @@ function App() {
               <Route path="/direct-consultant/services" element={<DirectConsultantServicesPage />} />
               <Route path="/direct-consultant/vendors" element={<DirectConsultantVendorsPage />} />
               <Route path="/direct-consultant/profile" element={<MembershipProfilePage />} />
-              <Route path="/direct-consultant/settings" element={<MembershipProfilePage />} />
 
               {/* Direct Consultant Specific Modules */}
               <Route path="/direct-consultant/members" element={<AdminManagementPage role={ROLES.CUSTOMER} />} />

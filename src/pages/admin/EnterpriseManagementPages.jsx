@@ -109,8 +109,8 @@ const moduleConfig = {
     fields: [],
   },
   testimonial: {
-    title: 'Testimonials',
-    description: 'Manage testimonials, approvals, featured stories, public highlights, photos, and status.',
+    title: 'Success Stories',
+    description: 'Manage the success stories displayed on the public Gloaro home page.',
     icon: Activity,
     types: ['member', ROLES.VENDOR, 'chapter', 'event', 'training'],
     fields: ['code', 'type', 'chapter', 'assignedTo', 'metadata.category'],
@@ -745,7 +745,224 @@ export function TrainingManagementPage() {
 }
 
 export function TestimonialsManagementPage() {
-  return <EnterpriseRecordsPage module="testimonial" />
+  const [search, setSearch] = useState('')
+  const [stories, setStories] = useState([])
+  const [formOpen, setFormOpen] = useState(false)
+  const [editingStory, setEditingStory] = useState(null)
+  const [form, setForm] = useState({ name: '', role: '', quote: '', rating: 5, status: 'active', avatar: '' })
+
+  const loadDatabaseStories = useCallback(async () => {
+    try {
+      const response = await adminApi.enterpriseRecords('testimonial', { limit: 100, sort: '-createdAt' })
+      const databaseStories = getList(response.data).map((record) => ({
+        _id: record._id,
+        name: record.name,
+        role: record.metadata?.role || '',
+        quote: record.metadata?.quote || '',
+        rating: Number(record.metadata?.rating) || 5,
+        avatar: record.metadata?.avatar || '',
+        status: record.status || 'active',
+      }))
+      setStories(databaseStories)
+    } catch (error) {
+      setStories([])
+      toast.error(error.response?.data?.message || 'Unable to load success stories')
+    }
+  }, [])
+
+  useEffect(() => {
+    loadDatabaseStories()
+  }, [loadDatabaseStories])
+
+  const rows = useMemo(() => {
+    const query = search.trim().toLowerCase()
+    return stories.filter((story) => {
+      return !query || [story.name, story.role, story.quote].some((value) => value.toLowerCase().includes(query))
+    })
+  }, [search, stories])
+
+  const submitStory = async (event) => {
+    event.preventDefault()
+    if (!form.name.trim() || !form.role.trim() || !form.quote.trim()) {
+      toast.error('Name, role/company, and success story are required')
+      return
+    }
+    const values = {
+      ...form,
+      name: form.name.trim(),
+      role: form.role.trim(),
+      quote: form.quote.trim(),
+      rating: Number(form.rating),
+      avatar: form.avatar.trim() || 'https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=96&q=80',
+    }
+    const wasEditing = Boolean(editingStory)
+    const databasePayload = {
+      name: values.name,
+      type: 'success_story',
+      status: values.status,
+      metadata: {
+        role: values.role,
+        quote: values.quote,
+        rating: values.rating,
+        avatar: values.avatar,
+      },
+    }
+    try {
+      if (wasEditing) {
+        await adminApi.updateEnterpriseRecord(editingStory._id, databasePayload)
+      } else {
+        await adminApi.createEnterpriseRecord('testimonial', databasePayload)
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Unable to save success story')
+      return
+    }
+    await loadDatabaseStories()
+    setForm({ name: '', role: '', quote: '', rating: 5, status: 'active', avatar: '' })
+    setEditingStory(null)
+    setFormOpen(false)
+    toast.success(values.status === 'active'
+      ? (wasEditing ? 'Success story updated on the public home page' : 'Success story added to the public home page')
+      : 'Success story saved as inactive')
+    if (!wasEditing && values.status === 'active') {
+      window.sessionStorage.setItem('gloaro_new_success_story', 'true')
+      window.location.assign(`${window.location.origin}/#testimonials`)
+    }
+  }
+
+  const openAddStory = () => {
+    setEditingStory(null)
+    setForm({ name: '', role: '', quote: '', rating: 5, status: 'active', avatar: '' })
+    setFormOpen(true)
+  }
+
+  const openEditStory = (story) => {
+    setEditingStory(story)
+    setForm({
+      name: story.name || '',
+      role: story.role || '',
+      quote: story.quote || '',
+      rating: story.rating || 5,
+      status: story.status || 'active',
+      avatar: story.avatar || '',
+    })
+    setFormOpen(true)
+  }
+
+  const selectProfileImage = (event) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please select a valid image file')
+      event.target.value = ''
+      return
+    }
+    if (file.size > 1024 * 1024) {
+      toast.error('Profile image must be 1 MB or smaller')
+      event.target.value = ''
+      return
+    }
+    const reader = new FileReader()
+    reader.onload = () => setForm((current) => ({ ...current, avatar: String(reader.result || '') }))
+    reader.onerror = () => toast.error('Unable to read the selected image')
+    reader.readAsDataURL(file)
+  }
+
+  return (
+    <section className="space-y-6">
+      <EnterpriseHeader
+        title="Success Stories"
+        description="View the same success stories currently displayed on the public Gloaro home page."
+        icon={Activity}
+      />
+
+      <div className="grid gap-3 sm:grid-cols-2">
+        {[
+          ['Total Stories', stories.length],
+          ['Active Stories', stories.filter((story) => story.status === 'active').length],
+        ].map(([label, value]) => (
+          <article key={label} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+            <p className="text-xs font-extrabold uppercase text-slate-500">{label}</p>
+            <p className="mt-2 text-3xl font-black text-[#0d4697]">{value}</p>
+          </article>
+        ))}
+      </div>
+
+      <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+        <div className="grid gap-3 md:grid-cols-[1fr_auto]">
+          <SearchBar value={search} onChange={setSearch} placeholder="Search success stories" />
+          <button type="button" onClick={openAddStory} className="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-[#0d4697] px-5 text-sm font-extrabold text-white shadow-sm hover:bg-[#093a80]"><Plus className="h-4 w-4" />Add Success Story</button>
+        </div>
+      </div>
+
+      <DataTable
+        columns={[
+          {
+            key: 'name',
+            header: 'Person',
+            render: (row) => (
+              <div className="flex min-w-48 items-center gap-3">
+                <img src={row.avatar} alt="" className="h-10 w-10 rounded-full object-cover ring-2 ring-blue-100" />
+                <div><p className="font-extrabold text-slate-950">{row.name}</p><p className="text-xs font-semibold text-slate-500">{row.role}</p></div>
+              </div>
+            ),
+          },
+          { key: 'quote', header: 'Success Story', render: (row) => <p className="w-[34rem] max-w-[42vw] whitespace-normal break-words font-semibold leading-5 text-slate-700 [overflow-wrap:anywhere]">{row.quote}</p> },
+          { key: 'rating', header: 'Rating', render: (row) => <span className="inline-block min-w-20 whitespace-nowrap font-black text-[#ffae13]">{'★'.repeat(row.rating)}</span> },
+          { key: 'status', header: 'Status', render: (row) => <span className="inline-block min-w-16"><StatusBadge value={row.status} /></span> },
+        ]}
+        rows={rows}
+        loading={false}
+        actions={(row) => <button type="button" onClick={() => openEditStory(row)} className="rounded-md border border-[#0d4697]/25 bg-blue-50 px-3 py-1.5 text-xs font-extrabold text-[#0d4697] hover:bg-blue-100">Edit</button>}
+      />
+      <Modal open={formOpen} title={editingStory ? 'Edit Success Story' : 'Add Success Story'} onClose={() => { setFormOpen(false); setEditingStory(null) }}>
+        <form onSubmit={submitStory} className="space-y-4">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <label className="text-sm font-extrabold text-slate-800">Person Name
+              <input value={form.name} onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))} placeholder="e.g. Priya Kumar" className="mt-1.5 h-11 w-full rounded-md border border-slate-300 px-3 font-semibold outline-none focus:border-[#0d4697]" />
+            </label>
+            <label className="text-sm font-extrabold text-slate-800">Role / Company
+              <input value={form.role} onChange={(event) => setForm((current) => ({ ...current, role: event.target.value }))} placeholder="e.g. Founder, ABC Tech" className="mt-1.5 h-11 w-full rounded-md border border-slate-300 px-3 font-semibold outline-none focus:border-[#0d4697]" />
+            </label>
+          </div>
+          <label className="block text-sm font-extrabold text-slate-800">Success Story
+            <textarea value={form.quote} onChange={(event) => setForm((current) => ({ ...current, quote: event.target.value }))} rows={5} placeholder="Enter the customer success story" className="mt-1.5 w-full rounded-md border border-slate-300 px-3 py-2 font-semibold outline-none focus:border-[#0d4697]" />
+          </label>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <label className="text-sm font-extrabold text-slate-800">Status
+              <select value={form.status} onChange={(event) => setForm((current) => ({ ...current, status: event.target.value }))} className="mt-1.5 h-11 w-full rounded-md border border-slate-300 bg-white px-3 font-semibold">
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+              </select>
+            </label>
+            <label className="text-sm font-extrabold text-slate-800">Rating
+              <select value={form.rating} onChange={(event) => setForm((current) => ({ ...current, rating: event.target.value }))} className="mt-1.5 h-11 w-full rounded-md border border-slate-300 bg-white px-3 font-semibold">
+                {[5, 4, 3, 2, 1].map((rating) => <option key={rating} value={rating}>{rating} Stars</option>)}
+              </select>
+            </label>
+          </div>
+          <div>
+            <p className="text-sm font-extrabold text-slate-800">Profile Image</p>
+            <div className="mt-1.5 flex items-center gap-4 rounded-lg border border-dashed border-slate-300 bg-slate-50 p-3">
+              {form.avatar
+                ? <img src={form.avatar} alt="Selected profile preview" className="h-16 w-16 rounded-full object-cover ring-4 ring-blue-100" />
+                : <div className="grid h-16 w-16 shrink-0 place-items-center rounded-full bg-slate-200 text-xs font-black text-slate-500">PHOTO</div>}
+              <div className="min-w-0 flex-1">
+                <input id="success-story-avatar" type="file" accept="image/png,image/jpeg,image/webp" onChange={selectProfileImage} className="hidden" />
+                <label htmlFor="success-story-avatar" className="inline-flex cursor-pointer items-center gap-2 rounded-md border border-[#0d4697]/25 bg-white px-4 py-2 text-sm font-extrabold text-[#0d4697] hover:bg-blue-50"><Upload className="h-4 w-4" />{form.avatar ? 'Change Image' : 'Upload Image'}</label>
+                <p className="mt-1.5 text-xs font-semibold text-slate-500">JPG, PNG or WebP — maximum 1 MB.</p>
+              </div>
+              {form.avatar && <button type="button" onClick={() => setForm((current) => ({ ...current, avatar: '' }))} className="text-xs font-extrabold text-red-600 hover:underline">Remove</button>}
+            </div>
+          </div>
+          <div className="flex justify-end gap-3 border-t border-slate-200 pt-4">
+            <button type="button" onClick={() => { setFormOpen(false); setEditingStory(null) }} className="rounded-md border border-slate-300 px-5 py-2.5 text-sm font-extrabold text-slate-700">Cancel</button>
+            <button type="submit" className="rounded-md bg-[#0d4697] px-5 py-2.5 text-sm font-extrabold text-white">{editingStory ? 'Save Changes' : 'Add Success Story'}</button>
+          </div>
+        </form>
+      </Modal>
+    </section>
+  )
 }
 
 export function GlobalSearchPage() {

@@ -54,6 +54,25 @@ td p {
 .bg-white h3 {
   color: #0f172a !important;
 }
+
+article p,
+article h1,
+article h2,
+article h3 {
+  color: #0f172a;
+}
+
+article .text-slate-500,
+article .text-slate-600 {
+  color: #475569 !important;
+}
+
+article .text-slate-950,
+article .text-slate-900,
+article .text-slate-800 {
+  color: #020617 !important;
+}
+
 #root {
   min-height: 100vh;
 }

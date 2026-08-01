@@ -45,6 +45,13 @@ export default function DynamicDashboard() {
 
   const [logs, setLogs] = useState([])
   const [logsLoading, setLogsLoading] = useState(true)
+  const [scopeOverview, setScopeOverview] = useState(null)
+
+  useEffect(() => {
+    api.get('/directory/scope-overview')
+      .then(res => setScopeOverview(res.data?.data || null))
+      .catch(() => {})
+  }, [])
 
   useEffect(() => {
     adminApi.auditLogs({ limit: 4 })
@@ -94,137 +101,139 @@ export default function DynamicDashboard() {
   const hierarchyString = hierarchyParts.filter(Boolean).join(' • ') || 'All Territories Authorized'
   const memberId = user?.officialId || user?.memberId || 'MEM-TN-CHN-000145'
 
+  const formatVal = (val) => val ?? '—'
+
   // Map stat key names to readable values and icons
   const statResolver = {
     members: {
       label: 'Members',
-      value: stats.roleStats?.registeredMembers || stats.totalUsers || 0,
+      value: formatVal(stats.roleStats?.registeredMembers ?? stats.totalUsers),
       icon: Users,
       color: 'text-blue-600 bg-blue-50'
     },
     attendance: {
       label: 'Attendance Rate',
-      value: '94%',
+      value: '—',
       icon: CheckCircle2,
       color: 'text-emerald-600 bg-emerald-50'
     },
     meetings: {
       label: 'Meetings Scheduled',
-      value: stats.eventsCount || stats.totalMeetings || 0,
+      value: formatVal(stats.eventsCount ?? stats.totalMeetings),
       icon: CalendarDays,
       color: 'text-amber-600 bg-amber-50'
     },
     referrals: {
       label: 'Referrals Passed',
-      value: stats.roleStats?.referralsCount || 32,
+      value: formatVal(stats.roleStats?.referralsCount),
       icon: Handshake,
       color: 'text-purple-600 bg-purple-50'
     },
     visitors: {
       label: 'Visitors Invited',
-      value: stats.visitorsCount || stats.roleStats?.visitorsCount || 8,
+      value: formatVal(stats.visitorsCount ?? stats.roleStats?.visitorsCount),
       icon: Ticket,
       color: 'text-pink-600 bg-pink-50'
     },
     business: {
       label: 'Business Generated',
-      value: formatCurrency(stats.revenue || 1245000),
+      value: stats.revenue != null ? formatCurrency(stats.revenue) : '—',
       icon: TrendingUp,
       color: 'text-teal-600 bg-teal-50'
     },
     assignedChapters: {
       label: 'Assigned Chapters',
-      value: stats.roleStats?.totalChapters || 4,
+      value: formatVal(stats.roleStats?.totalChapters),
       icon: Building2,
       color: 'text-blue-600 bg-blue-50'
     },
     chaptersReady: {
       label: 'Chapters Ready',
-      value: stats.roleStats?.activeChapters || 3,
+      value: formatVal(stats.roleStats?.activeChapters),
       icon: CheckCircle2,
       color: 'text-emerald-600 bg-emerald-50'
     },
     chaptersPending: {
       label: 'Chapters Pending',
-      value: stats.roleStats?.pendingChapters || 1,
+      value: formatVal(stats.roleStats?.pendingChapters),
       icon: Clock,
       color: 'text-amber-600 bg-amber-50'
     },
     presidentsAssigned: {
       label: 'Presidents Assigned',
-      value: stats.roleStats?.chapterPresidents || 4,
+      value: formatVal(stats.roleStats?.chapterPresidents),
       icon: Users,
       color: 'text-purple-600 bg-purple-50'
     },
     membersRegistered: {
       label: 'Members Registered',
-      value: stats.roleStats?.registeredMembers || stats.totalUsers || 0,
+      value: formatVal(stats.roleStats?.registeredMembers ?? stats.totalUsers),
       icon: Users,
       color: 'text-indigo-600 bg-indigo-50'
     },
     pendingMemberships: {
       label: 'Pending Memberships',
-      value: stats.roleStats?.pendingRegistrations || stats.pendingMembershipApplications || 0,
+      value: formatVal(stats.roleStats?.pendingRegistrations ?? stats.pendingMembershipApplications),
       icon: Clock,
       color: 'text-rose-600 bg-rose-50'
     },
     vendorsApproved: {
       label: 'Vendors Approved',
-      value: stats.activeVendors || 12,
+      value: formatVal(stats.activeVendors),
       icon: Briefcase,
       color: 'text-sky-600 bg-sky-50'
     },
     meetingsScheduled: {
       label: 'Meetings Scheduled',
-      value: stats.eventsCount || stats.totalMeetings || 4,
+      value: formatVal(stats.eventsCount ?? stats.totalMeetings),
       icon: CalendarDays,
       color: 'text-amber-600 bg-amber-50'
     },
     referralsPassed: {
       label: 'Referrals Passed',
-      value: stats.roleStats?.referralsCount || 32,
+      value: formatVal(stats.roleStats?.referralsCount),
       icon: Handshake,
       color: 'text-violet-600 bg-violet-50'
     },
     visitorsInvited: {
       label: 'Visitors Invited',
-      value: stats.visitorsCount || stats.roleStats?.visitorsCount || 8,
+      value: formatVal(stats.visitorsCount ?? stats.roleStats?.visitorsCount),
       icon: Ticket,
       color: 'text-pink-600 bg-pink-50'
     },
     businessGenerated: {
       label: 'Business Generated',
-      value: formatCurrency(stats.revenue || 0),
+      value: stats.revenue != null ? formatCurrency(stats.revenue) : '—',
       icon: TrendingUp,
       color: 'text-emerald-600 bg-emerald-50'
     },
     activeMembers: {
       label: 'Active Members',
-      value: stats.roleStats?.registeredMembers || stats.activeUsers || 0,
+      value: formatVal(scopeOverview?.activeMembers ?? stats.roleStats?.registeredMembers ?? stats.activeUsers),
       icon: Users,
       color: 'text-emerald-600 bg-emerald-50'
     },
     pendingVendors: {
       label: 'Vendor Applications',
-      value: stats.pendingVendors || stats.roleStats?.pendingVendors || 0,
+      value: formatVal(stats.pendingVendors ?? stats.roleStats?.pendingVendors),
       icon: Briefcase,
       color: 'text-rose-600 bg-rose-50'
     },
     oneToOnes: {
       label: 'One-to-One Meetings',
-      value: stats.oneToOnes || stats.roleStats?.oneToOnes || 0,
+      value: formatVal(stats.oneToOnes ?? stats.roleStats?.oneToOnes),
       icon: Users,
       color: 'text-indigo-600 bg-indigo-50'
     },
     chapterDirectors: {
       label: 'Chapter Directors',
-      value: stats.roleStats?.chapterDirectors || stats.roleStats?.launchDirectors || 0,
+      value: formatVal(stats.roleStats?.chapterDirectors ?? stats.roleStats?.launchDirectors),
       icon: Users,
       color: 'text-blue-600 bg-blue-50'
     },
     executiveDirectors: {
       label: 'Executive Directors',
-      value: stats.roleStats?.executiveDirectors || 0,
+      value: formatVal(stats.roleStats?.executiveDirectors),
       icon: Users,
       color: 'text-purple-600 bg-purple-50'
     }

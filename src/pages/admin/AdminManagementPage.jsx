@@ -377,7 +377,6 @@ const saveAdmin = async () => {
                <button onClick={() => setAdminStatus(row, row.isSuspended ? 'activate' : 'suspend')} className="rounded-md border border-slate-200 px-3 py-1.5 text-xs font-bold text-slate-900">{row.isSuspended ? 'Activate' : 'Suspend'}</button>
               <button onClick={() => setSelectedPermUser(row)} className="rounded-md border border-slate-200 px-3 py-1.5 text-xs font-bold text-[#0d4697]">Permissions</button>
               <button onClick={() => resetPassword(row)} className="rounded-md border border-slate-200 px-2 py-1.5 text-xs font-bold text-slate-900"><KeyRound className="h-3.5 w-3.5" /></button>
-              <button onClick={() => loginAs(row)} className="rounded-md border border-blue-200 px-2 py-1.5 text-xs font-bold text-[#0d4697]"><LogIn className="h-3.5 w-3.5" /></button>
               {row.role !== ROLES.SUPERADMIN && <button onClick={() => deleteAdmin(row)} className="rounded-md border border-red-200 px-3 py-1.5 text-xs font-bold text-red-600">Delete</button>}
             </div>
           )
