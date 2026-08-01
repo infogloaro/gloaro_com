@@ -1,19 +1,32 @@
 import { useForm } from 'react-hook-form'
 import toast from 'react-hot-toast'
-import { adminApi } from '../../api/admin'
+import { notificationApi } from '../../api/notification'
 import FormField from '../../components/forms/FormField'
 import { useAuth } from '../../hooks/useAuth'
 import NotificationsPage from '../shared/NotificationsPage'
 
 export default function AdminNotifications() {
   const { hasSection, hasOperation } = useAuth()
-  const { register, handleSubmit, reset, formState: { isSubmitting } } = useForm({ defaultValues: { type: 'announcement' } })
+  const { register, handleSubmit, reset, formState: { isSubmitting } } = useForm({
+    defaultValues: {
+      type: 'announcement',
+      category: 'broadcast',
+      priority: 'normal',
+      targetRoles: '',
+      targetUsers: '',
+    },
+  })
   const canViewNotifications = hasSection('settings', 'notifications') && hasOperation('settings', 'view')
   const canCreateBroadcast = hasOperation('settings', 'create')
   const onSubmit = async (values) => {
-    await adminApi.broadcast(values)
+    const splitValues = (value) => String(value || '').split(',').map((item) => item.trim()).filter(Boolean)
+    await notificationApi.broadcast({
+      ...values,
+      targetRoles: splitValues(values.targetRoles),
+      targetUsers: splitValues(values.targetUsers),
+    })
     toast.success('Broadcast sent')
-    reset({ type: 'announcement' })
+    reset({ type: 'announcement', category: 'broadcast', priority: 'normal', targetRoles: '', targetUsers: '' })
   }
 
   if (!canViewNotifications) return null
@@ -26,10 +39,28 @@ export default function AdminNotifications() {
           <FormField label="Title"><input {...register('title', { required: true })} className="h-11 w-full rounded-md border border-slate-200 px-3" /></FormField>
           <FormField label="Type"><input {...register('type')} className="h-11 w-full rounded-md border border-slate-200 px-3" /></FormField>
           <FormField label="Message"><input {...register('message', { required: true })} className="h-11 w-full rounded-md border border-slate-200 px-3" /></FormField>
+          <FormField label="Category">
+            <select {...register('category')} className="h-11 w-full rounded-md border border-slate-200 px-3">
+              {['broadcast', 'role', 'hierarchy', 'community', 'system'].map((value) => <option key={value} value={value}>{value}</option>)}
+            </select>
+          </FormField>
+          <FormField label="Priority">
+            <select {...register('priority')} className="h-11 w-full rounded-md border border-slate-200 px-3">
+              {['low', 'normal', 'high'].map((value) => <option key={value} value={value}>{value}</option>)}
+            </select>
+          </FormField>
+          <FormField label="Module"><input {...register('module')} className="h-11 w-full rounded-md border border-slate-200 px-3" placeholder="meetings, marketplace, training" /></FormField>
+          <FormField label="Target Roles"><input {...register('targetRoles')} className="h-11 w-full rounded-md border border-slate-200 px-3" placeholder="admin,chapter_president" /></FormField>
+          <FormField label="Target Users"><input {...register('targetUsers')} className="h-11 w-full rounded-md border border-slate-200 px-3" placeholder="User IDs separated by comma" /></FormField>
+          <FormField label="Region ID"><input {...register('region')} className="h-11 w-full rounded-md border border-slate-200 px-3" /></FormField>
+          <FormField label="State ID"><input {...register('state')} className="h-11 w-full rounded-md border border-slate-200 px-3" /></FormField>
+          <FormField label="District ID"><input {...register('district')} className="h-11 w-full rounded-md border border-slate-200 px-3" /></FormField>
+          <FormField label="Chapter ID"><input {...register('chapter')} className="h-11 w-full rounded-md border border-slate-200 px-3" /></FormField>
+          <FormField label="Action URL"><input {...register('actionUrl')} className="h-11 w-full rounded-md border border-slate-200 px-3" /></FormField>
         </div>
         <button disabled={isSubmitting} className="mt-4 h-10 rounded-md bg-[#0d4697] px-5 font-bold text-white">Send</button>
       </form>}
-      <NotificationsPage module="settings" section="notifications" />
+      <NotificationsPage module="settings" section="notifications" systemView />
     </div>
   )
 }
