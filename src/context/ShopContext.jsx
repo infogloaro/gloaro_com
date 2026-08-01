@@ -370,9 +370,11 @@ export function ShopProvider({ children }) {
 
   const addLocalWishlist = useCallback((product) => {
     if (!product?._id) return
+    let added = false
     setState((current) => {
       const existing = current.localWishlist.some((item) => item.productId === product._id)
       if (existing) return current
+      added = true
       return {
         ...current,
         localWishlist: [{
@@ -389,7 +391,7 @@ export function ShopProvider({ children }) {
         }, ...current.localWishlist].slice(0, 25),
       }
     })
-    toast.success('Saved to wishlist')
+    return added
   }, [])
 
   const removeLocalWishlist = useCallback((productId) => {
@@ -403,23 +405,25 @@ export function ShopProvider({ children }) {
         const itemType = 'product'
         const exists = state.localWishlist.some((item) => item.productId === product._id)
         if (exists) {
-          await customerApi.removeWishlist(product._id, itemType)
+          await customerApi.removeWishlist(product._id, itemType, { silent: true })
           removeLocalWishlist(product._id)
           toast.success('Removed from wishlist')
           return
         }
-        await customerApi.addWishlist({ itemType, itemId: product._id })
-        addLocalWishlist(product)
-        toast.success('Added to wishlist')
+        await customerApi.addWishlist({ itemType, itemId: product._id }, { silent: true })
+        const added = addLocalWishlist(product)
+        toast.success(added ? 'Saved to wishlist' : 'Already in wishlist')
         return
       } catch {
         // Fall back to the local wishlist path if the API call fails.
+        const added = addLocalWishlist(product)
+        if (added) toast.success('Saved to wishlist')
       }
     }
 
     const exists = state.localWishlist.some((item) => item.productId === product._id)
     if (exists) removeLocalWishlist(product._id)
-    else addLocalWishlist(product)
+    else if (addLocalWishlist(product)) toast.success('Saved to wishlist')
   }, [addLocalWishlist, removeLocalWishlist, state.localWishlist, user?._id])
 
   const applyCoupon = useCallback((couponCode, cartSnapshot = state.cart, deliveryMethod = state.deliveryMethod) => {

@@ -1,4 +1,5 @@
-import { Navigate, Route, Routes, Outlet } from 'react-router-dom'
+import { useEffect } from 'react'
+import { Navigate, Route, Routes, Outlet, useLocation } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
 import { adminNav, customerNav, membershipNav, memberNav, vendorNav, secretaryNav, regionDirectorNav, stateDirectorNav, districtDirectorNav, chapterDirectorNav, presidentNav, vicePresidentNav } from './constants/navigation'
 import DashboardLayout from './layouts/DashboardLayout'
@@ -174,6 +175,16 @@ import Leaderboard from './pages/membership/Leaderboard'
 import { ROLES } from './constants/roleConfig.js'
 import { getAccountClassification } from './utils/permissions'
 
+function ScrollToTop() {
+  const { pathname } = useLocation()
+
+  useEffect(() => {
+    window.scrollTo(0, 0)
+  }, [pathname])
+
+  return null
+}
+
 function App() {
   const { role, permissionsLoading, canAccessPath } = useAuth()
   const isAdminSession = [ROLES.SUPERADMIN, ROLES.ADMIN, ROLES.FRANCHISE_ADMIN, ROLES.ECOMMERCE_ADMIN, ROLES.MARKETPLACE_ADMIN, ROLES.DIGITAL_MARKETING_ADMIN, ROLES.TRAINING_ADMIN, ROLES.FINANCE_ADMIN, ROLES.REGION_DIRECTOR, ROLES.STATE_DIRECTOR, ROLES.DISTRICT_DIRECTOR, ROLES.EXECUTIVE_DIRECTOR, ROLES.LAUNCH_DIRECTOR, ROLES.DIRECT_CONSULTANT, ROLES.CHAPTER_PRESIDENT, ROLES.VICE_PRESIDENT, ROLES.SECRETARY, ROLES.OPERATION_VICE_PRESIDENT, ROLES.MEMBERSHIP_VERIFICATION_ADMIN, ROLES.CUSTOM_ADMIN].includes(role)
@@ -205,20 +216,10 @@ function App() {
     { path: '/services', element: <AdminServicesPage /> },
     { path: '/marketplace-approval', element: <MarketplaceApprovalPage /> },
     { path: '/members', element: <AdminMembersPage /> },
-    { path: '/visitors', element: <VisitorManagementPage /> },
-    { path: '/visitor-conversion', element: <VisitorConversionEnginePage /> },
     { path: '/attendance', element: <AttendanceEnginePage /> },
-    { path: '/meetings', element: <MeetingManagementPage /> },
     { path: '/chapters', element: <ChapterManagementPage />, roles: [ROLES.ADMIN, ROLES.SUPERADMIN] },
     { path: '/chapter-dashboard', element: <ChapterDashboardPage /> },
-    { path: '/applications', element: <AdminMembershipApplicationsPage /> },
-    { path: '/applications/membership', element: <AdminMembershipApplicationsPage /> },
-    { path: '/applications/franchise', element: <AdminModuleApplicationsPage title="Franchise Applications" /> },
-    { path: '/applications/business-network', element: <AdminModuleApplicationsPage title="Business Network Applications" /> },
-    { path: '/applications/vendor', element: <AdminVendorApplicationsPage /> },
     { path: '/membership-applications', element: <AdminMembershipApplicationsPage /> },
-    { path: '/plans', element: <AdminPlansPage /> },
-    { path: '/meeting-settings', element: <MeetingManagementPage /> },
     { path: '/events', element: <AdminEventsPage /> },
     { path: '/training', element: <TrainingManagementPage /> },
     { path: '/testimonials', element: <TestimonialsManagementPage /> },
@@ -226,24 +227,13 @@ function App() {
     { path: '/referrals-table', element: <AdminReferralsPage /> },
     { path: '/payments', element: <AdminPaymentsPage /> },
     { path: '/reviews', element: <AdminReviewsPage /> },
-    { path: '/banners', element: <AdminBannersPage /> },
     { path: '/faqs', element: <AdminFaqsPage /> },
     { path: '/settings', element: <AdminSettingsPage /> },
-    { path: '/support', element: <AdminSupportPage /> },
-    { path: '/reports', element: <EnterpriseReportBuilderPage /> },
-    { path: '/reports-center', element: <ReportsCenterPage /> },
     { path: '/analytics', element: <EnterpriseAnalyticsPage /> },
     { path: '/legacy-analytics', element: <AdminAnalytics /> },
-    { path: '/scorecards', element: <PerformanceScorecardPage /> },
-    { path: '/executive-dashboard', element: <ExecutiveDashboardPage /> },
-    { path: '/activity', element: <ActivityCenterPage /> },
-    { path: '/global-search', element: <GlobalSearchPage /> },
     { path: '/notifications', element: <NotificationsConfigPage /> },
-    { path: '/notification-automation', element: <NotificationAutomationPage /> },
     { path: '/tasks', element: <TaskManagementPage /> },
     { path: '/calendar', element: <EnterpriseCalendarPage /> },
-    { path: '/member-journey', element: <MemberJourneyPage /> },
-    { path: '/ai-insights', element: <AIInsightsPage /> },
     { path: '/broadcast-notifications', element: <AdminNotifications /> },
     { path: '/audit-logs', element: <AuditLogsPage /> },
     { path: '/system-logs', element: <SystemLogsPage />, roles: [ROLES.SUPERADMIN] },
@@ -269,6 +259,7 @@ function App() {
 
   return (
     <>
+      <ScrollToTop />
       <Routes>
         <Route element={<AuthLayout />}>
           <Route path="/login" element={<Login />} />
@@ -289,6 +280,8 @@ function App() {
           <Route path="/products" element={<ProductsPage />} />
           <Route path="/products/:id" element={<DetailPage type="products" />} />
           <Route path="/cart" element={<CartPage />} />
+          <Route path="/wishlist" element={<ShopWishlistPage />} />
+          <Route path="/customer/wishlist" element={<Navigate to="/wishlist" replace />} />
           <Route path="/checkout" element={<CheckoutPage />} />
           <Route path="/orders" element={<OrdersPage />} />
           <Route path="/orders/:orderId" element={<OrderDetailPage />} />
@@ -340,7 +333,6 @@ function App() {
             <Route element={<ProtectedRoute roles={[ROLES.CUSTOMER, ROLES.USER]} />}>
               <Route path="/customer/dashboard" element={<CustomerDashboardPage />} />
               <Route path="/customer/addresses" element={<CustomerAddressesPage />} />
-          <Route path="/customer/wishlist" element={<ShopWishlistPage />} />
               <Route path="/customer/referral" element={<ReferralPage />} />
               <Route path="/customer/notifications" element={<CustomerNotificationsPage />} />
               <Route path="/customer/profile" element={<CustomerProfilePage />} />

@@ -71,15 +71,13 @@ export function SuperAdminDashboardPage() {
     ['members', 'Total Members', stats.totalUsers, `${stats.newUsersToday || 0} today`, Users],
     ['members', 'Active Members', stats.activeUsers || stats.totalUsers, 'Verified network', CheckCircle2],
     ['approvals', 'Pending Membership', stats.pendingMembershipApplications || 0, 'Needs review', ClipboardList],
-    ['visitors', 'Visitors Today', stats.visitorsToday || 0, 'Live visits', Activity],
-    ['meetings', 'Meetings Today', stats.meetingsToday || 0, 'Scheduled', CalendarDays],
     ['members', 'Total Chapters', stats.totalChapters || 0, 'Organization', MapPinned],
     ['vendors', 'Total Vendors', stats.totalVendors, `${stats.pendingVendors || 0} pending`, Building2],
     ['marketplace', 'Marketplace Listings', Number(stats.productsCount || 0) + Number(stats.servicesCount || 0), 'Products + services', Store],
     ['referrals', 'Referrals', stats.referralsCount || 0, 'Network growth', Workflow],
     ['business', 'Business Generated', formatCurrency(stats.revenue), 'Platform revenue', FileBarChart],
     ['events', 'Upcoming Events', stats.upcomingEvents || stats.eventsCount || 0, 'Calendar', CalendarDays],
-    ['attendance', 'Attendance %', stats.attendancePercent || '0%', 'Meetings', Activity],
+    ['attendance', 'Attendance %', stats.attendancePercent || '0%', 'Attendance', Activity],
   ].filter(([widget]) => hasWidget(widget))
 
   return (

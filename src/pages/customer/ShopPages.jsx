@@ -381,11 +381,11 @@ export function ProductsPage() {
                   ))}
                 </div>
                 <div className="mt-5 flex flex-wrap gap-3">
-                  <Link to="/cart" className="inline-flex flex-1 items-center justify-center gap-1 rounded-xl border-2 border-navy px-4 py-3 text-sm font-black text-navy transition hover:bg-navy/5">
+                  <Link to="/cart" className="flex min-h-12 w-full items-center justify-center gap-1 rounded-xl border-2 border-navy px-4 py-3 text-sm font-black text-navy transition hover:bg-navy/5 sm:flex-1">
                     <span>Cart ({shop.cart.length})</span>
                     <ArrowRight className="h-3.5 w-3.5 transition" />
                   </Link>
-                  <Link to="/checkout" className="inline-flex flex-1 items-center justify-center rounded-xl bg-gradient-to-r from-navy to-royal px-4 py-3 text-sm font-black text-white shadow-lg shadow-navy/20 transition hover:from-navy/90 hover:to-royal/90">
+                  <Link to="/checkout" className="flex min-h-12 w-full items-center justify-center rounded-xl bg-gradient-to-r from-navy to-royal px-4 py-3 text-sm font-black text-white shadow-lg shadow-navy/20 transition hover:from-navy/90 hover:to-royal/90 sm:flex-1">
                     Checkout
                   </Link>
                 </div>
@@ -407,7 +407,7 @@ export function ProductsPage() {
               <div className="flex items-center gap-2">
                 <Link to="/cart" className="rounded-lg bg-navy px-4 py-2.5 text-xs font-black text-white transition hover:bg-navy/90">Cart {shop.cart.length}</Link>
                 <Link to="/orders" className="rounded-lg border border-slate-200 px-4 py-2.5 text-xs font-black text-slate-700 transition hover:border-navy/30 hover:text-navy">Orders</Link>
-                <Link to="/customer/wishlist" className="rounded-lg border border-slate-200 px-4 py-2.5 text-xs font-black text-slate-700 transition hover:border-navy/30 hover:text-navy">Wishlist</Link>
+                <Link to="/wishlist" className="rounded-lg border border-slate-200 px-4 py-2.5 text-xs font-black text-slate-700 transition hover:border-navy/30 hover:text-navy">Wishlist</Link>
               </div>
             </div>
 
@@ -764,7 +764,7 @@ export function CartPage() {
                 <p className="font-jakarta text-[10px] font-black uppercase tracking-[0.28em] text-slate-400">Shopping Cart</p>
                 <h1 className="mt-1 font-playfair text-3xl font-black text-navy">{cart.length} {cart.length === 1 ? 'item' : 'items'}</h1>
               </div>
-              <button onClick={clearCart} className="rounded-lg border border-slate-200 px-4 py-2 text-xs font-black text-slate-600 transition hover:border-rose-200 hover:text-rose-600">Clear Cart</button>
+              <button type="button" onClick={clearCart} className="rounded-lg border border-slate-200 px-4 py-2 text-xs font-black text-slate-600 transition hover:border-rose-200 hover:text-rose-600">Clear Cart</button>
             </div>
 
             <div className="mt-6 space-y-4">
@@ -779,8 +779,8 @@ export function CartPage() {
                   <div className="flex flex-col items-start gap-3 md:items-end">
                     <QuantityButtons value={line.quantity} onChange={(value) => updateCartQuantity(line.lineKey, value)} max={line.stock || 99} />
                     <div className="flex gap-2">
-                      <button onClick={() => saveForLater(line.lineKey)} className="rounded-lg bg-slate-100 px-3 py-1.5 text-xs font-black text-slate-600 transition hover:bg-slate-200">Save for later</button>
-                      <button onClick={() => removeFromCart(line.lineKey)} className="rounded-lg bg-rose-50 px-3 py-1.5 text-xs font-black text-rose-600 transition hover:bg-rose-100">Remove</button>
+                      <button type="button" onClick={() => saveForLater(line.lineKey)} className="rounded-lg bg-slate-100 px-3 py-1.5 text-xs font-black text-slate-600 transition hover:bg-slate-200">Save for later</button>
+                      <button type="button" onClick={() => removeFromCart(line.lineKey)} className="rounded-lg bg-rose-50 px-3 py-1.5 text-xs font-black text-rose-600 transition hover:bg-rose-100">Remove</button>
                     </div>
                   </div>
                 </article>
@@ -799,8 +799,8 @@ export function CartPage() {
                       <p className="text-sm font-medium text-slate-500">{formatCurrency(line.unitPrice)}</p>
                     </div>
                     <div className="flex gap-2">
-                      <button onClick={() => moveToCart(line.lineKey)} className="rounded-lg bg-navy px-3 py-1.5 text-xs font-black text-white">Move to cart</button>
-                      <button onClick={() => removeSaved(line.lineKey)} className="rounded-lg bg-slate-100 px-3 py-1.5 text-xs font-black text-slate-600">Remove</button>
+                      <button type="button" onClick={() => moveToCart(line.lineKey)} className="rounded-lg bg-navy px-3 py-1.5 text-xs font-black text-white">Move to cart</button>
+                      <button type="button" onClick={() => removeSaved(line.lineKey)} className="rounded-lg bg-slate-100 px-3 py-1.5 text-xs font-black text-slate-600">Remove</button>
                     </div>
                   </div>
                 ))}
@@ -828,25 +828,25 @@ export function CartPage() {
                 Coupon code
                 <div className="mt-2 flex gap-2">
                   <input value={couponCode} onChange={(event) => setCouponCode(event.target.value)} placeholder="WELCOME10" className="h-11 flex-1 rounded-xl border border-slate-200 px-3 text-sm font-semibold outline-none transition focus:border-navy/40" />
-                  <button onClick={() => applyCoupon(couponCode)} className="rounded-xl bg-navy px-4 text-sm font-black text-white shadow-md transition hover:bg-navy/90">Apply</button>
+                  <button type="button" onClick={() => applyCoupon(couponCode)} className="rounded-xl bg-navy px-4 text-sm font-black text-white shadow-md transition hover:bg-navy/90">Apply</button>
                 </div>
               </label>
               {activeCoupon && (
                 <div className="mt-3 flex items-center justify-between rounded-xl bg-emerald-50 px-3 py-2 text-xs font-black text-emerald-700">
                   <span>Applied {activeCoupon.code}</span>
-                  <button onClick={removeCoupon} className="ml-2 text-emerald-700 underline">Remove</button>
+                  <button type="button" onClick={removeCoupon} className="ml-2 text-emerald-700 underline">Remove</button>
                 </div>
               )}
               <div className="mt-3 flex flex-wrap gap-2">
                 {coupons.map((coupon) => (
-                  <button key={coupon.code} onClick={() => setCouponCode(coupon.code)} className="rounded-lg bg-white px-3 py-1.5 text-xs font-black text-slate-600 shadow-sm transition hover:shadow">Quick: {coupon.code}</button>
+                  <button type="button" key={coupon.code} onClick={() => setCouponCode(coupon.code)} className="rounded-lg bg-white px-3 py-1.5 text-xs font-black text-slate-600 shadow-sm transition hover:shadow">Quick: {coupon.code}</button>
                 ))}
               </div>
             </div>
 
             <div className="mt-5 flex flex-wrap gap-3">
-              <Link to="/products" className="inline-flex flex-1 items-center justify-center rounded-xl border-2 border-slate-200 px-4 py-3 text-sm font-black text-slate-600 transition hover:border-navy/30 hover:text-navy">Continue Shopping</Link>
-              <button type="button" onClick={() => navigate('/checkout')} className="inline-flex flex-1 items-center justify-center rounded-xl bg-gradient-to-r from-navy to-royal px-4 py-3 text-sm font-black text-white shadow-lg shadow-navy/20 transition hover:from-navy/90 hover:to-royal/90">Checkout</button>
+              <Link to="/products" className="flex min-h-12 w-full items-center justify-center rounded-xl border-2 border-slate-200 px-4 py-3 text-sm font-black text-slate-600 transition hover:border-navy/30 hover:text-navy sm:flex-1">Continue Shopping</Link>
+              <button type="button" onClick={() => navigate('/checkout')} className="flex min-h-12 w-full items-center justify-center rounded-xl bg-gradient-to-r from-navy to-royal px-4 py-3 text-sm font-black text-white shadow-lg shadow-navy/20 transition hover:from-navy/90 hover:to-royal/90 sm:flex-1">Checkout</button>
             </div>
           </div>
 
@@ -877,6 +877,8 @@ export function CheckoutPage() {
   const [guestForm, setGuestForm] = useState({ fullName: '', phone: '', line1: '', city: '', state: '', pincode: '' })
   const [checkoutReady, setCheckoutReady] = useState(false)
   const [checkoutError, setCheckoutError] = useState('')
+  const hasSavedAddress = !user?._id || addresses.length > 0
+  const canProceedToPayment = !user?._id || Boolean(address)
 
   useEffect(() => {
     setCheckoutMeta({ deliveryMethod, checkoutNotes })
@@ -887,7 +889,7 @@ export function CheckoutPage() {
     setLoadingAddresses(true)
     customerApi.addresses()
       .then((res) => {
-        const list = getList(res.data)
+        const list = res.data?.data?.addresses || getList(res.data)
         setAddresses(list)
         const defaultAddress = list.find((entry) => entry.isDefault) || list[0] || null
         setAddress(defaultAddress)
@@ -938,11 +940,20 @@ export function CheckoutPage() {
   }
 
   const selectedDelivery = DELIVERY_OPTIONS.find((option) => option.value === deliveryMethod) || DELIVERY_OPTIONS[0]
+  const selectedAddressText = address ? formatAddress(address) : ''
 
   const placeOrder = async () => {
     if (!cart.length) return
     if (!user?._id && !guestForm.fullName) {
       toast.error('Please enter delivery details')
+      return
+    }
+    if (user?._id && loadingAddresses) {
+      toast.error('Please wait while we load your saved addresses')
+      return
+    }
+    if (user?._id && !address) {
+      toast.error('Please add a delivery address before payment')
       return
     }
     setSubmitting(true)
@@ -1015,6 +1026,15 @@ export function CheckoutPage() {
           <div className="rounded-[2.5rem] border border-slate-200/80 bg-white p-6 shadow-[0_15px_50px_rgba(11,36,81,0.08)]">
             <h1 className="font-playfair text-3xl font-black text-navy">Checkout</h1>
             <p className="mt-2 text-sm font-medium text-slate-500">Review your order details before payment.</p>
+            {user?._id && !hasSavedAddress && !loadingAddresses && (
+              <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm font-semibold text-amber-800">
+                <p className="font-black text-amber-900">No saved address found.</p>
+                <p className="mt-1">Add a delivery address before you continue to payment.</p>
+                <Link to="/customer/addresses" className="mt-3 inline-flex rounded-xl bg-amber-500 px-4 py-2 text-xs font-black text-white transition hover:bg-amber-600">
+                  Add Address
+                </Link>
+              </div>
+            )}
             {checkoutError && (
               <div className="mt-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700">
                 {checkoutError}
@@ -1131,8 +1151,27 @@ export function CheckoutPage() {
               {activeCoupon?.code && <p className="mt-1 text-emerald-700">Coupon applied: {activeCoupon.code}</p>}
             </div>
 
+            {user?._id && (
+              <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                <div className="flex items-center justify-between gap-3">
+                  <p className="text-xs font-black uppercase tracking-[0.2em] text-slate-400">Selected Address</p>
+                  <Link to="/customer/addresses" className="text-[11px] font-black text-navy hover:underline">Manage</Link>
+                </div>
+                {address ? (
+                  <div className="mt-2">
+                    <p className="text-sm font-black text-navy">{address.fullName}</p>
+                    <p className="mt-1 text-sm font-medium leading-6 text-slate-600">{selectedAddressText}</p>
+                  </div>
+                ) : (
+                  <p className="mt-2 text-sm font-medium leading-6 text-amber-700">
+                    {loadingAddresses ? 'Loading your saved addresses...' : 'No saved address selected. Add one from your profile before payment.'}
+                  </p>
+                )}
+              </div>
+            )}
+
             <button
-              disabled={submitting || (paymentMethod === 'razorpay' && !checkoutReady)}
+              disabled={submitting || (paymentMethod === 'razorpay' && !checkoutReady) || !canProceedToPayment || loadingAddresses}
               onClick={placeOrder}
               className={`mt-5 w-full rounded-xl px-4 py-3.5 text-sm font-black text-white shadow-lg transition-all ${
                 paymentMethod === 'razorpay'
@@ -1146,6 +1185,8 @@ export function CheckoutPage() {
                     <LoadingSpinner />
                     Processing...
                   </>
+                ) : !canProceedToPayment ? (
+                  'Add Address First'
                 ) : paymentMethod === 'razorpay' && !checkoutReady ? (
                   'Loading Razorpay...'
                 ) : paymentMethod === 'cod' ? (
@@ -1529,7 +1570,7 @@ function ProductCard({ product, wishlisted, onQuickView, onWishlist, onAddToCart
       </div>
       <div className="p-5">
         <p className="font-jakarta text-[10px] font-black uppercase tracking-[0.24em] text-navy">{product.category?.name || 'Product'}</p>
-        <button onClick={onOpen} className="mt-1.5 text-left font-playfair text-lg font-bold text-navy transition group-hover:text-royal">{product.title}</button>
+        <button type="button" onClick={onOpen} className="mt-1.5 text-left font-playfair text-lg font-bold text-navy transition group-hover:text-royal">{product.title}</button>
         <p className="mt-1 text-xs font-medium text-slate-500">{getBrand(product)}</p>
         <div className="mt-4 flex items-center gap-3">
           <p className="font-playfair text-xl font-black text-navy">{formatCurrency(price)}</p>
@@ -1547,7 +1588,9 @@ function ProductCard({ product, wishlisted, onQuickView, onWishlist, onAddToCart
                   <button onClick={() => onAddToCart(product)} disabled={stockStatus === 'Out of stock'} className="rounded-xl bg-navy px-1.5 py-2.5 text-[10px] font-black text-white transition hover:bg-navy/90 disabled:cursor-not-allowed disabled:opacity-50 sm:px-2 sm:text-xs">
                     {stockStatus === 'Out of stock' ? 'Unavailable' : 'Cart'}
                   </button>
-                  <Link to={`/products/${product._id}`} className="rounded-xl bg-slate-900 px-1.5 py-2.5 text-center text-[10px] font-black text-white transition hover:bg-slate-800 sm:px-2 sm:text-xs">Details</Link>
+                  <Link to={`/products/${product._id}`} className="flex items-center justify-center rounded-xl bg-slate-900 px-1.5 py-2.5 text-center text-[10px] font-black text-white transition hover:bg-slate-800 sm:px-2 sm:text-xs">
+                    Details
+                  </Link>
                 </div>
       </div>
     </article>
