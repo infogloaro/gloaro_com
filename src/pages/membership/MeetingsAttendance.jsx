@@ -273,4 +273,3 @@ export default function MeetingsAttendance() {
     </div>
   )
 }
-export { default } from '../shared/AttendanceHistoryPage'
