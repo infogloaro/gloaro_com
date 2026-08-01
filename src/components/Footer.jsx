@@ -1,5 +1,6 @@
 import logo from '../assets/logo.png'
 import leastActionLogo from '../assets/least-action-company-logo.png'
+import { Link } from 'react-router-dom'
 
 const links = {
   quick: [
@@ -37,9 +38,9 @@ export default function Footer() {
         <div className="mt-10 flex flex-col gap-4 border-t border-white/10 pt-5 text-center text-[11px] font-medium text-slate-400 lg:flex-row lg:items-center lg:justify-between lg:text-left">
           <p>© 2026 GLOARO. All rights reserved.</p>
           <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 lg:justify-end">
-            <span>Terms &amp; Conditions</span>
+            <Link className="transition hover:text-[#ffad16]" to="/terms-and-conditions">Terms &amp; Conditions</Link>
             <span className="hidden h-4 w-px bg-white/20 sm:block" />
-            <span>Privacy Policy</span>
+            <Link className="transition hover:text-[#ffad16]" to="/privacy-policy">Privacy Policy</Link>
             <span className="hidden h-4 w-px bg-white/20 sm:block" />
             <a href="https://www.leastactioncompany.com/" target="_blank" rel="noopener noreferrer" className="group inline-flex items-center gap-2 text-slate-300 transition hover:text-[#ffad16]">
               <span>Powered by</span>

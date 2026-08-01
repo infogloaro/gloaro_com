@@ -45,6 +45,46 @@ const networkHighlights = [
   [ShieldCheck, 'Verified Network', 'Trusted enterprise leaders'],
 ]
 
+const networkTargets = {
+  'Membership Benefits': 'membership-benefits-detail',
+  'Yearly Subscription': 'membership-investment',
+  'Member Access': 'member-access',
+  '360 Gloaro Network': 'gloaro-360-network',
+  'Global Business Network': 'global-business-network',
+  'Business Growth': 'business-growth',
+  'Business Opportunities': 'business-opportunities',
+  'Referral Meeting': 'referral-meeting',
+  'Referral Join': 'referral-join',
+  'Referral Benefits': 'referral-benefits',
+  'Gloaro App': 'gloaro-app',
+  'Member App': 'member-app',
+  'Business Management App': 'business-management-app',
+  'Technology Development': 'technology-development',
+  'Mobile App Development': 'mobile-app-development',
+  'Digital Marketing': 'digital-marketing',
+  'IT Solutions': 'it-solutions',
+  'SaaS Solution': 'saas-solution',
+  'Monthly Meetings': 'monthly-meetings',
+  'Business Expo': 'business-expo',
+  'Social Events': 'social-events',
+  'District Community': 'district-community',
+  'Tamil Nadu Community': 'tamil-nadu-community',
+  'Global Community': 'global-community',
+  'Available Locations': 'available-locations',
+  'Apply Franchise': 'apply-franchise',
+  'Franchise Partners': 'franchise-partners',
+  Leaders: 'network-leaders',
+  Coordinators: 'network-coordinators',
+  'Business Runner': 'business-runner',
+  'Goal Achiever': 'goal-achiever',
+  'Member Achievements': 'member-achievements',
+  'AI Assistant': 'ai-assistant',
+  'Contact Support': 'contact-support',
+  'Social Media Links': 'social-media-links',
+}
+
+const getNetworkHref = (label) => label === 'Join Gloaro Network' ? '/register' : `/#${networkTargets[label]}`
+
 export default function Navbar() {
   const { isAuthenticated, user } = useAuth()
   const navigate = useNavigate()
@@ -284,9 +324,7 @@ function MobileGloaroNetworkMenu({ onNavigate }) {
               <ul className="mt-3 space-y-2">
                 {links.map((link) => (
                   <li key={link} className="text-sm font-medium text-black">
-                    {link === 'Join Gloaro Network'
-                      ? <a href="/register" onClick={onNavigate} className="font-semibold text-[#0b469e] hover:underline">{link}</a>
-                      : link}
+                    <a href={getNetworkHref(link)} onClick={onNavigate} className={`transition hover:text-[#0b469e] hover:underline ${link === 'Join Gloaro Network' ? 'font-semibold text-[#0b469e]' : ''}`}>{link}</a>
                   </li>
                 ))}
               </ul>
@@ -333,9 +371,7 @@ function GloaroNetworkMenu({ onClose }) {
                 <ul className="mt-3 space-y-3">
                   {links.map((link) => (
                     <li key={link} className="text-sm font-medium text-black">
-                      {link === 'Join Gloaro Network'
-                        ? <a href="/register" onClick={onClose} className="font-semibold text-[#0b469e] hover:underline">{link}</a>
-                        : link}
+                      <a href={getNetworkHref(link)} onClick={onClose} className={`transition hover:text-[#0b469e] hover:underline ${link === 'Join Gloaro Network' ? 'font-semibold text-[#0b469e]' : ''}`}>{link}</a>
                     </li>
                   ))}
                 </ul>
