@@ -15,7 +15,7 @@ import { ROLES } from '../constants/roleConfig.js'
 import { resolveNavigation, NAVIGATION_MODES } from '../utils/navigationResolver'
 
 export default function DashboardLayout({ navItems = [], title = 'Dashboard', theme = 'auto' }) {
-  const { user, logout, hasSidebar, marketplaceAccess, socket } = useAuth()
+  const { user, logout, hasSidebar, marketplaceAccess, socket, canAccessPath } = useAuth()
   const location = useLocation()
   const navigate = useNavigate()
   const [open, setOpen] = useState(false)
@@ -238,22 +238,6 @@ export default function DashboardLayout({ navItems = [], title = 'Dashboard', th
   const shouldShowChatBadge = (label, to) => chatUnreadCount > 0 && to?.endsWith('/chat') && ['Messages', 'Chat'].includes(label)
   const shouldShowNotificationBadge = (label, to) => notificationUnreadCount > 0 && (to?.endsWith('/notifications') || label.toLowerCase().includes('notification'))
 
-  const notificationCenterRoute = useMemo(() => {
-    for (const item of resolvedNavItems) {
-      if (!item) continue
-      if (Array.isArray(item)) {
-        const [label, to] = item
-        if (to?.endsWith('/notifications') || label.toLowerCase().includes('notification')) return to
-        continue
-      }
-      if (!Array.isArray(item) && Array.isArray(item.children)) {
-        const child = item.children.find(([label, to]) => to?.endsWith('/notifications') || label.toLowerCase().includes('notification'))
-        if (child) return child[1]
-      }
-    }
-    return '/notifications'
-  }, [resolvedNavItems])
-
   const openNotificationCenter = () => {
     setNotificationOpen(false)
     navigate('/notifications')
@@ -443,13 +427,9 @@ export default function DashboardLayout({ navItems = [], title = 'Dashboard', th
                 <div className={isLightShell ? 'absolute right-0 top-11 z-40 w-[min(22rem,calc(100vw-2rem))] overflow-hidden rounded-xl border border-slate-200 bg-white shadow-2xl' : 'absolute right-0 top-11 z-40 w-[min(22rem,calc(100vw-2rem))] overflow-hidden rounded-xl border border-slate-200 bg-white shadow-2xl dark:border-slate-800 dark:bg-slate-900'}>
                   <div className={isLightShell ? 'flex items-center justify-between border-b border-slate-100 px-4 py-3' : 'flex items-center justify-between border-b border-slate-100 px-4 py-3 dark:border-slate-800'}>
                     <p className={isLightShell ? 'text-sm font-black text-slate-900' : 'text-sm font-black text-slate-900 dark:text-white'}>Notifications</p>
-                    <button type="button" onClick={openNotificationCenter} className={isLightShell ? 'text-[11px] font-black text-[#0d4697]' : 'text-[11px] font-black text-[#0d4697] dark:text-blue-300'}>View all</button>
-                <div className="absolute right-0 top-11 z-40 w-[min(22rem,calc(100vw-2rem))] overflow-hidden rounded-xl border border-slate-200 bg-white shadow-2xl dark:border-slate-800 dark:bg-slate-900">
-                  <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3 dark:border-slate-800">
-                    <p className="text-sm font-black text-slate-900 dark:text-white">Notifications</p>
                     <div className="flex items-center gap-3">
-                      <button type="button" onClick={handleMarkAllNotificationsRead} className="text-[11px] font-black text-slate-600 hover:text-[#0d4697] dark:text-slate-300">Mark all read</button>
-                      <button type="button" onClick={openNotificationCenter} className="text-[11px] font-black text-[#0d4697] dark:text-blue-300">View all</button>
+                      <button type="button" onClick={handleMarkAllNotificationsRead} className={isLightShell ? 'text-[11px] font-black text-slate-600 hover:text-[#0d4697]' : 'text-[11px] font-black text-slate-600 hover:text-[#0d4697] dark:text-slate-300'}>Mark all read</button>
+                      <button type="button" onClick={openNotificationCenter} className={isLightShell ? 'text-[11px] font-black text-[#0d4697]' : 'text-[11px] font-black text-[#0d4697] dark:text-blue-300'}>View all</button>
                     </div>
                   </div>
                   <div className="max-h-96 overflow-y-auto p-2">
