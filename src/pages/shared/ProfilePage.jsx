@@ -116,16 +116,16 @@ export default function ProfilePage() {
   return (
     <div className="mx-auto max-w-6xl space-y-6">
       {/* Top Banner Card */}
-      <div className="relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+      <div className="relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-          <div className="grid h-16 w-16 place-items-center rounded-2xl bg-[#0d4697] text-2xl font-black text-white">
+          <div className="grid h-16 w-16 place-items-center rounded-2xl bg-[#0d4697] text-2xl font-black text-white shadow-md">
             {user?.name?.slice(0, 2).toUpperCase()}
           </div>
           <div>
-            <h2 className="text-2xl font-black text-slate-950 dark:text-white">{user?.name}</h2>
+            <h2 className="text-2xl font-black text-slate-950">{user?.name}</h2>
             <p className="text-sm font-bold text-slate-500">{user?.email} • {roleLabel(user?.role)}</p>
             {user?.officialId && (
-              <p className="mt-1 inline-flex items-center gap-1 rounded bg-slate-100 px-2 py-0.5 text-xs font-extrabold text-slate-700 dark:bg-slate-800 dark:text-slate-300">
+              <p className="mt-1 inline-flex items-center gap-1 rounded bg-slate-100 px-2 py-0.5 text-xs font-extrabold text-slate-700">
                 Official ID: {user.officialId}
               </p>
             )}
@@ -137,76 +137,76 @@ export default function ProfilePage() {
         {/* Left: Forms / Details */}
         <div className="space-y-6 lg:col-span-2">
           {isViewOnlyProfile ? (
-            <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-              <h3 className="flex items-center gap-2 text-lg font-black text-slate-950 dark:text-white">
+            <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+              <h3 className="flex items-center gap-2 text-lg font-black text-slate-950">
                 <User className="h-5 w-5 text-[#0d4697]" />
                 Personal Details
               </h3>
               <div className="mt-5 grid gap-6 sm:grid-cols-2">
                 <div>
                   <p className="text-[10px] font-extrabold uppercase tracking-wide text-slate-400">Full Name</p>
-                  <p className="mt-1 text-sm font-bold text-slate-850 dark:text-slate-200">{user?.name || '-'}</p>
+                  <p className="mt-1 text-sm font-bold text-slate-900">{user?.name || '-'}</p>
                 </div>
                 <div>
                   <p className="text-[10px] font-extrabold uppercase tracking-wide text-slate-400">Email Address</p>
-                  <p className="mt-1 text-sm font-bold text-slate-850 dark:text-slate-200">{user?.email || '-'}</p>
+                  <p className="mt-1 text-sm font-bold text-slate-900">{user?.email || '-'}</p>
                 </div>
                 <div>
                   <p className="text-[10px] font-extrabold uppercase tracking-wide text-slate-400">Mobile Number</p>
-                  <p className="mt-1 text-sm font-bold text-slate-850 dark:text-slate-200">{user?.phone || '-'}</p>
+                  <p className="mt-1 text-sm font-bold text-slate-900">{user?.phone || '-'}</p>
                 </div>
                 <div>
                   <p className="text-[10px] font-extrabold uppercase tracking-wide text-slate-400">Official ID</p>
-                  <p className="mt-1 text-sm font-bold text-slate-850 dark:text-slate-200">{user?.officialId || '-'}</p>
+                  <p className="mt-1 text-sm font-bold text-slate-900">{user?.officialId || '-'}</p>
                 </div>
                 <div>
                   <p className="text-[10px] font-extrabold uppercase tracking-wide text-slate-400">Role</p>
-                  <p className="mt-1 text-sm font-bold text-slate-850 dark:text-slate-200">{roleLabel(user?.role)}</p>
+                  <p className="mt-1 text-sm font-bold text-slate-900">{roleLabel(user?.role)}</p>
                 </div>
               </div>
             </div>
           ) : (
             <>
               {/* Personal Info Form */}
-              <form onSubmit={handleProfileSubmit(onUpdateProfile)} className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-                <h3 className="flex items-center gap-2 text-lg font-black text-slate-950 dark:text-white">
+              <form onSubmit={handleProfileSubmit(onUpdateProfile)} className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+                <h3 className="flex items-center gap-2 text-lg font-black text-slate-950">
                   <User className="h-5 w-5 text-[#0d4697]" />
                   Personal Details
                 </h3>
                 <div className="mt-5 grid gap-4 sm:grid-cols-2">
                   <FormField label="Full Name">
-                    <input {...regProfile('name')} className="h-11 w-full rounded-md border border-slate-300 px-3 outline-none focus:border-[#0d4697] dark:border-slate-700 dark:bg-slate-800" />
+                    <input {...regProfile('name')} className="h-11 w-full rounded-md border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-800 outline-none focus:border-[#0d4697]" />
                   </FormField>
                   <FormField label="Email (Read-only)">
-                    <input {...regProfile('email')} disabled className="h-11 w-full rounded-md border border-slate-300 bg-slate-50 px-3 outline-none dark:border-slate-800 dark:bg-slate-950 dark:text-slate-400" />
+                    <input {...regProfile('email')} disabled className="h-11 w-full rounded-md border border-slate-200 bg-slate-50 px-3 text-sm font-semibold text-slate-500 outline-none" />
                   </FormField>
                   <FormField label="Mobile Number">
-                    <input {...regProfile('phone')} className="h-11 w-full rounded-md border border-slate-300 px-3 outline-none focus:border-[#0d4697] dark:border-slate-700 dark:bg-slate-800" />
+                    <input {...regProfile('phone')} className="h-11 w-full rounded-md border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-800 outline-none focus:border-[#0d4697]" />
                   </FormField>
                 </div>
-                <button disabled={isSubmitting} type="submit" className="mt-5 h-11 rounded-md bg-[#0d4697] px-5 text-sm font-extrabold text-white hover:bg-blue-800">
+                <button disabled={isSubmitting} type="submit" className="mt-5 h-11 rounded-md bg-[#0d4697] px-5 text-sm font-extrabold text-white hover:bg-blue-800 transition">
                   Update Profile
                 </button>
               </form>
 
               {/* Change Password Form */}
-              <form onSubmit={handlePasswordSubmit(onUpdatePassword)} className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-                <h3 className="flex items-center gap-2 text-lg font-black text-slate-950 dark:text-white">
+              <form onSubmit={handlePasswordSubmit(onUpdatePassword)} className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+                <h3 className="flex items-center gap-2 text-lg font-black text-slate-950">
                   <Lock className="h-5 w-5 text-[#0d4697]" />
                   Change Password
                 </h3>
                 <div className="mt-5 grid gap-4 sm:grid-cols-3">
                   <FormField label="Old Password">
-                    <input type="password" {...regPassword('oldPassword', { required: true })} className="h-11 w-full rounded-md border border-slate-300 px-3 outline-none focus:border-[#0d4697] dark:border-slate-700 dark:bg-slate-800" />
+                    <input type="password" {...regPassword('oldPassword', { required: true })} className="h-11 w-full rounded-md border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-800 outline-none focus:border-[#0d4697]" />
                   </FormField>
                   <FormField label="New Password">
-                    <input type="password" {...regPassword('newPassword', { required: true })} className="h-11 w-full rounded-md border border-slate-300 px-3 outline-none focus:border-[#0d4697] dark:border-slate-700 dark:bg-slate-800" />
+                    <input type="password" {...regPassword('newPassword', { required: true })} className="h-11 w-full rounded-md border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-800 outline-none focus:border-[#0d4697]" />
                   </FormField>
                   <FormField label="Confirm New Password">
-                    <input type="password" {...regPassword('confirmPassword', { required: true })} className="h-11 w-full rounded-md border border-slate-300 px-3 outline-none focus:border-[#0d4697] dark:border-slate-700 dark:bg-slate-800" />
+                    <input type="password" {...regPassword('confirmPassword', { required: true })} className="h-11 w-full rounded-md border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-800 outline-none focus:border-[#0d4697]" />
                   </FormField>
                 </div>
-                <button disabled={updatingPassword} type="submit" className="mt-5 h-11 rounded-md bg-slate-950 px-5 text-sm font-extrabold text-white hover:bg-slate-800">
+                <button disabled={updatingPassword} type="submit" className="mt-5 h-11 rounded-md bg-slate-950 px-5 text-sm font-extrabold text-white hover:bg-slate-800 transition">
                   Change Password
                 </button>
               </form>
@@ -217,53 +217,53 @@ export default function ProfilePage() {
         {/* Right: metadata & Timeline */}
         <div className="space-y-6">
           {/* Organization metadata Details */}
-          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-            <h3 className="flex items-center gap-2 text-lg font-black text-slate-950 dark:text-white">
+          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+            <h3 className="flex items-center gap-2 text-lg font-black text-slate-950">
               <Shield className="h-5 w-5 text-[#0d4697]" />
               Organization & Role Context
             </h3>
             <div className="mt-4 space-y-4">
               <div className="flex items-start gap-3">
-                <MapPin className="h-5 w-5 shrink-0 text-slate-400" />
+                <MapPin className="h-5 w-5 shrink-0 text-[#0d4697]" />
                 <div>
                   <p className="text-[10px] font-extrabold uppercase tracking-wide text-slate-400">Assigned Location</p>
-                  <p className="text-sm font-bold text-slate-800 dark:text-slate-200">{orgLabel}</p>
+                  <p className="text-sm font-bold text-slate-900">{orgLabel}</p>
                 </div>
               </div>
 
               <div className="flex items-start gap-3">
-                <UserCheck className="h-5 w-5 shrink-0 text-slate-400" />
+                <UserCheck className="h-5 w-5 shrink-0 text-[#0d4697]" />
                 <div>
                   <p className="text-[10px] font-extrabold uppercase tracking-wide text-slate-400">Reporting Manager</p>
-                  <p className="text-sm font-bold text-slate-800 dark:text-slate-200">
+                  <p className="text-sm font-bold text-slate-900">
                     {REPORTING_STRUCTURE[user?.role] || 'None'}
                   </p>
                 </div>
               </div>
 
               <div className="flex items-start gap-3">
-                <User className="h-5 w-5 shrink-0 text-slate-400" />
+                <User className="h-5 w-5 shrink-0 text-[#0d4697]" />
                 <div>
                   <p className="text-[10px] font-extrabold uppercase tracking-wide text-slate-400">Created By</p>
-                  <p className="text-sm font-bold text-slate-800 dark:text-slate-200">
+                  <p className="text-sm font-bold text-slate-900">
                     {user?.createdBy?.name || user?.createdBy?.email || 'System / Onboarding'}
                   </p>
                 </div>
               </div>
 
               <div className="flex items-start gap-3">
-                <Calendar className="h-5 w-5 shrink-0 text-slate-400" />
+                <Calendar className="h-5 w-5 shrink-0 text-[#0d4697]" />
                 <div>
                   <p className="text-[10px] font-extrabold uppercase tracking-wide text-slate-400">Created Date</p>
-                  <p className="text-sm font-bold text-slate-800 dark:text-slate-200">{formatDate(user?.createdAt)}</p>
+                  <p className="text-sm font-bold text-slate-900">{formatDate(user?.createdAt)}</p>
                 </div>
               </div>
             </div>
           </div>
 
           {/* Timeline Card */}
-          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-            <h3 className="flex items-center gap-2 text-lg font-black text-slate-950 dark:text-white">
+          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+            <h3 className="flex items-center gap-2 text-lg font-black text-slate-950">
               <Activity className="h-5 w-5 text-[#0d4697]" />
               Activity History
             </h3>
@@ -272,9 +272,9 @@ export default function ProfilePage() {
                 <div className="py-4 text-center text-xs font-semibold text-slate-500">Loading activity...</div>
               ) : activity.length > 0 ? (
                 activity.map((item) => (
-                  <div key={item._id} className="relative pl-4 border-l border-slate-100 dark:border-slate-800 pb-2 last:pb-0">
+                  <div key={item._id} className="relative pl-4 border-l border-slate-200 pb-2 last:pb-0">
                     <span className="absolute -left-1.5 top-1.5 h-3 w-3 rounded-full bg-[#0d4697]" />
-                    <p className="text-xs font-bold text-slate-800 dark:text-slate-200">{item.action}</p>
+                    <p className="text-xs font-bold text-slate-900">{item.action}</p>
                     <p className="text-[10px] font-semibold text-slate-400">{formatDate(item.createdAt)}</p>
                   </div>
                 ))

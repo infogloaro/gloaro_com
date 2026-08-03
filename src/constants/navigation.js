@@ -338,14 +338,6 @@ const commonModules = [
   },
   ['Training', '/member/training', BookOpen],
   ['My Chapter', '/chapter', Building2],
-  {
-    label: 'Collaboration',
-    icon: MessageSquare,
-    children: [
-      ['Tasks', '/tasks', ClipboardCheck],
-      ['Help Desk', '/help-desk', HelpCircle]
-    ]
-  },
   ['Profile', '/profile', User]
 ];
 
