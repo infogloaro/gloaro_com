@@ -8,7 +8,6 @@ import { attendanceApi } from '../../api/attendance'
 import LoadingScreen from '../../components/common/LoadingScreen'
 import {
   Eye,
-  PlusCircle,
   ClipboardList
 } from 'lucide-react'
 import { formatDate } from '../../utils/format'
@@ -21,22 +20,11 @@ const getVenueString = (venue) => {
 };
 
 export default function MeetingsAttendance() {
-  const { user } = useAuth()
-  // Retrieve events mapped as meetings
-  const { data, loading } = useApi(() => customerApi.events({ limit: 12 }))
-  const [showLeaveModal, setShowLeaveModal] = useState(false)
-  const [leaveReason, setLeaveReason] = useState('')
-  const [leaveMeetingId, setLeaveMeetingId] = useState('')
-  const [leaveRequests, setLeaveRequests] = useState([])
-  const [selectedMeeting, setSelectedMeeting] = useState(null)
-
-  const meetings = useMemo(() => data?.data || data || [], [data])
   const [meetings, setMeetings] = useState([])
   const [attendanceRows, setAttendanceRows] = useState([])
   const [attendanceSummary, setAttendanceSummary] = useState({ present: 0, absent: 0, attendanceRate: 0 })
   const [loading, setLoading] = useState(true)
   const [selectedMeeting, setSelectedMeeting] = useState(null)
-  const [summary, setSummary] = useState({ attendanceRate: 0, present: 0, absent: 0 })
 
   const loadPageData = useCallback(async ({ silent = false } = {}) => {
     if (!silent) setLoading(true)
@@ -102,37 +90,6 @@ export default function MeetingsAttendance() {
         </div>
       </div>
 
-
-
-          <div className="divide-y divide-slate-100">
-            {meetings.map((meeting, index) => {
-              const event = meeting.event || meeting
-              const registration = meeting.registration || event.attendees?.find((attendee) => attendee.user?._id === user?._id || attendee.user === user?._id)
-              if (meeting.event) Object.assign(meeting, event)
-              const isAttended = registration ? registration.status === 'attended' : index > 0 // fallback for legacy records
-              return (
-                <div key={event._id || index} className="flex justify-between items-center py-4 first:pt-0 last:pb-0">
-                  <div className="flex items-start gap-3">
-                    <span className="grid h-9 w-9 place-items-center rounded-lg bg-blue-50 text-xs font-black text-[#0d4697]">
-                      {event.startDate ? new Date(event.startDate).getDate() : '—'}
-                    </span>
-                    <div>
-                      <p className="text-sm font-extrabold text-slate-800 leading-tight">{event.title || 'Weekly Chapter Meeting'}</p>
-                      <p className="text-[10px] font-semibold text-slate-400 mt-1">
-                        {formatDate(meeting.startDate)} • Venue: {getVenueString(meeting.venue)}
-                      </p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setSelectedMeeting({ meeting: event, registration, isAttended })}
-                      className="inline-flex items-center gap-1.5 rounded-lg border border-blue-100 bg-blue-50 px-3 py-1.5 text-xs font-extrabold text-[#0d4697] transition hover:border-[#0d4697] hover:bg-blue-100"
-                    >
-                      <Eye className="h-3.5 w-3.5" />
-                      View details
-                    </button>
       {/* Meetings Logs list */}
       <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm space-y-4">
         <h3 className="text-base font-extrabold text-slate-900 flex items-center gap-2">
