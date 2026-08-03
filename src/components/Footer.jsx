@@ -15,7 +15,6 @@ const links = {
     ['Events', '/#events'],
     ['Shop', '/products'],
     ['Services', '/services'],
-    ['B2B Marketplace', '/vendors'],
   ],
 }
 

@@ -305,14 +305,7 @@ export default function DashboardLayout({ navItems = [], title = 'Dashboard', th
           <ChevronLeft className={`h-4 w-4 transition ${collapsed ? 'rotate-180' : ''}`} />
         </button>
       </div>
-      {!collapsed && !isSuperAdmin && (
-        <div className="p-3">
-          <label className={isLightShell ? 'flex h-10 items-center gap-2 rounded-md border border-slate-200 bg-slate-50 px-3 text-sm text-slate-500' : 'flex h-10 items-center gap-2 rounded-md border border-white/10 bg-white/5 px-3 text-sm text-slate-300'}>
-            <Search className="h-4 w-4" />
-            <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search menu" className={isLightShell ? 'w-full bg-transparent font-semibold text-slate-700 outline-none placeholder:text-slate-400' : 'w-full bg-transparent font-semibold outline-none placeholder:text-slate-500'} />
-          </label>
-        </div>
-      )}
+
 
 
       <nav className="min-h-0 flex-1 space-y-1 overflow-y-auto p-3">

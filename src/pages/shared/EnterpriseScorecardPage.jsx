@@ -216,9 +216,6 @@ export default function EnterpriseScorecardPage() {
           <button type="button" onClick={exportPdf} className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-black text-slate-700 shadow-sm">
             <FileText className="h-4 w-4" /> PDF
           </button>
-          <button type="button" onClick={() => window.print()} className="inline-flex items-center gap-2 rounded-lg bg-[#1558b0] px-3 py-2 text-sm font-black text-white shadow-sm">
-            <Printer className="h-4 w-4" /> Print
-          </button>
         </div>
       </div>
 
@@ -373,14 +370,19 @@ export default function EnterpriseScorecardPage() {
             </tbody>
           </table>
         </div>
-        <div className="flex flex-col gap-3 border-t border-slate-200 p-4 sm:flex-row sm:items-center sm:justify-between">
-          <select value={filters.limit} onChange={(event) => updateFilter('limit', Number(event.target.value))} className="w-28 rounded-lg border border-slate-200 px-3 py-2 text-sm font-bold outline-none">
-            {[10, 25, 50].map((limit) => <option key={limit} value={limit}>{limit} rows</option>)}
-          </select>
-          <div className="mt-4 flex items-center justify-end gap-2">
-            <button type="button" disabled={pagination.page <= 1} onClick={() => updateFilter('page', pagination.page - 1)} className="rounded-lg border border-slate-300 bg-white px-3 py-2 font-medium text-slate-700 transition-all duration-200 hover:border-blue-600 hover:bg-blue-600 hover:text-white disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400 disabled:opacity-70 disabled:hover:border-slate-200 disabled:hover:bg-slate-100 disabled:hover:text-slate-400">Previous</button>
-            <span className="text-sm font-medium text-slate-600">Page {pagination.page} of {pagination.pages}</span>
-            <button type="button" disabled={pagination.page >= pagination.pages} onClick={() => updateFilter('page', pagination.page + 1)} className="rounded-lg border border-slate-300 bg-white px-3 py-2 font-medium text-slate-700 transition-all duration-200 hover:border-blue-600 hover:bg-blue-600 hover:text-white disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400 disabled:opacity-70 disabled:hover:border-slate-200 disabled:hover:bg-slate-100 disabled:hover:text-slate-400">Next</button>
+        <div className="flex flex-col gap-3 border-t border-slate-200 p-4 sm:flex-row sm:items-center sm:justify-between bg-slate-50/50">
+          <div className="flex items-center gap-3">
+            <select value={filters.limit} onChange={(event) => updateFilter('limit', Number(event.target.value))} className="w-32 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-extrabold text-slate-900 shadow-sm outline-none focus:border-[#0d4697]">
+              {[10, 25, 50].map((limit) => <option key={limit} value={limit} className="bg-white text-slate-900 font-bold">{limit} rows</option>)}
+            </select>
+            <span className="text-xs font-extrabold text-slate-600">Showing {visibleRange}</span>
+          </div>
+          <div className="flex items-center gap-3">
+            <span className="text-sm font-extrabold text-slate-700">Page {pagination.page} of {pagination.pages}</span>
+            <div className="flex items-center gap-2">
+              <button type="button" disabled={pagination.page <= 1} onClick={() => updateFilter('page', pagination.page - 1)} className="rounded-lg border border-slate-300 bg-white px-3.5 py-2 text-xs font-black text-slate-800 shadow-sm transition hover:border-[#0d4697] hover:bg-[#0d4697] hover:text-white disabled:cursor-not-allowed disabled:opacity-50">Previous</button>
+              <button type="button" disabled={pagination.page >= pagination.pages} onClick={() => updateFilter('page', pagination.page + 1)} className="rounded-lg border border-slate-300 bg-white px-3.5 py-2 text-xs font-black text-slate-800 shadow-sm transition hover:border-[#0d4697] hover:bg-[#0d4697] hover:text-white disabled:cursor-not-allowed disabled:opacity-50">Next</button>
+            </div>
           </div>
         </div>
       </section>
