@@ -179,7 +179,6 @@ import AssignedTrainingPage from './pages/membership/AssignedTrainingPage'
 import OneToOnesPage from './pages/membership/OneToOnesPage'
 import VisitorsPage from './pages/membership/VisitorsPage'
 import BusinessDirectory from './pages/membership/BusinessDirectory'
-import Leaderboard from './pages/membership/Leaderboard'
 import { ROLES } from './constants/roleConfig.js'
 import { getAccountClassification, normalizeRole } from './utils/permissions'
 
@@ -439,7 +438,6 @@ function App() {
               <Route path="/secretary/one-to-ones" element={<OneToOnesPage />} />
               <Route path="/secretary/visitors" element={<VisitorsPage />} />
               <Route path="/secretary/directory" element={<BusinessDirectory />} />
-              <Route path="/secretary/leaderboard" element={<Leaderboard />} />
               <Route path="/secretary/products" element={<SecretaryProductsPage />} />
               <Route path="/secretary/services" element={<SecretaryServicesPage />} />
               <Route path="/secretary/vendors" element={<SecretaryVendorsPage />} />
@@ -468,7 +466,6 @@ function App() {
               <Route path="/region-director/one-to-ones" element={<OneToOnesPage />} />
               <Route path="/region-director/visitors" element={<VisitorsPage />} />
               <Route path="/region-director/directory" element={<BusinessDirectory />} />
-              <Route path="/region-director/leaderboard" element={<Leaderboard />} />
               <Route path="/region-director/products" element={<RegionDirectorProductsPage />} />
               <Route path="/region-director/services" element={<RegionDirectorServicesPage />} />
               <Route path="/region-director/vendors" element={<RegionDirectorVendorsPage />} />
@@ -497,7 +494,6 @@ function App() {
               <Route path="/state-director/one-to-ones" element={<OneToOnesPage />} />
               <Route path="/state-director/visitors" element={<VisitorsPage />} />
               <Route path="/state-director/directory" element={<BusinessDirectory />} />
-              <Route path="/state-director/leaderboard" element={<Leaderboard />} />
               <Route path="/state-director/products" element={<StateDirectorProductsPage />} />
               <Route path="/state-director/services" element={<StateDirectorServicesPage />} />
               <Route path="/state-director/vendors" element={<StateDirectorVendorsPage />} />
@@ -525,7 +521,6 @@ function App() {
               <Route path="/district-director/one-to-ones" element={<OneToOnesPage />} />
               <Route path="/district-director/visitors" element={<VisitorsPage />} />
               <Route path="/district-director/directory" element={<BusinessDirectory />} />
-              <Route path="/district-director/leaderboard" element={<Leaderboard />} />
               <Route path="/district-director/products" element={<DistrictDirectorProductsPage />} />
               <Route path="/district-director/services" element={<DistrictDirectorServicesPage />} />
               <Route path="/district-director/vendors" element={<DistrictDirectorVendorsPage />} />
@@ -559,7 +554,6 @@ function App() {
               <Route path="/chapter-director/one-to-ones" element={<OneToOnesPage />} />
               <Route path="/chapter-director/visitors" element={<VisitorsPage />} />
               <Route path="/chapter-director/directory" element={<BusinessDirectory />} />
-              <Route path="/chapter-director/leaderboard" element={<Leaderboard />} />
               <Route path="/chapter-director/products" element={<ChapterDirectorProductsPage />} />
               <Route path="/chapter-director/services" element={<ChapterDirectorServicesPage />} />
               <Route path="/chapter-director/vendors" element={<ChapterDirectorVendorsPage />} />
@@ -592,7 +586,6 @@ function App() {
               <Route path="/president/one-to-ones" element={<OneToOnesPage />} />
               <Route path="/president/visitors" element={<VisitorsPage />} />
               <Route path="/president/directory" element={<BusinessDirectory />} />
-              <Route path="/president/leaderboard" element={<Leaderboard />} />
               <Route path="/president/products" element={<PresidentProductsPage />} />
               <Route path="/president/services" element={<PresidentServicesPage />} />
               <Route path="/president/vendors" element={<PresidentVendorsPage />} />
@@ -624,7 +617,6 @@ function App() {
               <Route path="/vice-president/one-to-ones" element={<OneToOnesPage />} />
               <Route path="/vice-president/visitors" element={<VisitorsPage />} />
               <Route path="/vice-president/directory" element={<BusinessDirectory />} />
-              <Route path="/vice-president/leaderboard" element={<Leaderboard />} />
               <Route path="/vice-president/products" element={<VicePresidentProductsPage />} />
               <Route path="/vice-president/services" element={<VicePresidentServicesPage />} />
               <Route path="/vice-president/vendors" element={<VicePresidentVendorsPage />} />
@@ -647,7 +639,6 @@ function App() {
               <Route path="/launch-director/one-to-ones" element={<OneToOnesPage />} />
               <Route path="/launch-director/visitors" element={<VisitorsPage />} />
               <Route path="/launch-director/directory" element={<BusinessDirectory />} />
-              <Route path="/launch-director/leaderboard" element={<Leaderboard />} />
               <Route path="/launch-director/products" element={<LaunchDirectorProductsPage />} />
               <Route path="/launch-director/services" element={<LaunchDirectorServicesPage />} />
               <Route path="/launch-director/vendors" element={<LaunchDirectorVendorsPage />} />
@@ -676,7 +667,6 @@ function App() {
               <Route path="/direct-consultant/one-to-ones" element={<OneToOnesPage />} />
               <Route path="/direct-consultant/visitors" element={<VisitorsPage />} />
               <Route path="/direct-consultant/directory" element={<BusinessDirectory />} />
-              <Route path="/direct-consultant/leaderboard" element={<Leaderboard />} />
               <Route path="/direct-consultant/products" element={<DirectConsultantProductsPage />} />
               <Route path="/direct-consultant/services" element={<DirectConsultantServicesPage />} />
               <Route path="/direct-consultant/vendors" element={<DirectConsultantVendorsPage />} />

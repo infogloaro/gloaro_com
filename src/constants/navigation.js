@@ -12,7 +12,6 @@ import {
   HelpCircle,
   Home,
   LayoutDashboard,
-  LayoutGrid,
   ListTree,
   Lock,
   MapPinned,
@@ -30,7 +29,6 @@ import {
   ClipboardList,
   Volume2,
   Handshake,
-  Trophy,
   MessageSquare,
   ClipboardCheck,
   User,
@@ -226,6 +224,10 @@ export const presidentNav = [];
 export const vicePresidentNav = [];
 export const regionDirectorNav = [];
 
+// Keep the Business Directory feature and routes available in code, but do not
+// expose its navigation entry anywhere in the dashboard UI.
+const SHOW_BUSINESS_DIRECTORY_IN_NAVIGATION = false
+
 const removeMarketplaceSection = (navItems = []) => navItems.filter((item) => Array.isArray(item) || item.label !== 'Marketplace')
 
 const getUserOrganization = (user) => (
@@ -319,8 +321,7 @@ const commonModules = [
       ['Gloaro Network', '/network', Network],
       ['Messages', '/chat', MessageSquare],
       ['Referrals', '/referrals', Handshake],
-      ['Business Directory', '/directory', Users],
-      ['Leaderboard', '/leaderboard', Trophy]
+      ['Business Directory', '/directory', Users]
     ]
   },
   {
@@ -488,6 +489,9 @@ export function getSidebarNav(role, options = {}) {
       }
     }
     if (item.label === 'Community') {
+      if (!SHOW_BUSINESS_DIRECTORY_IN_NAVIGATION) {
+        children = children.filter(([label]) => label !== 'Business Directory')
+      }
       if ([ROLES.REGION_DIRECTOR, ROLES.STATE_DIRECTOR, ROLES.DISTRICT_DIRECTOR].includes(normalizedRole)) {
         children = children.filter(([label]) => {
           if (label === 'Chapter Community') return hasChapterAssignment(user)
