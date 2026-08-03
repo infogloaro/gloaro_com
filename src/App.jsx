@@ -20,6 +20,7 @@ import AdminNotifications from './pages/admin/AdminNotifications'
 import AdminManagementPage from './pages/admin/AdminManagementPage'
 import AdminVendorApplicationsPage from './pages/admin/AdminVendorApplicationsPage'
 import AdminVendorCategoryApprovalsPage from './pages/admin/AdminVendorCategoryApprovalsPage'
+import AdminShippingPage from './pages/admin/AdminShippingPage'
 import ApprovedVendorsPage from './pages/shared/ApprovedVendorsPage'
 import {
   AuditLogsPage,
@@ -93,7 +94,6 @@ import {
   VendorProfilePage,
   VendorReviewsPage,
   VendorServicesPage,
-  VendorSupportPage,
   VendorOrdersPage,
 } from './pages/vendor/VendorPages'
 import {
@@ -225,6 +225,7 @@ function App() {
     { path: '/referrals-table', element: <AdminReferralsPage /> },
     { path: '/payments', element: <AdminPaymentsPage /> },
     { path: '/orders', element: <AdminOrdersPage /> },
+    { path: '/shipments', element: <AdminShippingPage /> },
     { path: '/reviews', element: <AdminReviewsPage /> },
     { path: '/faqs', element: <AdminFaqsPage /> },
     { path: '/settings', element: <AdminSettingsPage /> },
@@ -327,7 +328,6 @@ function App() {
               <Route path="/vendor/payments" element={<VendorPaymentsPage />} />
               <Route path="/vendor/analytics" element={<VendorAnalyticsPage />} />
               <Route path="/vendor/notifications" element={<VendorNotificationsPage />} />
-              <Route path="/vendor/support" element={<VendorSupportPage />} />
             </Route>
 
             {/* Customer Portal Route Group */}

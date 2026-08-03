@@ -523,6 +523,20 @@ export function AdminOrdersPage() {
                 </div>
               ),
             },
+            {
+              key: 'flags',
+              header: 'Flags',
+              render: (row) => (
+                <div className="flex flex-wrap gap-1.5">
+                  {row.cancellationRequest && <MiniFlag tone="rose" label="Cancel" />}
+                  {row.returnRequest && <MiniFlag tone="amber" label="Return" />}
+                  {row.refund && <MiniFlag tone="emerald" label="Refund" />}
+                  {!row.cancellationRequest && !row.returnRequest && !row.refund && (
+                    <span className="rounded-full bg-slate-100 px-2 py-1 text-[10px] font-black uppercase tracking-wide text-slate-500">None</span>
+                  )}
+                </div>
+              ),
+            },
             { key: 'paymentStatus', header: 'Payment', render: (row) => <StatusBadge value={row.paymentStatus} /> },
             { key: 'status', header: 'Order Status', render: (row) => <StatusBadge value={row.status} /> },
             { key: 'createdAt', header: 'Created', render: (row) => formatDate(row.createdAt) },
@@ -621,6 +635,64 @@ export function AdminOrdersPage() {
               <div className="rounded-md bg-slate-50 p-3 text-xs font-semibold text-slate-700">Order total: {formatCurrency(selectedOrder.total, selectedOrder.currency)}</div>
               <div className="rounded-md bg-slate-50 p-3 text-xs font-semibold text-slate-700">Vendor subtotal: {formatCurrency(activeVendorSlice?.vendorTotal || 0, selectedOrder.currency)}</div>
             </div>
+
+            {(selectedOrder.cancellationRequest || selectedOrder.returnRequest || selectedOrder.refund) && (
+              <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
+                <p className="text-[10px] font-black uppercase text-slate-400">Customer Actions</p>
+                <div className="mt-3 grid gap-4 xl:grid-cols-3">
+                  {selectedOrder.cancellationRequest && (
+                    <RequestDetailCard
+                      title="Cancellation"
+                      tone="rose"
+                      request={selectedOrder.cancellationRequest}
+                      fields={[
+                        { label: 'Status', value: selectedOrder.cancellationRequest.status?.replace(/_/g, ' ') || 'requested' },
+                        { label: 'Reason', value: selectedOrder.cancellationRequest.reason },
+                        { label: 'UPI ID', value: selectedOrder.cancellationRequest.upiId || '-' },
+                        { label: 'Requested At', value: selectedOrder.cancellationRequest.requestedAt ? formatDate(selectedOrder.cancellationRequest.requestedAt) : '-' },
+                        { label: 'Completed At', value: selectedOrder.cancellationRequest.completedAt ? formatDate(selectedOrder.cancellationRequest.completedAt) : '-' },
+                        { label: 'Failure Reason', value: selectedOrder.cancellationRequest.failureReason || '-' },
+                        { label: 'Refund ID', value: selectedOrder.cancellationRequest.refundId || '-' },
+                      ]}
+                    />
+                  )}
+                  {selectedOrder.returnRequest && (
+                    <RequestDetailCard
+                      title="Return"
+                      tone="amber"
+                      request={selectedOrder.returnRequest}
+                      fields={[
+                        { label: 'Status', value: selectedOrder.returnRequest.status?.replace(/_/g, ' ') || 'requested' },
+                        { label: 'Reason', value: selectedOrder.returnRequest.reasonLabel || selectedOrder.returnRequest.reason },
+                        { label: 'UPI ID', value: selectedOrder.returnRequest.upiId || '-' },
+                        { label: 'Return Method', value: selectedOrder.returnRequest.returnMethod || '-' },
+                        { label: 'Refund Method', value: selectedOrder.returnRequest.refundMethod || '-' },
+                        { label: 'Requested At', value: selectedOrder.returnRequest.requestedAt ? formatDate(selectedOrder.returnRequest.requestedAt) : '-' },
+                        { label: 'Window Ends', value: selectedOrder.returnRequest.returnWindowEndsAt ? formatDate(selectedOrder.returnRequest.returnWindowEndsAt) : '-' },
+                        { label: 'Rejection Reason', value: selectedOrder.returnRequest.rejectionReason || '-' },
+                      ]}
+                    />
+                  )}
+                  {selectedOrder.refund && (
+                    <RequestDetailCard
+                      title="Refund"
+                      tone="emerald"
+                      request={selectedOrder.refund}
+                      fields={[
+                        { label: 'Status', value: selectedOrder.refund.status || 'requested' },
+                        { label: 'Reason', value: selectedOrder.refund.reason || selectedOrder.refund.reasonLabel || '-' },
+                        { label: 'UPI ID', value: selectedOrder.refund.upiId || '-' },
+                        { label: 'Amount', value: formatCurrency(selectedOrder.refund.amount || selectedOrder.refund.refundAmount || 0) },
+                        { label: 'Refund ID', value: selectedOrder.refund.refundId || '-' },
+                        { label: 'Requested At', value: selectedOrder.refund.requestedAt ? formatDate(selectedOrder.refund.requestedAt) : '-' },
+                        { label: 'Completed At', value: selectedOrder.refund.refundedAt ? formatDate(selectedOrder.refund.refundedAt) : '-' },
+                        { label: 'Failure Reason', value: selectedOrder.refund.failureReason || '-' },
+                      ]}
+                    />
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         )}
       </Modal>
@@ -659,6 +731,9 @@ function splitOrderByVendor(order) {
       items: [],
       itemCount: 0,
       vendorTotal: 0,
+      cancellationRequest: order.cancellationRequest || null,
+      returnRequest: order.returnRequest || null,
+      refund: order.refund || null,
       itemSummary: '',
       searchBlob: '',
     }
@@ -711,6 +786,71 @@ function formatOrderAddress(address) {
     address.state,
     address.pincode,
   ].filter(Boolean).join(', ') || 'Address unavailable'
+}
+
+function RequestDetailCard({ title, tone = 'slate', request, fields = [] }) {
+  const toneMap = {
+    amber: 'border-amber-200 bg-amber-50/70 text-amber-800',
+    rose: 'border-rose-200 bg-rose-50/70 text-rose-800',
+    emerald: 'border-emerald-200 bg-emerald-50/70 text-emerald-800',
+    slate: 'border-slate-200 bg-white text-slate-800',
+  }
+  const chipClass = toneMap[tone] || toneMap.slate
+
+  return (
+    <div className={`rounded-2xl border p-4 ${chipClass}`}>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="text-sm font-black">{title}</p>
+          <p className="mt-1 text-[11px] font-semibold opacity-80">
+            {request?.status ? String(request.status).replace(/_/g, ' ') : 'requested'}
+          </p>
+        </div>
+        <StatusBadge value={request?.status || 'requested'} />
+      </div>
+
+      <div className="mt-4 space-y-2 rounded-xl bg-white/80 p-3 ring-1 ring-black/5">
+        {fields.map((field) => (
+          <div key={`${title}-${field.label}`} className="flex items-start justify-between gap-3">
+            <p className="text-[10px] font-black uppercase tracking-wide text-slate-400">{field.label}</p>
+            <p className="max-w-[60%] text-right text-xs font-semibold text-slate-700">{displayValue(field.value)}</p>
+          </div>
+        ))}
+      </div>
+
+      {Array.isArray(request?.tracking) && request.tracking.length > 0 && (
+        <div className="mt-4">
+          <p className="text-[10px] font-black uppercase tracking-wide text-slate-400">Timeline</p>
+          <div className="mt-2 space-y-2">
+            {request.tracking.slice(0, 5).map((step, index) => (
+              <div key={`${title}-timeline-${step.status || index}`} className="flex items-start gap-2">
+                <div className={`mt-1 h-2.5 w-2.5 rounded-full ${step.at ? 'bg-[#0d4697]' : 'bg-slate-300'}`} />
+                <div>
+                  <p className="text-xs font-bold text-slate-800">{displayValue(step.label || step.status)}</p>
+                  <p className="text-[11px] font-semibold text-slate-500">{step.at ? formatDate(step.at) : step.description || 'Waiting'}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function MiniFlag({ tone = 'slate', label }) {
+  const toneMap = {
+    amber: 'bg-amber-50 text-amber-700 ring-amber-200',
+    rose: 'bg-rose-50 text-rose-700 ring-rose-200',
+    emerald: 'bg-emerald-50 text-emerald-700 ring-emerald-200',
+    slate: 'bg-slate-50 text-slate-600 ring-slate-200',
+  }
+
+  return (
+    <span className={`rounded-full px-2 py-1 text-[10px] font-black uppercase tracking-wide ring-1 ${toneMap[tone] || toneMap.slate}`}>
+      {label}
+    </span>
+  )
 }
 
 export function AdminServicesPage() {

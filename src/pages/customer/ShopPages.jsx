@@ -24,6 +24,7 @@ import {
   X,
 } from 'lucide-react'
 import { customerApi } from '../../api/customer'
+import { ordersApi } from '../../api/orders'
 import { paymentApi } from '../../api/payment'
 import EmptyState from '../../components/common/EmptyState'
 import LoadingScreen from '../../components/common/LoadingScreen'
@@ -122,6 +123,14 @@ function getRating(product) {
 
 function getReviewCount(product) {
   return Number(product?.stats?.totalReviews || product?.vendor?.stats?.totalReviews || 0)
+}
+
+function getReturnWindowEndsAt(order) {
+  const deliveredAt = order?.deliveredAt || order?.tracking?.find((step) => step.status === 'delivered')?.at || null
+  if (!deliveredAt) return null
+  const date = new Date(deliveredAt)
+  if (Number.isNaN(date.getTime())) return null
+  return new Date(date.getTime() + 7 * 24 * 60 * 60 * 1000)
 }
 
 function getAverageReviewRating(reviews = [], fallback = 0) {
@@ -1387,9 +1396,10 @@ export function CheckoutPage() {
 }
 
 export function OrdersPage() {
-  const { orders, cancelOrder, downloadInvoice } = useShop()
+  const { orders, cancelOrder, canReturnOrder, downloadInvoice } = useShop()
   const [status, setStatus] = useState('all')
   const [returnModalOrder, setReturnModalOrder] = useState(null)
+  const [cancelModalOrder, setCancelModalOrder] = useState(null)
   const filteredOrders = status === 'all' ? orders : orders.filter((order) => order.status === status)
 
   return (
@@ -1422,6 +1432,7 @@ export function OrdersPage() {
                 const progress = Math.round(((currentIndex + 1) / stages.length) * 100)
                 const orderDate = formatDate(order.createdAt)
                 const eta = order.estimatedDeliveryDate ? formatDate(order.estimatedDeliveryDate) : 'To be updated'
+                const shipmentCount = Array.isArray(order.shiprocket?.shipments) ? order.shiprocket.shipments.length : 0
 
                 return (
                   <>
@@ -1456,6 +1467,10 @@ export function OrdersPage() {
                               <div className="h-full rounded-full bg-gradient-to-r from-navy to-royal" style={{ width: `${progress}%` }} />
                             </div>
                           </div>
+                          <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4">
+                            <p className="text-[10px] font-black uppercase tracking-[0.24em] text-slate-400">Vendor Shipments</p>
+                            <p className="mt-1 text-sm font-semibold text-slate-700">{shipmentCount} shipment{shipmentCount === 1 ? '' : 's'}</p>
+                          </div>
                         </div>
                       </div>
 
@@ -1464,13 +1479,18 @@ export function OrdersPage() {
                         <div className="mt-2 flex flex-wrap gap-2">
                           <button type="button" onClick={() => downloadInvoice(order)} className="rounded-lg bg-white px-3 py-2 text-xs font-black text-slate-700 transition hover:bg-slate-100">Invoice</button>
                           {['placed', 'confirmed'].includes(order.status) && (
-                            <button type="button" onClick={() => cancelOrder(order._id)} className="rounded-lg border border-rose-200 bg-white px-3 py-2 text-xs font-black text-rose-600 transition hover:bg-rose-50">Cancel</button>
+                            <button type="button" onClick={() => setCancelModalOrder(order)} className="rounded-lg border border-rose-200 bg-white px-3 py-2 text-xs font-black text-rose-600 transition hover:bg-rose-50">Cancel</button>
                           )}
-                          {order.status === 'delivered' && !order.returnRequest && (
+                          {canReturnOrder(order) && (
                             <button type="button" onClick={() => setReturnModalOrder(order)} className="rounded-lg bg-amber-500 px-3 py-2 text-xs font-black text-white transition hover:bg-amber-600">Start Return</button>
                           )}
                           <Link to={`/orders/${order._id}`} className="rounded-lg bg-navy px-3 py-2 text-xs font-black text-white">Details</Link>
                         </div>
+                        {(canReturnOrder(order) || order.returnRequest?.returnWindowEndsAt) && (
+                          <p className="mt-3 text-[11px] font-semibold text-amber-700">
+                            Return available until {formatDate(order.returnRequest?.returnWindowEndsAt || getReturnWindowEndsAt(order))}
+                          </p>
+                        )}
                       </div>
                     </div>
 
@@ -1486,6 +1506,11 @@ export function OrdersPage() {
                     {order.returnRequest && (
                       <div className="mt-4">
                         <ReturnStatusBar returnRequest={order.returnRequest} />
+                      </div>
+                    )}
+                    {order.cancellationRequest && (
+                      <div className="mt-4">
+                        <CancellationStatusBar cancellationRequest={order.cancellationRequest} />
                       </div>
                     )}
                     {order.refund && (
@@ -1507,6 +1532,16 @@ export function OrdersPage() {
           onClose={() => setReturnModalOrder(null)}
         />
       )}
+      {cancelModalOrder && (
+        <CancelOrderModal
+          order={cancelModalOrder}
+          onClose={() => setCancelModalOrder(null)}
+          onSubmit={async ({ reason, upiId }) => {
+            const result = await cancelOrder(cancelModalOrder._id, { reason, upiId })
+            if (result) setCancelModalOrder(null)
+          }}
+        />
+      )}
     </main>
   )
 }
@@ -1518,6 +1553,12 @@ function ReturnStatusBar({ returnRequest }) {
         <RotateCcw className="h-3.5 w-3.5" />
         Return {returnRequest.status.replace(/_/g, ' ')} — {returnRequest.reasonLabel || returnRequest.reason}
       </div>
+      {returnRequest.upiId && (
+        <p className="mt-1 text-xs text-slate-600">UPI: {returnRequest.upiId}</p>
+      )}
+      {returnRequest.returnWindowEndsAt && (
+        <p className="mt-1 text-xs text-slate-500">Return window until {formatDate(returnRequest.returnWindowEndsAt)}</p>
+      )}
       {returnRequest.pickupSlot && (
         <p className="mt-1 text-xs text-slate-500">Pickup: {returnRequest.pickupSlot}</p>
       )}
@@ -1548,12 +1589,79 @@ function RefundStatusBar({ refund }) {
   )
 }
 
+function CancellationStatusBar({ cancellationRequest }) {
+  if (!cancellationRequest) return null
+
+  const steps = [
+    { status: 'requested', label: 'Cancellation Requested' },
+    { status: 'cancelled', label: 'Order Cancelled' },
+    { status: 'refund_processing', label: 'Refund Processing' },
+    { status: 'refunded', label: 'Refund Completed' },
+    { status: 'refund_failed', label: 'Refund Failed' },
+  ]
+  const currentIndex = Math.max(0, steps.findIndex((step) => step.status === cancellationRequest.status))
+
+  return (
+    <div className="mt-3 rounded-xl bg-slate-50/80 p-3 ring-1 ring-slate-200">
+      <div className="flex items-center gap-2 text-xs font-medium text-slate-800">
+        <ShieldCheck className="h-3.5 w-3.5 text-navy" />
+        Cancellation {cancellationRequest.status?.replace(/_/g, ' ') || 'status'}
+      </div>
+      <div className="mt-3 space-y-2">
+        {steps.map((step, index) => {
+          const stepEntry = cancellationRequest.tracking?.find((entry) => entry.status === step.status)
+          const active = index <= currentIndex
+          return (
+            <div key={step.status} className="flex items-start gap-2">
+              <div className={`mt-1 h-2.5 w-2.5 rounded-full ${active ? 'bg-navy' : 'bg-slate-300'}`} />
+              <div>
+                <p className="text-xs font-bold text-slate-800">{step.label}</p>
+                <p className="text-[11px] font-medium text-slate-500">
+                  {stepEntry?.at ? `${stepEntry.description} — ${formatDate(stepEntry.at)}` : stepEntry?.description || 'Waiting'}
+                </p>
+              </div>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
 export function OrderDetailPage() {
   const { orderId } = useParams()
   const { orders, cancelOrder, canCancelOrder, canReturnOrder, downloadInvoice } = useShop()
   const [showReturnModal, setShowReturnModal] = useState(false)
   const [returnModalItems, setReturnModalItems] = useState([])
-  const order = orders.find((entry) => entry._id === orderId)
+  const [showCancelModal, setShowCancelModal] = useState(false)
+  const [detailOrder, setDetailOrder] = useState(null)
+  const [loadingDetail, setLoadingDetail] = useState(true)
+
+  const order = detailOrder || orders.find((entry) => entry._id === orderId) || null
+
+  useEffect(() => {
+    let alive = true
+    setLoadingDetail(true)
+    ordersApi.order(orderId)
+      .then((response) => {
+        if (!alive) return
+        setDetailOrder(response.data?.data || response.data || null)
+      })
+      .catch(() => {
+        if (!alive) return
+        setDetailOrder(null)
+      })
+      .finally(() => {
+        if (alive) setLoadingDetail(false)
+      })
+    return () => {
+      alive = false
+    }
+  }, [orderId])
+
+  if (loadingDetail && !order) {
+    return <div className="mx-auto max-w-4xl px-4 py-12"><LoadingScreen label="Loading order details..." /></div>
+  }
 
   if (!order) {
     return <div className="mx-auto max-w-4xl px-4 py-12"><EmptyState title="Order not found" description="This order may have been cleared or the link is incorrect." /></div>
@@ -1575,6 +1683,8 @@ export function OrderDetailPage() {
     { label: 'Method', value: order.deliveryMethod },
     { label: 'ETA', value: estimatedDelivery },
   ]
+  const vendorShipments = Array.isArray(order.shiprocket?.shipments) ? order.shiprocket.shipments : []
+  const trackingSnapshots = Array.isArray(order.shiprocket?.trackingSnapshots) ? order.shiprocket.trackingSnapshots : []
   const openReturnModal = (items = []) => {
     setReturnModalItems(items.length ? items : order.items)
     setShowReturnModal(true)
@@ -1618,10 +1728,91 @@ export function OrderDetailPage() {
             </div>
           </div>
 
+          {(canReturnOrder(order) || order.returnRequest?.returnWindowEndsAt) && (
+            <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50/60 p-4">
+              <p className="text-[10px] font-black uppercase tracking-[0.24em] text-amber-700">Return Window</p>
+              <p className="mt-1 text-sm font-semibold text-amber-900">
+                Return available until {formatDate(order.returnRequest?.returnWindowEndsAt || getReturnWindowEndsAt(order))}
+              </p>
+              <p className="mt-1 text-xs font-medium text-amber-800">
+                You can request a return only within 7 days after delivery.
+              </p>
+            </div>
+          )}
+
           <div className="mt-6 space-y-4">
             {deliveryTimeline.map((step, index) => (
               <TimelineStep key={step.key} title={step.title} note={step.note} active={index <= currentStepIndex} />
             ))}
+          </div>
+
+          <div className="mt-6 rounded-2xl border border-slate-100 bg-slate-50 p-4">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-[0.24em] text-slate-400">Vendor Shipments</p>
+                <h2 className="mt-1 font-playfair text-xl font-black text-navy">Amazon-style shipment breakdown</h2>
+              </div>
+              <StatusBadge value={order.shiprocket?.overallStatus || order.status} />
+            </div>
+
+            {!vendorShipments.length ? (
+              <p className="mt-3 text-sm font-semibold text-slate-500">Shipment records will appear here once the backend splits the order vendor-wise.</p>
+            ) : (
+              <div className="mt-4 grid gap-4">
+                {vendorShipments.map((shipment, index) => (
+                  <div key={shipment.shipmentId || shipment.orderId || index} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      <div>
+                        <p className="text-[10px] font-black uppercase tracking-[0.24em] text-slate-400">Shipment {index + 1}</p>
+                        <p className="mt-1 text-lg font-black text-navy">{shipment.vendorName || shipment.vendorId || 'Vendor shipment'}</p>
+                        <p className="mt-1 text-sm font-semibold text-slate-500">Order {shipment.orderId || '-'} · Shipment {shipment.shipmentId || '-'}</p>
+                      </div>
+                      <StatusBadge value={shipment.status || shipment.shipmentStatus || 'pending'} />
+                    </div>
+
+                    <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                      <InfoTile label="Pickup" value={shipment.pickupLocation || shipment.pickup_location || order.vendor?.shipping?.shiprocketPickupLocation || '-'} />
+                      <InfoTile label="AWB" value={shipment.awbCode || shipment.awb || '-'} />
+                      <InfoTile label="Courier" value={shipment.courierName || shipment.courier_name || '-'} />
+                      <InfoTile label="Shipping" value={formatCurrency(shipment.shippingCharge || 0)} />
+                    </div>
+
+                    <div className="mt-4 rounded-xl bg-slate-50 p-3">
+                      <p className="text-[10px] font-black uppercase tracking-[0.24em] text-slate-400">Tracking Timeline</p>
+                      <div className="mt-3 space-y-2">
+                        {(shipment.raw?.trackingHistory || shipment.raw?.tracking_history || shipment.raw?.data?.trackingHistory || []).slice(0, 5).map((event, eventIndex) => (
+                          <div key={`${shipment.shipmentId || index}-${eventIndex}`} className="flex items-start gap-2">
+                            <div className="mt-1 h-2.5 w-2.5 rounded-full bg-navy" />
+                            <div>
+                              <p className="text-sm font-bold text-slate-900">{event.label || event.status || 'Update'}</p>
+                              <p className="text-xs font-medium text-slate-500">{event.description || event.message || 'Tracking update'}</p>
+                              <p className="text-[11px] font-semibold text-slate-400">{event.at ? formatDate(event.at) : ''}</p>
+                            </div>
+                          </div>
+                        ))}
+                        {!((shipment.raw?.trackingHistory || shipment.raw?.tracking_history || shipment.raw?.data?.trackingHistory || []).length) && (
+                          <p className="text-xs font-semibold text-slate-500">Tracking history will appear here after courier sync.</p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {trackingSnapshots.length > 0 && (
+              <div className="mt-4 rounded-xl border border-slate-200 bg-white p-4">
+                <p className="text-[10px] font-black uppercase tracking-[0.24em] text-slate-400">Live Tracking Snapshots</p>
+                <div className="mt-3 space-y-3">
+                  {trackingSnapshots.map((snapshot, index) => (
+                    <div key={`${snapshot.shipmentId || index}`} className="rounded-xl bg-slate-50 p-3">
+                      <p className="text-sm font-black text-slate-900">{snapshot.shipmentId || `Shipment ${index + 1}`}</p>
+                      <pre className="mt-2 overflow-auto text-[11px] font-mono text-slate-600">{JSON.stringify(snapshot.raw || snapshot, null, 2)}</pre>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="mt-6 rounded-2xl bg-gradient-to-r from-slate-50 to-slate-100/50 p-4">
@@ -1758,7 +1949,7 @@ export function OrderDetailPage() {
               )}
               <button
                 type="button"
-                onClick={() => cancelOrder(order._id)}
+                onClick={() => setShowCancelModal(true)}
                 disabled={!canCancelOrder(order)}
                 className="w-full rounded-xl border border-rose-200 px-4 py-3 text-sm font-black text-rose-600 transition hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-50"
               >
@@ -1774,6 +1965,11 @@ export function OrderDetailPage() {
                   Return in progress
                 </span>
               )}
+              {order.cancellationRequest && (
+                <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-black uppercase tracking-wide text-slate-700 ring-1 ring-slate-200">
+                  Cancellation {order.cancellationRequest.status?.replace(/_/g, ' ') || 'status'}
+                </span>
+              )}
               {order.refund && (
                 <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-black uppercase tracking-wide text-emerald-700 ring-1 ring-emerald-200">
                   Refund tracked
@@ -1781,7 +1977,7 @@ export function OrderDetailPage() {
               )}
             </div>
 
-            {(order.returnRequest || order.refund) && (
+            {(order.returnRequest || order.cancellationRequest || order.refund) && (
               <div className="mt-5 space-y-3">
                 {order.returnRequest && (
                   <div className="rounded-2xl border border-amber-200 bg-amber-50/70 p-4">
@@ -1789,6 +1985,20 @@ export function OrderDetailPage() {
                     <p className="mt-1 text-sm font-semibold text-amber-900">
                       {order.returnRequest.status.replace(/_/g, ' ')}
                     </p>
+                    {order.returnRequest.upiId && (
+                      <p className="mt-1 text-xs font-medium text-amber-800">UPI: {order.returnRequest.upiId}</p>
+                    )}
+                  </div>
+                )}
+                {order.cancellationRequest && (
+                  <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
+                    <p className="text-[10px] font-black uppercase tracking-[0.24em] text-slate-700">Cancellation Status</p>
+                    <p className="mt-1 text-sm font-semibold text-slate-900">
+                      {order.cancellationRequest.status?.replace(/_/g, ' ') || 'cancelled'}
+                    </p>
+                    {order.cancellationRequest.reason && (
+                      <p className="mt-1 text-xs font-medium text-slate-500">{order.cancellationRequest.reason}</p>
+                    )}
                   </div>
                 )}
                 {order.refund && (
@@ -1810,6 +2020,16 @@ export function OrderDetailPage() {
           order={order}
           initialItems={returnModalItems}
           onClose={() => setShowReturnModal(false)}
+        />
+      )}
+      {showCancelModal && (
+        <CancelOrderModal
+          order={order}
+          onClose={() => setShowCancelModal(false)}
+          onSubmit={async ({ reason, upiId }) => {
+            const result = await cancelOrder(order._id, { reason, upiId })
+            if (result) setShowCancelModal(false)
+          }}
         />
       )}
     </main>
@@ -2453,6 +2673,15 @@ function InfoBlock({ icon: Icon, title, text }) {
   )
 }
 
+function InfoTile({ label, value }) {
+  return (
+    <div className="rounded-xl bg-white p-3 shadow-sm">
+      <p className="text-[10px] font-black uppercase tracking-[0.24em] text-slate-400">{label}</p>
+      <p className="mt-1 text-sm font-semibold text-slate-700">{value}</p>
+    </div>
+  )
+}
+
 function TimelineStep({ title, note, active }) {
   return (
     <div className={`flex gap-3 rounded-xl border p-4 transition ${active ? 'border-navy bg-navy/5 shadow-sm' : 'border-slate-200 bg-white'}`}>
@@ -2467,6 +2696,144 @@ function TimelineStep({ title, note, active }) {
   )
 }
 
+function CancelOrderModal({ order, onClose, onSubmit }) {
+  const requiresUpi = order?.paymentMethod === 'razorpay' && order?.paymentStatus === 'paid'
+  const [reason, setReason] = useState('')
+  const [upiId, setUpiId] = useState('')
+  const [notes, setNotes] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+
+  const reasonOptions = [
+    ['changed_mind', 'Changed my mind'],
+    ['ordered_by_mistake', 'Ordered by mistake'],
+    ['wrong_address', 'Wrong delivery address'],
+    ['delayed_delivery', 'Delivery taking too long'],
+    ['duplicate_order', 'Duplicate order'],
+    ['other', 'Other reason'],
+  ]
+
+  const handleSubmit = async () => {
+    if (!reason) {
+      toast.error('Please select a cancellation reason')
+      return
+    }
+    if (requiresUpi && !upiId.trim()) {
+      toast.error('UPI ID is required for prepaid Razorpay cancellations')
+      return
+    }
+
+    setSubmitting(true)
+    try {
+      await onSubmit?.({
+        reason: notes.trim() ? `${reason} - ${notes.trim()}` : reason,
+        upiId: requiresUpi ? upiId.trim() : '',
+      })
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-[95] overflow-y-auto bg-navy/35 px-4 py-6 backdrop-blur-sm">
+      <div className="mx-auto flex w-full max-w-2xl min-h-full items-center">
+        <div className="flex max-h-[calc(100vh-3rem)] w-full flex-col overflow-hidden rounded-[2rem] border border-slate-200/80 bg-white shadow-2xl">
+        <div className="flex items-start justify-between gap-3 border-b border-slate-100 p-6">
+          <div>
+            <p className="text-[10px] font-black uppercase tracking-[0.28em] text-slate-400">Cancel Order</p>
+            <h2 className="mt-1 font-playfair text-2xl font-black text-navy">{order?.orderNumber || 'Order'} cancellation</h2>
+            <p className="mt-1 text-sm font-medium text-slate-500">
+              {requiresUpi
+                ? 'This order was paid online, so we need a UPI ID to process the cancellation refund.'
+                : 'This order is COD, so only the cancellation reason is required.'}
+            </p>
+          </div>
+          <button type="button" onClick={onClose} className="grid h-9 w-9 place-items-center rounded-full bg-slate-100 text-slate-500 transition hover:bg-slate-200">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        <div className="flex-1 space-y-4 overflow-y-auto p-6">
+          <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4">
+            <p className="text-xs font-black uppercase tracking-[0.22em] text-slate-400">Payment Summary</p>
+            <div className="mt-3 grid gap-3 sm:grid-cols-3">
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-wide text-slate-400">Method</p>
+                <p className="mt-1 text-sm font-bold text-slate-800">{order?.paymentMethod || '-'}</p>
+              </div>
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-wide text-slate-400">Payment</p>
+                <p className="mt-1 text-sm font-bold text-slate-800">{order?.paymentStatus || '-'}</p>
+              </div>
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-wide text-slate-400">Refund Rule</p>
+                <p className="mt-1 text-sm font-bold text-slate-800">{requiresUpi ? 'UPI required' : 'UPI optional'}</p>
+              </div>
+            </div>
+          </div>
+
+          <label className="block">
+            <span className="text-sm font-black text-slate-700">Cancellation reason</span>
+            <select
+              value={reason}
+              onChange={(event) => setReason(event.target.value)}
+              className="mt-1 h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold outline-none focus:border-navy/40"
+            >
+              <option value="">Select a reason</option>
+              {reasonOptions.map(([value, label]) => (
+                <option key={value} value={label}>{label}</option>
+              ))}
+            </select>
+          </label>
+
+          <label className="block">
+            <span className="text-sm font-black text-slate-700">Additional notes</span>
+            <textarea
+              rows="3"
+              value={notes}
+              onChange={(event) => setNotes(event.target.value)}
+              placeholder="Add any extra details for support or the seller"
+              className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-3 text-sm font-medium outline-none focus:border-navy/40"
+            />
+          </label>
+
+          {requiresUpi && (
+            <label className="block">
+              <span className="text-sm font-black text-slate-700">UPI ID</span>
+              <input
+                value={upiId}
+                onChange={(event) => setUpiId(event.target.value)}
+                placeholder="example@upi"
+                className="mt-1 h-11 w-full rounded-xl border border-slate-200 px-3 text-sm font-semibold outline-none focus:border-navy/40"
+              />
+              <p className="mt-1 text-xs font-medium text-slate-500">Required for prepaid Razorpay cancellations so the refund can be processed.</p>
+            </label>
+          )}
+        </div>
+
+        <div className="flex items-center justify-between gap-3 border-t border-slate-100 p-6">
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-xl border border-slate-200 px-5 py-2.5 text-sm font-black text-slate-600 transition hover:border-slate-300 hover:text-slate-800"
+          >
+            Keep Order
+          </button>
+          <button
+            type="button"
+            onClick={handleSubmit}
+            disabled={submitting}
+            className="inline-flex items-center gap-2 rounded-xl bg-rose-600 px-5 py-2.5 text-sm font-black text-white transition hover:bg-rose-700 disabled:opacity-60"
+          >
+            <Banknote className="h-4 w-4" />
+            {submitting ? 'Cancelling...' : 'Cancel Order'}
+          </button>
+        </div>
+      </div>
+      </div>
+    </div>
+  )
+}
+
 function ReturnRequestModal({ order, onClose, initialItems = [] }) {
   const { submitReturnRequest } = useShop()
   const [step, setStep] = useState(0)
@@ -2474,13 +2841,14 @@ function ReturnRequestModal({ order, onClose, initialItems = [] }) {
   const [reason, setReason] = useState('')
   const [reasonLabel, setReasonLabel] = useState('')
   const [details, setDetails] = useState('')
+  const [upiId, setUpiId] = useState('')
   const [returnMethod, setReturnMethod] = useState('pickup')
   const [refundMethod, setRefundMethod] = useState('original')
   const [evidence, setEvidence] = useState([])
   const [submitting, setSubmitting] = useState(false)
   const [errors, setErrors] = useState({})
 
-  const steps = ['Select Items', 'Reason', 'Details', 'Return Method', 'Refund Method', 'Evidence', 'Review']
+  const steps = ['Select Items', 'Reason', 'Details', 'UPI', 'Return Method', 'Refund Method', 'Evidence', 'Review']
 
   const toggleItem = (item) => {
     setSelectedItems((prev) =>
@@ -2508,6 +2876,7 @@ function ReturnRequestModal({ order, onClose, initialItems = [] }) {
   const handleNext = () => {
     if (step === 0 && !selectedItems.length) { setErrors({ items: 'Select at least one item' }); return }
     if (step === 1 && !reason) { setErrors({ reason: 'Select a return reason' }); return }
+    if (step === 3 && !upiId.trim()) { setErrors({ upiId: 'Enter a UPI ID to receive the refund' }); return }
     setErrors({})
     setStep((prev) => Math.min(prev + 1, steps.length - 1))
   }
@@ -2518,19 +2887,23 @@ function ReturnRequestModal({ order, onClose, initialItems = [] }) {
       return
     }
     setSubmitting(true)
-    const result = submitReturnRequest(order._id, {
-      items: selectedItems,
-      reason,
-      reasonLabel,
-      details,
-      returnMethod,
-      refundMethod,
-      evidence,
-    })
-    setSubmitting(false)
-    if (result) {
-      toast.success('Return request submitted successfully')
-      onClose()
+    try {
+      const result = await submitReturnRequest(order._id, {
+        items: selectedItems,
+        reason,
+        reasonLabel,
+        details,
+        upiId,
+        returnMethod,
+        refundMethod,
+        evidence,
+      })
+      if (result) {
+        toast.success('Return request submitted successfully')
+        onClose()
+      }
+    } finally {
+      setSubmitting(false)
     }
   }
 
@@ -2605,6 +2978,23 @@ function ReturnRequestModal({ order, onClose, initialItems = [] }) {
       case 3:
         return (
           <div>
+            <p className="mb-4 text-sm font-medium text-slate-600">Enter the UPI ID where the refund should be sent:</p>
+            <label className="block">
+              <span className="text-xs font-black uppercase tracking-wider text-slate-400">UPI ID</span>
+              <input
+                value={upiId}
+                onChange={(e) => setUpiId(e.target.value)}
+                placeholder="name@upi"
+                className="mt-1 h-11 w-full rounded-xl border border-slate-200 px-4 text-sm font-semibold outline-none transition focus:border-navy/40"
+              />
+              <p className="mt-2 text-xs text-slate-400">This is required for COD and prepaid return requests.</p>
+            </label>
+            {errors.upiId && <p className="mt-2 text-xs font-semibold text-rose-600">{errors.upiId}</p>}
+          </div>
+        )
+      case 4:
+        return (
+          <div>
             <p className="mb-4 text-sm font-medium text-slate-600">How would you like to return the item?</p>
             <div className="space-y-3">
               {RETURN_METHODS.map((m) => (
@@ -2629,7 +3019,7 @@ function ReturnRequestModal({ order, onClose, initialItems = [] }) {
             </div>
           </div>
         )
-      case 4:
+      case 5:
         return (
           <div>
             <p className="mb-4 text-sm font-medium text-slate-600">How would you like to receive your refund?</p>
@@ -2656,7 +3046,7 @@ function ReturnRequestModal({ order, onClose, initialItems = [] }) {
             </div>
           </div>
         )
-      case 5:
+      case 6:
         return (
           <div>
             <p className="mb-4 text-sm font-medium text-slate-600">Upload images as evidence (optional):</p>
@@ -2684,7 +3074,7 @@ function ReturnRequestModal({ order, onClose, initialItems = [] }) {
             )}
           </div>
         )
-      case 6:
+      case 7:
         return (
           <div className="space-y-4">
             <div className="rounded-xl bg-slate-50 p-4">
@@ -2703,6 +3093,10 @@ function ReturnRequestModal({ order, onClose, initialItems = [] }) {
                 <p className="mt-1 text-sm font-medium text-slate-700">{details}</p>
               </div>
             )}
+            <div className="rounded-xl bg-slate-50 p-4">
+              <p className="text-xs font-black uppercase tracking-wider text-slate-400">UPI ID</p>
+              <p className="mt-1 text-sm font-medium text-slate-700">{upiId || '-'}</p>
+            </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="rounded-xl bg-slate-50 p-4">
                 <p className="text-xs font-black uppercase tracking-wider text-slate-400">Return Method</p>

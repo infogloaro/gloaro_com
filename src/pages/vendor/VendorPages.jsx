@@ -5,9 +5,9 @@ import toast from 'react-hot-toast'
 import { vendorApi } from '../../api/vendor'
 import { customerApi } from '../../api/customer'
 import StatusBadge from '../../components/common/StatusBadge'
+import FormField from '../../components/forms/FormField'
 import { formatCurrency, formatDate } from '../../utils/format'
 import NotificationsPage from '../shared/NotificationsPage'
-import ProfilePage from '../shared/ProfilePage'
 import ResourceListPage from '../shared/ResourceListPage'
 import SimpleJsonForm from '../shared/SimpleJsonForm'
 import DataTable from '../../components/tables/DataTable'
@@ -34,19 +34,287 @@ const ORDER_STATUS_OPTIONS = [
   { value: 'cancelled', label: 'Cancelled' },
 ]
 
+const buildPickupAddressState = (vendor = {}) => {
+  const pickup = vendor.shipping?.pickupAddress || {}
+  const address = vendor.address || {}
+
+  return {
+    contactName: pickup.contactName || vendor.ownerName || '',
+    phone: pickup.phone || vendor.phone || '',
+    alternatePhone: pickup.alternatePhone || vendor.alternatePhone || '',
+    email: pickup.email || vendor.email || '',
+    addressLine1: pickup.addressLine1 || address.street || '',
+    addressLine2: pickup.addressLine2 || '',
+    landmark: pickup.landmark || '',
+    city: pickup.city || address.city || '',
+    state: pickup.state || address.state || '',
+    country: pickup.country || address.country || 'India',
+    pincode: pickup.pincode || address.pincode || '',
+    gstNumber: pickup.gstNumber || vendor.gstNumber || '',
+  }
+}
+
 export function VendorProfilePage() {
-  return (
-    <div className="grid gap-5 xl:grid-cols-2">
-      <ResourceListPage title="Business Profile" fetcher={async () => {
-        try {
-          const response = await vendorApi.profile()
-          return { data: { data: response.data.data ? [response.data.data] : [] } }
-        } catch (error) {
-          if (error.response?.status === 404) return { data: { data: [] } }
-          throw error
+  const [vendor, setVendor] = useState(null)
+  const [pickupForm, setPickupForm] = useState(buildPickupAddressState())
+  const [loadingProfile, setLoadingProfile] = useState(true)
+  const [savingProfile, setSavingProfile] = useState(false)
+  const [clearingProfile, setClearingProfile] = useState(false)
+
+  useEffect(() => {
+    let alive = true
+
+    const loadVendor = async () => {
+      setLoadingProfile(true)
+      try {
+        const response = await vendorApi.profile()
+        const vendorData = response.data?.data || response.data || null
+        if (!alive) return
+        setVendor(vendorData)
+        setPickupForm(buildPickupAddressState(vendorData || {}))
+      } catch (error) {
+        if (!alive) return
+        if (error.response?.status === 404) {
+          setVendor(null)
+          setPickupForm(buildPickupAddressState())
+        } else {
+          toast.error(error.response?.data?.message || 'Failed to load vendor profile')
         }
-      }} columns={[{ key: 'businessName', header: 'Business' }, { key: 'status', header: 'Verification', render: (row) => <StatusBadge value={row.status} /> }]} />
-      <ProfilePage />
+      } finally {
+        if (alive) setLoadingProfile(false)
+      }
+    }
+
+    loadVendor()
+
+    return () => {
+      alive = false
+    }
+  }, [])
+
+  const handleChange = (event) => {
+    const { name, value } = event.target
+    setPickupForm((current) => ({ ...current, [name]: value }))
+  }
+
+  const handleSave = async (event) => {
+    event.preventDefault()
+    const vendorId = vendor?._id || vendor?.id
+    if (!vendorId) {
+      toast.error('Vendor profile is not available yet')
+      return
+    }
+
+    setSavingProfile(true)
+    try {
+      const payload = {
+        shipping: {
+          pickupAddress: {
+            contactName: pickupForm.contactName,
+            phone: pickupForm.phone,
+            alternatePhone: pickupForm.alternatePhone,
+            email: pickupForm.email,
+            addressLine1: pickupForm.addressLine1,
+            addressLine2: pickupForm.addressLine2,
+            landmark: pickupForm.landmark,
+            city: pickupForm.city,
+            state: pickupForm.state,
+            country: pickupForm.country || 'India',
+            pincode: pickupForm.pincode,
+            gstNumber: pickupForm.gstNumber,
+          },
+        },
+      }
+
+      const response = await vendorApi.updateProfile(vendorId, payload)
+      const updatedVendor = response.data?.data || response.data || vendor
+      setVendor(updatedVendor)
+      setPickupForm(buildPickupAddressState(updatedVendor))
+      toast.success('Pickup location saved')
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to save pickup location')
+    } finally {
+      setSavingProfile(false)
+    }
+  }
+
+  const handleClear = async () => {
+    const vendorId = vendor?._id || vendor?.id
+    if (!vendorId) {
+      toast.error('Vendor profile is not available yet')
+      return
+    }
+
+    setClearingProfile(true)
+    try {
+      const response = await vendorApi.updateProfile(vendorId, {
+        shipping: {
+          pickupAddress: null,
+        },
+      })
+      const updatedVendor = response.data?.data || response.data || vendor
+      setVendor(updatedVendor)
+      setPickupForm(buildPickupAddressState(updatedVendor))
+      toast.success('Pickup location removed')
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to remove pickup location')
+    } finally {
+      setClearingProfile(false)
+    }
+  }
+
+  const pickupStatus = vendor?.shipping?.shiprocketPickupStatus || 'NOT_CONFIGURED'
+  const pickupLocation = vendor?.shipping?.shiprocketPickupLocation || 'Not generated yet'
+  const pickupApproved = vendor?.shipping?.shiprocketPickupApproved
+
+  return (
+    <div className="grid gap-5 xl:grid-cols-[1fr_1.2fr]">
+      <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <p className="text-[10px] font-black uppercase tracking-[0.28em] text-slate-400">Vendor Profile</p>
+            <h2 className="mt-1 text-2xl font-black text-slate-900">Pickup Location Setup</h2>
+            <p className="mt-2 text-sm font-semibold text-slate-500">
+              Update the address Shiprocket will use as your pickup location. This also appears in your vendor dashboard.
+            </p>
+          </div>
+          <StatusBadge value={vendor?.status || 'pending'} />
+        </div>
+
+        <div className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-left">
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Business Snapshot</p>
+          <div className="mt-3 space-y-2">
+            <div>
+              <p className="text-sm font-black text-slate-900">{vendor?.businessName || 'Vendor business'}</p>
+              <p className="text-xs font-semibold text-slate-500">{vendor?.ownerName || 'Owner name not available'}</p>
+            </div>
+            <div className="grid gap-2 text-xs font-semibold text-slate-600">
+              <p><span className="font-black text-slate-800">Email:</span> {vendor?.email || '-'}</p>
+              <p><span className="font-black text-slate-800">Phone:</span> {vendor?.phone || '-'}</p>
+              <p><span className="font-black text-slate-800">GST:</span> {vendor?.gstNumber || '-'}</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-4 rounded-2xl border border-blue-100 bg-blue-50 p-4 text-left">
+          <div className="flex items-center gap-2 text-[#0d4697]">
+            <Truck className="h-4 w-4" />
+            <p className="text-xs font-black uppercase tracking-[0.2em]">Shiprocket Pickup</p>
+          </div>
+          <p className="mt-2 text-sm font-semibold text-slate-700">
+            <span className="font-black text-slate-900">Location:</span> {pickupLocation}
+          </p>
+          <p className="mt-1 text-sm font-semibold text-slate-700">
+            <span className="font-black text-slate-900">Status:</span> {pickupStatus}
+          </p>
+          <p className="mt-1 text-sm font-semibold text-slate-700">
+            <span className="font-black text-slate-900">Approval:</span> {pickupApproved ? 'Approved' : 'Pending review'}
+          </p>
+          <p className="mt-3 text-xs font-semibold text-slate-500">
+            Updating the pickup address will mark the pickup location for revalidation.
+          </p>
+        </div>
+
+        <div className="mt-4 rounded-2xl border border-slate-200 bg-white p-4 text-left">
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Current Address</p>
+          <p className="mt-2 text-sm font-semibold text-slate-700">
+            {[
+              vendor?.shipping?.pickupAddress?.addressLine1,
+              vendor?.shipping?.pickupAddress?.addressLine2,
+              vendor?.shipping?.pickupAddress?.landmark,
+              vendor?.shipping?.pickupAddress?.city,
+              vendor?.shipping?.pickupAddress?.state,
+              vendor?.shipping?.pickupAddress?.pincode,
+            ].filter(Boolean).join(', ') || 'No pickup address saved yet'}
+          </p>
+        </div>
+      </section>
+
+      <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <h3 className="text-xl font-black text-slate-900">Edit Pickup Address</h3>
+            <p className="mt-1 text-sm font-semibold text-slate-500">
+              Use the address below as your vendor pickup location for orders, cancellations, and returns.
+            </p>
+          </div>
+          {loadingProfile && <p className="text-xs font-black uppercase tracking-wider text-slate-400">Loading</p>}
+        </div>
+
+        <form onSubmit={handleSave} className="mt-6 space-y-4">
+          <div className="grid gap-4 md:grid-cols-2">
+            <FormField label="Contact Name">
+              <input name="contactName" value={pickupForm.contactName} onChange={handleChange} className="h-11 w-full rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-900 outline-none focus:border-[#0d4697]" />
+            </FormField>
+            <FormField label="Phone">
+              <input name="phone" value={pickupForm.phone} onChange={handleChange} className="h-11 w-full rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-900 outline-none focus:border-[#0d4697]" />
+            </FormField>
+            <FormField label="Alternate Phone">
+              <input name="alternatePhone" value={pickupForm.alternatePhone} onChange={handleChange} className="h-11 w-full rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-900 outline-none focus:border-[#0d4697]" />
+            </FormField>
+            <FormField label="Email">
+              <input name="email" type="email" value={pickupForm.email} onChange={handleChange} className="h-11 w-full rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-900 outline-none focus:border-[#0d4697]" />
+            </FormField>
+          </div>
+
+          <FormField label="Address Line 1">
+            <input name="addressLine1" value={pickupForm.addressLine1} onChange={handleChange} className="h-11 w-full rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-900 outline-none focus:border-[#0d4697]" />
+          </FormField>
+
+          <FormField label="Address Line 2">
+            <input name="addressLine2" value={pickupForm.addressLine2} onChange={handleChange} className="h-11 w-full rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-900 outline-none focus:border-[#0d4697]" />
+          </FormField>
+
+          <div className="grid gap-4 md:grid-cols-2">
+            <FormField label="Landmark">
+              <input name="landmark" value={pickupForm.landmark} onChange={handleChange} className="h-11 w-full rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-900 outline-none focus:border-[#0d4697]" />
+            </FormField>
+            <FormField label="GST Number">
+              <input name="gstNumber" value={pickupForm.gstNumber} onChange={handleChange} className="h-11 w-full rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-900 outline-none focus:border-[#0d4697]" />
+            </FormField>
+            <FormField label="City">
+              <input name="city" value={pickupForm.city} onChange={handleChange} className="h-11 w-full rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-900 outline-none focus:border-[#0d4697]" />
+            </FormField>
+            <FormField label="State">
+              <input name="state" value={pickupForm.state} onChange={handleChange} className="h-11 w-full rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-900 outline-none focus:border-[#0d4697]" />
+            </FormField>
+            <FormField label="Country">
+              <input name="country" value={pickupForm.country} onChange={handleChange} className="h-11 w-full rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-900 outline-none focus:border-[#0d4697]" />
+            </FormField>
+            <FormField label="Pincode">
+              <input name="pincode" value={pickupForm.pincode} onChange={handleChange} className="h-11 w-full rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-900 outline-none focus:border-[#0d4697]" />
+            </FormField>
+          </div>
+
+          <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-left">
+            <p className="text-xs font-black uppercase tracking-[0.2em] text-amber-700">Important</p>
+            <p className="mt-2 text-sm font-semibold text-amber-900">
+              Saving changes will update your Shiprocket pickup location and may reset approval to pending until verified again.
+            </p>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-3">
+            <button
+              type="submit"
+              disabled={savingProfile || loadingProfile}
+              className="inline-flex items-center gap-2 rounded-xl bg-[#0d4697] px-5 py-3 text-sm font-black text-white hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {savingProfile ? 'Saving...' : 'Save Pickup Location'}
+            </button>
+            <button
+              type="button"
+              onClick={handleClear}
+              disabled={clearingProfile || savingProfile || loadingProfile}
+              className="inline-flex items-center gap-2 rounded-xl border border-rose-200 bg-rose-50 px-5 py-3 text-sm font-black text-rose-700 hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {clearingProfile ? 'Removing...' : 'Remove Pickup Location'}
+            </button>
+            <p className="text-xs font-semibold text-slate-500">
+              This address is used for vendor dashboard pickup display and shipping operations.
+            </p>
+          </div>
+        </form>
+      </section>
     </div>
   )
 }
@@ -633,18 +901,28 @@ export function VendorOrdersPage() {
   }
 
   const stats = useMemo(() => {
-    const totalRevenue = filteredOrders.reduce((sum, order) => sum + Number(order.total || 0), 0)
+    const revenueOrders = orders.filter((order) => {
+      const status = String(order.status || '')
+      const paymentStatus = String(order.paymentStatus || '')
+      const paymentMethod = String(order.paymentMethod || '').toLowerCase()
+      const isEligibleMethod = ['cod', 'razorpay'].includes(paymentMethod)
+      const isCompleted = status === 'delivered' && paymentStatus === 'paid'
+      return isEligibleMethod && isCompleted && !order.returnRequest && !order.cancellationRequest
+    })
+    const totalRevenue = revenueOrders.reduce((sum, order) => sum + Number(order.total || 0), 0)
+    const dashboardRevenue = Number(dashboard?.stats?.totalRevenue || 0)
+    const dashboardRevenueCount = Number(dashboard?.stats?.revenueOrderCount || 0)
     return {
       totalOrders: orders.length,
       pendingOrders: orders.filter((order) => ['placed', 'confirmed'].includes(order.status)).length,
       processingOrders: orders.filter((order) => ['processing', 'shipped'].includes(order.status)).length,
       deliveredOrders: orders.filter((order) => order.status === 'delivered').length,
       cancelledOrders: orders.filter((order) => order.status === 'cancelled').length,
-      totalRevenue,
-      avgOrderValue: orders.length ? Math.round(totalRevenue / orders.length) : 0,
+      totalRevenue: dashboardRevenue || totalRevenue,
+      avgOrderValue: dashboardRevenueCount ? Math.round((dashboardRevenue || totalRevenue) / dashboardRevenueCount) : (revenueOrders.length ? Math.round(totalRevenue / revenueOrders.length) : 0),
       dashboardOrders: dashboard?.stats?.totalOrders || 0,
     }
-  }, [dashboard?.stats?.totalOrders, filteredOrders, orders])
+  }, [dashboard?.stats?.totalOrders, orders])
 
   return (
     <div className="space-y-6">
@@ -675,7 +953,7 @@ export function VendorOrdersPage() {
           <MetricCard label="Pending" value={stats.pendingOrders} helper="Placed / confirmed" icon={Clock3} accent="amber" />
           <MetricCard label="Processing" value={stats.processingOrders} helper="Packed / shipped" icon={Truck} accent="blue" />
           <MetricCard label="Delivered" value={stats.deliveredOrders} helper="Completed orders" icon={CircleDashed} accent="emerald" />
-          <MetricCard label="Revenue" value={formatCurrency(stats.totalRevenue)} helper="Visible orders" icon={Banknote} accent="slate" />
+          <MetricCard label="Revenue" value={formatCurrency(stats.totalRevenue)} helper="Delivered COD / Razorpay only" icon={Banknote} accent="slate" />
           <MetricCard label="AOV" value={formatCurrency(stats.avgOrderValue)} helper="Average order value" icon={Banknote} accent="violet" />
         </div>
       </section>
@@ -695,7 +973,7 @@ export function VendorOrdersPage() {
                   value={searchQuery}
                   onChange={(event) => setSearchQuery(event.target.value)}
                   placeholder="Search order, customer, product..."
-                  className="w-64 bg-transparent text-xs font-semibold outline-none placeholder:text-slate-400"
+                  className="w-64 bg-transparent text-xs font-semibold text-slate-900 caret-slate-900 outline-none placeholder:text-slate-400"
                 />
               </div>
               <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-black text-slate-600">
@@ -768,6 +1046,26 @@ export function VendorOrdersPage() {
                       <p className="text-xs font-medium text-slate-500">
                         {order.items?.length || 0} item(s) • {order.deliveryMethod || 'standard'} delivery • {formatCurrency(order.total)}
                       </p>
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        {order.cancellationRequest && (
+                          <OrderFlagBadge
+                            tone="rose"
+                            label={`Cancel ${String(order.cancellationRequest.status || 'requested').replace(/_/g, ' ')}`}
+                          />
+                        )}
+                        {order.returnRequest && (
+                          <OrderFlagBadge
+                            tone="amber"
+                            label={`Return ${String(order.returnRequest.status || 'requested').replace(/_/g, ' ')}`}
+                          />
+                        )}
+                        {order.refund && (
+                          <OrderFlagBadge
+                            tone="emerald"
+                            label={`Refund ${String(order.refund.status || 'requested').replace(/_/g, ' ')}`}
+                          />
+                        )}
+                      </div>
                     </div>
 
                     <div className="flex items-center gap-3">
@@ -808,7 +1106,7 @@ export function VendorOrdersPage() {
             </div>
             <textarea
               rows={5}
-              className="mt-4 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium outline-none focus:border-[#0d4697]"
+              className="mt-4 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-900 caret-slate-900 placeholder:text-slate-400 outline-none focus:border-[#0d4697]"
               placeholder="Add private notes for your team..."
             />
           </div>
@@ -820,7 +1118,6 @@ export function VendorOrdersPage() {
 
 export function VendorReviewsPage() {
   const [reviews, setReviews] = useState([])
-  const [replyText, setReplyText] = useState({})
 
   useEffect(() => {
     vendorApi.reviews()
@@ -828,18 +1125,11 @@ export function VendorReviewsPage() {
       .catch(() => {})
   }, [])
 
-  const handleSendReply = (reviewId) => {
-    const text = replyText[reviewId]
-    if (!text?.trim()) return
-    toast.success('Reply submitted to customer review')
-    setReplyText(curr => ({ ...curr, [reviewId]: '' }))
-  }
-
   return (
     <div className="space-y-6">
       <div>
         <h2 className="text-2xl font-black text-slate-900">Customer Reviews & Ratings</h2>
-        <p className="text-sm font-semibold text-slate-500">View customer ratings, comment logs, and write response replies.</p>
+        <p className="text-sm font-semibold text-slate-500">View customer ratings and review comments from the backend.</p>
       </div>
 
       <div className="grid gap-6">
@@ -863,24 +1153,6 @@ export function VendorReviewsPage() {
               <p className="text-xs font-semibold text-slate-600 leading-relaxed bg-slate-50 p-3 rounded-lg">
                 "{r.comment || 'Outstanding services!'}"
               </p>
-
-              <div className="space-y-2 border-t border-slate-100 pt-4">
-                <p className="text-[10px] font-black uppercase text-slate-400">Reply to Review</p>
-                <div className="flex gap-2">
-                  <input
-                    placeholder="Type your response reply..."
-                    value={replyText[r._id] || ''}
-                    onChange={e => setReplyText(curr => ({ ...curr, [r._id]: e.target.value }))}
-                    className="flex-1 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold outline-none"
-                  />
-                  <button
-                    onClick={() => handleSendReply(r._id)}
-                    className="rounded-lg bg-[#0d4697] px-4 py-1.5 text-xs font-extrabold text-white hover:bg-blue-800 shrink-0"
-                  >
-                    Reply
-                  </button>
-                </div>
-              </div>
             </div>
           ))
         )}
@@ -936,6 +1208,9 @@ function OrderDetailPanel({ order, onCopyOrderNumber, statusDraft, statusOptions
   }
 
   const tracking = order.tracking?.length ? order.tracking : buildFallbackTracking(order.status)
+  const shiprocketShipments = Array.isArray(order.shiprocket?.shipments) ? order.shiprocket.shipments : []
+  const trackingSnapshots = Array.isArray(order.shiprocket?.trackingSnapshots) ? order.shiprocket.trackingSnapshots : []
+  const trackingSnapshotMap = new Map(trackingSnapshots.map((snapshot) => [String(snapshot?.shipmentId || snapshot?.orderId || ''), snapshot]))
 
   return (
     <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
@@ -965,7 +1240,7 @@ function OrderDetailPanel({ order, onCopyOrderNumber, statusDraft, statusOptions
             <select
               value={statusDraft || order.status}
               onChange={(event) => onStatusDraftChange?.(event.target.value)}
-              className="mt-1 h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold outline-none focus:border-[#0d4697]"
+              className="mt-1 h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-900 outline-none focus:border-[#0d4697]"
             >
               {statusOptions?.map((status) => (
                 <option key={status.value} value={status.value}>
@@ -1022,6 +1297,64 @@ function OrderDetailPanel({ order, onCopyOrderNumber, statusDraft, statusOptions
         </div>
       </div>
 
+      {(order.returnRequest || order.cancellationRequest || order.refund) && (
+        <div className="mt-4 rounded-2xl border border-slate-100 bg-slate-50 p-4">
+          <p className="text-[10px] font-black uppercase tracking-wide text-slate-400">Customer Actions</p>
+          <div className="mt-3 grid gap-4 xl:grid-cols-3">
+            {order.cancellationRequest && (
+              <RequestDetailCard
+                title="Cancellation"
+                tone="rose"
+                request={order.cancellationRequest}
+                fields={[
+                  { label: 'Status', value: order.cancellationRequest.status?.replace(/_/g, ' ') || 'requested' },
+                  { label: 'Reason', value: order.cancellationRequest.reason },
+                  { label: 'UPI ID', value: order.cancellationRequest.upiId || '-' },
+                  { label: 'Requested At', value: order.cancellationRequest.requestedAt ? formatDate(order.cancellationRequest.requestedAt) : '-' },
+                  { label: 'Completed At', value: order.cancellationRequest.completedAt ? formatDate(order.cancellationRequest.completedAt) : '-' },
+                  { label: 'Failure Reason', value: order.cancellationRequest.failureReason || '-' },
+                  { label: 'Refund ID', value: order.cancellationRequest.refundId || '-' },
+                ]}
+              />
+            )}
+            {order.returnRequest && (
+              <RequestDetailCard
+                title="Return"
+                tone="amber"
+                request={order.returnRequest}
+                fields={[
+                  { label: 'Status', value: order.returnRequest.status?.replace(/_/g, ' ') || 'requested' },
+                  { label: 'Reason', value: order.returnRequest.reasonLabel || order.returnRequest.reason },
+                  { label: 'UPI ID', value: order.returnRequest.upiId || '-' },
+                  { label: 'Return Method', value: order.returnRequest.returnMethod || '-' },
+                  { label: 'Refund Method', value: order.returnRequest.refundMethod || '-' },
+                  { label: 'Requested At', value: order.returnRequest.requestedAt ? formatDate(order.returnRequest.requestedAt) : '-' },
+                  { label: 'Window Ends', value: order.returnRequest.returnWindowEndsAt ? formatDate(order.returnRequest.returnWindowEndsAt) : '-' },
+                  { label: 'Rejection Reason', value: order.returnRequest.rejectionReason || '-' },
+                ]}
+              />
+            )}
+            {order.refund && (
+              <RequestDetailCard
+                title="Refund"
+                tone="emerald"
+                request={order.refund}
+                fields={[
+                  { label: 'Status', value: order.refund.status || 'requested' },
+                  { label: 'Reason', value: order.refund.reason || order.refund.reasonLabel || '-' },
+                  { label: 'UPI ID', value: order.refund.upiId || '-' },
+                  { label: 'Amount', value: formatCurrency(order.refund.amount || order.refund.refundAmount || 0) },
+                  { label: 'Refund ID', value: order.refund.refundId || '-' },
+                  { label: 'Requested At', value: order.refund.requestedAt ? formatDate(order.refund.requestedAt) : '-' },
+                  { label: 'Completed At', value: order.refund.refundedAt ? formatDate(order.refund.refundedAt) : '-' },
+                  { label: 'Failure Reason', value: order.refund.failureReason || '-' },
+                ]}
+              />
+            )}
+          </div>
+        </div>
+      )}
+
       <div className="mt-4 rounded-2xl border border-slate-100 p-4">
         <p className="text-[10px] font-black uppercase tracking-wide text-slate-400">Fulfillment Timeline</p>
         <div className="mt-4 space-y-3">
@@ -1037,6 +1370,109 @@ function OrderDetailPanel({ order, onCopyOrderNumber, statusDraft, statusOptions
             </div>
           ))}
         </div>
+      </div>
+
+      <div className="mt-4 rounded-2xl border border-slate-100 bg-slate-50 p-4">
+        <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
+          <div>
+            <p className="text-[10px] font-black uppercase tracking-wide text-slate-400">Shiprocket Fulfillment</p>
+            <p className="mt-1 text-sm font-semibold text-slate-600">
+              Shipment-level status, pickup details, and courier snapshots for this order.
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <StatusBadge value={order.shiprocket?.status || 'pending'} />
+            {order.shiprocket?.lastVendorStatus && (
+              <span className="rounded-full bg-white px-3 py-1 text-xs font-black uppercase tracking-wide text-slate-600 ring-1 ring-slate-200">
+                {order.shiprocket.lastVendorStatus}
+              </span>
+            )}
+          </div>
+        </div>
+
+        <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <InfoTile label="Shiprocket Status" value={order.shiprocket?.status || 'not synced'} />
+          <InfoTile label="Shipments" value={shiprocketShipments.length || 0} />
+          <InfoTile label="Last Vendor Update" value={order.shiprocket?.lastVendorStatusAt ? formatDate(order.shiprocket.lastVendorStatusAt) : '-'} />
+          <InfoTile label="Last Tracking Sync" value={order.shiprocket?.lastTrackingSyncAt ? formatDate(order.shiprocket.lastTrackingSyncAt) : '-'} />
+        </div>
+
+        {shiprocketShipments.length > 0 ? (
+          <div className="mt-4 space-y-3">
+            {shiprocketShipments.map((shipment, index) => {
+              const snapshot = trackingSnapshotMap.get(String(shipment.shipmentId || shipment.orderId || ''))
+              const trackingData = snapshot?.raw?.tracking_data || snapshot?.raw?.data || snapshot?.raw || {}
+              const activities = Array.isArray(trackingData.shipment_track_activities)
+                ? trackingData.shipment_track_activities
+                : Array.isArray(trackingData.activities)
+                  ? trackingData.activities
+                  : []
+              const currentStatus =
+                trackingData.current_status ||
+                trackingData.status ||
+                trackingData.shipment_status ||
+                shipment.status ||
+                'created'
+
+              return (
+                <div key={`${shipment.shipmentId || shipment.orderId || index}`} className="rounded-2xl border border-white bg-white p-4 shadow-sm">
+                  <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                    <div>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Package className="h-4 w-4 text-[#0d4697]" />
+                        <p className="text-sm font-black text-slate-900">{shipment.vendorName || 'Vendor shipment'}</p>
+                        <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-black uppercase tracking-wide text-slate-600">
+                          {currentStatus}
+                        </span>
+                      </div>
+                      <p className="mt-1 text-xs font-semibold text-slate-500">
+                        Order ID: {displayValue(shipment.orderId)} • Shipment ID: {displayValue(shipment.shipmentId)}
+                      </p>
+                    </div>
+
+                    {snapshot?.raw && (
+                      <div className="grid gap-2 text-right text-xs font-semibold text-slate-500">
+                        <p>AWB: {displayValue(trackingData.awb_code || trackingData.awbCode || '-')}</p>
+                        <p>Courier: {displayValue(trackingData.courier_name || trackingData.courierName || '-')}</p>
+                        <p>Updated: {displayValue(trackingData.updated_at || trackingData.updatedAt || trackingData.last_update_time || '-')}</p>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                    <InfoTile label="Pickup Location" value={order.shiprocket?.pickupLocation || shipment.pickup_location || '-'} />
+                    <InfoTile label="Shipment Status" value={shipment.status || currentStatus} />
+                  </div>
+
+                  {activities.length > 0 && (
+                    <div className="mt-4 rounded-2xl border border-slate-100 bg-slate-50 p-3">
+                      <p className="text-[10px] font-black uppercase tracking-wide text-slate-400">Courier Tracking</p>
+                      <div className="mt-3 space-y-3">
+                        {activities.slice(0, 4).map((activity, activityIndex) => (
+                          <div key={`${shipment.shipmentId || index}-activity-${activityIndex}`} className="flex items-start gap-3">
+                            <div className="mt-1 h-3 w-3 rounded-full bg-[#0d4697]" />
+                            <div>
+                              <p className="text-sm font-bold text-slate-900">
+                                {displayValue(activity.status || activity.current_status || activity.activity)}
+                              </p>
+                              <p className="text-xs font-semibold text-slate-500">
+                                {displayValue(activity.date_time || activity.date || activity.timestamp || activity.remarks || activity.location || '')}
+                              </p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+        ) : (
+          <div className="mt-4 rounded-2xl border border-dashed border-slate-200 bg-white p-4 text-sm font-semibold text-slate-500">
+            Shiprocket shipment details will appear here after the order is synced from the backend.
+          </div>
+        )}
       </div>
 
       {order.notes && (
@@ -1055,6 +1491,71 @@ function InfoTile({ label, value }) {
       <p className="text-[10px] font-black uppercase tracking-wide text-slate-400">{label}</p>
       <p className="mt-1 text-sm font-bold text-slate-900">{displayValue(value)}</p>
     </div>
+  )
+}
+
+function RequestDetailCard({ title, tone = 'slate', request, fields = [] }) {
+  const toneMap = {
+    amber: 'border-amber-200 bg-amber-50/70 text-amber-800',
+    rose: 'border-rose-200 bg-rose-50/70 text-rose-800',
+    emerald: 'border-emerald-200 bg-emerald-50/70 text-emerald-800',
+    slate: 'border-slate-200 bg-white text-slate-800',
+  }
+  const chipClass = toneMap[tone] || toneMap.slate
+
+  return (
+    <div className={`rounded-2xl border p-4 ${chipClass}`}>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="text-sm font-black">{title}</p>
+          <p className="mt-1 text-[11px] font-semibold opacity-80">
+            {request?.status ? String(request.status).replace(/_/g, ' ') : 'requested'}
+          </p>
+        </div>
+        <StatusBadge value={request?.status || 'requested'} />
+      </div>
+
+      <div className="mt-4 space-y-2 rounded-xl bg-white/80 p-3 ring-1 ring-black/5">
+        {fields.map((field) => (
+          <div key={`${title}-${field.label}`} className="flex items-start justify-between gap-3">
+            <p className="text-[10px] font-black uppercase tracking-wide text-slate-400">{field.label}</p>
+            <p className="max-w-[60%] text-right text-xs font-semibold text-slate-700">{displayValue(field.value)}</p>
+          </div>
+        ))}
+      </div>
+
+      {Array.isArray(request?.tracking) && request.tracking.length > 0 && (
+        <div className="mt-4">
+          <p className="text-[10px] font-black uppercase tracking-wide text-slate-400">Timeline</p>
+          <div className="mt-2 space-y-2">
+            {request.tracking.slice(0, 5).map((step, index) => (
+              <div key={`${title}-timeline-${step.status || index}`} className="flex items-start gap-2">
+                <div className={`mt-1 h-2.5 w-2.5 rounded-full ${step.at ? 'bg-[#0d4697]' : 'bg-slate-300'}`} />
+                <div>
+                  <p className="text-xs font-bold text-slate-800">{displayValue(step.label || step.status)}</p>
+                  <p className="text-[11px] font-semibold text-slate-500">{step.at ? formatDate(step.at) : step.description || 'Waiting'}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function OrderFlagBadge({ tone = 'slate', label }) {
+  const toneMap = {
+    amber: 'border-amber-200 bg-amber-50 text-amber-800',
+    rose: 'border-rose-200 bg-rose-50 text-rose-800',
+    emerald: 'border-emerald-200 bg-emerald-50 text-emerald-800',
+    slate: 'border-slate-200 bg-slate-50 text-slate-700',
+  }
+
+  return (
+    <span className={`inline-flex items-center rounded-full border px-2.5 py-1 text-[10px] font-black uppercase tracking-wide ${toneMap[tone] || toneMap.slate}`}>
+      {label}
+    </span>
   )
 }
 
@@ -1134,35 +1635,55 @@ export function VendorPaymentsPage() {
     loadPayments()
   }, [])
 
+  const settlementRows = useMemo(() => {
+    return payments.map((payment) => {
+      const grossAmount = Number(payment.amount || 0)
+      const commissionAmount = getCommissionAmount(payment)
+      const vendorShareAmount = getVendorShare(payment)
+      return {
+        ...payment,
+        grossAmount,
+        commissionAmount,
+        vendorShareAmount,
+        settlementStatus: getSettlementStatus(payment),
+        sourceLabel: getPaymentSourceLabel(payment),
+        orderLabel: payment.orderNumber || payment.invoiceNumber || payment._id,
+        customerLabel: getCustomerLabel(payment),
+      }
+    })
+  }, [payments])
+
   const stats = useMemo(() => {
-    const completedPayments = payments.filter((payment) => payment.status === 'completed')
-    const pendingPayments = payments.filter((payment) => payment.status === 'pending')
-    const refundedPayments = payments.filter((payment) => ['refunded', 'partially_refunded'].includes(payment.status))
-    const grossSales = payments.reduce((sum, payment) => sum + Number(payment.amount || 0), 0)
-    const completedAmount = completedPayments.reduce((sum, payment) => sum + Number(payment.amount || 0), 0)
-    const commission = Math.round(completedAmount * 0.05)
+    const completedPayments = settlementRows.filter((payment) => isRevenueEligible(payment))
+    const pendingPayments = settlementRows.filter((payment) => payment.status === 'pending')
+    const refundedPayments = settlementRows.filter((payment) => ['refunded', 'partially_refunded'].includes(payment.status))
+    const grossSales = completedPayments.reduce((sum, payment) => sum + Number(payment.grossAmount || 0), 0)
+    const completedAmount = completedPayments.reduce((sum, payment) => sum + Number(payment.grossAmount || 0), 0)
+    const commission = completedPayments.reduce((sum, payment) => sum + Number(payment.commissionAmount || 0), 0)
+    const vendorShare = completedPayments.reduce((sum, payment) => sum + Number(payment.vendorShareAmount || 0), 0)
 
     return {
       grossSales,
       commission,
-      netEarnings: Math.max(0, completedAmount - commission),
       completedCount: completedPayments.length,
       pendingCount: pendingPayments.length,
       refundedCount: refundedPayments.length,
+      completedAmount,
+      vendorShare,
       recentCompleted: completedPayments.slice(0, 5),
     }
-  }, [payments])
+  }, [settlementRows])
 
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-black text-slate-900">Payments & Commission Settle</h2>
-        <p className="text-sm font-semibold text-slate-500">Track transaction records, earnings, and settlement activity from the backend.</p>
+        <h2 className="text-2xl font-black text-slate-900">Vendor Payouts & Earnings</h2>
+        <p className="text-sm font-semibold text-slate-500">Track order payouts, earnings, and payment activity from the backend.</p>
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex gap-2 border-b border-slate-200 pb-px">
-          {['earnings', 'settlement', 'transactions'].map((tab) => (
+          {['earnings', 'payouts', 'transactions'].map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
@@ -1188,7 +1709,7 @@ export function VendorPaymentsPage() {
       </div>
 
       {activeTab === 'earnings' && (
-        <div className="grid gap-4 sm:grid-cols-3">
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm text-left">
             <p className="text-[10px] font-black uppercase text-slate-400">Gross Sales</p>
             <p className="text-xl font-black text-slate-800 mt-2">{formatCurrency(stats.grossSales)}</p>
@@ -1198,25 +1719,35 @@ export function VendorPaymentsPage() {
             <p className="text-xl font-black text-[#0d4697] mt-2">{formatCurrency(stats.commission)}</p>
           </div>
           <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm text-left">
-            <p className="text-[10px] font-black uppercase text-[#ffbf1a]">Net Earnings</p>
-            <p className="text-xl font-black text-emerald-700 mt-2">{formatCurrency(stats.netEarnings)}</p>
+            <p className="text-[10px] font-black uppercase text-slate-400">Settlement Value</p>
+            <p className="text-xl font-black text-slate-800 mt-2">{formatCurrency(stats.vendorShare)}</p>
           </div>
         </div>
       )}
 
-      {activeTab === 'settlement' && (
+      {activeTab === 'payouts' && (
         <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm space-y-4 text-left">
-          <h3 className="text-xs font-black uppercase text-slate-800">Settlement Ledger</h3>
+          <h3 className="text-xs font-black uppercase text-slate-800">Payout Summary</h3>
           {loading ? (
-            <p className="text-sm font-semibold text-slate-500">Loading settlement records...</p>
+            <p className="text-sm font-semibold text-slate-500">Loading payout records...</p>
           ) : stats.recentCompleted.length === 0 ? (
-            <p className="text-sm font-semibold text-slate-500">No completed settlements found yet.</p>
+            <p className="text-sm font-semibold text-slate-500">No completed payouts found yet.</p>
           ) : (
             <div className="space-y-3">
               {stats.recentCompleted.map((payment) => (
-                <div key={payment._id || payment.id} className="flex items-center justify-between gap-3 border-b border-slate-100 pb-2 text-xs">
-                  <span>Invoice {payment.invoiceNumber || payment._id}</span>
-                  <span className="font-extrabold text-emerald-700">Settled ({formatCurrency(payment.amount, payment.currency)})</span>
+                <div key={payment._id || payment.id} className="grid gap-2 rounded-2xl border border-slate-100 bg-slate-50 p-4 text-xs sm:grid-cols-[1.1fr_0.9fr_0.8fr] sm:items-center">
+                  <div>
+                    <p className="font-black text-slate-900">{payment.orderLabel}</p>
+                    <p className="mt-1 font-semibold text-slate-500">{payment.customerLabel} • {payment.sourceLabel}</p>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <span className="rounded-full bg-white px-2.5 py-1 font-black text-slate-700 ring-1 ring-slate-200">{formatCurrency(payment.grossAmount, payment.currency)}</span>
+                    <span className="rounded-full bg-blue-50 px-2.5 py-1 font-black text-[#0d4697] ring-1 ring-blue-100">Fee {formatCurrency(payment.commissionAmount, payment.currency)}</span>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-black text-emerald-700">{formatCurrency(payment.vendorShareAmount, payment.currency)}</p>
+                    <p className="mt-1 font-semibold text-slate-500">{payment.settlementStatus}</p>
+                  </div>
                 </div>
               ))}
             </div>
@@ -1248,14 +1779,16 @@ export function VendorPaymentsPage() {
           <DataTable
             loading={loading}
             columns={[
-              { key: 'invoiceNumber', header: 'Invoice', render: (row) => row.invoiceNumber || row._id },
-              { key: 'type', header: 'Type' },
-              { key: 'amount', header: 'Amount', render: (row) => formatCurrency(row.amount, row.currency) },
-              { key: 'gateway', header: 'Gateway' },
+              { key: 'orderLabel', header: 'Order', render: (row) => row.orderLabel || row.invoiceNumber || row._id },
+              { key: 'customerLabel', header: 'Customer', render: (row) => row.customerLabel || 'Guest' },
+              { key: 'grossAmount', header: 'Order Value', render: (row) => formatCurrency(row.grossAmount ?? row.amount, row.currency) },
+              { key: 'commissionAmount', header: 'Commission', render: (row) => formatCurrency(row.commissionAmount || 0, row.currency) },
+              { key: 'vendorShareAmount', header: 'Vendor Share', render: (row) => formatCurrency(row.vendorShareAmount ?? row.amount, row.currency) },
+              { key: 'gateway', header: 'Gateway', render: (row) => row.gateway || 'order' },
               { key: 'paidAt', header: 'Paid On', render: (row) => formatDate(row.paidAt || row.createdAt) },
-              { key: 'status', header: 'Status', render: (row) => <StatusBadge value={row.status} /> },
+              { key: 'settlementStatus', header: 'Settlement', render: (row) => <StatusBadge value={row.settlementStatus || row.status} /> },
             ]}
-            rows={payments}
+            rows={settlementRows}
           />
         </div>
       )}
@@ -1419,4 +1952,40 @@ function mergePayments(items = []) {
     seen.add(key)
     return true
   })
+}
+
+function getPaymentSourceLabel(payment) {
+  return payment?.source === 'order' ? 'Order settlement' : 'Payment'
+}
+
+function getSettlementStatus(payment) {
+  if (!payment) return 'pending'
+  if (payment.status === 'completed') return 'settled'
+  if (payment.status === 'refunded') return 'refunded'
+  if (payment.status === 'partially_refunded') return 'partial refund'
+  if (payment.status === 'cancelled') return 'cancelled'
+  if (payment.status === 'failed') return 'failed'
+  return 'pending'
+}
+
+function getVendorShare(payment) {
+  const amount = Number(payment?.amount || 0)
+  if (!amount) return 0
+  if (['refunded', 'cancelled', 'failed'].includes(String(payment?.status || ''))) return 0
+  return Math.max(0, amount - Math.round(amount * 0.05))
+}
+
+function getCommissionAmount(payment) {
+  const amount = Number(payment?.amount || 0)
+  if (!amount || ['refunded', 'cancelled', 'failed'].includes(String(payment?.status || ''))) return 0
+  return Math.round(amount * 0.05)
+}
+
+function getCustomerLabel(payment) {
+  return payment?.customerSnapshot?.name || payment?.user?.name || 'Guest'
+}
+
+function isRevenueEligible(payment) {
+  const status = String(payment?.status || '')
+  return status === 'completed'
 }

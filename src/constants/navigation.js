@@ -27,6 +27,7 @@ import {
   ShieldCheck,
   ShoppingBag,
   Star,
+  Truck,
   Ticket,
   ToggleLeft,
   Users,
@@ -100,6 +101,7 @@ export const adminNav = [
       ['Products', '/products', Package],
       ['Services', '/services', BriefcaseBusiness],
       ['Orders', '/orders', ShoppingBag],
+      ['Shipments', '/shipments', Truck],
       ['Marketplace Approval', '/marketplace-approval', Workflow],
       ['Vendor Category Requests', '/vendor-category-approvals', Workflow],
     ],
@@ -129,7 +131,6 @@ export const vendorNav = [
   ['Payments', '/vendor/payments', CreditCard],
   ['Analytics', '/vendor/analytics', BarChart3],
   ['Notifications', '/vendor/notifications', Bell],
-  ['Support', '/vendor/support', HelpCircle],
 ]
 
 export const memberVendorNav = [

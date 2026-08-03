@@ -177,10 +177,22 @@ const mergeUniqueByKey = (items = [], incoming = [], keyField = 'lineKey') => {
 }
 
 const CANCELABLE_ORDER_STATUSES = new Set(['placed', 'confirmed'])
-const RETURNABLE_ORDER_STATUSES = new Set(['delivered'])
+const RETURN_WINDOW_MS = 7 * 24 * 60 * 60 * 1000
+
+const getDeliveredAt = (order) => {
+  const deliveredAt = order?.deliveredAt || order?.tracking?.find((step) => step.status === 'delivered')?.at || null
+  const date = deliveredAt ? new Date(deliveredAt) : null
+  return date && !Number.isNaN(date.getTime()) ? date : null
+}
+
+const isWithinReturnWindow = (order) => {
+  const deliveredAt = getDeliveredAt(order)
+  if (!deliveredAt) return false
+  return Date.now() - deliveredAt.getTime() <= RETURN_WINDOW_MS
+}
 
 const canCancelOrder = (order) => Boolean(order?._id) && CANCELABLE_ORDER_STATUSES.has(order.status) && !order.returnRequest
-const canReturnOrder = (order) => Boolean(order?._id) && RETURNABLE_ORDER_STATUSES.has(order.status) && !order.returnRequest
+const canReturnOrder = (order) => Boolean(order?._id) && order.status === 'delivered' && !order.returnRequest && isWithinReturnWindow(order)
 
 const mergeOrdersById = (currentOrders = [], incomingOrders = []) => {
   const map = new Map()
@@ -274,6 +286,284 @@ const createLocalOrder = ({ cart, address, deliveryMethod, activeCoupon, notes }
     ...totals,
   }
   return order
+}
+
+const PDF_PAGE_WIDTH = 595.28
+const PDF_PAGE_HEIGHT = 841.89
+const PDF_MARGIN_X = 36
+const PDF_TOP = 40
+const PDF_BOTTOM = 42
+const PDF_LINE_HEIGHT = 14
+const PDF_BODY_FONT = 10
+const PDF_SMALL_FONT = 8
+
+const normalizePdfText = (value) => String(value ?? '')
+  .replace(/\r?\n+/g, ' ')
+  .replace(/[^\x20-\x7E]/g, ' ')
+  .replace(/\s+/g, ' ')
+  .trim()
+
+const escapePdfText = (value) => normalizePdfText(value)
+  .replace(/\\/g, '\\\\')
+  .replace(/\(/g, '\\(')
+  .replace(/\)/g, '\\)')
+
+const formatPdfMoney = (value) => `INR ${Number(value || 0).toLocaleString('en-IN')}`
+
+const formatPdfDate = (value) => {
+  if (!value) return '-'
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return '-'
+  return date.toLocaleDateString('en-IN', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  })
+}
+
+const formatPdfAddress = (address) => {
+  if (!address) return '-'
+  if (typeof address === 'string') return normalizePdfText(address)
+  if (Array.isArray(address)) return address.map(formatPdfAddress).filter(Boolean).join(', ')
+  if (typeof address !== 'object') return normalizePdfText(address)
+  return [
+    address.fullName,
+    address.line1,
+    address.line2,
+    address.landmark,
+    address.city,
+    address.state,
+    address.pincode,
+  ].filter(Boolean).map(normalizePdfText).join(', ') || '-'
+}
+
+const wrapPdfText = (text, maxChars = 48) => {
+  const words = normalizePdfText(text).split(' ').filter(Boolean)
+  const lines = []
+  let current = ''
+  words.forEach((word) => {
+    const next = current ? `${current} ${word}` : word
+    if (next.length > maxChars && current) {
+      lines.push(current)
+      current = word
+    } else {
+      current = next
+    }
+  })
+  if (current) lines.push(current)
+  return lines.length ? lines : ['']
+}
+
+const createPdfText = (x, y, text, size = PDF_BODY_FONT, font = 'F1', color = '0 0 0') => {
+  const safe = escapePdfText(text)
+  return [
+    'BT',
+    `/${font} ${size} Tf`,
+    `${color} rg`,
+    `1 0 0 1 ${x.toFixed(2)} ${y.toFixed(2)} Tm`,
+    `(${safe}) Tj`,
+    'ET',
+  ].join('\n')
+}
+
+const estimatePdfTextWidth = (text, size = PDF_BODY_FONT) => normalizePdfText(text).length * size * 0.52
+
+const createPdfTextRight = (xRight, y, text, size = PDF_BODY_FONT, font = 'F1', color = '0 0 0') => {
+  const width = estimatePdfTextWidth(text, size)
+  return createPdfText(Math.max(18, xRight - width), y, text, size, font, color)
+}
+
+const createPdfLine = (x1, y1, x2, y2, width = 1, color = '0 0 0') => [
+  `${width} w`,
+  `${color} RG`,
+  `${x1.toFixed(2)} ${y1.toFixed(2)} m`,
+  `${x2.toFixed(2)} ${y2.toFixed(2)} l`,
+  'S',
+].join('\n')
+
+const createPdfRect = (x, y, width, height, fillColor = null, strokeColor = null, strokeWidth = 1) => {
+  const parts = []
+  if (fillColor) {
+    parts.push(`${fillColor} rg`)
+  }
+  if (strokeColor) {
+    parts.push(`${strokeWidth} w`)
+    parts.push(`${strokeColor} RG`)
+  }
+  parts.push(`${x.toFixed(2)} ${y.toFixed(2)} ${width.toFixed(2)} ${height.toFixed(2)} re`)
+  parts.push(fillColor ? 'B' : strokeColor ? 'S' : 'n')
+  return parts.join('\n')
+}
+
+const buildInvoicePdf = (order) => {
+  const customerName = normalizePdfText(order.customerSnapshot?.name || order.user?.name || 'Guest Customer')
+  const customerEmail = normalizePdfText(order.customerSnapshot?.email || order.user?.email || '-')
+  const customerPhone = normalizePdfText(order.customerSnapshot?.phone || order.user?.phone || '-')
+  const orderNumber = normalizePdfText(order.orderNumber || order._id)
+  const invoiceNumber = normalizePdfText(order.invoiceNumber || `INV-${orderNumber}`)
+  const createdAt = formatPdfDate(order.createdAt)
+  const paymentMethod = normalizePdfText(order.paymentMethod || 'razorpay')
+  const paymentStatus = normalizePdfText(order.paymentStatus || 'pending')
+  const deliveryMethod = normalizePdfText(order.deliveryMethod || 'standard')
+  const address = formatPdfAddress(order.address)
+  const shiprocketStatus = normalizePdfText(order.shiprocket?.status || '-')
+  const items = Array.isArray(order.items) ? order.items : []
+
+  const objects = []
+  const addObject = (body) => {
+    objects.push(body)
+    return objects.length
+  }
+
+  const buildPageContent = (pageItems, pageIndex, totalPages) => {
+    const content = []
+    const dark = '0.05 0.15 0.30'
+    const navy = '0.08 0.23 0.44'
+    const gold = '0.84 0.67 0.18'
+    const soft = '0.97 0.98 0.99'
+    const border = '0.86 0.89 0.93'
+    const muted = '0.39 0.44 0.50'
+    let y = PDF_PAGE_HEIGHT - PDF_TOP
+
+    content.push(createPdfRect(0, 0, PDF_PAGE_WIDTH, PDF_PAGE_HEIGHT, '0.99 0.99 1.00'))
+    content.push(createPdfRect(0, PDF_PAGE_HEIGHT - 104, PDF_PAGE_WIDTH, 104, dark))
+    content.push(createPdfRect(PDF_MARGIN_X, PDF_PAGE_HEIGHT - 72, 110, 24, gold))
+    content.push(createPdfText(PDF_MARGIN_X + 16, PDF_PAGE_HEIGHT - 56, 'GLOARO', 19, 'F2', '1 1 1'))
+    content.push(createPdfText(PDF_MARGIN_X, PDF_PAGE_HEIGHT - 82, 'Premium Marketplace Invoice', 9, 'F1', '0.90 0.93 0.97'))
+    content.push(createPdfTextRight(PDF_PAGE_WIDTH - 38, PDF_PAGE_HEIGHT - 40, `Invoice No: ${invoiceNumber}`, 11, 'F2', '1 1 1'))
+    content.push(createPdfTextRight(PDF_PAGE_WIDTH - 38, PDF_PAGE_HEIGHT - 58, `Order No: ${orderNumber}`, 9, 'F1', '0.90 0.93 0.97'))
+
+    y -= 122
+    const topCardY = y
+    const leftCardX = PDF_MARGIN_X
+    const leftCardW = 260
+    const rightCardX = 309
+    const rightCardW = PDF_PAGE_WIDTH - rightCardX - PDF_MARGIN_X
+    const cardH = 124
+
+    content.push(createPdfRect(leftCardX, topCardY - cardH, leftCardW, cardH, '1 1 1', border, 1))
+    content.push(createPdfRect(rightCardX, topCardY - cardH, rightCardW, cardH, '1 1 1', border, 1))
+    content.push(createPdfRect(leftCardX, topCardY - 12, leftCardW, 12, soft))
+    content.push(createPdfRect(rightCardX, topCardY - 12, rightCardW, 12, soft))
+    content.push(createPdfText(leftCardX + 14, topCardY - 18, 'BILL TO', 8, 'F2', navy))
+    content.push(createPdfText(leftCardX + 14, topCardY - 40, customerName, 15, 'F2', '0.09 0.12 0.20'))
+    wrapPdfText(address, 40).slice(0, 3).forEach((line, index) => {
+      content.push(createPdfText(leftCardX + 14, topCardY - 58 - (index * 12), line, 9, 'F1', muted))
+    })
+    content.push(createPdfText(leftCardX + 14, topCardY - 102, customerEmail, 9, 'F1', muted))
+    content.push(createPdfText(leftCardX + 14, topCardY - 116, customerPhone, 9, 'F1', muted))
+
+    content.push(createPdfText(rightCardX + 14, topCardY - 18, 'ORDER SUMMARY', 8, 'F2', navy))
+    const summaryRows = [
+      ['Placed on', createdAt],
+      ['Payment', `${paymentMethod} · ${paymentStatus}`],
+      ['Delivery', deliveryMethod],
+      ['Shiprocket', shiprocketStatus],
+    ]
+    summaryRows.forEach((row, index) => {
+      const rowTop = topCardY - 42 - (index * 18)
+      content.push(createPdfText(rightCardX + 14, rowTop, row[0], 8, 'F2', muted))
+      content.push(createPdfTextRight(rightCardX + rightCardW - 14, rowTop, row[1], 9, 'F1', '0.08 0.12 0.18'))
+    })
+
+    const tableTop = topCardY - cardH - 26
+    const tableLeft = PDF_MARGIN_X
+    const tableWidth = PDF_PAGE_WIDTH - (PDF_MARGIN_X * 2)
+    const itemX = tableLeft + 14
+    const qtyX = tableLeft + tableWidth - 232
+    const unitX = tableLeft + tableWidth - 170
+    const totalX = tableLeft + tableWidth - 64
+    const rowHeight = 44
+
+    content.push(createPdfRect(tableLeft, tableTop - 28, tableWidth, 28, navy))
+    content.push(createPdfText(itemX, tableTop - 10, 'ITEM', 9, 'F2', '1 1 1'))
+    content.push(createPdfText(qtyX, tableTop - 10, 'QTY', 9, 'F2', '1 1 1'))
+    content.push(createPdfText(unitX, tableTop - 10, 'UNIT PRICE', 9, 'F2', '1 1 1'))
+    content.push(createPdfText(totalX, tableTop - 10, 'AMOUNT', 9, 'F2', '1 1 1'))
+
+    let rowY = tableTop - 40
+    pageItems.forEach((item, index) => {
+      const title = normalizePdfText(item.productSnapshot?.title || 'Product')
+      const variant = normalizePdfText(item.variant?.option || item.variant?.name || 'Default')
+      const rowFill = index % 2 === 0 ? '1 1 1' : '0.985 0.987 0.99'
+      content.push(createPdfRect(tableLeft, rowY - 20, tableWidth, rowHeight, rowFill, border, 0.6))
+      content.push(createPdfText(itemX, rowY, title.slice(0, 54), 10, 'F2', '0.09 0.12 0.20'))
+      content.push(createPdfText(itemX, rowY - 13, variant.slice(0, 46), 8, 'F1', muted))
+      content.push(createPdfTextRight(qtyX + 24, rowY, String(item.quantity || 1), 10, 'F2', '0.09 0.12 0.20'))
+      content.push(createPdfTextRight(unitX + 64, rowY, formatPdfMoney(item.unitPrice), 10, 'F2', '0.09 0.12 0.20'))
+      content.push(createPdfTextRight(totalX + 40, rowY, formatPdfMoney(item.lineTotal), 10, 'F2', navy))
+      rowY -= rowHeight
+    })
+
+    const totalsBoxW = 214
+    const totalsBoxX = PDF_PAGE_WIDTH - PDF_MARGIN_X - totalsBoxW
+    const totalsBoxY = Math.max(rowY - 16, PDF_BOTTOM + 118)
+    content.push(createPdfRect(totalsBoxX, totalsBoxY - 82, totalsBoxW, 96, '1 1 1', border, 1))
+    content.push(createPdfRect(totalsBoxX, totalsBoxY + 14, totalsBoxW, 14, gold))
+    content.push(createPdfText(totalsBoxX + 14, totalsBoxY + 28, 'SUBTOTAL', 8, 'F2', muted))
+    content.push(createPdfTextRight(PDF_PAGE_WIDTH - PDF_MARGIN_X - 14, totalsBoxY + 28, formatPdfMoney(order.subtotal), 9, 'F2', '0.10 0.12 0.16'))
+    content.push(createPdfText(totalsBoxX + 14, totalsBoxY + 12, 'TAX', 8, 'F2', muted))
+    content.push(createPdfTextRight(PDF_PAGE_WIDTH - PDF_MARGIN_X - 14, totalsBoxY + 12, formatPdfMoney(order.tax), 9, 'F2', '0.10 0.12 0.16'))
+    content.push(createPdfText(totalsBoxX + 14, totalsBoxY - 4, 'SHIPPING', 8, 'F2', muted))
+    content.push(createPdfTextRight(PDF_PAGE_WIDTH - PDF_MARGIN_X - 14, totalsBoxY - 4, formatPdfMoney(order.shipping), 9, 'F2', '0.10 0.12 0.16'))
+    content.push(createPdfText(totalsBoxX + 14, totalsBoxY - 20, 'COUPON', 8, 'F2', muted))
+    content.push(createPdfTextRight(PDF_PAGE_WIDTH - PDF_MARGIN_X - 14, totalsBoxY - 20, `- ${formatPdfMoney(order.couponDiscount || 0)}`, 9, 'F2', '0.10 0.12 0.16'))
+    content.push(createPdfLine(totalsBoxX + 14, totalsBoxY - 34, PDF_PAGE_WIDTH - PDF_MARGIN_X - 14, totalsBoxY - 34, 0.8, border))
+    content.push(createPdfText(totalsBoxX + 14, totalsBoxY - 52, 'GRAND TOTAL', 11, 'F2', navy))
+    content.push(createPdfTextRight(PDF_PAGE_WIDTH - PDF_MARGIN_X - 14, totalsBoxY - 52, formatPdfMoney(order.total), 14, 'F2', navy))
+
+    content.push(createPdfRect(PDF_MARGIN_X, PDF_BOTTOM + 54, 188, 30, soft, border, 1))
+    content.push(createPdfText(PDF_MARGIN_X + 12, PDF_BOTTOM + 72, 'Paid securely through Gloaro checkout', 9, 'F2', navy))
+    content.push(createPdfLine(PDF_MARGIN_X, PDF_BOTTOM + 36, PDF_PAGE_WIDTH - PDF_MARGIN_X, PDF_BOTTOM + 36, 0.8, border))
+    content.push(createPdfText(PDF_MARGIN_X, PDF_BOTTOM + 22, `Page ${pageIndex} of ${totalPages}`, 8, 'F1', muted))
+    content.push(createPdfTextRight(PDF_PAGE_WIDTH - PDF_MARGIN_X, PDF_BOTTOM + 22, 'Thank you for shopping with Gloaro', 8, 'F2', navy))
+    return content.join('\n')
+  }
+
+  const itemsPerPage = 5
+  const pageCount = Math.max(1, Math.ceil(items.length / itemsPerPage))
+  const pageObjectIds = []
+  const contentObjectIds = []
+
+  for (let index = 0; index < pageCount; index += 1) {
+    const pageItems = items.slice(index * itemsPerPage, (index + 1) * itemsPerPage)
+    const stream = buildPageContent(pageItems, index + 1, pageCount)
+    const contentId = addObject(`<< /Length ${stream.length} >>\nstream\n${stream}\nendstream`)
+    const pageId = addObject(null)
+    contentObjectIds.push(contentId)
+    pageObjectIds.push(pageId)
+  }
+
+  const fontRegularId = addObject('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>')
+  const fontBoldId = addObject('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>')
+
+  pageObjectIds.forEach((pageId, index) => {
+    objects[pageId - 1] = `<< /Type /Page /Parent 0 0 R /MediaBox [0 0 ${PDF_PAGE_WIDTH} ${PDF_PAGE_HEIGHT}] /Resources << /Font << /F1 ${fontRegularId} 0 R /F2 ${fontBoldId} 0 R >> >> /Contents ${contentObjectIds[index]} 0 R >>`
+  })
+
+  const pagesId = addObject(`<< /Type /Pages /Count ${pageObjectIds.length} /Kids [${pageObjectIds.map((id) => `${id} 0 R`).join(' ')}] >>`)
+  objects.forEach((body, index) => {
+    if (body && body.includes('/Parent 0 0 R')) {
+      objects[index] = body.replace('/Parent 0 0 R', `/Parent ${pagesId} 0 R`)
+    }
+  })
+
+  const catalogId = addObject(`<< /Type /Catalog /Pages ${pagesId} 0 R >>`)
+
+  let pdf = '%PDF-1.4\n'
+  const offsets = [0]
+  objects.forEach((body, index) => {
+    offsets.push(pdf.length)
+    pdf += `${index + 1} 0 obj\n${body}\nendobj\n`
+  })
+  const xrefOffset = pdf.length
+  pdf += `xref\n0 ${objects.length + 1}\n0000000000 65535 f \n`
+  for (let index = 1; index <= objects.length; index += 1) {
+    pdf += `${String(offsets[index]).padStart(10, '0')} 00000 n \n`
+  }
+  pdf += `trailer\n<< /Size ${objects.length + 1} /Root ${catalogId} 0 R >>\nstartxref\n${xrefOffset}\n%%EOF`
+
+  return new Blob([pdf], { type: 'application/pdf' })
 }
 
 export function ShopProvider({ children }) {
@@ -597,14 +887,19 @@ export function ShopProvider({ children }) {
     }))
   }, [])
 
-  const submitReturnRequest = useCallback((orderId, { items, reason, reasonLabel, details, returnMethod, refundMethod, evidence = [] }) => {
+  const submitReturnRequest = useCallback(async (orderId, { items, reason, reasonLabel, details, upiId, returnMethod, refundMethod, evidence = [] }) => {
     if (!orderId || !items?.length || !reason) {
       toast.error('Please complete all required fields')
       return false
     }
-    const currentOrder = state.orders.find((order) => String(order._id) === String(orderId))
+    let currentOrder = state.orders.find((order) => String(order._id) === String(orderId))
     if (!canReturnOrder(currentOrder)) {
       toast.error('Returns are available only after delivery')
+      return false
+    }
+    const normalizedUpiId = String(upiId || '').trim()
+    if (!normalizedUpiId) {
+      toast.error('Please enter a UPI ID for the return request')
       return false
     }
     const now = new Date().toISOString()
@@ -621,10 +916,12 @@ export function ShopProvider({ children }) {
       reason,
       reasonLabel: reasonLabel || reason,
       details: details || '',
+      upiId: normalizedUpiId,
       returnMethod: returnMethod || 'pickup',
       refundMethod: refundMethod || 'original',
       evidence,
       requestedAt: now,
+      returnWindowEndsAt: currentOrder?.deliveredAt ? new Date(new Date(currentOrder.deliveredAt).getTime() + RETURN_WINDOW_MS).toISOString() : null,
       approvedAt: null,
       pickupScheduledAt: null,
       pickupSlot: null,
@@ -645,22 +942,43 @@ export function ShopProvider({ children }) {
       ],
       refundAmount: null,
     }
-    setState((current) => ({
-      ...current,
-      orders: current.orders.map((order) => {
-        if (order._id !== orderId) return order
-        return { ...order, returnRequest }
-      }),
-    }))
-    toast.success('Return request submitted successfully')
-    return returnRequest
+    try {
+      const response = await ordersApi.return(orderId, {
+        items: returnRequest.items,
+        reason,
+        reasonLabel,
+        details,
+        upiId: normalizedUpiId,
+        returnMethod,
+        refundMethod,
+        evidence,
+      })
+      const updatedOrder = response.data?.data || response.data || null
+      setState((current) => ({
+        ...current,
+        orders: current.orders.map((order) => (order._id === orderId ? { ...order, ...updatedOrder, returnRequest: updatedOrder?.returnRequest || returnRequest } : order)),
+      }))
+      toast.success('Return request submitted successfully')
+      return updatedOrder?.returnRequest || returnRequest
+    } catch (error) {
+      setState((current) => ({
+        ...current,
+        orders: current.orders.map((order) => {
+          if (order._id !== orderId) return order
+          return { ...order, returnRequest }
+        }),
+      }))
+      toast.error(error.response?.data?.message || 'Unable to submit return request')
+      return returnRequest
+    }
   }, [state.orders])
 
-  const submitRefundRequest = useCallback((orderId, { reason, reasonLabel, details, refundMethod, evidence = [] }) => {
+  const submitRefundRequest = useCallback(async (orderId, { reason, reasonLabel, details, refundMethod, evidence = [] }) => {
     if (!orderId || !reason) {
       toast.error('Please complete all required fields')
       return false
     }
+    let currentOrder = state.orders.find((order) => String(order._id) === String(orderId))
     const now = new Date().toISOString()
     const refundId = crypto.randomUUID()
     const refund = {
@@ -687,51 +1005,121 @@ export function ShopProvider({ children }) {
       ],
       refundAmount: null,
     }
-    setState((current) => ({
-      ...current,
-      orders: current.orders.map((order) => {
-        if (order._id !== orderId) return order
-        return { ...order, refund }
-      }),
-    }))
-    toast.success('Refund request submitted successfully')
-    return refund
-  }, [])
+    try {
+      if (!currentOrder?.paymentId) {
+        const fetchedOrder = await ordersApi.order(orderId)
+        currentOrder = fetchedOrder.data?.data || fetchedOrder.data || currentOrder
+      }
 
-  const cancelOrder = useCallback((orderId) => {
+      if (currentOrder?.paymentId) {
+        const response = await paymentApi.requestRefund(currentOrder.paymentId, {
+          reason,
+          amount: currentOrder.total,
+        })
+        const updatedOrder = response.data?.data || response.data || null
+        setState((current) => ({
+          ...current,
+          orders: current.orders.map((order) => (order._id === orderId ? { ...order, refund: updatedOrder?.refund || refund, paymentStatus: updatedOrder?.status === 'refunded' ? 'refunded' : order.paymentStatus } : order)),
+        }))
+        toast.success('Refund request submitted successfully')
+        return updatedOrder?.refund || refund
+      }
+      throw new Error('No payment record available for refund')
+    } catch (error) {
+      setState((current) => ({
+        ...current,
+        orders: current.orders.map((order) => {
+          if (order._id !== orderId) return order
+          return { ...order, refund }
+        }),
+      }))
+      toast.error(error.response?.data?.message || error.message || 'Unable to submit refund request')
+      return refund
+    }
+  }, [state.orders])
+
+  const cancelOrder = useCallback(async (orderId, { reason, upiId } = {}) => {
     const currentOrder = state.orders.find((order) => String(order._id) === String(orderId))
     if (!canCancelOrder(currentOrder)) {
       toast.error('You can only cancel an order before it ships')
       return false
     }
 
-    setState((current) => ({
-      ...current,
-      orders: current.orders.map((order) => {
-        if (order._id !== orderId) return order
-        if (!canCancelOrder(order)) return order
-        return {
-          ...order,
-          status: 'cancelled',
-          paymentStatus: order.paymentStatus === 'paid' ? 'refunded' : order.paymentStatus,
-          updatedAt: new Date().toISOString(),
-          tracking: [
-            ...order.tracking.map((step) => (step.status === 'placed' ? { ...step, label: 'Cancelled', at: step.at || new Date().toISOString() } : step)),
-            { status: 'cancelled', label: 'Order cancelled', at: new Date().toISOString() },
-          ],
-        }
-      }),
-    }))
-    toast.success('Order cancelled')
-    return true
+    try {
+      const response = await ordersApi.cancel(orderId, {
+        reason: reason || 'Customer cancelled order',
+        upiId: upiId || '',
+      })
+      const updatedOrder = response.data?.data || response.data || null
+      setState((current) => ({
+        ...current,
+        orders: current.orders.map((order) => (order._id === orderId ? { ...order, ...updatedOrder } : order)),
+      }))
+      toast.success('Order cancelled')
+      return true
+    } catch (error) {
+      setState((current) => ({
+        ...current,
+        orders: current.orders.map((order) => {
+          if (order._id !== orderId) return order
+          if (!canCancelOrder(order)) return order
+          const cancellationStatus = order.paymentStatus === 'paid' ? 'refund_processing' : 'cancelled'
+          return {
+            ...order,
+            status: 'cancelled',
+            paymentStatus: order.paymentStatus === 'paid' ? 'refunded' : order.paymentStatus,
+            updatedAt: new Date().toISOString(),
+            cancellationRequest: {
+              status: cancellationStatus,
+              reason: reason || 'Customer cancelled order',
+              upiId: upiId || null,
+              requiresUpi: order.paymentMethod === 'razorpay' && order.paymentStatus === 'paid',
+              paymentMethod: order.paymentMethod,
+              paymentStatus: order.paymentStatus,
+              requestedAt: new Date().toISOString(),
+              completedAt: new Date().toISOString(),
+              tracking: [
+                { status: 'requested', label: 'Cancellation Requested', description: 'Your cancellation request has been received', at: new Date().toISOString() },
+                { status: 'cancelled', label: 'Order Cancelled', description: 'The order has been cancelled in the marketplace', at: new Date().toISOString() },
+                { status: 'refund_processing', label: 'Refund Processing', description: 'Refund is being processed for this cancellation', at: order.paymentStatus === 'paid' ? new Date().toISOString() : null },
+                { status: 'refunded', label: 'Refund Completed', description: 'Refund has been credited to the original payment source', at: order.paymentStatus === 'paid' ? new Date().toISOString() : null },
+                { status: 'refund_failed', label: 'Refund Failed', description: 'Refund could not be completed and needs manual review', at: null },
+              ],
+            },
+            refund: order.paymentStatus === 'paid' ? {
+              _id: crypto.randomUUID(),
+              status: 'completed',
+              amount: order.total,
+              reason: reason || 'Customer cancelled order',
+              upiId: upiId || null,
+              requiresUpi: order.paymentMethod === 'razorpay',
+              refundedAt: new Date().toISOString(),
+              tracking: [
+                { status: 'requested', label: 'Refund Requested', description: 'Cancellation requested and refund queued', at: new Date().toISOString() },
+                { status: 'approved', label: 'Refund Approved', description: 'Refund approved for processing', at: new Date().toISOString() },
+                { status: 'processing', label: 'Processing', description: 'Refund is being processed', at: new Date().toISOString() },
+                { status: 'initiated', label: 'Refund Initiated', description: 'Refund has been sent to the payment source', at: new Date().toISOString() },
+                { status: 'completed', label: 'Refund Completed', description: 'Refund has been credited to your account', at: new Date().toISOString() },
+              ],
+            } : order.refund,
+            tracking: [
+              ...order.tracking.map((step) => (step.status === 'placed' ? { ...step, label: 'Cancelled', at: step.at || new Date().toISOString() } : step)),
+              { status: 'cancelled', label: 'Order cancelled', at: new Date().toISOString() },
+            ],
+          }
+        }),
+      }))
+      toast.error(error.response?.data?.message || 'Unable to cancel order')
+      return false
+    }
   }, [state.orders])
 
   const downloadInvoice = useCallback((order) => {
-    const blob = new Blob([JSON.stringify(order, null, 2)], { type: 'application/json' })
+    const blob = buildInvoicePdf(order)
     const url = URL.createObjectURL(blob)
     const link = document.createElement('a')
     link.href = url
-    link.download = `${order.orderNumber || 'invoice'}.json`
+    link.download = `${order.orderNumber || 'invoice'}.pdf`
     link.click()
     URL.revokeObjectURL(url)
   }, [])

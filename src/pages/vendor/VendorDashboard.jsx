@@ -38,7 +38,18 @@ export default function VendorDashboard() {
 
   const vendor = data.vendor || {}
   const stats = data.stats || {}
-  const address = [vendor.address?.street, vendor.address?.city, vendor.address?.state, vendor.address?.pincode].filter(Boolean).join(', ')
+  const pickupAddress = vendor.shipping?.pickupAddress || {}
+  const pickupLocationName = vendor.shipping?.shiprocketPickupLocation || vendor.shipping?.pickupLocation || 'Pickup location not configured'
+  const pickupAddressText = [
+    pickupAddress.contactName || vendor.ownerName,
+    pickupAddress.addressLine1 || vendor.address?.street,
+    pickupAddress.addressLine2,
+    pickupAddress.landmark,
+    pickupAddress.city || vendor.address?.city,
+    pickupAddress.state || vendor.address?.state,
+    pickupAddress.pincode || vendor.address?.pincode,
+  ].filter(Boolean).join(', ')
+  const pickupStatus = vendor.shipping?.shiprocketPickupStatus || (vendor.shipping?.shiprocketPickupApproved ? 'ACTIVE' : 'NOT_CONFIGURED')
 
   return (
     <div className="space-y-6">
@@ -50,13 +61,32 @@ export default function VendorDashboard() {
               <div>
                 <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-[#ffb20c]">Vendor Dashboard</p>
                 <h1 className="mt-1 text-2xl font-black sm:text-3xl">{vendor.businessName || 'Your Business'}</h1>
-                <p className="mt-1 flex items-center gap-2 text-sm font-semibold text-slate-200"><MapPin className="h-4 w-4" />{address || 'Complete your business address'}</p>
+                <p className="mt-1 flex items-center gap-2 text-sm font-semibold text-slate-200"><MapPin className="h-4 w-4" />{pickupLocationName}</p>
               </div>
             </div>
 
             <div className="mt-6 flex flex-wrap gap-3">
               <StatusBadge value={vendor.status || 'pending'} />
               <StatusBadge value={vendor.isVerified ? 'verified' : 'verification pending'} />
+            </div>
+
+            <div className="mt-6 grid gap-3 sm:grid-cols-2">
+              <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+                <p className="text-[10px] font-black uppercase tracking-[0.22em] text-slate-300">Pickup Location</p>
+                <p className="mt-2 text-sm font-bold text-white">{pickupLocationName}</p>
+                <p className="mt-1 text-xs font-medium leading-5 text-slate-200">
+                  {pickupAddressText || 'Add pickup address in your business profile'}
+                </p>
+              </div>
+              <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+                <p className="text-[10px] font-black uppercase tracking-[0.22em] text-slate-300">Shiprocket Pickup Status</p>
+                <p className="mt-2 text-sm font-bold text-white">{pickupStatus}</p>
+                <p className="mt-1 text-xs font-medium leading-5 text-slate-200">
+                  {vendor.shipping?.shiprocketPickupApproved
+                    ? 'Approved for Shiprocket shipping.'
+                    : 'Pickup approval is required before shipping can start.'}
+                </p>
+              </div>
             </div>
           </div>
 

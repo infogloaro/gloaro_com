@@ -23,7 +23,6 @@ export const vendorApi = {
   addLeadNote: (id, data) => api.post(`/leads/${id}/notes`, data),
   orders: (params) => api.get('/vendors/me/orders', { params }),
   reviews: (params) => api.get('/vendors/me/reviews', { params }),
-  replyReview: (id, data) => api.post(`/reviews/${id}/reply`, data),
   payments: (params) => api.get('/vendors/me/payments', { params }),
   updateOrderStatus: (id, data) => api.patch(`/vendors/me/orders/${id}/status`, data),
 }
