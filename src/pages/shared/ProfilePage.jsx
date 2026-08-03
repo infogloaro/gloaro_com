@@ -35,6 +35,7 @@ const VIEW_ONLY_PROFILE_ROLES = [
   ROLES.DIRECT_CONSULTANT,
   ROLES.CHAPTER_PRESIDENT,
   ROLES.VICE_PRESIDENT,
+  ROLES.SECRETARY,
   ROLES.USER,
 ]
 
@@ -171,6 +172,12 @@ export default function ProfilePage() {
                 <div>
                   <p className="text-[10px] font-extrabold uppercase tracking-wide text-slate-400">Role</p>
                   <p className="mt-1 text-sm font-bold text-slate-800">{roleLabel(user?.role)}</p>
+                </div>
+                <div>
+                  <p className="text-[10px] font-extrabold uppercase tracking-wide text-slate-400">Address</p>
+                  <p className="mt-1 text-sm font-bold text-slate-800">
+                    {[user?.address?.street, user?.address?.city, user?.address?.state, user?.address?.pincode, user?.address?.country].filter(Boolean).join(', ') || '-'}
+                  </p>
                 </div>
               </div>
             </div>
