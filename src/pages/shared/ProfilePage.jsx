@@ -35,7 +35,6 @@ const VIEW_ONLY_PROFILE_ROLES = [
   ROLES.DIRECT_CONSULTANT,
   ROLES.CHAPTER_PRESIDENT,
   ROLES.VICE_PRESIDENT,
-  ROLES.SECRETARY,
   ROLES.USER,
 ]
 
@@ -55,11 +54,18 @@ export default function ProfilePage() {
       resetProfile({
         name: user.name || '',
         email: user.email || '',
-        phone: user.phone || ''
+        phone: user.phone || '',
+        address: {
+          street: user.address?.street || '',
+          city: user.address?.city || '',
+          state: user.address?.state || '',
+          country: user.address?.country || 'India',
+          pincode: user.address?.pincode || '',
+        },
       })
 
       // Fetch user's activity logs
-      setLoadingActivity(true)
+      const loadingTimer = window.setTimeout(() => setLoadingActivity(true), 0)
       const fetchActivity = [ROLES.ADMIN, ROLES.SUPERADMIN].includes(user.role)
         ? adminApi.adminActivity(user._id, { limit: 6 })
         : api.get('/users/activity', { params: { limit: 6 } })
@@ -69,7 +75,10 @@ export default function ProfilePage() {
           setActivity(res.data?.data || [])
         })
         .catch(() => {})
-        .finally(() => setLoadingActivity(false))
+        .finally(() => {
+          window.clearTimeout(loadingTimer)
+          setLoadingActivity(false)
+        })
     }
   }, [user, resetProfile])
 
@@ -106,7 +115,7 @@ export default function ProfilePage() {
   const orgLabel = useMemo(() => {
     const org = user?.meta?.adminProfile?.organization || {}
     return ['region', 'state', 'area', 'district', 'chapter']
-      .map((key) => org[key])
+      .map((key) => org[key]?.name || org[key]?.code || (typeof org[key] === 'string' ? org[key] : ''))
       .filter(Boolean)
       .join(' / ') || 'None assigned'
   }, [user])

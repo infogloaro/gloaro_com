@@ -1,24 +1,14 @@
-import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
 import { useApi } from '../../hooks/useApi'
 import { secretaryApi } from '../../api/secretary'
-import api from '../../api/axios'
 import LoadingScreen from '../../components/common/LoadingScreen'
 import EmptyState from '../../components/common/EmptyState'
 import StatCard from '../../components/dashboard/StatCard'
 import { formatDate } from '../../utils/format'
-import { Users, FileText, CalendarDays, ShoppingBag, FolderOpen } from 'lucide-react'
+import { Users, CalendarDays } from 'lucide-react'
 import JurisdictionCard from '../../components/common/JurisdictionCard'
 
 export default function SecretaryDashboard() {
   const { data, loading, error } = useApi(secretaryApi.dashboard)
-  const [scopeOverview, setScopeOverview] = useState(null)
-
-  useEffect(() => {
-    api.get('/directory/scope-overview')
-      .then(res => setScopeOverview(res.data?.data || null))
-      .catch(() => {})
-  }, [])
 
   if (loading) return <LoadingScreen label="Loading Secretary Dashboard..." />
 
@@ -52,28 +42,10 @@ export default function SecretaryDashboard() {
       <JurisdictionCard />
 
       {/* Summary KPI Cards Grid */}
-      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         <StatCard label="Total Members" value={summary.totalMembers ?? '—'} icon={Users} />
-        <StatCard label="Active Members" value={scopeOverview?.activeMembers ?? summary.activeMembers ?? '—'} icon={Users} />
-        <StatCard label="Pending Minutes" value={summary.pendingMinutes ?? '—'} icon={FileText} />
+        <StatCard label="Active Members" value={summary.activeMembers ?? '—'} icon={Users} />
         <StatCard label="Attendance Rate" value={summary.attendanceRate != null && !isNaN(summary.attendanceRate) ? `${summary.attendanceRate}%` : '—'} icon={CalendarDays} />
-        <StatCard label="Documents" value={summary.documentsUploaded ?? summary.documents ?? '—'} icon={ShoppingBag} />
-      </section>
-
-      {/* Quick Actions Panel */}
-      <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
-        <h2 className="text-lg font-extrabold text-slate-950">Quick Actions</h2>
-        <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-          {data.quickActions?.map((action) => (
-            <Link
-              key={action.to}
-              to={action.to}
-              className="flex h-11 items-center justify-center gap-2 rounded-md bg-[#0d4697] px-4 text-sm font-extrabold text-white transition hover:bg-[#0b3e85]"
-            >
-              {action.label}
-            </Link>
-          ))}
-        </div>
       </section>
 
       {/* Grid Content Panel */}
