@@ -149,6 +149,7 @@ import {
   MembershipReferralPage,
   MembershipSupportPage,
 } from './pages/membership/MembershipPages'
+import MemberProfilePage from './pages/membership/MemberProfilePage'
 import SecretaryDashboard from './pages/secretary/SecretaryDashboard'
 import MembersPage from './pages/secretary/MembersPage'
 import MinutesPage from './pages/secretary/MinutesPage'
@@ -375,7 +376,8 @@ function App() {
             <Route element={<ProtectedRoute roles={[ROLES.SUPERADMIN, ROLES.ADMIN, ROLES.FRANCHISE_ADMIN, ROLES.ECOMMERCE_ADMIN, ROLES.MARKETPLACE_ADMIN, ROLES.DIGITAL_MARKETING_ADMIN, ROLES.TRAINING_ADMIN, ROLES.FINANCE_ADMIN, ROLES.REGION_DIRECTOR, ROLES.STATE_DIRECTOR, ROLES.DISTRICT_DIRECTOR, ROLES.EXECUTIVE_DIRECTOR, ROLES.LAUNCH_DIRECTOR, ROLES.DIRECT_CONSULTANT, ROLES.CHAPTER_PRESIDENT, ROLES.VICE_PRESIDENT, ROLES.SECRETARY, ROLES.CUSTOMER, ROLES.USER, ROLES.VENDOR]} />}>
               <Route path="/member/vendor-application" element={<VendorApplicationForm />} />
               <Route path="/member/vendor-application-status" element={<VendorApplicationStatus />} />
-              <Route path="/member/profile" element={<MembershipProfilePage />} />
+              <Route path="/member/profile" element={<MemberProfilePage />} />
+              <Route path="/member/dashboard/profile" element={<MemberProfilePage />} />
               
               {/* Parameterized main dashboard sub-views */}
               <Route path="/member/dashboard" element={<MemberDashboard />} />
