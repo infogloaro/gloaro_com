@@ -1,21 +1,16 @@
 import {
   Activity,
-  Award,
   BarChart3,
   BookOpen,
   Bell,
   BriefcaseBusiness,
   Building2,
   CalendarDays,
-  Clock,
   CreditCard,
-  FileBarChart,
   FileText,
-  Folder,
   Heart,
   HelpCircle,
   Home,
-  KeyRound,
   LayoutDashboard,
   LayoutGrid,
   ListTree,
@@ -23,7 +18,6 @@ import {
   MapPinned,
   Network,
   Package,
-  Search,
   Settings,
   ShieldCheck,
   ShoppingBag,
@@ -34,14 +28,9 @@ import {
   Workflow,
   PlusCircle,
   ClipboardList,
-  Gem,
-  TrendingUp,
   Volume2,
   Handshake,
   Trophy,
-  Calendar,
-  Sparkles,
-  QrCode,
   MessageSquare,
   ClipboardCheck,
   User,
@@ -54,6 +43,14 @@ import { ROLES } from './roleConfig.js'
 
 export const adminNav = [
   ['Dashboard', '/dashboard', LayoutDashboard],
+  ['Enterprise Scorecard', '/scorecard', BarChart3],
+  {
+    label: 'Communication',
+    icon: MessageSquare,
+    children: [
+      ['Notifications', '/notifications', Bell],
+    ],
+  },
   {
     label: 'Organization Management',
     icon: Building2,
@@ -122,7 +119,6 @@ export const adminNav = [
 
   ['FAQs', '/faqs', HelpCircle],
   ['Analytics', '/analytics', BarChart3],
-  ['Notification Center', '/notifications', Bell],
   ['Profile', '/profile', User],
   ['Audit Logs', '/audit-logs', FileText],
   ['System Logs', '/system-logs', Lock],
@@ -130,6 +126,8 @@ export const adminNav = [
 
 export const vendorNav = [
   ['Dashboard', '/vendor', LayoutDashboard],
+  ['Enterprise Scorecard', '/vendor/scorecard', BarChart3],
+  { label: 'Communication', icon: MessageSquare, children: [['Notifications', '/notifications', Bell]] },
   ['Business Profile', '/vendor/profile', Building2],
   ['Business Categories', '/vendor/business-categories', PlusCircle],
   ['Products', '/vendor/products', Package],
@@ -140,12 +138,13 @@ export const vendorNav = [
   ['Membership', '/vendor/membership', CreditCard],
   ['Payments', '/vendor/payments', CreditCard],
   ['Analytics', '/vendor/analytics', BarChart3],
-  ['Notifications', '/vendor/notifications', Bell],
   ['Support', '/vendor/support', HelpCircle],
 ]
 
 export const memberVendorNav = [
   ['Dashboard', '/member/dashboard', LayoutDashboard],
+  ['Enterprise Scorecard', '/member/dashboard/scorecard', BarChart3],
+  { label: 'Communication', icon: MessageSquare, children: [['Notifications', '/notifications', Bell]] },
   ['Business Profile', '/member/dashboard/my-business', Building2],
   ['Business Categories', '/member/dashboard/business-categories', PlusCircle],
   ['My Products', '/member/dashboard/products', Package],
@@ -159,12 +158,16 @@ export const memberVendorNav = [
 ]
 
 export const applicantNav = [
+  ['Enterprise Scorecard', '/member/dashboard/scorecard', BarChart3],
+  { label: 'Communication', icon: MessageSquare, children: [['Notifications', '/notifications', Bell]] },
   ['Profile', '/member/profile', User],
   ['Membership Application Status', '/member/membership-application-status', ClipboardCheck],
 ]
 
 export const vendorApplicantNav = [
   ['Dashboard', '/vendor/onboarding-status', LayoutDashboard],
+  ['Enterprise Scorecard', '/vendor/scorecard', BarChart3],
+  { label: 'Communication', icon: MessageSquare, children: [['Notifications', '/notifications', Bell]] },
   ['Vendor Application Status', '/vendor/onboarding-status', ClipboardList],
   ['Profile', '/vendor/account', User],
   ['Settings', '/vendor/settings', Settings],
@@ -172,6 +175,8 @@ export const vendorApplicantNav = [
 ]
 
 export const vendorOnboardingNav = [
+  ['Enterprise Scorecard', '/vendor/scorecard', BarChart3],
+  { label: 'Communication', icon: MessageSquare, children: [['Notifications', '/notifications', Bell]] },
   ['Vendor Onboarding', '/vendor/onboarding', FileText],
   ['Application Status', '/vendor/onboarding-status', ClipboardList],
   ['Account', '/vendor/account', User],
@@ -192,13 +197,14 @@ export const customerNav = [
   ['Wishlist', '/customer/wishlist', Heart],
   ['Referral', '/customer/referral', Ticket],
   ['Events', '/events', CalendarDays],
-  ['Notifications', '/customer/notifications', Bell],
   ['Profile', '/customer/profile', Users],
   ['Support', '/customer/support', HelpCircle],
 ]
 
 export const customerFoundationNav = [
   ['Dashboard', '/customer/dashboard', LayoutDashboard],
+  ['Enterprise Scorecard', '/customer/scorecard', BarChart3],
+  { label: 'Communication', icon: MessageSquare, children: [['Notifications', '/notifications', Bell]] },
   ['Profile', '/customer/profile', User],
   ['Addresses', '/customer/addresses', MapPinned],
   ['Logout', '__logout__', LogOut],
@@ -206,11 +212,12 @@ export const customerFoundationNav = [
 
 export const membershipNav = [
   ['Dashboard', '/membership/dashboard', LayoutDashboard],
+  ['Enterprise Scorecard', '/membership/scorecard', BarChart3],
+  { label: 'Communication', icon: MessageSquare, children: [['Notifications', '/notifications', Bell]] },
   ['Benefits', '/membership/benefits', Star],
   ['Events', '/membership/events', CalendarDays],
   ['Assigned Courses', '/membership/training', BookOpen],
   ['Referral', '/membership/referral', Ticket],
-  ['Notifications', '/membership/notifications', Bell],
   ['Profile', '/membership/profile', Users],
   ['Support', '/membership/support', HelpCircle],
 ]
@@ -224,7 +231,7 @@ export const presidentNav = [];
 export const vicePresidentNav = [];
 export const regionDirectorNav = [];
 
-const removeMarketplaceSection = (navItems = []) => navItems.filter((_, index) => index !== 2)
+const removeMarketplaceSection = (navItems = []) => navItems.filter((item) => Array.isArray(item) || item.label !== 'Marketplace')
 
 const getUserOrganization = (user) => (
   user?.meta?.adminProfile?.organization ||
@@ -301,6 +308,14 @@ export const rolePrefixes = {
 
 const commonModules = [
   ['Dashboard', '', LayoutDashboard],
+  ['Enterprise Scorecard', '/scorecard', BarChart3],
+  {
+    label: 'Communication',
+    icon: MessageSquare,
+    children: [
+      ['Notifications', '/notifications', Bell],
+    ]
+  },
   {
     label: 'Community',
     icon: Network,
@@ -395,6 +410,7 @@ export function getSidebarNav(role, options = {}) {
     const prefixPath = (item) => {
       if (Array.isArray(item)) {
         const [label, to, icon] = item;
+        if (to === '/notifications') return [label, to, icon];
         return [label, buildAdminRoute(role, to), icon];
       }
       return {
@@ -460,7 +476,7 @@ export function getSidebarNav(role, options = {}) {
       const memberReferralPath = label === 'Referrals' && to === '/referrals' && [ROLES.CUSTOMER, ROLES.USER, ROLES.VENDOR].includes(normalizedRole);
       const finalPath = memberReferralPath
         ? '/member/referrals'
-        : (to.startsWith('/admin/') || to === '/admin' || to.startsWith('/member/') || to === '/member') || to.startsWith('/super-admin') ? to : `${prefix}${to}`;
+        : (to === '/notifications' || to.startsWith('/admin/') || to === '/admin' || to.startsWith('/member/') || to === '/member') || to.startsWith('/super-admin') ? to : `${prefix}${to}`;
       return [label, finalPath, icon];
     }
     let children = item.children;
@@ -511,25 +527,29 @@ if (
     base = [
       base[0], // Dashboard
       orgMgmt,
-      base[2], // Marketplace
-      base[3], // Meetings
-      base[1], // Community
-      base[4], // Training
-      base[5], // Chapter
-      base[6], // Collaboration
-      base[7], // Profile
+      base[1], // Enterprise Scorecard
+      base[2], // Communication
+      base[4], // Marketplace
+      base[5], // Meetings
+      base[3], // Community
+      base[6], // Training
+      base[7], // Chapter
+      base[8], // Collaboration
+      base[9], // Profile
     ];
   } else {
     base = [
       base[0], // Dashboard
       orgMgmt,
-      base[2], // Marketplace
-      base[3], // Meetings
-      base[1], // Community
-      base[4], // Training
-      base[5], // Chapter
-      base[6], // Collaboration
-      base[7], // Profile
+      base[1], // Enterprise Scorecard
+      base[2], // Communication
+      base[4], // Marketplace
+      base[5], // Meetings
+      base[3], // Community
+      base[6], // Training
+      base[7], // Chapter
+      base[8], // Collaboration
+      base[9], // Profile
     ];
   }
 }
