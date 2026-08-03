@@ -1,13 +1,14 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import toast from 'react-hot-toast'
-import { CheckCircle2, ExternalLink, Eye, FileText, Loader2, XCircle, Package, BriefcaseBusiness, AlertCircle } from 'lucide-react'
+import { CheckCircle2, ExternalLink, Eye, FileText, Loader2, XCircle, Package, BriefcaseBusiness, AlertCircle, MapPinned } from 'lucide-react'
 import api from '../../api/axios'
 import { adminApi } from '../../api/admin'
 import DataTable from '../../components/tables/DataTable'
 import Modal from '../../components/common/Modal'
 import StatusBadge from '../../components/common/StatusBadge'
+import SearchBar from '../../components/common/SearchBar'
 import { useAuth } from '../../hooks/useAuth'
-import { formatCurrency, formatDate } from '../../utils/format'
+import { formatCurrency, formatDate, getList, getPagination } from '../../utils/format'
 import ResourceListPage from '../shared/ResourceListPage'
 import SimpleJsonForm from '../shared/SimpleJsonForm'
 import { ROLES } from '../../constants/roleConfig.js'
@@ -543,12 +544,14 @@ export function AdminMembershipApplicationsPage() {
       await adminApi.updateMembershipApplicationStatus(row._id, { status, adminNotes: row.adminNotes || '' })
       toast.success(`Application marked ${status.replaceAll('_', ' ')}`)
       reload?.()
-    } catch (_) {}
+    } catch (error) {
+      console.error('Failed to update membership application status', error)
+    }
   }
 
   return (
     <>
-      <ResourceListPage module="members" section="applications" title="Membership Applications" fetcher={adminApi.membershipApplications} filters={[{ key: 'status', label: 'Status', options: ['pending_vp_review', 'submitted', 'approved', 'rejected'].map((value) => ({ value, label: value.replaceAll('_', ' ') })) }]} columns={[
+      <ResourceListPage module="members" section="applications" title="Membership Applications" fetcher={adminApi.membershipApplications} filters={[{ key: 'status', label: 'Status', options: ['submitted', 'approved', 'rejected'].map((value) => ({ value, label: value.replaceAll('_', ' ') })) }]} columns={[
         { key: 'applicationNumber', header: 'Member ID/App ID', render: (row) => row.submittedBy?.memberId || row.applicationNumber },
         { key: 'fullName', header: 'Name', render: (row) => row.personal?.fullName || row.submittedBy?.name },
         { key: 'email', header: 'Email', render: (row) => row.personal?.emailAddress || row.submittedBy?.email || 'Not added' },
@@ -953,81 +956,135 @@ export function AdminSettingsPage() {
 }
 
 export function AdminMembersPage() {
+  const [locations, setLocations] = useState([])
+  const [loadingLocations, setLoadingLocations] = useState(true)
+  const [rows, setRows] = useState([])
+  const [pagination, setPagination] = useState({})
+  const [loadingMembers, setLoadingMembers] = useState(true)
+  const [search, setSearch] = useState('')
+  const [page, setPage] = useState(1)
+  const [filters, setFilters] = useState({ region: '', state: '', district: '', chapter: '' })
+
   useEffect(() => {
-    console.log('AdminMembersPage mounted', window.location.pathname)
-  }, [])
+    let mounted = true
+    api.get('/organization/locations')
+      .then((res) => {
+        if (!mounted) return
+        setLocations(res.data?.data?.locations || [])
+      })
+      .catch((err) => {
+        console.error('Error loading locations', err)
+        if (mounted) setLocations([])
+      })
+      .finally(() => {
+        if (mounted) setLoadingLocations(false)
+      })
 
-  const [regions, setRegions] = useState([])
-  const [states, setStates] = useState([])
-  const [districts, setDistricts] = useState([])
-  const [chapters, setChapters] = useState([])
-
-  useEffect(() => {
-    api.get('/organization/regions')
-      .then(res => setRegions(res.data?.data?.regions || []))
-      .catch(err => console.error("Error loading regions", err))
-
-    api.get('/organization/states')
-      .then(res => setStates(res.data?.data?.states || []))
-      .catch(err => console.error("Error loading states", err))
-
-    api.get('/organization/districts')
-      .then(res => setDistricts(res.data?.data?.districts || []))
-      .catch(err => console.error("Error loading districts", err))
-
-    api.get('/organization/chapters')
-      .then(res => setChapters(res.data?.data?.chapters || []))
-      .catch(err => console.error("Error loading chapters", err))
-  }, [])
-
-  const filters = useMemo(() => [
-    {
-      key: 'region',
-      label: 'Region',
-      options: regions.map(r => ({ value: r._id, label: r.name }))
-    },
-    {
-      key: 'state',
-      label: 'State',
-      options: states.map(s => ({ value: s._id, label: s.name }))
-    },
-    {
-      key: 'district',
-      label: 'District',
-      options: districts.map(d => ({ value: d._id, label: d.name }))
-    },
-    {
-      key: 'chapter',
-      label: 'Chapter',
-      options: chapters.map(c => ({ value: c._id, label: c.name }))
-    },
-    {
-      key: 'plan',
-      label: 'Membership Plan',
-      options: [
-        { value: 'free', label: 'Free' },
-        { value: 'silver', label: 'Silver' },
-        { value: 'gold', label: 'Gold' },
-        { value: 'platinum', label: 'Platinum' }
-      ]
-    },
-    {
-      key: 'status',
-      label: 'Status',
-      options: [
-        { value: 'active', label: 'Active' },
-        { value: 'suspended', label: 'Suspended' },
-        { value: 'blocked', label: 'Blocked' }
-      ]
+    return () => {
+      mounted = false
     }
-  ], [regions, states, districts, chapters])
+  }, [])
+
+  const locationIndex = useMemo(() => {
+    const byId = new Map()
+    const byParent = new Map()
+
+    locations.forEach((location) => {
+      byId.set(location._id, location)
+      const parentId = location.parent?._id || location.parent || 'root'
+      if (!byParent.has(parentId)) byParent.set(parentId, [])
+      byParent.get(parentId).push(location)
+    })
+
+    return { byId, byParent }
+  }, [locations])
+
+  const getParentId = (location) => location?.parent?._id || location?.parent || ''
+
+  const isDescendantOf = useCallback((location, ancestorId) => {
+    if (!location || !ancestorId) return false
+    let currentParentId = getParentId(location)
+
+    while (currentParentId) {
+      if (String(currentParentId) === String(ancestorId)) return true
+      const parent = locationIndex.byId.get(currentParentId)
+      if (!parent) break
+      currentParentId = getParentId(parent)
+    }
+
+    return false
+  }, [locationIndex])
+
+  const regionOptions = useMemo(() => locations.filter((location) => location.type === 'region').map((location) => ({ value: location._id, label: location.name })), [locations])
+  const stateOptions = useMemo(() => {
+    const allStates = locations.filter((location) => location.type === 'state')
+    if (!filters.region) return allStates.map((location) => ({ value: location._id, label: location.name }))
+    return allStates.filter((location) => isDescendantOf(location, filters.region)).map((location) => ({ value: location._id, label: location.name }))
+  }, [filters.region, locations, isDescendantOf])
+  const districtOptions = useMemo(() => {
+    const allDistricts = locations.filter((location) => location.type === 'district')
+    if (!filters.state) return allDistricts.map((location) => ({ value: location._id, label: location.name }))
+    return allDistricts.filter((location) => isDescendantOf(location, filters.state)).map((location) => ({ value: location._id, label: location.name }))
+  }, [filters.state, locations, isDescendantOf])
+  const chapterOptions = useMemo(() => {
+    const allChapters = locations.filter((location) => location.type === 'chapter')
+    if (!filters.district) return allChapters.map((location) => ({ value: location._id, label: location.name }))
+    return allChapters.filter((location) => isDescendantOf(location, filters.district)).map((location) => ({ value: location._id, label: location.name }))
+  }, [filters.district, locations, isDescendantOf])
+
+  const loadMembers = useCallback(async () => {
+    setLoadingMembers(true)
+    try {
+      const params = {
+        page,
+        limit: 10,
+        search: search.trim() || undefined,
+        region: filters.region || undefined,
+        state: filters.state || undefined,
+        district: filters.district || undefined,
+        chapter: filters.chapter || undefined,
+      }
+      const response = await adminApi.members(params)
+      const nextRows = getList(response.data)
+      setRows(nextRows)
+      setPagination(getPagination(response.data))
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to load members')
+      setRows([])
+      setPagination({})
+    } finally {
+      setLoadingMembers(false)
+    }
+  }, [filters.chapter, filters.district, filters.region, filters.state, page, search])
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      loadMembers()
+    }, 200)
+    return () => window.clearTimeout(timer)
+  }, [loadMembers])
+
+  const updateFilter = (key, value) => {
+    setPage(1)
+    setFilters((current) => {
+      if (key === 'region') {
+        return { region: value, state: '', district: '', chapter: '' }
+      }
+      if (key === 'state') {
+        return { ...current, state: value, district: '', chapter: '' }
+      }
+      if (key === 'district') {
+        return { ...current, district: value, chapter: '' }
+      }
+      return { ...current, [key]: value }
+    })
+  }
 
   const columns = useMemo(() => [
     { key: 'memberId', header: 'Member ID', render: (row) => row.memberId || 'N/A' },
     { key: 'name', header: 'Name', render: (row) => row.name },
     { key: 'email', header: 'Email', render: (row) => row.email },
     { key: 'phone', header: 'Mobile', render: (row) => row.phone || 'N/A' },
-    { key: 'membershipPlan', header: 'Membership Plan', render: (row) => <span className="uppercase font-bold text-xs bg-slate-100 text-slate-700 px-2 py-0.5 rounded">{row.membershipPlan}</span> },
     { key: 'region', header: 'Region', render: (row) => row.region || 'N/A' },
     { key: 'state', header: 'State', render: (row) => row.state || 'N/A' },
     { key: 'district', header: 'District', render: (row) => row.district || 'N/A' },
@@ -1035,23 +1092,71 @@ export function AdminMembersPage() {
     { key: 'approvedBy', header: 'Approved By', render: (row) => row.approvedBy || 'N/A' },
     { key: 'approvedRole', header: 'Approver Role', render: (row) => <span className="capitalize font-semibold text-xs text-slate-500">{row.approvedRole?.replaceAll('_', ' ')}</span> },
     { key: 'approvedAt', header: 'Approved Date', render: (row) => formatDate(row.approvedAt) },
-    { key: 'status', header: 'Status', render: (row) => {
-      let statusVal = 'active'
-      if (row.isSuspended) statusVal = 'suspended'
-      else if (row.isBlocked) statusVal = 'blocked'
-      return <StatusBadge value={statusVal} />
-    }},
   ], [])
 
   return (
-    <ResourceListPage
-      module="members"
-      section="list"
-      title="Members"
-      description="View and filter all approved members across regions, states, districts, and chapters."
-      fetcher={adminApi.members}
-      columns={columns}
-      filters={filters}
-    />
+    <section className="space-y-6">
+      <header className="flex flex-col gap-4 rounded-2xl border border-white/60 bg-white/85 p-6 shadow-sm backdrop-blur dark:border-slate-800 dark:bg-slate-900 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <p className="inline-flex items-center gap-2 text-xs font-extrabold uppercase tracking-[0.18em] text-[#0d4697]">
+            <MapPinned className="h-4 w-4" /> Approved Members
+          </p>
+          <h1 className="mt-3 text-3xl font-black text-slate-950 dark:text-white">Members</h1>
+          <p className="mt-2 text-sm font-semibold text-slate-555">
+            View and filter all approved members across regions, states, districts, and chapters.
+          </p>
+        </div>
+        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+          <SearchBar
+            value={search}
+            onChange={(value) => {
+              setSearch(value)
+              setPage(1)
+            }}
+            placeholder="Search members"
+          />
+        </div>
+      </header>
+
+      <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950">
+        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+          <SelectFilter label="Region" value={filters.region} onChange={(value) => updateFilter('region', value)} options={regionOptions} placeholder={loadingLocations ? 'Loading regions...' : 'All Regions'} />
+          <SelectFilter label="State" value={filters.state} onChange={(value) => updateFilter('state', value)} options={stateOptions} placeholder={loadingLocations ? 'Loading states...' : 'All States'} />
+          <SelectFilter label="District" value={filters.district} onChange={(value) => updateFilter('district', value)} options={districtOptions} placeholder={loadingLocations ? 'Loading districts...' : 'All Districts'} />
+          <SelectFilter label="Chapter" value={filters.chapter} onChange={(value) => updateFilter('chapter', value)} options={chapterOptions} placeholder={loadingLocations ? 'Loading chapters...' : 'All Chapters'} />
+        </div>
+      </div>
+
+      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950">
+        <DataTable
+          columns={columns}
+          rows={rows}
+          loading={loadingMembers}
+          pagination={pagination}
+          onPageChange={setPage}
+        />
+      </div>
+    </section>
+  )
+}
+
+function SelectFilter({ label, value, onChange, options = [], placeholder, disabled = false }) {
+  return (
+    <label className="block">
+      <span className="text-xs font-black uppercase tracking-wider text-slate-500">{label}</span>
+      <select
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        disabled={disabled}
+        className="mt-1 h-11 w-full rounded-md border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-800 outline-none focus:border-[#0d4697] disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-400"
+      >
+        <option value="">{placeholder}</option>
+        {options.map((option) => (
+          <option key={option.value} value={option.value}>
+            {option.label}
+          </option>
+        ))}
+      </select>
+    </label>
   )
 }

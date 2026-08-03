@@ -99,7 +99,7 @@ const SIDEBAR_ALIASES = {
   ai_insights: 'reports',
   settings: 'settings',
   audit_logs: 'reports',
-  system_logs: 'settings',
+  system_logs: 'reports',
 }
 
 const ADMIN_ROUTE_RULES = [
@@ -169,7 +169,7 @@ const ADMIN_ROUTE_RULES = [
   { path: '/ai-insights', module: 'reports', section: 'ai_insights' },
   { path: '/broadcast-notifications', module: 'settings', section: 'notifications' },
   { path: '/audit-logs', module: 'reports', section: 'audit_logs' },
-  { path: '/system-logs', module: 'settings', section: 'system_logs', superadminOnly: true },
+  { path: '/system-logs', module: 'reports', section: 'audit_logs' },
 ]
 
 const normalizeKey = (value = '') => String(value).trim().toLowerCase().replace(/&/g, '').replace(/\s+/g, '_').replace(/[^a-z0-9_/-]/g, '')

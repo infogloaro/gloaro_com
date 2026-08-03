@@ -436,7 +436,7 @@ function App() {
               <Route path="/region-director/chat" element={<ChatSystem />} />
               <Route path="/region-director/referrals" element={<ReferralsPipeline />} />
               <Route path="/region-director/meetings" element={<MeetingsAttendance />} />
-              <Route path="/region-director/attendance" element={<MeetingsAttendance />} />
+              <Route path="/region-director/attendance" element={<AttendancePage />} />
               <Route path="/region-director/one-to-ones" element={<OneToOnesPage />} />
               <Route path="/region-director/visitors" element={<VisitorsPage />} />
               <Route path="/region-director/directory" element={<BusinessDirectory />} />
@@ -465,7 +465,7 @@ function App() {
               <Route path="/state-director/chat" element={<ChatSystem />} />
               <Route path="/state-director/referrals" element={<ReferralsPipeline />} />
               <Route path="/state-director/meetings" element={<MeetingsAttendance />} />
-              <Route path="/state-director/attendance" element={<MeetingsAttendance />} />
+              <Route path="/state-director/attendance" element={<AttendancePage />} />
               <Route path="/state-director/one-to-ones" element={<OneToOnesPage />} />
               <Route path="/state-director/visitors" element={<VisitorsPage />} />
               <Route path="/state-director/directory" element={<BusinessDirectory />} />
@@ -493,7 +493,7 @@ function App() {
               <Route path="/district-director/chat" element={<ChatSystem />} />
               <Route path="/district-director/referrals" element={<ReferralsPipeline />} />
               <Route path="/district-director/meetings" element={<MeetingsAttendance />} />
-              <Route path="/district-director/attendance" element={<MeetingsAttendance />} />
+              <Route path="/district-director/attendance" element={<AttendancePage />} />
               <Route path="/district-director/one-to-ones" element={<OneToOnesPage />} />
               <Route path="/district-director/visitors" element={<VisitorsPage />} />
               <Route path="/district-director/directory" element={<BusinessDirectory />} />
@@ -527,7 +527,7 @@ function App() {
               <Route path="/chapter-director/chat" element={<ChatSystem />} />
               <Route path="/chapter-director/referrals" element={<ReferralsPipeline />} />
               <Route path="/chapter-director/meetings" element={<MeetingsAttendance />} />
-              <Route path="/chapter-director/attendance" element={<MeetingsAttendance />} />
+              <Route path="/chapter-director/attendance" element={<AttendancePage />} />
               <Route path="/chapter-director/one-to-ones" element={<OneToOnesPage />} />
               <Route path="/chapter-director/visitors" element={<VisitorsPage />} />
               <Route path="/chapter-director/directory" element={<BusinessDirectory />} />
@@ -560,7 +560,7 @@ function App() {
               <Route path="/president/chat" element={<ChatSystem />} />
               <Route path="/president/referrals" element={<ReferralsPipeline />} />
               <Route path="/president/meetings" element={<MeetingsAttendance />} />
-              <Route path="/president/attendance" element={<MeetingsAttendance />} />
+              <Route path="/president/attendance" element={<AttendancePage />} />
               <Route path="/president/one-to-ones" element={<OneToOnesPage />} />
               <Route path="/president/visitors" element={<VisitorsPage />} />
               <Route path="/president/directory" element={<BusinessDirectory />} />
@@ -592,7 +592,7 @@ function App() {
               <Route path="/vice-president/chat" element={<ChatSystem />} />
               <Route path="/vice-president/referrals" element={<ReferralsPipeline />} />
               <Route path="/vice-president/meetings" element={<MeetingsAttendance />} />
-              <Route path="/vice-president/attendance" element={<MeetingsAttendance />} />
+              <Route path="/vice-president/attendance" element={<AttendancePage />} />
               <Route path="/vice-president/one-to-ones" element={<OneToOnesPage />} />
               <Route path="/vice-president/visitors" element={<VisitorsPage />} />
               <Route path="/vice-president/directory" element={<BusinessDirectory />} />
@@ -615,7 +615,7 @@ function App() {
               <Route path="/launch-director/chat" element={<ChatSystem />} />
               <Route path="/launch-director/referrals" element={<ReferralsPipeline />} />
               <Route path="/launch-director/meetings" element={<MeetingsAttendance />} />
-              <Route path="/launch-director/attendance" element={<MeetingsAttendance />} />
+              <Route path="/launch-director/attendance" element={<AttendancePage />} />
               <Route path="/launch-director/one-to-ones" element={<OneToOnesPage />} />
               <Route path="/launch-director/visitors" element={<VisitorsPage />} />
               <Route path="/launch-director/directory" element={<BusinessDirectory />} />
@@ -644,7 +644,7 @@ function App() {
               <Route path="/direct-consultant/chat" element={<ChatSystem />} />
               <Route path="/direct-consultant/referrals" element={<ReferralsPipeline />} />
               <Route path="/direct-consultant/meetings" element={<MeetingsAttendance />} />
-              <Route path="/direct-consultant/attendance" element={<MeetingsAttendance />} />
+              <Route path="/direct-consultant/attendance" element={<AttendancePage />} />
               <Route path="/direct-consultant/one-to-ones" element={<OneToOnesPage />} />
               <Route path="/direct-consultant/visitors" element={<VisitorsPage />} />
               <Route path="/direct-consultant/directory" element={<BusinessDirectory />} />
