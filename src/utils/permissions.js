@@ -91,6 +91,7 @@ const SIDEBAR_ALIASES = {
   reports_center: 'reports',
   analytics: 'reports',
   scorecards: 'reports',
+  enterprise_scorecard: 'reports',
   executive_dashboard: 'reports',
   activity_center: 'reports',
   global_search: 'settings',
@@ -99,7 +100,7 @@ const SIDEBAR_ALIASES = {
   ai_insights: 'reports',
   settings: 'settings',
   audit_logs: 'reports',
-  system_logs: 'settings',
+  system_logs: 'reports',
 }
 
 const ADMIN_ROUTE_RULES = [
@@ -144,6 +145,7 @@ const ADMIN_ROUTE_RULES = [
   { path: '/events', module: 'events', section: 'events' },
   { path: '/training', module: 'training', section: 'training' },
   { path: '/testimonials', module: 'reports', section: 'testimonials' },
+  { path: '/referral-management', module: 'referrals', section: 'referrals' },
   { path: '/referrals', module: 'referrals', section: 'referrals' },
   { path: '/referrals-table', module: 'referrals', section: 'referrals' },
   { path: '/payments', module: 'reports', section: 'payments' },
@@ -156,19 +158,22 @@ const ADMIN_ROUTE_RULES = [
   { path: '/reports-center', module: 'reports', section: 'reports_center' },
   { path: '/analytics', module: 'reports', section: 'analytics' },
   { path: '/legacy-analytics', module: 'reports', section: 'analytics' },
+  { path: '/scorecard', module: 'reports', section: 'enterprise_scorecard' },
   { path: '/scorecards', module: 'reports', section: 'scorecards' },
   { path: '/executive-dashboard', module: 'reports', section: 'executive_dashboard' },
   { path: '/activity', module: 'reports', section: 'activity_center' },
   { path: '/global-search', module: 'settings', section: 'global_search' },
   { path: '/notifications', module: 'settings', section: 'notifications' },
   { path: '/notification-automation', module: 'settings', section: 'notification_automation' },
+  { path: '/network', module: 'community', section: 'network' },
+  { path: '/wall', module: 'community', section: 'chapter' },
+  { path: '/chat', module: 'chat', section: 'direct_messages' },
   { path: '/tasks', module: 'settings', section: 'tasks' },
   { path: '/calendar', module: 'events', section: 'calendar' },
   { path: '/member-journey', module: 'members', section: 'member_journey' },
   { path: '/ai-insights', module: 'reports', section: 'ai_insights' },
-  { path: '/broadcast-notifications', module: 'settings', section: 'notifications' },
   { path: '/audit-logs', module: 'reports', section: 'audit_logs' },
-  { path: '/system-logs', module: 'settings', section: 'system_logs', superadminOnly: true },
+  { path: '/system-logs', module: 'reports', section: 'audit_logs' },
 ]
 
 const normalizeKey = (value = '') => String(value).trim().toLowerCase().replace(/&/g, '').replace(/\s+/g, '_').replace(/[^a-z0-9_/-]/g, '')
@@ -247,7 +252,9 @@ export function translatePermissionsToConfig(permissionsArray = []) {
 }
 
 export function createPermissionHelpers(user, permissionConfig = null) {
-  const isSuperAdmin = normalizeRole(user?.role) === ROLES.SUPERADMIN
+  const role = normalizeRole(user?.role)
+  const isSuperAdmin = role === ROLES.SUPERADMIN
+  const isCoreAdmin = role === ROLES.ADMIN || role === ROLES.SUPERADMIN
   let config = permissionConfig
   if (Array.isArray(permissionConfig)) {
     config = translatePermissionsToConfig(permissionConfig)
@@ -338,6 +345,7 @@ export function createPermissionHelpers(user, permissionConfig = null) {
 
     const rule = getRouteRule(pathname)
     if (!rule) return true
+    if (isCoreAdmin && ['/network', '/wall', '/chat', '/notifications'].includes(rule.path)) return true
     if (rule.superadminOnly) return false
     if (rule.module && !hasModule(rule.module)) return false
     if (rule.section && !hasSection(rule.module, rule.section)) return false
@@ -438,4 +446,3 @@ export function getDashboardRoute(role, user = null) {
 
   return '/member/dashboard'
 }
-

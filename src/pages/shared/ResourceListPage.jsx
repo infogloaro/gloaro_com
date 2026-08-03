@@ -5,6 +5,7 @@ import SearchBar from '../../components/common/SearchBar'
 import StatusBadge from '../../components/common/StatusBadge'
 import DataTable from '../../components/tables/DataTable'
 import { useAuth } from '../../hooks/useAuth'
+import { ROLES } from '../../constants/roleConfig.js'
 import { getList, getPagination, formatDate } from '../../utils/format'
 
 export default function ResourceListPage({
@@ -24,9 +25,9 @@ export default function ResourceListPage({
   renderForm,
   defaultParams = {},
   readOnly = false,
-  retainRowsOnEmptySearch = false,
 }) {
-  const { hasSection, hasOperation } = useAuth()
+  const { hasSection, hasOperation, user } = useAuth()
+  const isSuperAdmin = user?.role === ROLES.SUPERADMIN
   const [payload, setPayload] = useState(null)
   const [loading, setLoading] = useState(true)
   const [page, setPage] = useState(1)
@@ -41,16 +42,6 @@ export default function ResourceListPage({
   const canCreate = readOnly ? false : (module ? hasOperation(module, 'create') : true)
   const canEdit = readOnly ? false : (module ? hasOperation(module, 'edit') : true)
   const canDelete = readOnly ? false : (module ? hasOperation(module, 'delete') : true)
-
-  useEffect(() => {
-    console.log({
-      pathname: window.location.pathname,
-      module,
-      section,
-      title,
-      fetcher,
-    })
-  }, [module, section, title, fetcher])
 
   useEffect(() => {
     const timer = window.setTimeout(() => setDebouncedSearch(search.trim()), 300)
@@ -68,15 +59,13 @@ export default function ResourceListPage({
     setLoading(true)
     try {
       const response = await fetcher(params)
+      setPayload(response.data)
       const nextPayload = response.data
-      setPayload((current) => {
-        const shouldRetainRows = retainRowsOnEmptySearch && debouncedSearch && current && getList(nextPayload).length === 0
-        return shouldRetainRows ? current : nextPayload
-      })
+      setPayload(nextPayload)
     } finally {
       setLoading(false)
     }
-  }, [canViewSection, debouncedSearch, fetcher, params, retainRowsOnEmptySearch])
+  }, [canViewSection, fetcher, params])
 
   useEffect(() => {
     if (!canViewSection) return undefined
@@ -126,12 +115,12 @@ export default function ResourceListPage({
     <section>
       <div className="mb-5 flex flex-col justify-between gap-4 lg:flex-row lg:items-end">
         <div>
-          <h2 className="text-2xl font-extrabold text-slate-950 dark:text-white">{title}</h2>
+          <h2 className={isSuperAdmin ? 'text-2xl font-extrabold text-slate-950' : 'text-2xl font-extrabold text-slate-950 dark:text-white'}>{title}</h2>
           {description && <p className="mt-1 text-sm font-semibold text-slate-500">{description}</p>}
         </div>
         <div className="flex flex-col gap-2 sm:flex-row">
           <SearchBar value={search} onChange={(value) => { setSearch(value); setPage(1) }} placeholder={`Search ${title.toLowerCase()}`} />
-          {filters.map((filter) => (
+          {filters.filter((filter) => filter.key !== 'status' && filter.label?.toLowerCase() !== 'status').map((filter) => (
             <select key={filter.key} value={filterValues[filter.key] || ''} onChange={(event) => setFilterValues((current) => ({ ...current, [filter.key]: event.target.value || undefined }))} className="h-10 rounded-md border border-slate-200 bg-white px-3 text-sm font-bold text-slate-800">
               <option value="">{filter.label}</option>
               {filter.options.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
@@ -154,6 +143,8 @@ export default function ResourceListPage({
             {deleteAction && canDelete && <button onClick={() => remove(row)} className="rounded-md border border-red-500 bg-white px-3 py-1.5 text-xs font-bold text-red-500 hover:bg-red-50 transition duration-150">Delete</button>}
           </div>
         ) : undefined}
+        emptyTitle={debouncedSearch ? `No results for “${debouncedSearch}”` : 'No records found'}
+        emptyDescription={debouncedSearch ? `No ${title.toLowerCase()} match this search. Try another product name, category, vendor, business, email, phone, or SKU.` : undefined}
       />
       <Modal open={Boolean(details)} title={details?.title || `${title} details`} onClose={() => setDetails(null)}>
         {detailsLoading ? <p className="py-8 text-center text-sm font-semibold text-slate-500">Loading details...</p> : details ? renderDetails?.(details) : null}

@@ -1,23 +1,17 @@
 import {
   Activity,
-  Award,
   BarChart3,
   BookOpen,
   Bell,
   BriefcaseBusiness,
   Building2,
   CalendarDays,
-  Clock,
   CreditCard,
-  FileBarChart,
   FileText,
-  Folder,
   Heart,
   HelpCircle,
   Home,
-  KeyRound,
   LayoutDashboard,
-  LayoutGrid,
   ListTree,
   Lock,
   MapPinned,
@@ -51,6 +45,17 @@ import { ROLES } from './roleConfig.js'
 
 export const adminNav = [
   ['Dashboard', '/dashboard', LayoutDashboard],
+  ['Enterprise Scorecard', '/scorecard', BarChart3],
+  {
+    label: 'Communication',
+    icon: MessageSquare,
+    children: [
+      ['Gloaro Community', '/network', Network],
+      ['Chapter Community', '/wall', Volume2],
+      ['Direct Messages', '/chat', MessageSquare],
+      ['Notifications', '/notifications', Bell],
+    ],
+  },
   {
     label: 'Organization Management',
     icon: Building2,
@@ -64,11 +69,16 @@ export const adminNav = [
     children: [
       ['Admin Management', '/admin-management', Users],
       ['Assignments', '/assignments', Workflow],
-      ['Feature Management', '/features', ToggleLeft],
-      ['Dashboard Config', '/dashboard-config', LayoutGrid],
-      ['Workflow Settings', '/membership-workflow', Workflow],
       ['Tasks', '/tasks', Activity],
       ['Calendar', '/calendar', CalendarDays],
+    ],
+  },
+  {
+    label: 'Referrals',
+    icon: Handshake,
+    children: [
+      ['My Referrals', '/my-referrals', User],
+      ['Referral Management', '/referral-management', Handshake],
     ],
   },
   {
@@ -79,7 +89,6 @@ export const adminNav = [
       ['Members', '/members', Users],
       ['Attendance', '/attendance', Activity],
       ['Chapter Approvals', '/chapters', Network],
-      ['Referrals', '/referrals', Ticket],
     ],
   },
   {
@@ -110,11 +119,8 @@ export const adminNav = [
   ['Training', '/training', Star],
 
   ['Success Stories', '/testimonials', FileText],
-  ['Banners', '/banners', FileText],
-
   ['FAQs', '/faqs', HelpCircle],
   ['Analytics', '/analytics', BarChart3],
-  ['Notification Center', '/notifications', Bell],
   ['Profile', '/profile', User],
   ['Audit Logs', '/audit-logs', FileText],
   ['System Logs', '/system-logs', Lock],
@@ -122,6 +128,8 @@ export const adminNav = [
 
 export const vendorNav = [
   ['Dashboard', '/vendor', LayoutDashboard],
+  ['Enterprise Scorecard', '/vendor/scorecard', BarChart3],
+  { label: 'Communication', icon: MessageSquare, children: [['Notifications', '/notifications', Bell]] },
   ['Business Profile', '/vendor/profile', Building2],
   ['Business Categories', '/vendor/business-categories', PlusCircle],
   ['Products', '/vendor/products', Package],
@@ -132,10 +140,13 @@ export const vendorNav = [
   ['Payments', '/vendor/payments', CreditCard],
   ['Analytics', '/vendor/analytics', BarChart3],
   ['Notifications', '/vendor/notifications', Bell],
+  ['Support', '/vendor/support', HelpCircle],
 ]
 
 export const memberVendorNav = [
   ['Dashboard', '/member/dashboard', LayoutDashboard],
+  ['Enterprise Scorecard', '/member/dashboard/scorecard', BarChart3],
+  { label: 'Communication', icon: MessageSquare, children: [['Notifications', '/notifications', Bell]] },
   ['Business Profile', '/member/dashboard/my-business', Building2],
   ['Business Categories', '/member/dashboard/business-categories', PlusCircle],
   ['My Products', '/member/dashboard/products', Package],
@@ -148,12 +159,16 @@ export const memberVendorNav = [
 ]
 
 export const applicantNav = [
+  ['Enterprise Scorecard', '/member/dashboard/scorecard', BarChart3],
+  { label: 'Communication', icon: MessageSquare, children: [['Notifications', '/notifications', Bell]] },
   ['Profile', '/member/profile', User],
   ['Membership Application Status', '/member/membership-application-status', ClipboardCheck],
 ]
 
 export const vendorApplicantNav = [
   ['Dashboard', '/vendor/onboarding-status', LayoutDashboard],
+  ['Enterprise Scorecard', '/vendor/scorecard', BarChart3],
+  { label: 'Communication', icon: MessageSquare, children: [['Notifications', '/notifications', Bell]] },
   ['Vendor Application Status', '/vendor/onboarding-status', ClipboardList],
   ['Profile', '/vendor/account', User],
   ['Settings', '/vendor/settings', Settings],
@@ -161,6 +176,8 @@ export const vendorApplicantNav = [
 ]
 
 export const vendorOnboardingNav = [
+  ['Enterprise Scorecard', '/vendor/scorecard', BarChart3],
+  { label: 'Communication', icon: MessageSquare, children: [['Notifications', '/notifications', Bell]] },
   ['Vendor Onboarding', '/vendor/onboarding', FileText],
   ['Application Status', '/vendor/onboarding-status', ClipboardList],
   ['Account', '/vendor/account', User],
@@ -181,13 +198,14 @@ export const customerNav = [
   ['Wishlist', '/wishlist', Heart],
   ['Referral', '/customer/referral', Ticket],
   ['Events', '/events', CalendarDays],
-  ['Notifications', '/customer/notifications', Bell],
   ['Profile', '/customer/profile', Users],
   ['Support', '/customer/support', HelpCircle],
 ]
 
 export const customerFoundationNav = [
   ['Dashboard', '/customer/dashboard', LayoutDashboard],
+  ['Enterprise Scorecard', '/customer/scorecard', BarChart3],
+  { label: 'Communication', icon: MessageSquare, children: [['Notifications', '/notifications', Bell]] },
   ['Profile', '/customer/profile', User],
   ['Addresses', '/customer/addresses', MapPinned],
   ['Logout', '__logout__', LogOut],
@@ -195,11 +213,12 @@ export const customerFoundationNav = [
 
 export const membershipNav = [
   ['Dashboard', '/membership/dashboard', LayoutDashboard],
+  ['Enterprise Scorecard', '/membership/scorecard', BarChart3],
+  { label: 'Communication', icon: MessageSquare, children: [['Notifications', '/notifications', Bell]] },
   ['Benefits', '/membership/benefits', Star],
   ['Events', '/membership/events', CalendarDays],
   ['Assigned Courses', '/membership/training', BookOpen],
   ['Referral', '/membership/referral', Ticket],
-  ['Notifications', '/membership/notifications', Bell],
   ['Profile', '/membership/profile', Users],
   ['Support', '/membership/support', HelpCircle],
 ]
@@ -213,7 +232,11 @@ export const presidentNav = [];
 export const vicePresidentNav = [];
 export const regionDirectorNav = [];
 
-const removeMarketplaceSection = (navItems = []) => navItems.filter((_, index) => index !== 2)
+// Keep the Business Directory feature and routes available in code, but do not
+// expose its navigation entry anywhere in the dashboard UI.
+const SHOW_BUSINESS_DIRECTORY_IN_NAVIGATION = false
+
+const removeMarketplaceSection = (navItems = []) => navItems.filter((item) => Array.isArray(item) || item.label !== 'Marketplace')
 
 const getUserOrganization = (user) => (
   user?.meta?.adminProfile?.organization ||
@@ -289,6 +312,14 @@ export const rolePrefixes = {
 
 const commonModules = [
   ['Dashboard', '', LayoutDashboard],
+  ['Enterprise Scorecard', '/scorecard', BarChart3],
+  {
+    label: 'Communication',
+    icon: MessageSquare,
+    children: [
+      ['Notifications', '/notifications', Bell],
+    ]
+  },
   {
     label: 'Community',
     icon: Network,
@@ -297,8 +328,7 @@ const commonModules = [
       ['Gloaro Network', '/network', Network],
       ['Messages', '/chat', MessageSquare],
       ['Referrals', '/referrals', Handshake],
-      ['Business Directory', '/directory', Users],
-      ['Leaderboard', '/leaderboard', Trophy]
+      ['Business Directory', '/directory', Users]
     ]
   },
   {
@@ -325,14 +355,6 @@ const commonModules = [
   },
   ['Training', '/member/training', BookOpen],
   ['My Chapter', '/chapter', Building2],
-  {
-    label: 'Collaboration',
-    icon: MessageSquare,
-    children: [
-      ['Tasks', '/tasks', ClipboardCheck],
-      ['Help Desk', '/help-desk', HelpCircle]
-    ]
-  },
   ['Profile', '/profile', User]
 ];
 
@@ -390,6 +412,7 @@ export function getSidebarNav(role, options = {}) {
     const prefixPath = (item) => {
       if (Array.isArray(item)) {
         const [label, to, icon] = item;
+        if (to === '/notifications') return [label, to, icon];
         return [label, buildAdminRoute(role, to), icon];
       }
       return {
@@ -455,7 +478,7 @@ export function getSidebarNav(role, options = {}) {
       const memberReferralPath = label === 'Referrals' && to === '/referrals' && [ROLES.CUSTOMER, ROLES.USER, ROLES.VENDOR].includes(normalizedRole);
       const finalPath = memberReferralPath
         ? '/member/referrals'
-        : (to.startsWith('/admin/') || to === '/admin' || to.startsWith('/member/') || to === '/member') || to.startsWith('/super-admin') ? to : `${prefix}${to}`;
+        : (to === '/notifications' || to.startsWith('/admin/') || to === '/admin' || to.startsWith('/member/') || to === '/member') || to.startsWith('/super-admin') ? to : `${prefix}${to}`;
       return [label, finalPath, icon];
     }
     let children = item.children;
@@ -472,10 +495,13 @@ export function getSidebarNav(role, options = {}) {
       }
     }
     if (item.label === 'Community') {
+      if (!SHOW_BUSINESS_DIRECTORY_IN_NAVIGATION) {
+        children = children.filter(([label]) => label !== 'Business Directory')
+      }
       if ([ROLES.REGION_DIRECTOR, ROLES.STATE_DIRECTOR, ROLES.DISTRICT_DIRECTOR].includes(normalizedRole)) {
         children = children.filter(([label]) => {
           if (label === 'Chapter Community') return hasChapterAssignment(user)
-          return ['Gloaro Network', 'Messages'].includes(label)
+          return ['Gloaro Network', 'Messages', 'Referrals'].includes(label)
         })
       } else if ([ROLES.CUSTOMER, ROLES.USER, ROLES.VENDOR].includes(normalizedRole)) {
         children = children.filter(([label]) => ['Chapter Community', 'Gloaro Network', 'Messages', 'Referrals'].includes(label))
@@ -506,25 +532,29 @@ if (
     base = [
       base[0], // Dashboard
       orgMgmt,
-      base[2], // Marketplace
-      base[3], // Meetings
-      base[1], // Community
-      base[4], // Training
-      base[5], // Chapter
-      base[6], // Collaboration
-      base[7], // Profile
+      base[1], // Enterprise Scorecard
+      base[2], // Communication
+      base[4], // Marketplace
+      base[5], // Meetings
+      base[3], // Community
+      base[6], // Training
+      base[7], // Chapter
+      base[8], // Collaboration
+      base[9], // Profile
     ];
   } else {
     base = [
       base[0], // Dashboard
       orgMgmt,
-      base[2], // Marketplace
-      base[3], // Meetings
-      base[1], // Community
-      base[4], // Training
-      base[5], // Chapter
-      base[6], // Collaboration
-      base[7], // Profile
+      base[1], // Enterprise Scorecard
+      base[2], // Communication
+      base[4], // Marketplace
+      base[5], // Meetings
+      base[3], // Community
+      base[6], // Training
+      base[7], // Chapter
+      base[8], // Collaboration
+      base[9], // Profile
     ];
   }
 }

@@ -1,24 +1,27 @@
 import { useEffect, useState } from 'react'
 import { communityApi } from '../../api/community'
+import { customerApi } from '../../api/customer'
 import LoadingScreen from '../../components/common/LoadingScreen'
 import toast from 'react-hot-toast'
 import {
   Search,
   Building2,
-  UsersRound,
   Mail,
   Phone,
-  MessageSquare,
-  Globe,
   Star,
-  Award,
   Filter
 } from 'lucide-react'
+
+const directoryRoleName = (item) => {
+  if (['customer', 'user'].includes(String(item.roleCode || '').toLowerCase())) return 'Member'
+  return item.role || 'Member'
+}
 
 export default function BusinessDirectory() {
   const [directory, setDirectory] = useState([])
   const [filtered, setFiltered] = useState([])
   const [loading, setLoading] = useState(true)
+  const [categoryOptions, setCategoryOptions] = useState([])
 
   // Search & Filter state
   const [searchQuery, setSearchQuery] = useState('')
@@ -28,11 +31,19 @@ export default function BusinessDirectory() {
 
   const fetchDirectory = (params = {}) => {
     setLoading(true)
-    communityApi.getDirectory(params)
-      .then(res => {
-        const data = res.data?.data || []
+    Promise.all([
+      communityApi.getDirectory(params),
+      customerApi.categories({ all: true, isActive: true }),
+    ])
+      .then(([directoryResponse, categoryResponse]) => {
+        const data = directoryResponse.data?.data || []
+        const categoryData = categoryResponse.data?.data || []
+        const allCategories = categoryData.flatMap((category) => [category, ...(category.subcategories || [])])
+        const uniqueCategoryNames = [...new Set(allCategories.map((category) => category?.name).filter(Boolean))]
+          .sort((left, right) => left.localeCompare(right))
         setDirectory(data)
         setFiltered(data)
+        setCategoryOptions(uniqueCategoryNames)
       })
       .catch(() => {
         toast.error('Failed to load business directory')
@@ -43,7 +54,8 @@ export default function BusinessDirectory() {
   }
 
   useEffect(() => {
-    fetchDirectory()
+    const timer = window.setTimeout(() => fetchDirectory(), 0)
+    return () => window.clearTimeout(timer)
   }, [])
 
   const handleSearchChange = (val) => {
@@ -71,7 +83,13 @@ export default function BusinessDirectory() {
     }
 
     if (cat) {
-      result = result.filter(item => item.category === cat)
+      const [filterType, ...filterValueParts] = cat.split(':')
+      const filterValue = filterValueParts.join(':')
+      if (filterType === 'role') {
+        result = result.filter((item) => directoryRoleName(item) === filterValue)
+      } else if (filterType === 'category') {
+        result = result.filter((item) => item.category === filterValue)
+      }
     }
 
     if (ch) {
@@ -90,7 +108,12 @@ export default function BusinessDirectory() {
   }
 
   // Extract unique filter fields
-  const categories = [...new Set(directory.map(i => i.category))].filter(Boolean)
+  const categories = [...new Set([
+    ...categoryOptions,
+    ...directory.map((item) => item.category).filter(Boolean),
+  ])].sort((left, right) => left.localeCompare(right))
+  const roles = [...new Set(directory.map(directoryRoleName).filter(Boolean))]
+    .sort((left, right) => left.localeCompare(right))
   const chapters = [...new Set(directory.map(i => i.chapterName))].filter(Boolean)
 
   return (
@@ -119,8 +142,17 @@ export default function BusinessDirectory() {
             onChange={(e) => handleFilterChange(e.target.value, selectedChapter, selectedStatus)}
             className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 outline-none focus:border-[#0d4697]"
           >
-            <option value="">All Categories</option>
-            {categories.map(c => <option key={c} value={c}>{c}</option>)}
+            <option value="">All Categories / Roles</option>
+            {!!roles.length && (
+              <optgroup label="Member Roles">
+                {roles.map((role) => <option key={role} value={`role:${role}`}>{role}</option>)}
+              </optgroup>
+            )}
+            {!!categories.length && (
+              <optgroup label="Business Categories">
+                {categories.map((category) => <option key={category} value={`category:${category}`}>{category}</option>)}
+              </optgroup>
+            )}
           </select>
 
           <select 
@@ -155,7 +187,7 @@ export default function BusinessDirectory() {
               </span>
               <div>
                 <h4 className="text-sm font-extrabold text-slate-900 leading-tight">{item.name}</h4>
-                <p className="text-[10px] font-semibold text-slate-400 capitalize mt-0.5">{item.role?.replace('_', ' ')}</p>
+                <p className="text-[10px] font-semibold text-slate-400 capitalize mt-0.5">{directoryRoleName(item)}</p>
                 <p className="text-[11px] font-extrabold text-[#0d4697] mt-1">{item.businessName}</p>
               </div>
             </div>

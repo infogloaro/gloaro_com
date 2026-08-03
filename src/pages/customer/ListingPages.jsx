@@ -655,21 +655,21 @@ export function ProductsPage() {
           </div>
 
           {pagination.totalPages > 1 && (
-            <div className="mt-10 flex items-center justify-center gap-4">
+            <div className="mt-4 flex items-center justify-end gap-2">
               <button
                 disabled={page <= 1}
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
-                className="h-10 rounded-md border border-slate-200 bg-white px-4 text-sm font-bold text-slate-755 hover:bg-slate-50 disabled:opacity-50"
+                className="rounded-lg border border-slate-300 bg-white px-3 py-2 font-medium text-slate-700 transition-all duration-200 hover:border-blue-600 hover:bg-blue-600 hover:text-white disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400 disabled:opacity-70 disabled:hover:border-slate-200 disabled:hover:bg-slate-100 disabled:hover:text-slate-400"
               >
                 Previous
               </button>
-              <span className="text-sm font-bold text-slate-550">
+              <span className="text-sm font-medium text-slate-600">
                 Page {pagination.page} of {pagination.totalPages}
               </span>
               <button
                 disabled={page >= pagination.totalPages}
                 onClick={() => setPage((p) => Math.min(pagination.totalPages, p + 1))}
-                className="h-10 rounded-md border border-slate-200 bg-white px-4 text-sm font-bold text-slate-755 hover:bg-slate-50 disabled:opacity-50"
+                className="rounded-lg border border-slate-300 bg-white px-3 py-2 font-medium text-slate-700 transition-all duration-200 hover:border-blue-600 hover:bg-blue-600 hover:text-white disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400 disabled:opacity-70 disabled:hover:border-slate-200 disabled:hover:bg-slate-100 disabled:hover:text-slate-400"
               >
                 Next
               </button>
@@ -814,21 +814,21 @@ export function ServicesPage() {
           </div>
 
           {pagination.totalPages > 1 && (
-            <div className="mt-10 flex items-center justify-center gap-4">
+            <div className="mt-4 flex items-center justify-end gap-2">
               <button
                 disabled={page <= 1}
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
-                className="h-10 rounded-md border border-slate-200 bg-white px-4 text-sm font-bold text-slate-755 hover:bg-slate-50 disabled:opacity-50"
+                className="rounded-lg border border-slate-300 bg-white px-3 py-2 font-medium text-slate-700 transition-all duration-200 hover:border-blue-600 hover:bg-blue-600 hover:text-white disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400 disabled:opacity-70 disabled:hover:border-slate-200 disabled:hover:bg-slate-100 disabled:hover:text-slate-400"
               >
                 Previous
               </button>
-              <span className="text-sm font-bold text-slate-550">
+              <span className="text-sm font-medium text-slate-600">
                 Page {pagination.page} of {pagination.totalPages}
               </span>
               <button
                 disabled={page >= pagination.totalPages}
                 onClick={() => setPage((p) => Math.min(pagination.totalPages, p + 1))}
-                className="h-10 rounded-md border border-slate-200 bg-white px-4 text-sm font-bold text-slate-755 hover:bg-slate-50 disabled:opacity-50"
+                className="rounded-lg border border-slate-300 bg-white px-3 py-2 font-medium text-slate-700 transition-all duration-200 hover:border-blue-600 hover:bg-blue-600 hover:text-white disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400 disabled:opacity-70 disabled:hover:border-slate-200 disabled:hover:bg-slate-100 disabled:hover:text-slate-400"
               >
                 Next
               </button>

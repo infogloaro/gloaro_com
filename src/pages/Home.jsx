@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import BusinessCategories from '../components/common/BusinessCategories'
 import { ShoppingBag, ShoppingCart, Store, UserRound, UsersRound } from 'lucide-react'
 import heroNetworkIcon from '../assets/hero_net_icon.png'
 import heroBackground from '../assets/herobg-1.png'
@@ -21,6 +22,8 @@ import rocketIcon from '../assets/rocket.png'
 import whyImage from '../assets/why_img.png'
 import awardsImage from '../assets/awards_img.png'
 import api from '../api/axios'
+import leader1 from '../assets/leader1.png'
+import leader2 from '../assets/leader2.png'
 
 import leaderImage1 from '../assets/ceo.jpeg'
 import leaderImage2 from '../assets/Digital_Network.png'
@@ -90,21 +93,111 @@ const eventCards = [
   ['TRAINING', 'Compliance Essentials', 'Certified training module on regional B2B regulations and trade laws.', 'Certified learning • Trade compliance', 'https://images.unsplash.com/photo-1551836022-d5d88e9218df?auto=format&fit=crop&w=600&q=80'],
 ]
 
+const networkDetailGroups = [
+  {
+    title: 'Membership',
+    eyebrow: 'Connect & belong',
+    items: [
+      ['membership-benefits-detail', 'Membership Benefits', 'One-to-one referrals, verified networking, business promotion, digital support, training, leadership development, expos and recognition programs.'],
+      ['membership-investment', 'Yearly Subscription', 'Annual membership is ₹30,000 plus ₹5,400 GST (18%), totaling ₹35,400. It includes the referral network, meetings, training, community access, digital support and business promotion.'],
+      ['member-access', 'Member Access', 'Approved members enter a verified community with business directory visibility, structured meetings, referral opportunities and digital growth resources.'],
+    ],
+  },
+  {
+    title: 'Business Network',
+    eyebrow: 'One complete ecosystem',
+    items: [
+      ['gloaro-360-network', '360 Gloaro Network', 'A unified ecosystem connecting entrepreneurs, businesses, technology, referrals, digital opportunities, marketplace access and community growth.'],
+      ['global-business-network', 'Global Business Network', 'GLOARO is building toward international business communities and global visits with industry leaders as part of its future expansion.'],
+      ['business-growth', 'Business Growth', 'Trusted relationships, qualified referrals, digital promotion, training, technology and marketplace visibility work together to support long-term growth.'],
+      ['business-opportunities', 'Business Opportunities', 'Members can discover collaborations, strategic partnerships, marketplace opportunities, franchise growth and business expansion pathways.'],
+    ],
+  },
+  {
+    title: 'Referral Program',
+    eyebrow: 'Trust-led opportunities',
+    items: [
+      ['referral-meeting', 'Referral Meeting', 'Members attend structured weekly and one-to-one business meetings designed to build trusted relationships and qualified opportunities.'],
+      ['referral-join', 'Referral Join', 'A prospective member is referred by an existing verified member, completes offline verification and receives membership approval before joining.'],
+      ['referral-benefits', 'Referral Benefits', 'The referral engine creates genuine introductions, business relationships, qualified leads and ongoing community support.'],
+    ],
+  },
+  {
+    title: 'Mobile App',
+    eyebrow: 'Business on the move',
+    items: [
+      ['gloaro-app', 'Gloaro App', 'A planned mobile ecosystem for networking, referrals, community participation and access to GLOARO digital opportunities.'],
+      ['member-app', 'Member App', 'A member-focused experience for profiles, connections, meeting updates, referrals and recognition activity.'],
+      ['business-management-app', 'Business Management App', 'A proposed workspace to organize business activity, opportunities, customer follow-ups and performance insights.'],
+    ],
+  },
+  {
+    title: 'Business Services',
+    eyebrow: 'Digital growth solutions',
+    items: [
+      ['technology-development', 'Technology Development', 'GLOARO supports digital transformation through websites, applications, e-commerce solutions and technology-led business enablement.'],
+      ['mobile-app-development', 'Mobile App Development', 'Mobile application support helps businesses create accessible digital experiences and new sales channels.'],
+      ['digital-marketing', 'Digital Marketing', 'Full-service digital growth support includes social media promotion, branding, promotional campaigns and marketplace visibility.'],
+      ['it-solutions', 'IT Solutions', 'Practical technology solutions help businesses improve their digital presence, operations and customer reach.'],
+      ['saas-solution', 'SaaS Solution', 'Scalable software solutions are planned to help growing businesses manage workflows, collaboration and performance.'],
+    ],
+  },
+  {
+    title: 'Events & Community',
+    eyebrow: 'Learn & grow together',
+    items: [
+      ['monthly-meetings', 'Monthly Meetings', 'Regular networking meetings create space for referrals, learning, accountability and trusted business relationships.'],
+      ['business-expo', 'Business Expo', 'Business expos and trade events give members opportunities to showcase, connect and discover new markets.'],
+      ['social-events', 'Social Events', 'Community and cultural events strengthen relationships beyond formal business meetings.'],
+      ['district-community', 'District Community', 'The district model supports five chapters per district, with approximately 45–70 members in each chapter.'],
+      ['tamil-nadu-community', 'Tamil Nadu Community', 'A growing regional community connecting verified entrepreneurs and business leaders across Tamil Nadu districts.'],
+      ['global-community', 'Global Community', 'The future roadmap includes international business communities, global visits and smart digital networking.'],
+    ],
+  },
+  {
+    title: 'Franchise',
+    eyebrow: 'Lead regional expansion',
+    items: [
+      ['available-locations', 'Available Locations', 'District-wise expansion is planned across India, with regional opportunities organized around scalable local chapters.'],
+      ['apply-franchise', 'Apply Franchise', 'The district franchise model is ₹21.30 lakhs, royalty-free, with a one-year agreement and 35% franchise commission.'],
+      ['franchise-partners', 'Franchise Partners', 'Partners receive district control, chapter expansion opportunities, website access, regional leadership and recurring member-revenue potential.'],
+    ],
+  },
+  {
+    title: 'Leaders & Achievements',
+    eyebrow: 'Recognize excellence',
+    items: [
+      ['network-leaders', 'Leaders', 'A structured multi-tier leadership ecosystem supports accountability, chapter growth, learning and community direction.'],
+      ['network-coordinators', 'Coordinators', 'Community coordinators help organize meetings, member communication and local business activities.'],
+      ['business-runner', 'Business Runner', 'A recognition pathway for members who demonstrate consistent participation, collaboration and business momentum.'],
+      ['goal-achiever', 'Goal Achiever', 'A milestone-based recognition for members who make measurable progress toward referral, leadership and growth goals.'],
+      ['member-achievements', 'Member Achievements', 'Programs include the Mr. 360° Lead Champion Award, Referral Excellence Awards, leadership recognition and Business Achievement Awards.'],
+    ],
+  },
+  {
+    title: 'Help Center',
+    eyebrow: 'Support when needed',
+    items: [
+      ['ai-assistant', 'AI Assistant', 'A planned digital assistant to help members find platform information, services and common support answers.'],
+      ['contact-support', 'Contact Support', 'Contact the GLOARO team at info@gloaro.com or +91 72002 38737 for membership and platform assistance.'],
+      ['social-media-links', 'Social Media Links', 'Follow GLOARO social channels for business updates, event announcements, member stories and community news.'],
+    ],
+  },
+]
+
 const leaders = [
   {
     name: 'G.MANI VANNAN',
-    role: 'Founder & CEO',
+    role: 'FOUNDER AND MANAGING DIRECTOR',
     bio: 'Visionary leader with 15+ years of experience in business strategy and growth.',
-    image: leaderImage1,
+    image: leader2,
   },
   {
-    name: 'Yuvaraj',
-    role: 'Digital Network Director',
+    name: 'Kannan',
+    role: 'Co-Founder and CEO',
     bio: 'Operations expert focused on delivering excellence and scaling impact.',
-    image: leaderImage2,
+    image: leader1,
   },
-  
-  
 ]
 
 export default function Home() {
@@ -145,6 +238,10 @@ export default function Home() {
     if (!targetId) return
 
     const scrollToTarget = () => {
+      if (targetId === 'top') {
+        window.scrollTo({ top: 0, left: 0, behavior: 'auto' })
+        return
+      }
       document.getElementById(targetId)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
     }
 
@@ -275,8 +372,7 @@ export default function Home() {
     <section id="why-gloaro" className="bg-[#fdf9e9] py-12 sm:py-16 lg:py-20"><div className="mx-auto grid max-w-6xl items-center gap-8 px-5 sm:gap-10 lg:grid-cols-[minmax(0,400px)_minmax(0,1fr)] lg:gap-14 lg:px-8"><img className="h-auto w-full max-w-[400px] justify-self-center rounded-lg object-cover shadow-sm lg:h-[400px] lg:w-[400px] lg:justify-self-start" src={businessImage} alt="Business professionals collaborating" /><div className="text-center lg:text-left"><h2 className="font-playfair text-3xl font-semibold italic leading-tight text-[#0d4697] sm:text-4xl lg:text-[38px]">Why <span className="text-[#ffae13]">Gloaro</span></h2><p className="mx-auto mt-4 max-w-[670px] text-left font-urbanist text-base font-medium leading-relaxed text-[#151515] sm:text-lg lg:mx-0">GLOARO is more than just a business network; it is a powerful growth ecosystem designed to connect entrepreneurs, investors, and innovators. It creates a platform where businesses can discover new opportunities, build meaningful partnerships, and unlock their full potential. By bringing the right people together, GLOARO helps transform ideas into impactful ventures and supports the journey toward sustainable success.</p><a href="/register" className="mt-5 inline-block rounded-lg bg-[#0d4697] px-6 py-3 font-urbanist text-base font-semibold text-white shadow-sm sm:text-lg">Explore Network&nbsp; ↗</a></div></div></section>
 
     {/* 3. Business Categories */}
-
-    <section id="business-categories" className="bg-[#0d4697] px-5 py-12 sm:py-16 lg:px-8 lg:py-12"><div className="mx-auto max-w-7xl"><div className="text-center text-white"><h2 className="font-playfair text-4xl font-semibold italic sm:text-5xl"><span className="mr-3 align-middle text-xl not-italic sm:mr-6">—</span><span className="text-[#ffae13]">Business</span> Categories<span className="ml-3 align-middle text-xl not-italic sm:ml-6">—</span></h2><p className="mt-1 font-urbanist text-base font-medium sm:text-lg">Explore business opportunities across the Gloaro network</p></div><div className="mt-7 grid gap-5 sm:grid-cols-2 lg:grid-cols-5 lg:gap-x-6 lg:gap-y-5">{serviceItems.map((service) => <a key={service} href={service === 'B2B solutions' ? loginLink('b2b', '/vendors') : service === 'Franchise' ? loginLink('franchise', '/membership-application') : '/marketplace/categories'} className="flex min-h-20 items-center justify-between rounded-2xl border border-white/25 bg-white/15 px-7 font-playfair text-xl font-semibold italic text-white shadow-[inset_0_1px_12px_rgba(255,255,255,.12)] transition hover:-translate-y-1 hover:bg-white/25"><span className={service === 'B2B solutions' || service === 'Digital Marketing' ? 'max-w-[88px] leading-5' : ''}>{service}</span><span className="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-white text-sm not-italic text-[#0d4697]">›</span></a>)}</div></div></section>
+    <BusinessCategories />
    
 
     {/* 4. Features */}
@@ -305,6 +401,40 @@ export default function Home() {
       </div>
     </section>
 
+    <section id="network-details" className="border-y border-slate-200 bg-white px-5 py-14 sm:py-18 lg:px-8 lg:py-20">
+      <div className="mx-auto max-w-7xl">
+        <div className="mx-auto max-w-3xl text-center">
+          <p className="font-inter text-xs font-extrabold uppercase tracking-[0.2em] text-[#ff9500]">One platform. Complete business ecosystem.</p>
+          <h2 className="mt-3 font-playfair text-4xl font-semibold italic text-[#0d4697] sm:text-5xl">Explore the GLOARO Network</h2>
+          <p className="mt-4 font-urbanist text-base font-medium leading-7 text-slate-600 sm:text-lg">Discover how membership, trusted referrals, digital solutions, community and leadership work together to create lasting business growth.</p>
+        </div>
+
+        <div className="mt-10 grid items-stretch gap-6 md:grid-cols-2 xl:grid-cols-3">
+          {networkDetailGroups.map((group, groupIndex) => (
+            <article key={group.title} className="flex flex-col h-full overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_10px_35px_rgba(15,23,42,0.07)]">
+              <header className="border-b border-slate-200 bg-[#0d4697] px-6 py-5 !text-white" style={{ backgroundColor: '#0d4697', color: '#ffffff' }}>
+                <p className="text-[10px] font-black uppercase tracking-[0.18em] !text-white" style={{ color: '#ffffff' }}>{group.eyebrow}</p>
+                <h3 className="mt-1 font-playfair text-2xl font-bold italic !text-white" style={{ color: '#ffffff' }}>{String(groupIndex + 1).padStart(2, '0')}. {group.title}</h3>
+              </header>
+              <div className="flex-1 divide-y divide-slate-100 px-6">
+                {group.items.map(([id, title, description]) => (
+                  <div id={id} key={id} className="scroll-mt-48 py-5 lg:scroll-mt-44">
+                    <h4 className="font-urbanist text-base font-extrabold text-slate-950">{title}</h4>
+                    <p className="mt-1.5 font-urbanist text-sm font-semibold leading-6 text-slate-700">{description}</p>
+                  </div>
+                ))}
+              </div>
+            </article>
+          ))}
+        </div>
+
+        <div className="mt-10 flex flex-col items-center justify-between gap-5 rounded-2xl bg-[#fff6df] px-6 py-7 text-center sm:flex-row sm:px-8 sm:text-left">
+          <div><h3 className="font-playfair text-2xl font-bold text-[#0b469e]">Ready to grow with GLOARO?</h3><p className="mt-1 font-urbanist text-sm font-semibold text-slate-700">Join a verified ecosystem where relationships create opportunities.</p></div>
+          <a href="/register" className="shrink-0 rounded-lg bg-[#0b469e] px-7 py-3 font-urbanist text-sm font-extrabold text-white shadow-md transition hover:-translate-y-0.5 hover:bg-[#07377c]">Join Gloaro Network</a>
+        </div>
+      </div>
+    </section>
+
     {/* 6. Member Benefits */}
     <section id="membership" className="border-t-2 border-[#0d4697] bg-[#fdf9e9] px-5 py-12 sm:py-16 lg:px-8"><div className="mx-auto max-w-7xl"><div className="text-center"><p className="font-inter text-sm font-medium tracking-[0.16em] text-[#0d4697] sm:text-base">GLOARO 360 MEMBER BENEFITS</p><h2 className="mt-1 font-playfair text-3xl font-semibold italic leading-tight text-[#0d4697] sm:text-4xl">Everything you need to <span className="text-[#ff7e15]">grow your business</span></h2><p className="mt-1 font-urbanist text-sm font-medium text-[#161616] sm:text-base">Our membership opens the door to powerful connections, global exposure and<br className="hidden sm:block" /> resources that help you build, scale and succeed.</p></div><div className="mt-4 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">{memberBenefits.map(([title, image]) => <div key={title} className="group relative h-48 overflow-hidden rounded-xl bg-slate-700 sm:h-52"><img src={image} alt={title} className="h-full w-full object-cover transition duration-500 group-hover:scale-105" /><div className="absolute inset-x-3 bottom-3 flex items-center justify-between gap-3 rounded-xl border border-white/35 bg-slate-100/10 px-4 py-2.5 text-white backdrop-blur-sm"><span className="max-w-[210px] font-urbanist text-base font-semibold leading-5">{title}</span><span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-white text-xl leading-none text-[#0d4697]">›</span></div></div>)}</div></div></section>
 
@@ -312,7 +442,7 @@ export default function Home() {
     <section id="premium" className="bg-[#104694] px-5 py-10 text-white sm:py-14 lg:px-8"><div className="mx-auto max-w-7xl"><div className="text-center"><h2 className="font-playfair text-3xl font-semibold italic sm:text-4xl"><span>Premium </span><span className="text-[#ffae13]">Membership Benefits</span></h2></div><div className="mt-5 grid gap-4 md:grid-cols-2 lg:grid-cols-3">{premiumBenefits.map(([icon, title, description]) => <article key={`${title}-${description}`} className="flex min-h-[88px] gap-3 rounded-lg border border-white/25 bg-white/10 p-4 text-left shadow-[inset_0_1px_10px_rgba(255,255,255,.06)] transition duration-200 hover:-translate-y-1 hover:border-[#ffae13] hover:bg-white/20 hover:ring-2 hover:ring-[#ffae13]"><span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-white p-1 text-[#104694]"><img src={icon} alt="" className="h-full w-full object-contain" /></span><span><span className="block font-playfair text-sm font-semibold">{title}</span><span className="mt-1 block font-urbanist text-[11px] leading-3.5 text-slate-100">{description}</span></span></article>)}</div></div></section>
 
     {/* 9. Featured Businesses */}
-    <section id="directory" onMouseEnter={() => setFeaturedBusinessesPaused(true)} onMouseLeave={() => setFeaturedBusinessesPaused(false)} onTouchStart={() => setFeaturedBusinessesPaused(true)} onTouchEnd={() => setFeaturedBusinessesPaused(false)} className="border-b-4 border-[#163960] bg-[#fdf9e9] px-5 py-12 sm:py-16 lg:px-8"><div className="mx-auto max-w-7xl"><div><h2 className="font-playfair text-4xl font-semibold italic leading-none text-[#0d4697] sm:text-5xl"><span>Featured </span><span className="text-[#ffae13]">Businesses</span></h2></div><div className="relative mt-8"><button type="button" onClick={() => scrollFeaturedBusinesses(-1)} aria-label="Previous featured businesses" className="absolute -left-4 top-1/2 z-10 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-full bg-white text-xl font-bold text-[#1c2433] shadow-md lg:-left-7">‹</button><div ref={featuredBusinessesRef} className="flex snap-x gap-5 overflow-x-auto scroll-smooth pb-2 [scrollbar-width:none] lg:gap-6 [&::-webkit-scrollbar]:hidden">{businesses.map(([name, type, image, icon, iconColor]) => <article key={name} data-featured-business-card className="w-[min(230px,78vw)] shrink-0 snap-start overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm sm:w-[calc((100%-1.25rem)/2)] lg:w-[calc((100%-6rem)/5)]"><div className="relative h-[110px] overflow-hidden"><img src={image} className="h-full w-full object-cover" alt={`${name} business`} /><div className="absolute -bottom-8 left-1/2 grid h-16 w-16 -translate-x-1/2 place-items-center rounded-full border border-slate-100 bg-white shadow-lg"><span className={`font-play text-3xl font-bold ${iconColor}`}>{icon}</span></div></div><div className="px-4 pb-5 pt-9 text-center"><h3 className="font-urbanist text-base font-extrabold leading-tight text-[#1f2937]">{name}</h3><p className="mt-0.5 font-urbanist text-xs font-semibold text-[#151515]">{type}</p><p className="mt-1 text-sm leading-none text-[#ffc400]">★★★★★</p><button type="button" className="mt-5 block w-full rounded bg-[#0d4697] px-4 py-2.5 font-urbanist text-xs font-extrabold text-white">Connect Now</button></div></article>)}</div><button type="button" onClick={() => scrollFeaturedBusinesses(1)} aria-label="Next featured businesses" className="absolute -right-4 top-1/2 z-10 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-full bg-white text-xl font-bold text-[#1c2433] shadow-md lg:-right-7">›</button></div></div></section>
+    <section id="directory" onMouseEnter={() => setFeaturedBusinessesPaused(true)} onMouseLeave={() => setFeaturedBusinessesPaused(false)} onTouchStart={() => setFeaturedBusinessesPaused(true)} onTouchEnd={() => setFeaturedBusinessesPaused(false)} className="hidden border-b-4 border-[#163960] bg-[#fdf9e9] px-5 py-12 sm:py-16 lg:px-8"><div className="mx-auto max-w-7xl"><div><h2 className="font-playfair text-4xl font-semibold italic leading-none text-[#0d4697] sm:text-5xl"><span>Featured </span><span className="text-[#ffae13]">Businesses</span></h2></div><div className="relative mt-8"><button type="button" onClick={() => scrollFeaturedBusinesses(-1)} aria-label="Previous featured businesses" className="absolute -left-4 top-1/2 z-10 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-full bg-white text-xl font-bold text-[#1c2433] shadow-md lg:-left-7">‹</button><div ref={featuredBusinessesRef} className="flex snap-x gap-5 overflow-x-auto scroll-smooth pb-2 [scrollbar-width:none] lg:gap-6 [&::-webkit-scrollbar]:hidden">{businesses.map(([name, type, image, icon, iconColor]) => <article key={name} data-featured-business-card className="w-[min(230px,78vw)] shrink-0 snap-start overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm sm:w-[calc((100%-1.25rem)/2)] lg:w-[calc((100%-6rem)/5)]"><div className="relative h-[110px] overflow-hidden"><img src={image} className="h-full w-full object-cover" alt={`${name} business`} /><div className="absolute -bottom-8 left-1/2 grid h-16 w-16 -translate-x-1/2 place-items-center rounded-full border border-slate-100 bg-white shadow-lg"><span className={`font-play text-3xl font-bold ${iconColor}`}>{icon}</span></div></div><div className="px-4 pb-5 pt-9 text-center"><h3 className="font-urbanist text-base font-extrabold leading-tight text-[#1f2937]">{name}</h3><p className="mt-0.5 font-urbanist text-xs font-semibold text-[#151515]">{type}</p><p className="mt-1 text-sm leading-none text-[#ffc400]">★★★★★</p><button type="button" className="mt-5 block w-full rounded bg-[#0d4697] px-4 py-2.5 font-urbanist text-xs font-extrabold text-white">Connect Now</button></div></article>)}</div><button type="button" onClick={() => scrollFeaturedBusinesses(1)} aria-label="Next featured businesses" className="absolute -right-4 top-1/2 z-10 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-full bg-white text-xl font-bold text-[#1c2433] shadow-md lg:-right-7">›</button></div></div></section>
 
     {/* 10. Our Leaders */}
     <section id="leaders" className="border-b-4 border-[#163960] bg-[#fdf9e9] px-5 py-12 sm:py-16 lg:px-8">
@@ -322,7 +452,6 @@ export default function Home() {
             <h2 className="font-playfair text-4xl font-semibold italic leading-none text-[#0d4697] sm:text-5xl"><span>Our </span><span className="text-[#ffae13]">Leaders</span></h2>
             <p className="mt-3 font-urbanist text-base font-semibold text-[#26364d] sm:text-lg">Visionary leaders driving innovation and excellence</p>
           </div>
-          <a href="#join" className="shrink-0 font-urbanist text-lg font-extrabold text-[#0d4697] sm:text-2xl">View All →</a>
         </div>
         <div className={`mt-10 grid gap-8 ${leadersContentLayout}`}>
           <div className={`relative w-full max-w-[270px] sm:max-w-[560px] ${leadersCarouselWidth}`}>
@@ -340,7 +469,6 @@ export default function Home() {
                     <h3 className="font-urbanist text-xl font-extrabold leading-tight text-[#172338]">{leader.name}</h3>
                     <p className="mt-2 font-urbanist text-sm font-extrabold text-[#0d4697]">{leader.role}</p>
                     <p className="mx-auto mt-5 min-h-[72px] max-w-[210px] font-urbanist text-sm font-semibold leading-6 text-[#1f2937]">{leader.bio}</p>
-                    <a href="#join" aria-label={`${leader.name} LinkedIn profile`} className="mx-auto mt-5 grid h-6 w-6 place-items-center rounded bg-[#0878b9] font-urbanist text-sm font-black leading-none text-white">in</a>
                   </div>
                 </article>
               ))}
@@ -350,14 +478,13 @@ export default function Home() {
           <div className="max-w-xl lg:justify-self-end">
             <h3 className="font-playfair text-3xl font-semibold italic leading-tight text-[#0d4697] sm:text-4xl">Leadership That <span className="text-[#ffae13]">Drives Growth</span></h3>
             <p className="mt-4 font-urbanist text-base font-semibold leading-7 text-[#26364d] sm:text-lg">Our leadership team brings vision, innovation, and disciplined execution together to help businesses grow with confidence. Their commitment to excellence shapes every connection, opportunity, and partnership across the Gloaro network.</p>
-            <a href="#join" className="mt-6 inline-flex items-center rounded-lg bg-[#0d4697] px-6 py-3 font-urbanist text-base font-extrabold text-white shadow-sm transition hover:bg-[#0a3b81]">Meet Our Leadership&nbsp; →</a>
           </div>
         </div>
       </div>
     </section>
 
     {/* 10. Awards */}
-    <section className="bg-[#08213d] px-5 py-12 text-white sm:py-16 lg:px-8"><div className="mx-auto grid max-w-6xl items-center gap-8 md:grid-cols-2 lg:gap-12"><div className="rounded-lg border border-white/15 bg-white/10 px-6 py-7 text-center shadow-[inset_0_1px_12px_rgba(255,255,255,.04)] sm:px-10"><h2 className="font-playfair text-3xl font-bold leading-[0.95] sm:text-4xl">Weekly Awards<br />Ceremony</h2><h3 className="mt-4 font-urbanist text-lg font-medium">Celebrating Excellence Every Month</h3><p className="mx-auto mt-4 max-w-[390px] font-urbanist text-base font-normal leading-7 text-white/90">Recognizing outstanding members, business leaders, and top performers for their contributions, growth, and achievements within the Gloaro Network community.</p><a href="#join" className="mt-4 inline-flex items-center gap-8 rounded-md bg-[#ffc400] px-8 py-2.5 font-urbanist text-base font-extrabold text-black">View Awards <span className="text-sm">↗</span></a></div><img src={awardsImage} alt="Business award ceremony" className="h-80 w-full rounded-[22px] object-cover object-center shadow-sm sm:h-96 lg:h-[390px]" /></div></section>
+    <section className="bg-[#08213d] px-5 py-12 text-white sm:py-16 lg:px-8"><div className="mx-auto grid max-w-6xl items-center gap-8 md:grid-cols-2 lg:gap-12"><div className="rounded-lg border border-white/15 bg-white/10 px-6 py-7 text-center shadow-[inset_0_1px_12px_rgba(255,255,255,.04)] sm:px-10"><h2 className="font-playfair text-3xl font-bold leading-[0.95] sm:text-4xl">Weekly Awards<br />Ceremony</h2><h3 className="mt-4 font-urbanist text-lg font-medium">Celebrating Excellence Every Month</h3><p className="mx-auto mt-4 max-w-[390px] font-urbanist text-base font-normal leading-7 text-white/90">Recognizing outstanding members, business leaders, and top performers for their contributions, growth, and achievements within the Gloaro Network community.</p></div><img src={awardsImage} alt="Business award ceremony" className="h-80 w-full rounded-[22px] object-cover object-center shadow-sm sm:h-96 lg:h-[390px]" /></div></section>
 
     {/* 11. Meetings & Events */}
     <section id="events" className="scroll-mt-48 bg-[#fdf9e9] px-5 py-12 sm:py-16 lg:scroll-mt-52 lg:px-8"><div className="mx-auto max-w-6xl"><div className="text-center"><h2 className="font-playfair text-4xl font-semibold italic leading-none text-[#0d4697] sm:text-5xl"><span>Meetings </span><span className="text-[#ffae13]">and Events</span></h2><p className="mt-1 font-urbanist text-base font-extrabold text-[#0d4697] sm:text-lg">Find curated vendor products across multiple industries.</p></div><div className="mt-7 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">{eventCards.map(([category, title, description, details, image]) => <article key={category} onClick={() => setSelectedEvent(title)} className={`cursor-pointer overflow-hidden rounded-lg border bg-white shadow-sm transition duration-200 ${selectedEvent === title ? '-translate-y-1 border-[#ffae13] ring-2 ring-[#ffae13] shadow-lg' : 'border-slate-200 hover:-translate-y-0.5 hover:border-[#ffae13]/70 hover:shadow-md'}`}><img src={image} alt={`${title} event`} className="h-32 w-full object-cover" /><div className="px-4 pb-5 pt-4"><p className="font-play text-sm font-bold uppercase text-[#0d4697]">{category}</p><h3 className="mt-3 font-playfair text-sm font-semibold text-black">{title}</h3><p className="mt-3 min-h-[54px] font-urbanist text-xs font-semibold leading-5 text-black">{description}</p><div className={`mt-4 rounded-md border px-3 py-2.5 font-urbanist text-xs font-bold transition ${selectedEvent === title ? 'border-[#ffae13] bg-[#fff5d8] text-[#9a5800]' : 'border-[#dbe5f2] bg-[#f5f8fc] text-[#0d4697]'}`}>{details}</div></div></article>)}</div></div></section>

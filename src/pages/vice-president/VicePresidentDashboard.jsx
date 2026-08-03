@@ -3,39 +3,25 @@ import { useNavigate } from 'react-router-dom'
 import {
   Users,
   CheckCircle2,
-  ClipboardList,
-  CalendarDays,
-  FileBarChart,
   Handshake,
   UserCheck,
-  TrendingUp,
   MapPin,
   Clock,
   Calendar,
   Layers,
-  Award,
-  ArrowRight,
   PlusCircle,
   UsersRound,
   Building2,
-  FileText,
   Volume2,
   Ticket,
   ChevronRight,
-  Activity,
-  ThumbsUp,
-  Briefcase
 } from 'lucide-react'
 import { useAuth } from '../../hooks/useAuth'
-import { useApi } from '../../hooks/useApi'
-import { adminApi } from '../../api/admin'
-import { reportApi } from '../../api/report'
 import api from '../../api/axios'
 import ChartCard from '../../components/charts/ChartCard'
 import LoadingScreen from '../../components/common/LoadingScreen'
-import { formatCurrency, formatDate } from '../../utils/format'
+import { formatCurrency } from '../../utils/format'
 import toast from 'react-hot-toast'
-import { ROLES } from '../../constants/roleConfig.js'
 
 const monthLabel = (item) => {
   if (!item || !item._id) return 'Unknown'
@@ -52,49 +38,34 @@ const monthLabel = (item) => {
 export default function VicePresidentDashboard() {
   const { user } = useAuth()
   const navigate = useNavigate()
-  const dashboard = useApi(adminApi.dashboard)
-  const analytics = useApi(() => reportApi.analytics({ from: '2025-01-01' }))
-  
-  const stats = dashboard.data || {}
-  const report = analytics.data || {}
+  const stats = {}
+  const report = {}
 
-  // Fetch chapter secretary count
-  const secCount = stats.roleStats?.secretaries ?? 0;
-  const [posts, setPosts] = useState([])
-  const [referrals, setReferrals] = useState([])
-  const [visitorsCount, setVisitorsCount] = useState(0)
-  const [membershipApps, setMembershipApps] = useState([])
   const [scopeOverview, setScopeOverview] = useState(null)
+  const [scopeLoading, setScopeLoading] = useState(true)
+  const showExtendedDashboard = false
+  const referrals = []
+  const visitorsCount = 0
+  const membershipApps = []
+  const posts = []
 
   useEffect(() => {
-    api.get('/directory/scope-overview')
-      .then(res => setScopeOverview(res.data?.data || null))
+    let mounted = true
+    const loadScopeOverview = () => api.get('/directory/scope-overview', { silent: true })
+      .then((res) => { if (mounted) setScopeOverview(res.data?.data || null) })
       .catch(() => {})
+      .finally(() => { if (mounted) setScopeLoading(false) })
+    loadScopeOverview()
+    const interval = window.setInterval(loadScopeOverview, 30000)
+    window.addEventListener('focus', loadScopeOverview)
+    return () => {
+      mounted = false
+      window.clearInterval(interval)
+      window.removeEventListener('focus', loadScopeOverview)
+    }
   }, [])
 
-  useEffect(() => {
-    // Load recent posts
-    api.get('/community/posts')
-      .then(res => setPosts(res.data?.data?.slice(0, 3) || []))
-      .catch(() => {})
-
-    // Load recent referrals
-    api.get('/community/referrals')
-      .then(res => setReferrals(res.data?.data?.slice(0, 4) || []))
-      .catch(() => {})
-
-    // Load recent visitors
-    api.get('/community/visitors')
-      .then(res => setVisitorsCount(res.data?.data?.length || 0))
-      .catch(() => {})
-
-    // Load pending membership applications
-    api.get('/membership-applications?status=submitted&limit=3')
-      .then(res => setMembershipApps(res.data?.data || []))
-      .catch(() => {})
-  }, [])
-
-  if (dashboard.loading || analytics.loading) {
+  if (scopeLoading) {
     return <LoadingScreen label="Loading Vice President console..." />
   }
 
@@ -118,12 +89,12 @@ export default function VicePresidentDashboard() {
   if (region) hierarchyParts.push(formatName(region, 'Region'))
 
   const hierarchyString = hierarchyParts.filter(Boolean).join(' • ') || 'All Territories Authorized'
-  const memberId = user?.officialId || user?.memberId || 'MEM-TN-CHN-000145'
+  const memberId = user?.officialId || user?.memberId || '—'
 
   // Dynamic live statistics from API metrics
   const kpis = {
-    members: stats.roleStats?.registeredMembers ?? stats.totalUsers ?? '—',
-    activeMembers: scopeOverview?.activeMembers ?? stats.activeUsers ?? '—',
+    members: scopeOverview?.totalMembers ?? '—',
+    activeMembers: scopeOverview?.activeMembers ?? '—',
     pendingRegs: stats.roleStats?.pendingRegistrations ?? stats.pendingMembershipApplications ?? '—',
     attendanceRate: '—', // no real backend data
     referralsGiven: referrals.length > 0 ? referrals.length : '—',
@@ -138,7 +109,7 @@ export default function VicePresidentDashboard() {
       <div className="overflow-hidden rounded-2xl bg-gradient-to-br from-[#0b1f3d] to-[#0d4697] p-6 text-white shadow-lg relative flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div className="space-y-2">
           <p className="text-xs font-extrabold uppercase tracking-[0.2em] text-[#ffb20c]">
-            Good Morning, {user?.name || 'Kishore'} 👋
+            Good Morning, {user?.name || 'Vice President'} 👋
           </p>
           <h1 className="text-3xl font-black">Vice President Console</h1>
           <p className="text-sm font-semibold text-slate-200">
@@ -148,13 +119,13 @@ export default function VicePresidentDashboard() {
         <div className="bg-white/10 px-4 py-3 rounded-xl border border-white/20 backdrop-blur text-xs space-y-1">
           <div className="font-bold flex items-center gap-1.5"><Layers className="h-3.5 w-3.5 text-[#ffb20c]" /> Member ID: {memberId}</div>
           <div className="font-bold flex items-center gap-1.5">
-            <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" /> Status: <span className="uppercase text-emerald-400 font-black">Active</span>
+            <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" /> Status: <span className="uppercase text-emerald-400 font-black">{user?.isActive === false ? 'Inactive' : 'Active'}</span>
           </div>
         </div>
       </div>
 
       {/* 2. Chapter Information Card */}
-      <section className="grid gap-6 md:grid-cols-3">
+      <section className="grid gap-6">
         <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm flex flex-col justify-between">
           <div>
             <h3 className="text-sm font-black uppercase text-slate-800 tracking-wider flex items-center gap-2 mb-4">
@@ -181,7 +152,7 @@ export default function VicePresidentDashboard() {
           </div>
         </div>
 
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm flex flex-col justify-between">
+        {showExtendedDashboard && <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm flex flex-col justify-between">
           <div>
             <h3 className="text-sm font-black uppercase text-slate-800 tracking-wider flex items-center gap-2 mb-4">
               <Users className="h-4 w-4 text-[#0d4697]" /> Leadership & Members
@@ -205,9 +176,9 @@ export default function VicePresidentDashboard() {
               </div>
             </div>
           </div>
-        </div>
+        </div>}
 
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm flex flex-col justify-between">
+        {showExtendedDashboard && <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm flex flex-col justify-between">
           <div>
             <h3 className="text-sm font-black uppercase text-slate-800 tracking-wider flex items-center gap-2 mb-4">
               <Clock className="h-4 w-4 text-[#0d4697]" /> Meetings Schedule
@@ -231,13 +202,13 @@ export default function VicePresidentDashboard() {
               </div>
             </div>
           </div>
-        </div>
+        </div>}
       </section>
 
       {/* 3. KPI Cards Grid */}
       <section className="space-y-4">
         {/* Row 1 */}
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-4 sm:grid-cols-2">
           <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
             <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Members</p>
             <h4 className="text-2xl font-black text-slate-900 mt-2">{kpis.members}</h4>
@@ -248,20 +219,20 @@ export default function VicePresidentDashboard() {
             <h4 className="text-2xl font-black text-emerald-600 mt-2">{kpis.activeMembers}</h4>
             <p className="text-xs text-slate-500 font-semibold mt-1">Verified standing</p>
           </div>
-          <div onClick={() => navigate('/vice-president/membership-applications')} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm hover:border-[#0d4697] cursor-pointer transition">
+          {showExtendedDashboard && <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
             <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Pending Registrations</p>
             <h4 className="text-2xl font-black text-amber-500 mt-2">{kpis.pendingRegs}</h4>
             <p className="text-xs text-slate-500 font-semibold mt-1">Awaiting approval</p>
-          </div>
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          </div>}
+          {showExtendedDashboard && <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
             <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Attendance %</p>
             <h4 className="text-2xl font-black text-[#0d4697] mt-2">{kpis.attendanceRate}</h4>
             <p className="text-xs text-slate-500 font-semibold mt-1">Last 4 sessions average</p>
-          </div>
+          </div>}
         </div>
 
         {/* Row 2 */}
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {showExtendedDashboard && <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
             <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Referrals Given</p>
             <h4 className="text-2xl font-black text-slate-900 mt-2">{kpis.referralsGiven}</h4>
@@ -282,11 +253,11 @@ export default function VicePresidentDashboard() {
             <h4 className="text-2xl font-black text-slate-900 mt-2">{kpis.upcomingMeetings}</h4>
             <p className="text-xs text-slate-500 font-semibold mt-1">Chapter calendar events</p>
           </div>
-        </div>
+        </div>}
       </section>
 
       {/* 4. Quick Actions */}
-      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      {showExtendedDashboard && <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <h3 className="text-sm font-black uppercase text-slate-800 tracking-wider mb-4">Quick Actions Console</h3>
         <div className="grid gap-3 grid-cols-2 md:grid-cols-4">
           <button
@@ -347,28 +318,28 @@ export default function VicePresidentDashboard() {
             <Clock className="h-4 w-4 text-[#0d4697]" /> Schedule One-to-One
           </button>
         </div>
-      </section>
+      </section>}
 
       {/* 5. Chapter Performance Charts */}
-      <section className="grid gap-5 xl:grid-cols-2">
-        {report.monthlyUsers?.length ? (
-          <ChartCard title="Membership Growth" data={report.monthlyUsers.map((item) => ({ label: monthLabel(item), members: item.users }))} dataKey="members" />
+      <section className="grid gap-5">
+        {scopeOverview?.membershipGrowth?.length ? (
+          <ChartCard title="Membership Growth" data={scopeOverview.membershipGrowth.map((item) => ({ label: monthLabel({ _id: { year: item.year, month: item.month } }), members: item.members }))} dataKey="members" />
         ) : (
           <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm flex flex-col items-center justify-center min-h-[300px]">
             <p className="text-sm font-semibold text-slate-500">No data available</p>
           </div>
         )}
-        {report.membershipSales?.length ? (
+        {showExtendedDashboard && (report.membershipSales?.length ? (
           <ChartCard title="Business Generated" type="bar" data={report.membershipSales.map((item) => ({ label: item._id, sales: item.sales }))} dataKey="sales" />
         ) : (
           <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm flex flex-col items-center justify-center min-h-[300px]">
             <p className="text-sm font-semibold text-slate-500">No data available</p>
           </div>
-        )}
+        ))}
       </section>
 
       {/* 6. Upcoming Activities */}
-      <section className="grid gap-6 md:grid-cols-2">
+      {showExtendedDashboard && <section className="grid gap-6 md:grid-cols-2">
         <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm space-y-4">
           <h3 className="text-sm font-black uppercase text-slate-800 tracking-wider flex items-center gap-2 border-b border-slate-100 pb-2">
             <Calendar className="h-4 w-4 text-[#0d4697]" /> Today's Meeting & Activities
@@ -421,10 +392,10 @@ export default function VicePresidentDashboard() {
             )}
           </div>
         </div>
-      </section>
+      </section>}
 
       {/* 7. Business Wall - Latest Chapter Posts */}
-      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      {showExtendedDashboard && <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <h3 className="text-sm font-black uppercase text-slate-800 tracking-wider mb-4 flex items-center gap-2">
           <Volume2 className="h-4 w-4 text-[#0d4697]" /> Latest Chapter Posts (Business Wall)
         </h3>
@@ -441,7 +412,7 @@ export default function VicePresidentDashboard() {
             <p className="text-sm font-semibold text-slate-500 col-span-3 text-center py-6">No recent posts found.</p>
           )}
         </div>
-      </section>
+      </section>}
 
       {/* The Referrals Pipeline, Top Performers, and Activity mock sections have been removed per strict user request. */}
     </div>

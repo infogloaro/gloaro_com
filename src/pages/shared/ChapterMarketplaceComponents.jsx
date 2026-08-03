@@ -30,7 +30,6 @@ export function ChapterMarketplaceProducts({
     <>
       <ResourceListPage
         readOnly={true}
-        retainRowsOnEmptySearch={true}
         title={title}
         description={description}
         fetcher={adminApi.products}
@@ -143,7 +142,8 @@ export function ChapterMarketplaceProducts({
 
 export function ChapterMarketplaceServices({
   title = "Services Monitoring",
-  description = "Chapter-wide view of services offered by approved vendors in your assigned chapter."
+  description = "Chapter-wide view of services offered by approved vendors in your assigned chapter.",
+  showStatus = true,
 }) {
   const [selectedService, setSelectedService] = useState(null)
   const [categories, setCategories] = useState([])
@@ -157,7 +157,7 @@ export function ChapterMarketplaceServices({
   }, [])
 
   const filters = [
-    { key: 'status', label: 'Status', options: ['pending', 'approved', 'rejected', 'suspended'].map(s => ({ value: s, label: s.toUpperCase() })) },
+    ...(showStatus ? [{ key: 'status', label: 'Status', options: ['pending', 'approved', 'rejected', 'suspended'].map(s => ({ value: s, label: s.toUpperCase() })) }] : []),
     { key: 'category', label: 'Category', options: categories }
   ]
 
@@ -206,7 +206,7 @@ export function ChapterMarketplaceServices({
               return '-'
             }
           },
-          { key: 'status', header: 'Status', render: (row) => <StatusBadge value={row.status} /> },
+          ...(showStatus ? [{ key: 'status', header: 'Status', render: (row) => <StatusBadge value={row.status} /> }] : []),
           { key: 'createdAt', header: 'Created Date', render: (row) => formatDate(row.createdAt) }
         ]}
         renderActions={(row) => (
@@ -268,10 +268,12 @@ export function ChapterMarketplaceServices({
                   )
                 </p>
               </div>
-              <div>
-                <p className="text-xs font-bold uppercase text-slate-400">Status</p>
-                <div className="mt-1"><StatusBadge value={selectedService.status} /></div>
-              </div>
+              {showStatus && (
+                <div>
+                  <p className="text-xs font-bold uppercase text-slate-400">Status</p>
+                  <div className="mt-1"><StatusBadge value={selectedService.status} /></div>
+                </div>
+              )}
             </div>
             {selectedService.description && (
               <div className="border-t border-slate-100 pt-4">
@@ -291,7 +293,8 @@ export function ChapterMarketplaceServices({
 
 export function ChapterMarketplaceVendors({
   title = "Vendors Monitoring",
-  description = "Browse directory of approved marketplace vendors in your chapter."
+  description = "Browse directory of approved marketplace vendors in your chapter.",
+  showStatus = true,
 }) {
   const [selected, setSelected] = useState(null)
   const [categories, setCategories] = useState([])
@@ -305,7 +308,7 @@ export function ChapterMarketplaceVendors({
   }, [])
 
   const filters = [
-    { key: 'status', label: 'Status', options: ['pending', 'approved', 'rejected', 'suspended'].map(s => ({ value: s, label: s.toUpperCase() })) },
+    ...(showStatus ? [{ key: 'status', label: 'Status', options: ['pending', 'approved', 'rejected', 'suspended'].map(s => ({ value: s, label: s.toUpperCase() })) }] : []),
     { key: 'category', label: 'Category', options: categories }
   ]
 
@@ -326,7 +329,7 @@ export function ChapterMarketplaceVendors({
           { key: 'district', header: 'District', render: (row) => row.districtId?.name || '-' },
           { key: 'chapter', header: 'Chapter', render: (row) => row.chapterId?.name || '-' },
           { key: 'approvedAt', header: 'Approval Date', render: (row) => formatDate(row.approvedAt || row.createdAt) },
-          { key: 'status', header: 'Vendor Status', render: (row) => <StatusBadge value={row.status} /> },
+          ...(showStatus ? [{ key: 'status', header: 'Vendor Status', render: (row) => <StatusBadge value={row.status} /> }] : []),
         ]}
         renderActions={(row) => (
           <button
@@ -344,12 +347,12 @@ export function ChapterMarketplaceVendors({
           <div className="space-y-6">
             <div className="flex flex-col justify-between gap-4 border-b border-slate-100 bg-slate-50 p-5 rounded-xl sm:flex-row sm:items-center">
               <div>
-                <p className="text-[10px] font-black uppercase tracking-wider text-[#0d4697]">Active Vendor</p>
+                <p className="text-[10px] font-black uppercase tracking-wider text-[#0d4697]">Vendor Profile</p>
                 <h3 className="mt-1 text-xl font-extrabold text-slate-950">{selected.businessName}</h3>
                 <p className="text-xs font-semibold text-slate-500 mt-1">{selected.businessCategory?.name || 'Category'}</p>
               </div>
               <div className="flex items-center gap-2">
-                <StatusBadge value={selected.status} />
+                {showStatus && <StatusBadge value={selected.status} />}
                 <span className="rounded-full bg-white px-3 py-1 text-xs font-extrabold text-slate-600 ring-1 ring-slate-200">
                   ID: {selected.vendorId}
                 </span>

@@ -24,6 +24,7 @@ import b2bIcon from '../assets/b2b_icon.png'
 import brandIcon from '../assets/brand_icon.png'
 import nearMeIcon from '../assets/nearme_icon.png'
 import loginIcon from '../assets/login_icon.png'
+import aboutIcon from '../assets/about_icon.svg'
 
 const SearchIcon = () => <svg viewBox="0 0 24 24" className="h-4 w-4 shrink-0 fill-none stroke-current stroke-[3.25]"><circle cx="11" cy="11" r="6" /><path d="m16 16 4 4" /></svg>
 
@@ -44,6 +45,46 @@ const networkHighlights = [
   [TrendingUp, 'Business Growth', 'Scalable B2B resources'],
   [ShieldCheck, 'Verified Network', 'Trusted enterprise leaders'],
 ]
+
+const networkTargets = {
+  'Membership Benefits': 'membership-benefits-detail',
+  'Yearly Subscription': 'membership-investment',
+  'Member Access': 'member-access',
+  '360 Gloaro Network': 'gloaro-360-network',
+  'Global Business Network': 'global-business-network',
+  'Business Growth': 'business-growth',
+  'Business Opportunities': 'business-opportunities',
+  'Referral Meeting': 'referral-meeting',
+  'Referral Join': 'referral-join',
+  'Referral Benefits': 'referral-benefits',
+  'Gloaro App': 'gloaro-app',
+  'Member App': 'member-app',
+  'Business Management App': 'business-management-app',
+  'Technology Development': 'technology-development',
+  'Mobile App Development': 'mobile-app-development',
+  'Digital Marketing': 'digital-marketing',
+  'IT Solutions': 'it-solutions',
+  'SaaS Solution': 'saas-solution',
+  'Monthly Meetings': 'monthly-meetings',
+  'Business Expo': 'business-expo',
+  'Social Events': 'social-events',
+  'District Community': 'district-community',
+  'Tamil Nadu Community': 'tamil-nadu-community',
+  'Global Community': 'global-community',
+  'Available Locations': 'available-locations',
+  'Apply Franchise': 'apply-franchise',
+  'Franchise Partners': 'franchise-partners',
+  Leaders: 'network-leaders',
+  Coordinators: 'network-coordinators',
+  'Business Runner': 'business-runner',
+  'Goal Achiever': 'goal-achiever',
+  'Member Achievements': 'member-achievements',
+  'AI Assistant': 'ai-assistant',
+  'Contact Support': 'contact-support',
+  'Social Media Links': 'social-media-links',
+}
+
+const getNetworkHref = (label) => label === 'Join Gloaro Network' ? '/register' : `/#${networkTargets[label]}`
 
 export default function Navbar() {
   const { isAuthenticated, user } = useAuth()
@@ -142,6 +183,7 @@ export default function Navbar() {
     [shopIcon, 'Shop', '/products', 'bg-[#ffb20c] text-[#063a85] hover:brightness-95'],
     [brandIcon, 'Services', '/services', 'bg-[#10b981] text-white hover:bg-[#059669]', 'brightness-0 invert'],
     [b2bIcon, 'B2B Marketplace', '/vendors', 'bg-[#0b469e] text-white hover:bg-[#093a84]', 'brightness-0 invert'],
+    [aboutIcon, 'About', '/about', 'bg-[#ffb20c] text-[#063a85] hover:brightness-95'],
   ]
 
   return (
@@ -284,9 +326,7 @@ function MobileGloaroNetworkMenu({ onNavigate }) {
               <ul className="mt-3 space-y-2">
                 {links.map((link) => (
                   <li key={link} className="text-sm font-medium text-black">
-                    {link === 'Join Gloaro Network'
-                      ? <a href="/register" onClick={onNavigate} className="font-semibold text-[#0b469e] hover:underline">{link}</a>
-                      : link}
+                    <a href={getNetworkHref(link)} onClick={onNavigate} className={`transition hover:text-[#0b469e] hover:underline ${link === 'Join Gloaro Network' ? 'font-semibold text-[#0b469e]' : ''}`}>{link}</a>
                   </li>
                 ))}
               </ul>
@@ -333,9 +373,7 @@ function GloaroNetworkMenu({ onClose }) {
                 <ul className="mt-3 space-y-3">
                   {links.map((link) => (
                     <li key={link} className="text-sm font-medium text-black">
-                      {link === 'Join Gloaro Network'
-                        ? <a href="/register" onClick={onClose} className="font-semibold text-[#0b469e] hover:underline">{link}</a>
-                        : link}
+                      <a href={getNetworkHref(link)} onClick={onClose} className={`transition hover:text-[#0b469e] hover:underline ${link === 'Join Gloaro Network' ? 'font-semibold text-[#0b469e]' : ''}`}>{link}</a>
                     </li>
                   ))}
                 </ul>
