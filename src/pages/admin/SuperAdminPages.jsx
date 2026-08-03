@@ -21,7 +21,6 @@ import {
   Plus,
   Printer,
   Search,
-  Settings,
   ShieldCheck,
   ShoppingBag,
   Store,
@@ -34,8 +33,6 @@ import {
 } from 'lucide-react'
 import { adminApi } from '../../api/admin'
 import { notificationApi } from '../../api/notification'
-import { reportApi } from '../../api/report'
-import ChartCard from '../../components/charts/ChartCard'
 import LoadingScreen from '../../components/common/LoadingScreen'
 import StatusBadge from '../../components/common/StatusBadge'
 import DataTable from '../../components/tables/DataTable'
@@ -47,8 +44,6 @@ import { ROLES } from '../../constants/roleConfig.js'
 
 const modules = ['dashboard', 'members', 'meetings', 'visitors', 'reports', 'marketplace', 'vendors', 'training', 'events']
 const roles = [ROLES.SUPERADMIN, ROLES.ADMIN, ROLES.FRANCHISE_ADMIN, ROLES.STATE_DIRECTOR, ROLES.EXECUTIVE_DIRECTOR, ROLES.DIRECT_CONSULTANT]
-const permissions = ['View', 'Create', 'Edit', 'Delete', 'Approve', 'Export', 'Print', 'Reports', 'Dashboard', 'Settings', 'Notifications']
-
 function SuperAdminOnlyNotice({ title = 'Super Admin access required' }) {
   return (
     <section className="rounded-2xl border border-amber-200 bg-white p-6 shadow-sm">
@@ -72,9 +67,7 @@ const moduleCards = [
 export function SuperAdminDashboardPage() {
   const { hasSection, hasWidget } = useAuth()
   const dashboard = useApi(adminApi.dashboard)
-  const analytics = useApi(() => reportApi.analytics({ from: '2025-01-01' }))
   const stats = dashboard.data || {}
-  const report = analytics.data || {}
 
   const topCards = [
     ['members', 'Total Members', (stats.totalUsers ?? stats.roleStats?.totalMembers ?? 0).toLocaleString(), `${stats.newUsersToday || 0} today`, Users],
@@ -88,7 +81,6 @@ export function SuperAdminDashboardPage() {
     ['marketplace', 'Marketplace Listings', (Number(stats.productsCount || 0) + Number(stats.servicesCount || 0)).toLocaleString(), 'Products + services', ShoppingBag],
     ['events', 'Upcoming Events', (stats.upcomingEvents ?? stats.eventsCount ?? 0).toLocaleString(), 'Calendar', CalendarDays],
     ['reports', 'Total Business Generated', formatCurrency(stats.revenue ?? 0), 'Platform revenue', FileBarChart],
-    ['reports', 'Membership Revenue', formatCurrency(stats.membershipRevenue ?? 0), 'Membership fees', CreditCard],
   ].filter(([widget]) => hasWidget(widget))
 
   return (
@@ -638,9 +630,6 @@ function ActivityTimeline() {
   );
 }
 
-function monthLabel(item) {
-  return `${item._id?.month || ''}/${item._id?.year || ''}`
-}
 
 function formatLabel(value = '') {
   return String(value)

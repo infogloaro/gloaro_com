@@ -7,9 +7,18 @@ export const formatDate = (value) => {
 }
 
 export const getList = (responseData) => {
+  if (!responseData) return []
   if (Array.isArray(responseData)) return responseData
-  if (Array.isArray(responseData?.items)) return responseData.items
-  if (Array.isArray(responseData?.data)) return responseData.data
+  if (Array.isArray(responseData.items)) return responseData.items
+  if (Array.isArray(responseData.data)) return responseData.data
+  if (typeof responseData === 'object') {
+    for (const key of ['products', 'results', 'records', 'list', 'docs']) {
+      if (Array.isArray(responseData[key])) return responseData[key]
+    }
+    if (responseData.data && typeof responseData.data === 'object') {
+      return getList(responseData.data)
+    }
+  }
   return []
 }
 

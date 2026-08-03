@@ -1,5 +1,9 @@
+
+import { useEffect } from 'react'
+import { Navigate, Route, Routes, Outlet, useLocation } from 'react-router-dom'
+
 import { lazy, Suspense } from 'react'
-import { Navigate, Route, Routes, Outlet } from 'react-router-dom'
+
 import { Toaster } from 'react-hot-toast'
 import { adminNav, customerNav, membershipNav, memberNav, vendorNav, secretaryNav, regionDirectorNav, stateDirectorNav, districtDirectorNav, chapterDirectorNav, presidentNav, vicePresidentNav } from './constants/navigation'
 import DashboardLayout from './layouts/DashboardLayout'
@@ -19,6 +23,7 @@ import AdminAnalytics from './pages/admin/AdminAnalytics'
 import AdminManagementPage from './pages/admin/AdminManagementPage'
 import AdminVendorApplicationsPage from './pages/admin/AdminVendorApplicationsPage'
 import AdminVendorCategoryApprovalsPage from './pages/admin/AdminVendorCategoryApprovalsPage'
+import AdminShippingPage from './pages/admin/AdminShippingPage'
 import ApprovedVendorsPage from './pages/shared/ApprovedVendorsPage'
 import {
   AdminReferralTrackingPage,
@@ -73,7 +78,7 @@ import {
   AdminMembershipsPage,
   AdminMembersPage,
   AdminPaymentsPage,
-  AdminPlansPage,
+  AdminOrdersPage,
   AdminProductsPage,
   AdminReferralsPage,
   AdminReviewsPage,
@@ -88,35 +93,29 @@ import VendorDashboard from './pages/vendor/VendorDashboard'
 import VendorCategoryApprovalsPage from './pages/vendor/VendorCategoryApprovalsPage'
 import {
   VendorLeadsPage,
-  VendorMembershipPage,
   VendorNotificationsPage,
   VendorPaymentsPage,
+  VendorAnalyticsPage,
   VendorProductsPage,
   VendorProfilePage,
+  VendorServiceEnquiriesPage,
   VendorReviewsPage,
   VendorServicesPage,
-  VendorSupportPage,
   VendorOrdersPage,
 } from './pages/vendor/VendorPages'
 import {
   CategoriesPage,
   CustomerNotificationsPage,
   CustomerSupportPage,
-  DetailPage,
   EventsPage,
   NearbyPage,
-  ProductsPage,
   ReferralPage,
   ReviewsPage,
   ServicesPage,
   VendorsPage,
-  WishlistPage,
 } from './pages/customer/ListingPages'
-import {
-  CustomerAddressesPage,
-  CustomerDashboardPage,
-  CustomerProfileFoundationPage,
-} from './pages/customer/CustomerFoundationPages'
+import { CartPage, CheckoutPage, DetailPage, OrderDetailPage, OrdersPage, ProductsPage, WishlistPage as ShopWishlistPage } from './pages/customer/ShopPages'
+import { CustomerAddressesPage, CustomerDashboardPage, CustomerProfileFoundationPage } from './pages/customer/CustomerFoundationPages'
 import NotificationsPage from './pages/shared/NotificationsPage'
 import ProfilePage from './pages/shared/ProfilePage'
 import EnterpriseScorecardPage from './pages/shared/EnterpriseScorecardPage'
@@ -183,6 +182,16 @@ import BusinessDirectory from './pages/membership/BusinessDirectory'
 import { ROLES } from './constants/roleConfig.js'
 import { getAccountClassification, normalizeRole } from './utils/permissions'
 
+function ScrollToTop() {
+  const { pathname } = useLocation()
+
+  useEffect(() => {
+    window.scrollTo(0, 0)
+  }, [pathname])
+
+  return null
+}
+
 function App() {
   const { role: rawRole, permissionsLoading, canAccessPath } = useAuth()
   const role = normalizeRole(rawRole)
@@ -228,6 +237,8 @@ function App() {
     { path: '/referrals', element: <ReferralPipelinePage /> },
     { path: '/referrals-table', element: <AdminReferralsPage /> },
     { path: '/payments', element: <AdminPaymentsPage /> },
+    { path: '/orders', element: <AdminOrdersPage /> },
+    { path: '/shipments', element: <AdminShippingPage /> },
     { path: '/reviews', element: <AdminReviewsPage /> },
     { path: '/faqs', element: <AdminFaqsPage /> },
     { path: '/settings', element: <AdminSettingsPage /> },
@@ -266,6 +277,7 @@ function App() {
 
   return (
     <>
+      <ScrollToTop />
       <Routes>
         <Route element={<AuthLayout />}>
           <Route path="/login" element={<Login />} />
@@ -285,6 +297,12 @@ function App() {
           <Route path="/vendors/:id" element={<DetailPage type="vendors" />} />
           <Route path="/products" element={<ProductsPage />} />
           <Route path="/products/:id" element={<DetailPage type="products" />} />
+          <Route path="/cart" element={<CartPage />} />
+          <Route path="/wishlist" element={<ShopWishlistPage />} />
+          <Route path="/customer/wishlist" element={<Navigate to="/wishlist" replace />} />
+          <Route path="/checkout" element={<CheckoutPage />} />
+          <Route path="/orders" element={<OrdersPage />} />
+          <Route path="/orders/:orderId" element={<OrderDetailPage />} />
           <Route path="/services" element={<ServicesPage />} />
           <Route path="/services/:id" element={<DetailPage type="services" />} />
           <Route path="/events" element={<EventsPage />} />
@@ -341,19 +359,18 @@ function App() {
               <Route path="/vendor/services" element={<VendorServicesPage />} />
               <Route path="/vendor/orders" element={<VendorOrdersPage />} />
               <Route path="/vendor/leads" element={<VendorLeadsPage />} />
+              <Route path="/vendor/service-enquiries" element={<VendorServiceEnquiriesPage />} />
               <Route path="/vendor/reviews" element={<VendorReviewsPage />} />
-              <Route path="/vendor/membership" element={<VendorMembershipPage />} />
               <Route path="/vendor/payments" element={<VendorPaymentsPage />} />
-              <Route path="/vendor/analytics" element={<VendorDashboard />} />
+              <Route path="/vendor/analytics" element={<VendorAnalyticsPage />} />
               <Route path="/vendor/notifications" element={<VendorNotificationsPage />} />
-              <Route path="/vendor/support" element={<VendorSupportPage />} />
             </Route>
 
             {/* Customer Portal Route Group */}
             <Route element={<ProtectedRoute roles={[ROLES.CUSTOMER, ROLES.USER]} />}>
               <Route path="/customer/dashboard" element={<CustomerDashboardPage />} />
               <Route path="/customer/addresses" element={<CustomerAddressesPage />} />
-              <Route path="/customer/wishlist" element={<WishlistPage />} />
+              <Route path="/customer/wishlist" element={<ShopWishlistPage />} />
               <Route path="/customer/referral" element={<ReferralPage />} />
               <Route path="/customer/notifications" element={<CustomerNotificationsPage />} />
               <Route path="/customer/profile" element={<CustomerProfileFoundationPage />} />
@@ -405,7 +422,6 @@ function App() {
               <Route path="/member/dashboard/reviews" element={<VendorReviewsPage />} />
               <Route path="/member/dashboard/payments" element={<VendorPaymentsPage />} />
               <Route path="/member/dashboard/notifications" element={<VendorNotificationsPage />} />
-              <Route path="/member/dashboard/subscription" element={<VendorMembershipPage />} />
               <Route path="/member/dashboard/vendor-analytics" element={<VendorDashboard />} />
             </Route>
             </Route>

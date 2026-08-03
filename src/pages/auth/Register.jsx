@@ -32,6 +32,7 @@ export default function Register() {
       email: '',
       phone: '',
       password: '',
+      termsAccepted: false,
     },
   })
   const nameField = register('name', {
@@ -193,6 +194,18 @@ export default function Register() {
             </button>
           </div>
         </FormField>
+
+        <label className="flex items-start gap-3 rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-600">
+          <input
+            type="checkbox"
+            {...register('termsAccepted', { required: 'Please accept the terms and conditions' })}
+            className="mt-1 accent-[#0d4697]"
+          />
+          <span>
+            I agree to the terms and conditions, privacy policy, and marketplace guidelines.
+          </span>
+        </label>
+        {errors.termsAccepted && <p className="text-xs font-semibold text-rose-600">{errors.termsAccepted.message}</p>}
 
         {showReferralCode && (
           <FormField label="Do you have a Referral Code? (Optional)" error={referralError}>

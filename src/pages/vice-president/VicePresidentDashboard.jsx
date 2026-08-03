@@ -380,7 +380,7 @@ export default function VicePresidentDashboard() {
                 <div key={app._id} className="text-xs flex items-center justify-between text-slate-850 bg-slate-50 p-2.5 rounded-lg border border-slate-100 mb-2 last:mb-0">
                   <div>
                     <div className="font-extrabold">{app.personal?.fullName || app.submittedBy?.name || 'Applicant'}</div>
-                    <div className="text-[10px] text-slate-500 font-semibold mt-0.5">{app.professional?.companyName || 'Silver Plan'}</div>
+                    <div className="text-[10px] text-slate-500 font-semibold mt-0.5">{app.professional?.companyName || 'Member profile'}</div>
                   </div>
                   <button onClick={() => navigate('/vice-president/membership-applications')} className="text-[#0d4697] font-extrabold flex items-center gap-0.5 hover:underline">
                     Review <ChevronRight className="h-3 w-3" />

@@ -3,7 +3,6 @@ import { adminApi } from '../../api/admin'
 import { reportApi } from '../../api/report'
 import LoadingScreen from '../../components/common/LoadingScreen'
 import StatusBadge from '../../components/common/StatusBadge'
-import ChartCard from '../../components/charts/ChartCard'
 import StatCard from '../../components/dashboard/StatCard'
 import DataTable from '../../components/tables/DataTable'
 import { useAuth } from '../../hooks/useAuth'
@@ -12,7 +11,6 @@ import { formatCurrency } from '../../utils/format'
 import JurisdictionCard from '../../components/common/JurisdictionCard'
 import { ROLES } from '../../constants/roleConfig.js'
 
-const monthLabel = (item) => `${item._id?.month || ''}/${item._id?.year || ''}`
 const statusValue = (value) => Number(value || 0) > 0 ? value : 'Pending'
 
 export default function AdminDashboard() {
@@ -29,7 +27,6 @@ export default function AdminDashboard() {
   if (dashboard.loading || analytics.loading) return <LoadingScreen label="Loading admin dashboard..." />
 
   const stats = dashboard.data || {}
-  const report = analytics.data || {}
   const applicationStatuses = stats.applicationStatusCounts || {}
   const overviewCards = [
     ['approvals', 'Documents Verified', statusValue(applicationStatuses.documentsVerified), undefined, FileText],
@@ -40,7 +37,6 @@ export default function AdminDashboard() {
     ['marketplace', 'Products', stats.productsCount, undefined, Package],
     ['marketplace', 'Services', stats.servicesCount, undefined, ShoppingBag],
     ['reports', 'Revenue', formatCurrency(stats.revenue), undefined, CreditCard],
-    ['reports', 'Membership Revenue', formatCurrency(stats.membershipRevenue), undefined, CreditCard],
     ['members', 'Applications', stats.membershipApplicationsCount, `${stats.pendingMembershipApplications || 0} new`, FileText],
     ['vendors', 'Pending Vendors', stats.pendingVendors, undefined, Building2],
     ['vendors', 'Verified Vendors', stats.verifiedVendors, undefined, Building2],

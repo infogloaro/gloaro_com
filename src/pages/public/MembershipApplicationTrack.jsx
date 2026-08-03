@@ -174,7 +174,7 @@ function ApprovedApplication({ application, lastUpdatedAt }) {
           <div className="flex items-start justify-between">
             <div>
               <p className="text-[10px] font-extrabold uppercase tracking-[0.4em] text-blue-100/70">Gloaro Network</p>
-              <h2 className="mt-2 font-playfair text-2xl font-black">Executive Member</h2>
+              <h2 className="mt-2 font-playfair text-2xl font-black">Membership Approved</h2>
             </div>
             <div className="grid h-10 w-10 place-items-center rounded-md border border-white/25 bg-white/10">
               <Cuboid className="h-5 w-5 text-[#ffcf25]" />
