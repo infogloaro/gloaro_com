@@ -23,6 +23,7 @@ api.interceptors.response.use(
   async (error) => {
     const original = error.config
     const status = error.response?.status
+    const method = String(original?.method || 'get').toLowerCase()
 
     if (status === 401 && !original?._retry && storage.getRefreshToken()) {
       original._retry = true
@@ -46,7 +47,11 @@ api.interceptors.response.use(
     }
 
     const message = error.response?.data?.message || error.message || 'Something went wrong'
-    if (!original?.silent) toast.error(message)
+    const isExpectedBackgroundForbidden = status === 403 && method === 'get'
+
+    // Keep authorization failures visible for user actions, but avoid alarming toasts
+    // for background data-loading GET requests that are denied by backend scope rules.
+    if (!original?.silent && !isExpectedBackgroundForbidden) toast.error(message)
     return Promise.reject(error)
   }
 )
