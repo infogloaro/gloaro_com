@@ -48,14 +48,18 @@ export default function LocationsManagementPage() {
     parent: '',
     status: 'active'
   })
+  const isGlobalAdmin = [ROLES.SUPERADMIN, ROLES.ADMIN].includes(user?.role)
 
   const loadLocations = async () => {
     setLoading(true)
     try {
       const res = await api.get('/organization/locations')
-      setLocations(res.data?.data?.locations || [])
+      const nextLocations = res.data?.data?.locations || []
+      setLocations(nextLocations)
+      return nextLocations
     } catch {
       toast.error('Failed to load locations master list')
+      return []
     } finally {
       setLoading(false)
     }
@@ -210,14 +214,22 @@ export default function LocationsManagementPage() {
     }
   }
 
-  const handleDelete = async (id) => {
+  const handleDelete = async (node) => {
+    if (!node?._id) return
+
+    if (node.type === 'chapter' && !isGlobalAdmin) {
+      toast.error('Only Super Admin and Admin can delete chapter records')
+      return
+    }
+
     if (!window.confirm('Are you sure you want to delete this location?')) return
 
     try {
-      await api.delete(`/organization/location/${id}`)
+      await api.delete(`/organization/location/${node._id}`)
       toast.success('Location node deleted')
-      setSelectedNode(null)
-      loadLocations()
+      const refreshedLocations = await loadLocations()
+      const nextSelectedId = node.parent?._id || node.parent || null
+      setSelectedNode(nextSelectedId ? refreshedLocations.find((item) => item._id === nextSelectedId) || null : null)
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to delete location')
     }
@@ -539,9 +551,9 @@ export default function LocationsManagementPage() {
                       {selectedNode.status === 'active' ? 'Deactivate' : 'Activate'}
                     </button>
                   )}
-                  {selectedNode.type !== 'chapter' && (
+                  {(selectedNode.type !== 'chapter' || isGlobalAdmin) && (
                     <button
-                      onClick={() => handleDelete(selectedNode._id)}
+                      onClick={() => handleDelete(selectedNode)}
                       className="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-red-50 px-4 text-xs font-extrabold text-red-600 hover:bg-red-100"
                     >
                       <Trash2 className="h-4 w-4" /> Delete Location

@@ -145,23 +145,23 @@ export default function ProfilePage() {
               <div className="mt-5 grid gap-6 sm:grid-cols-2">
                 <div>
                   <p className="text-[10px] font-extrabold uppercase tracking-wide text-slate-400">Full Name</p>
-                  <p className="mt-1 text-sm font-bold text-slate-900">{user?.name || '-'}</p>
+                  <p className="mt-1 text-sm font-bold text-slate-800">{user?.name || '-'}</p>
                 </div>
                 <div>
                   <p className="text-[10px] font-extrabold uppercase tracking-wide text-slate-400">Email Address</p>
-                  <p className="mt-1 text-sm font-bold text-slate-900">{user?.email || '-'}</p>
+                  <p className="mt-1 text-sm font-bold text-slate-800">{user?.email || '-'}</p>
                 </div>
                 <div>
                   <p className="text-[10px] font-extrabold uppercase tracking-wide text-slate-400">Mobile Number</p>
-                  <p className="mt-1 text-sm font-bold text-slate-900">{user?.phone || '-'}</p>
+                  <p className="mt-1 text-sm font-bold text-slate-800">{user?.phone || '-'}</p>
                 </div>
                 <div>
                   <p className="text-[10px] font-extrabold uppercase tracking-wide text-slate-400">Official ID</p>
-                  <p className="mt-1 text-sm font-bold text-slate-900">{user?.officialId || '-'}</p>
+                  <p className="mt-1 text-sm font-bold text-slate-800">{user?.officialId || '-'}</p>
                 </div>
                 <div>
                   <p className="text-[10px] font-extrabold uppercase tracking-wide text-slate-400">Role</p>
-                  <p className="mt-1 text-sm font-bold text-slate-900">{roleLabel(user?.role)}</p>
+                  <p className="mt-1 text-sm font-bold text-slate-800">{roleLabel(user?.role)}</p>
                 </div>
               </div>
             </div>
@@ -175,13 +175,13 @@ export default function ProfilePage() {
                 </h3>
                 <div className="mt-5 grid gap-4 sm:grid-cols-2">
                   <FormField label="Full Name">
-                    <input {...regProfile('name')} className="h-11 w-full rounded-md border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-800 outline-none focus:border-[#0d4697]" />
+                    <input {...regProfile('name')} className="h-11 w-full rounded-md border border-slate-300 bg-white px-3 text-slate-800 outline-none focus:border-[#0d4697]" />
                   </FormField>
                   <FormField label="Email (Read-only)">
-                    <input {...regProfile('email')} disabled className="h-11 w-full rounded-md border border-slate-200 bg-slate-50 px-3 text-sm font-semibold text-slate-500 outline-none" />
+                    <input {...regProfile('email')} disabled className="h-11 w-full rounded-md border border-slate-300 bg-slate-50 px-3 text-slate-500 outline-none" />
                   </FormField>
                   <FormField label="Mobile Number">
-                    <input {...regProfile('phone')} className="h-11 w-full rounded-md border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-800 outline-none focus:border-[#0d4697]" />
+                    <input {...regProfile('phone')} className="h-11 w-full rounded-md border border-slate-300 bg-white px-3 text-slate-800 outline-none focus:border-[#0d4697]" />
                   </FormField>
                 </div>
                 <button disabled={isSubmitting} type="submit" className="mt-5 h-11 rounded-md bg-[#0d4697] px-5 text-sm font-extrabold text-white hover:bg-blue-800 transition">
@@ -197,13 +197,13 @@ export default function ProfilePage() {
                 </h3>
                 <div className="mt-5 grid gap-4 sm:grid-cols-3">
                   <FormField label="Old Password">
-                    <input type="password" {...regPassword('oldPassword', { required: true })} className="h-11 w-full rounded-md border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-800 outline-none focus:border-[#0d4697]" />
+                    <input type="password" {...regPassword('oldPassword', { required: true })} className="h-11 w-full rounded-md border border-slate-300 bg-white px-3 text-slate-800 outline-none focus:border-[#0d4697]" />
                   </FormField>
                   <FormField label="New Password">
-                    <input type="password" {...regPassword('newPassword', { required: true })} className="h-11 w-full rounded-md border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-800 outline-none focus:border-[#0d4697]" />
+                    <input type="password" {...regPassword('newPassword', { required: true })} className="h-11 w-full rounded-md border border-slate-300 bg-white px-3 text-slate-800 outline-none focus:border-[#0d4697]" />
                   </FormField>
                   <FormField label="Confirm New Password">
-                    <input type="password" {...regPassword('confirmPassword', { required: true })} className="h-11 w-full rounded-md border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-800 outline-none focus:border-[#0d4697]" />
+                    <input type="password" {...regPassword('confirmPassword', { required: true })} className="h-11 w-full rounded-md border border-slate-300 bg-white px-3 text-slate-800 outline-none focus:border-[#0d4697]" />
                   </FormField>
                 </div>
                 <button disabled={updatingPassword} type="submit" className="mt-5 h-11 rounded-md bg-slate-950 px-5 text-sm font-extrabold text-white hover:bg-slate-800 transition">
@@ -227,7 +227,7 @@ export default function ProfilePage() {
                 <MapPin className="h-5 w-5 shrink-0 text-[#0d4697]" />
                 <div>
                   <p className="text-[10px] font-extrabold uppercase tracking-wide text-slate-400">Assigned Location</p>
-                  <p className="text-sm font-bold text-slate-900">{orgLabel}</p>
+                  <p className="text-sm font-bold text-slate-800">{orgLabel}</p>
                 </div>
               </div>
 
@@ -235,7 +235,7 @@ export default function ProfilePage() {
                 <UserCheck className="h-5 w-5 shrink-0 text-[#0d4697]" />
                 <div>
                   <p className="text-[10px] font-extrabold uppercase tracking-wide text-slate-400">Reporting Manager</p>
-                  <p className="text-sm font-bold text-slate-900">
+                  <p className="text-sm font-bold text-slate-800">
                     {REPORTING_STRUCTURE[user?.role] || 'None'}
                   </p>
                 </div>
@@ -245,7 +245,7 @@ export default function ProfilePage() {
                 <User className="h-5 w-5 shrink-0 text-[#0d4697]" />
                 <div>
                   <p className="text-[10px] font-extrabold uppercase tracking-wide text-slate-400">Created By</p>
-                  <p className="text-sm font-bold text-slate-900">
+                  <p className="text-sm font-bold text-slate-800">
                     {user?.createdBy?.name || user?.createdBy?.email || 'System / Onboarding'}
                   </p>
                 </div>
@@ -255,7 +255,7 @@ export default function ProfilePage() {
                 <Calendar className="h-5 w-5 shrink-0 text-[#0d4697]" />
                 <div>
                   <p className="text-[10px] font-extrabold uppercase tracking-wide text-slate-400">Created Date</p>
-                  <p className="text-sm font-bold text-slate-900">{formatDate(user?.createdAt)}</p>
+                  <p className="text-sm font-bold text-slate-800">{formatDate(user?.createdAt)}</p>
                 </div>
               </div>
             </div>
@@ -272,9 +272,9 @@ export default function ProfilePage() {
                 <div className="py-4 text-center text-xs font-semibold text-slate-500">Loading activity...</div>
               ) : activity.length > 0 ? (
                 activity.map((item) => (
-                  <div key={item._id} className="relative pl-4 border-l border-slate-200 pb-2 last:pb-0">
+                  <div key={item._id} className="relative border-l border-slate-100 pb-2 pl-4 last:pb-0">
                     <span className="absolute -left-1.5 top-1.5 h-3 w-3 rounded-full bg-[#0d4697]" />
-                    <p className="text-xs font-bold text-slate-900">{item.action}</p>
+                    <p className="text-xs font-bold text-slate-800">{item.action}</p>
                     <p className="text-[10px] font-semibold text-slate-400">{formatDate(item.createdAt)}</p>
                   </div>
                 ))
