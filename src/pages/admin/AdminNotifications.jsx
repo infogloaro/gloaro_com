@@ -3,10 +3,12 @@ import toast from 'react-hot-toast'
 import { notificationApi } from '../../api/notification'
 import FormField from '../../components/forms/FormField'
 import { useAuth } from '../../hooks/useAuth'
+import { ROLES } from '../../constants/roleConfig'
+import { normalizeRole } from '../../utils/permissions'
 import NotificationsPage from '../shared/NotificationsPage'
 
 export default function AdminNotifications() {
-  const { hasSection, hasOperation } = useAuth()
+  const { hasSection, hasOperation, user } = useAuth()
   const { register, handleSubmit, reset, formState: { isSubmitting } } = useForm({
     defaultValues: {
       type: 'announcement',
@@ -16,8 +18,9 @@ export default function AdminNotifications() {
       targetUsers: '',
     },
   })
-  const canViewNotifications = hasSection('settings', 'notifications') && hasOperation('settings', 'view')
-  const canCreateBroadcast = hasOperation('settings', 'create')
+  const isCoreAdmin = [ROLES.ADMIN, ROLES.SUPERADMIN].includes(normalizeRole(user?.role))
+  const canViewNotifications = isCoreAdmin || (hasSection('settings', 'notifications') && hasOperation('settings', 'view'))
+  const canCreateBroadcast = isCoreAdmin || hasOperation('settings', 'create')
   const onSubmit = async (values) => {
     const splitValues = (value) => String(value || '').split(',').map((item) => item.trim()).filter(Boolean)
     await notificationApi.broadcast({

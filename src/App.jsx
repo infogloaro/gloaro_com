@@ -15,7 +15,6 @@ import ResetPassword from './pages/auth/ResetPassword'
 import VerifyEmail from './pages/auth/VerifyEmail'
 import AdminDashboard from './pages/admin/AdminDashboard'
 import AdminAnalytics from './pages/admin/AdminAnalytics'
-import AdminNotifications from './pages/admin/AdminNotifications'
 import AdminManagementPage from './pages/admin/AdminManagementPage'
 import AdminVendorApplicationsPage from './pages/admin/AdminVendorApplicationsPage'
 import AdminVendorCategoryApprovalsPage from './pages/admin/AdminVendorCategoryApprovalsPage'
@@ -236,7 +235,9 @@ function App() {
     { path: '/notifications', element: <NotificationsPage /> },
     { path: '/tasks', element: <TaskManagementPage /> },
     { path: '/calendar', element: <EnterpriseCalendarPage /> },
-    { path: '/broadcast-notifications', element: <AdminNotifications /> },
+    { path: '/network', element: <CommunityPage scope="network" />, roles: [ROLES.ADMIN, ROLES.SUPERADMIN] },
+    { path: '/wall', element: <BusinessWall />, roles: [ROLES.ADMIN, ROLES.SUPERADMIN] },
+    { path: '/chat', element: <ChatSystem />, roles: [ROLES.ADMIN, ROLES.SUPERADMIN] },
     { path: '/audit-logs', element: <AuditLogsPage /> },
     { path: '/system-logs', element: <SystemLogsPage />, roles: [ROLES.SUPERADMIN, ROLES.ADMIN] },
     { path: '/profile', element: <MembershipProfilePage /> },
