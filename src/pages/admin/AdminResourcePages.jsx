@@ -7,7 +7,6 @@ import DataTable from '../../components/tables/DataTable'
 import Modal from '../../components/common/Modal'
 import SearchBar from '../../components/common/SearchBar'
 import StatusBadge from '../../components/common/StatusBadge'
-import SearchBar from '../../components/common/SearchBar'
 import { useAuth } from '../../hooks/useAuth'
 import { formatCurrency, formatDate, getList, getPagination } from '../../utils/format'
 import ResourceListPage from '../shared/ResourceListPage'
@@ -789,6 +788,14 @@ function formatOrderAddress(address) {
   ].filter(Boolean).join(', ') || 'Address unavailable'
 }
 
+const displayValue = (value) => {
+  if (value === null || value === undefined || value === '') return 'N/A'
+  if (value instanceof Date) return formatDate(value)
+  if (Array.isArray(value)) return value.length ? value.map(displayValue).join(', ') : 'N/A'
+  if (typeof value === 'object') return value.name || value.label || JSON.stringify(value)
+  return String(value).replace(/_/g, ' ')
+}
+
 function RequestDetailCard({ title, tone = 'slate', request, fields = [] }) {
   const toneMap = {
     amber: 'border-amber-200 bg-amber-50/70 text-amber-800',
@@ -1566,35 +1573,6 @@ export function AdminMembersPage() {
     return () => window.clearTimeout(timer)
   }, [loadMembers])
 
-  const filters = useMemo(() => [
-    {
-      key: 'region',
-      label: 'Region',
-      options: regions.map(r => ({ value: r._id, label: r.name }))
-    },
-    {
-      key: 'state',
-      label: 'State',
-      options: states.map(s => ({ value: s._id, label: s.name }))
-    },
-    {
-      key: 'district',
-      label: 'District',
-      options: districts.map(d => ({ value: d._id, label: d.name }))
-    },
-    {
-      key: 'chapter',
-      label: 'Chapter',
-      options: chapters.map(c => ({ value: c._id, label: c.name }))
-    },
-    {
-      key: 'status',
-      label: 'Status',
-      options: [
-        { value: 'active', label: 'Active' },
-        { value: 'suspended', label: 'Suspended' },
-        { value: 'blocked', label: 'Blocked' }
-      ]
   useEffect(() => {
     const refresh = () => loadMembers()
     window.addEventListener('focus', refresh)
