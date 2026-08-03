@@ -139,7 +139,8 @@ export default function DashboardLayout({ navItems = [], title = 'Dashboard' }) 
       .map((item) => {
         if (!item) return null
         if (Array.isArray(item)) return (bypassEnabledCheck || isSidebarItemEnabled(item[0])) ? item : null
-        const filteredChildren = [...item.children].filter(([label]) => bypassEnabledCheck || isSidebarItemEnabled(label))
+        const children = Array.isArray(item.children) ? item.children : []
+        const filteredChildren = children.filter(([label]) => bypassEnabledCheck || isSidebarItemEnabled(label))
         return filteredChildren.length ? { ...item, children: filteredChildren } : null
       })
       .filter(Boolean)
@@ -150,8 +151,8 @@ export default function DashboardLayout({ navItems = [], title = 'Dashboard' }) 
       .map((item) => {
         if (!item) return null
         if (Array.isArray(item)) return item[0].toLowerCase().includes(value) ? item : null
-        const children = item.children.filter(([label]) => label.toLowerCase().includes(value))
-        if (item.label.toLowerCase().includes(value) || children.length) return { ...item, children: children.length ? children : item.children }
+        const children = (Array.isArray(item.children) ? item.children : []).filter(([label]) => label.toLowerCase().includes(value))
+        if (item.label?.toLowerCase().includes(value) || children.length) return { ...item, children: children.length ? children : (item.children || []) }
         return null
       })
       .filter(Boolean)
@@ -159,8 +160,9 @@ export default function DashboardLayout({ navItems = [], title = 'Dashboard' }) 
 
   const pageTitle = useMemo(() => {
     for (const item of resolvedNavItems) {
+      if (!item) continue
       if (Array.isArray(item) && item[1] === location.pathname) return item[0]
-      if (!Array.isArray(item)) {
+      if (!Array.isArray(item) && Array.isArray(item.children)) {
         const child = item.children.find(([, to]) => to === location.pathname)
         if (child) return child[0]
       }
@@ -170,8 +172,9 @@ export default function DashboardLayout({ navItems = [], title = 'Dashboard' }) 
 
   const chatRoute = useMemo(() => {
     for (const item of resolvedNavItems) {
+      if (!item) continue
       if (Array.isArray(item) && item[1]?.endsWith('/chat')) return item[1]
-      if (!Array.isArray(item)) {
+      if (!Array.isArray(item) && Array.isArray(item.children)) {
         const preferred = item.children.find(([label, to]) => label === 'Messages' && to?.endsWith('/chat'))
         if (preferred) return preferred[1]
         const child = item.children.find(([, to]) => to?.endsWith('/chat'))
@@ -233,6 +236,22 @@ export default function DashboardLayout({ navItems = [], title = 'Dashboard' }) 
 
   const shouldShowChatBadge = (label, to) => chatUnreadCount > 0 && to?.endsWith('/chat') && ['Messages', 'Chat'].includes(label)
   const shouldShowNotificationBadge = (label, to) => notificationUnreadCount > 0 && (to?.endsWith('/notifications') || label.toLowerCase().includes('notification'))
+
+  const notificationCenterRoute = useMemo(() => {
+    for (const item of resolvedNavItems) {
+      if (!item) continue
+      if (Array.isArray(item)) {
+        const [label, to] = item
+        if (to?.endsWith('/notifications') || label.toLowerCase().includes('notification')) return to
+        continue
+      }
+      if (!Array.isArray(item) && Array.isArray(item.children)) {
+        const child = item.children.find(([label, to]) => to?.endsWith('/notifications') || label.toLowerCase().includes('notification'))
+        if (child) return child[1]
+      }
+    }
+    return '/notifications'
+  }, [resolvedNavItems])
 
   const openNotificationCenter = () => {
     setNotificationOpen(false)
@@ -301,20 +320,15 @@ export default function DashboardLayout({ navItems = [], title = 'Dashboard' }) 
           <ChevronLeft className={`h-4 w-4 transition ${collapsed ? 'rotate-180' : ''}`} />
         </button>
       </div>
-      {!collapsed && !isSuperAdmin && (
-        <div className="p-3">
-          <label className="flex h-10 items-center gap-2 rounded-md border border-white/10 bg-white/5 px-3 text-sm text-slate-300">
-            <Search className="h-4 w-4" />
-            <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search menu" className="w-full bg-transparent font-semibold outline-none placeholder:text-slate-500" />
-          </label>
-        </div>
-      )}
+
 
       <nav className="min-h-0 flex-1 space-y-1 overflow-y-auto p-3">
         {filteredNav.map((item) => {
+          if (!item) return null
           if (!Array.isArray(item)) {
             const Icon = item.icon
-            const isExpanded = collapsed ? false : openGroups[item.label] ?? item.children.some(([, to]) => to === location.pathname)
+            const children = Array.isArray(item.children) ? item.children : []
+            const isExpanded = collapsed ? false : openGroups[item.label] ?? children.some(([, to]) => to === location.pathname)
             return (
               <div key={item.label} className="space-y-1">
                 <button
@@ -328,7 +342,7 @@ export default function DashboardLayout({ navItems = [], title = 'Dashboard' }) 
                   {!collapsed && <ChevronDown className={`h-4 w-4 transition ${isExpanded ? 'rotate-180' : ''}`} />}
                 </button>
                 {!collapsed && isExpanded && <div className="space-y-1 pl-4">
-                  {item.children.map(([label, to, ChildIcon]) => (
+                  {children.map(([label, to, ChildIcon]) => (
                     <NavLink
                       key={label}
                       to={to}

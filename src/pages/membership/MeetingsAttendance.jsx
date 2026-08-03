@@ -91,88 +91,53 @@ export default function MeetingsAttendance() {
         </div>
       </div>
 
-      {/* Action panel to apply leave */}
-      <div className="flex justify-between items-center bg-white border border-slate-200 rounded-xl p-4">
-        <span className="text-sm font-extrabold text-slate-800">Need to apply for leaves for upcoming scheduled sessions?</span>
-        <button
-          onClick={() => setShowLeaveModal(true)}
-          className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-4 py-2 text-xs font-extrabold text-slate-700 hover:bg-slate-50"
-        >
-          <PlusCircle className="h-4 w-4" />
-          Apply for Leave
-        </button>
-      </div>
 
-      <div className="grid gap-6 lg:grid-cols-[1.4fr_0.6fr]">
-        {/* Meetings Logs list */}
-        <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm space-y-4">
-          <h3 className="text-base font-extrabold text-slate-900 flex items-center gap-2">
-            <ClipboardList className="h-5 w-5 text-[#0d4697]" />
-            Chapter Meetings Registry
-          </h3>
 
-          <div className="divide-y divide-slate-100">
-            {meetings.map((meeting, index) => {
-              const event = meeting.event || meeting
-              const registration = meeting.registration || event.attendees?.find((attendee) => attendee.user?._id === user?._id || attendee.user === user?._id)
-              if (meeting.event) Object.assign(meeting, event)
-              const isAttended = registration ? registration.status === 'attended' : index > 0 // fallback for legacy records
-              return (
-                <div key={event._id || index} className="flex justify-between items-center py-4 first:pt-0 last:pb-0">
-                  <div className="flex items-start gap-3">
-                    <span className="grid h-9 w-9 place-items-center rounded-lg bg-blue-50 text-xs font-black text-[#0d4697]">
-                      {new Date(event.startDate || Date.now()).getDate()}
-                    </span>
-                    <div>
-                      <p className="text-sm font-extrabold text-slate-800 leading-tight">{event.title || 'Weekly Chapter Meeting'}</p>
-                      <p className="text-[10px] font-semibold text-slate-400 mt-1">
-                        {formatDate(meeting.startDate)} • Venue: {getVenueString(meeting.venue)}
-                      </p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setSelectedMeeting({ meeting: event, registration, isAttended })}
-                      className="inline-flex items-center gap-1.5 rounded-lg border border-blue-100 bg-blue-50 px-3 py-1.5 text-xs font-extrabold text-[#0d4697] transition hover:border-[#0d4697] hover:bg-blue-100"
-                    >
-                      <Eye className="h-3.5 w-3.5" />
-                      View details
-                    </button>
-                  </div>
-                </div>
-              )
-            })}
-            {!meetings.length && (
-              <p className="text-sm font-semibold text-slate-500 py-6 text-center">No scheduled meetings logged in registry.</p>
-            )}
-          </div>
-        </section>
+      {/* Meetings Logs list */}
+      <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm space-y-4">
+        <h3 className="text-base font-extrabold text-slate-900 flex items-center gap-2">
+          <ClipboardList className="h-5 w-5 text-[#0d4697]" />
+          Chapter Meetings Registry
+        </h3>
 
-        {/* Leave Requests Logs Sidebar */}
-        <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm space-y-4">
-          <h3 className="text-sm font-extrabold text-slate-900">Leave Applications Logs</h3>
-          
-          <div className="space-y-3">
-            {leaveRequests.map((req, idx) => (
-              <div key={idx} className="rounded-lg bg-slate-50 border border-slate-100 p-3 text-xs space-y-1.5">
-                <div className="flex justify-between items-center font-bold text-slate-700">
-                  <span>Leave Request</span>
-                  <span className="rounded bg-amber-50 border border-amber-200 px-1.5 py-0.5 text-[9px] font-extrabold uppercase text-amber-700">
-                    {req.status}
+        <div className="divide-y divide-slate-100">
+          {meetings.map((meeting, index) => {
+            const event = meeting.event || meeting
+            const registration = meeting.registration || event.attendees?.find((attendee) => attendee.user?._id === user?._id || attendee.user === user?._id)
+            if (meeting.event) Object.assign(meeting, event)
+            const isAttended = registration ? registration.status === 'attended' : index > 0 // fallback for legacy records
+            return (
+              <div key={event._id || index} className="flex justify-between items-center py-4 first:pt-0 last:pb-0">
+                <div className="flex items-start gap-3">
+                  <span className="grid h-9 w-9 place-items-center rounded-lg bg-blue-50 text-xs font-black text-[#0d4697]">
+                    {new Date(event.startDate || Date.now()).getDate()}
                   </span>
+                  <div>
+                    <p className="text-sm font-extrabold text-slate-800 leading-tight">{event.title || 'Weekly Chapter Meeting'}</p>
+                    <p className="text-[10px] font-semibold text-slate-400 mt-1">
+                      {formatDate(meeting.startDate)} • Venue: {getVenueString(meeting.venue)}
+                    </p>
+                  </div>
                 </div>
-                <p className="text-slate-500 leading-normal">{req.reason}</p>
-                <p className="text-[9px] font-semibold text-slate-400">{formatDate(req.date)}</p>
+                
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setSelectedMeeting({ meeting: event, registration, isAttended })}
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-blue-100 bg-blue-50 px-3 py-1.5 text-xs font-extrabold text-[#0d4697] transition hover:border-[#0d4697] hover:bg-blue-100"
+                  >
+                    <Eye className="h-3.5 w-3.5" />
+                    View details
+                  </button>
+                </div>
               </div>
-            ))}
-            {!leaveRequests.length && (
-              <p className="text-xs font-semibold text-slate-400 text-center py-6">No leaves logged.</p>
-            )}
-          </div>
-        </section>
-      </div>
+            )
+          })}
+          {!meetings.length && (
+            <p className="text-sm font-semibold text-slate-500 py-6 text-center">No scheduled meetings logged in registry.</p>
+          )}
+        </div>
+      </section>
 
       {selectedMeeting && (
         <div className="fixed inset-0 z-50 grid place-items-center bg-slate-950/60 p-4" onMouseDown={() => setSelectedMeeting(null)}>
