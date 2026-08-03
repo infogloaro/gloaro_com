@@ -97,10 +97,6 @@ export default function MeetingsAttendance() {
           <p className="mt-2 text-2xl font-black text-emerald-600">{attendanceSummary.present || 0}</p>
         </div>
         <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-          <p className="text-xs font-extrabold uppercase tracking-wider text-slate-400">Absent Logs</p>
-          <p className="mt-2 text-2xl font-black text-red-600">{attendanceSummary.absent || 0}</p>
-        </div>
-        <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
           <p className="text-xs font-extrabold uppercase tracking-wider text-slate-400">Attendance Rate</p>
           <p className="mt-2 text-2xl font-black text-[#0d4697]">{attendanceSummary.attendanceRate || 0}%</p>
         </div>
