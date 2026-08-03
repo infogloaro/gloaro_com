@@ -70,10 +70,7 @@ export default function ResourceListPage({
     try {
       const response = await fetcher(params)
       const nextPayload = response.data
-      setPayload((current) => {
-        const shouldRetainRows = retainRowsOnEmptySearch && debouncedSearch && current && getList(nextPayload).length === 0
-        return shouldRetainRows ? current : nextPayload
-      })
+      setPayload(nextPayload)
     } finally {
       setLoading(false)
     }

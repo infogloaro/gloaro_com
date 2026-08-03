@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { attendanceApi } from '../../api/attendance'
 import { customerApi } from '../../api/customer'
 import { useApi } from '../../hooks/useApi'
 import LoadingScreen from '../../components/common/LoadingScreen'
@@ -34,6 +35,7 @@ export default function MeetingsAttendance() {
   const [leaveMeetingId, setLeaveMeetingId] = useState('')
   const [leaveRequests, setLeaveRequests] = useState([])
   const [selectedMeeting, setSelectedMeeting] = useState(null)
+  const [summary, setSummary] = useState({ attendanceRate: 0, present: 0, absent: 0 })
 
   useEffect(() => {
     if (data) {
@@ -41,6 +43,16 @@ export default function MeetingsAttendance() {
       setMeetings(data.data || data || [])
     }
   }, [data])
+
+  useEffect(() => {
+    attendanceApi.list()
+      .then((res) => {
+        if (res.data?.summary) {
+          setSummary(res.data.summary)
+        }
+      })
+      .catch(() => {})
+  }, [])
 
   const handleApplyLeave = (e) => {
     e.preventDefault()
@@ -63,16 +75,15 @@ export default function MeetingsAttendance() {
     return <LoadingScreen label="Loading meetings and attendance logs..." />
   }
 
-  // Calculate Attendance KPIs
-  const totalMeetings = meetings.length || 8
-  const attendedCount = Math.max(totalMeetings - 1, 0)
-  const missedCount = Math.min(totalMeetings - attendedCount, 1)
-  const pct = totalMeetings > 0 ? ((attendedCount / totalMeetings) * 100).toFixed(0) : '100'
+  // Calculate Attendance KPIs from Live Database
+  const attendedCount = summary.present || 0
+  const missedCount = summary.absent || 0
+  const pct = summary.attendanceRate != null ? summary.attendanceRate : 0
 
   return (
     <div className="space-y-6">
       {/* Attendance Stats Cards */}
-      <div className="grid gap-4 sm:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-3">
         <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
           <p className="text-xs font-extrabold uppercase tracking-wider text-slate-400">Attendance Rate</p>
           <p className="mt-2 text-2xl font-black text-[#0d4697]">{pct}%</p>
@@ -84,10 +95,6 @@ export default function MeetingsAttendance() {
         <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
           <p className="text-xs font-extrabold uppercase tracking-wider text-slate-400">Absent Logs</p>
           <p className="mt-2 text-2xl font-black text-red-600">{missedCount}</p>
-        </div>
-        <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-          <p className="text-xs font-extrabold uppercase tracking-wider text-slate-400">Approved Leaves</p>
-          <p className="mt-2 text-2xl font-black text-slate-600">{leaveRequests.length}</p>
         </div>
       </div>
 
