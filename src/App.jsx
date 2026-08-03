@@ -25,7 +25,6 @@ import {
   AuditLogsPage,
   DashboardConfigurationPage,
   FeatureManagementPage,
-  NotificationsConfigPage,
   // PermissionMatrixPage,
   ReferralManagementPage,
 
@@ -120,6 +119,7 @@ import {
 } from './pages/customer/CustomerFoundationPages'
 import NotificationsPage from './pages/shared/NotificationsPage'
 import ProfilePage from './pages/shared/ProfilePage'
+import EnterpriseScorecardPage from './pages/shared/EnterpriseScorecardPage'
 import Home from './pages/Home'
 import MembershipAgreement from './pages/public/MembershipAgreement'
 import MembershipApplication from './pages/public/MembershipApplication'
@@ -190,6 +190,7 @@ function App() {
 
   const adminRouteDefs = [
     { path: '/dashboard', element: <SuperAdminDashboardPage /> },
+    { path: '/scorecard', element: <EnterpriseScorecardPage /> },
     { path: '/legacy-dashboard', element: <AdminDashboard /> },
     { path: '/admin-management', element: <AdminManagementPage />, roles: [ROLES.SUPERADMIN] },
     { path: '/organization', element: <OrganizationManagementPage />, roles: [ROLES.SUPERADMIN] },
@@ -232,7 +233,7 @@ function App() {
     { path: '/settings', element: <AdminSettingsPage /> },
     { path: '/analytics', element: <EnterpriseAnalyticsPage /> },
     { path: '/legacy-analytics', element: <AdminAnalytics /> },
-    { path: '/notifications', element: <NotificationsConfigPage /> },
+    { path: '/notifications', element: <NotificationsPage /> },
     { path: '/tasks', element: <TaskManagementPage /> },
     { path: '/calendar', element: <EnterpriseCalendarPage /> },
     { path: '/broadcast-notifications', element: <AdminNotifications /> },
@@ -297,6 +298,23 @@ function App() {
 
         <Route element={<ProtectedRoute roles={[ROLES.ADMIN, ROLES.SUPERADMIN, ROLES.REGION_DIRECTOR, ROLES.STATE_DIRECTOR, ROLES.DISTRICT_DIRECTOR, ROLES.EXECUTIVE_DIRECTOR, ROLES.LAUNCH_DIRECTOR, ROLES.DIRECT_CONSULTANT, ROLES.CHAPTER_PRESIDENT, ROLES.VICE_PRESIDENT, ROLES.SECRETARY, ROLES.CUSTOMER, ROLES.USER, ROLES.VENDOR]} />}>
           <Route element={<DashboardLayout title="Gloaro Portal" />}>
+            <Route path="/notifications" element={<NotificationsPage />} />
+            {[
+              '/scorecard',
+              '/membership/scorecard',
+              '/member/dashboard/scorecard',
+              '/customer/scorecard',
+              '/vendor/scorecard',
+              '/secretary/scorecard',
+              '/vice-president/scorecard',
+              '/president/scorecard',
+              '/chapter-director/scorecard',
+              '/district-director/scorecard',
+              '/state-director/scorecard',
+              '/region-director/scorecard',
+              '/launch-director/scorecard',
+              '/direct-consultant/scorecard',
+            ].map((path) => <Route key={path} path={path} element={<EnterpriseScorecardPage />} />)}
             
             {/* Super Admin Console Route Group */}
             <Route element={<ProtectedRoute roles={[ROLES.SUPERADMIN]} />}>
@@ -672,7 +690,6 @@ function App() {
           </Route>
         </Route>
 
-        <Route path="/notifications" element={<NotificationsPage />} />
         <Route path="/dashboard" element={<RoleRedirect />} />
       </Routes>
       <Toaster position="top-right" />
