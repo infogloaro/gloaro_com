@@ -3,7 +3,15 @@ import api from './axios'
 export const communityApi = {
   // 1. Business Wall Feed
   getPosts: (params, config) => api.get('/community/posts', { params, ...config }),
-  createPost: (payload) => api.post('/community/posts', payload, payload instanceof FormData ? { headers: { 'Content-Type': 'multipart/form-data' } } : undefined),
+  createPost: (payload, config) => api.post(
+    '/community/posts',
+    payload,
+    {
+      ...(payload instanceof FormData ? { headers: { 'Content-Type': 'multipart/form-data' } } : {}),
+      timeout: 60000,
+      ...config,
+    }
+  ),
   deletePost: (id) => api.delete(`/community/posts/${id}`),
   likePost: (id, payload) => api.post(`/community/posts/${id}/like`, payload),
   commentPost: (id, payload) => api.post(`/community/posts/${id}/comment`, payload),
