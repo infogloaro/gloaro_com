@@ -124,6 +124,17 @@ const deriveCartLine = (product, variant, quantity = 1) => {
   const basePrice = Number(selectedVariant?.price ?? product.pricing?.sellingPrice ?? 0)
   const originalPrice = Number(selectedVariant?.originalPrice ?? product.pricing?.mrp ?? basePrice)
   const stock = Number.isFinite(selectedVariant?.stock) ? selectedVariant.stock : Number(product.inventory?.quantity || 0)
+  const productSku = String(product.sku || product.productId || product._id || selectedVariant?.sku || 'SKU').toUpperCase()
+  const shippingInfo = {
+    ...(product.shippingInfo || {}),
+    weight: Number(product.shippingInfo?.weight || product.weight || 1),
+    dimensions: {
+      length: Number(product.shippingInfo?.dimensions?.length || 10),
+      breadth: Number(product.shippingInfo?.dimensions?.breadth || product.shippingInfo?.dimensions?.width || 10),
+      width: Number(product.shippingInfo?.dimensions?.width || product.shippingInfo?.dimensions?.breadth || 10),
+      height: Number(product.shippingInfo?.dimensions?.height || 10),
+    },
+  }
   const lineKey = `${product._id}:${selectedVariant?.sku || 'base'}`
   return {
     lineKey,
@@ -141,6 +152,8 @@ const deriveCartLine = (product, variant, quantity = 1) => {
       inventory: product.inventory || {},
       vendor: product.vendor || {},
       stats: product.stats || {},
+      sku: productSku,
+      shippingInfo,
       status: product.status,
       isFeatured: product.isFeatured,
     },

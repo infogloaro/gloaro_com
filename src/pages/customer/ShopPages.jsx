@@ -2,6 +2,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import toast from 'react-hot-toast'
+import { useForm } from 'react-hook-form'
 import {
   ArrowRight,
   Banknote,
@@ -86,6 +87,28 @@ function getBrand(product) {
 
 function getPrice(product, variant) {
   return Number(variant?.price ?? product?.pricing?.sellingPrice ?? 0)
+}
+
+function getServiceDisplayPrice(service) {
+  const pricing = service?.pricing || {}
+  const candidates = [pricing.minPrice, pricing.maxPrice, service?.price, service?.amount]
+  const numeric = candidates.map((value) => Number(value)).find((value) => Number.isFinite(value) && value > 0)
+  return numeric || 0
+}
+
+function getServicePriceText(service) {
+  const pricing = service?.pricing || {}
+  const minPrice = Number(pricing.minPrice)
+  const maxPrice = Number(pricing.maxPrice)
+  const currency = pricing.currency || 'INR'
+
+  if (pricing.type === 'range' && Number.isFinite(minPrice) && minPrice > 0 && Number.isFinite(maxPrice) && maxPrice > 0) {
+    return `${formatCurrency(minPrice, currency)} - ${formatCurrency(maxPrice, currency)}`
+  }
+
+  const price = getServiceDisplayPrice(service)
+  if (price > 0) return formatCurrency(price, currency)
+  return 'Custom quote'
 }
 
 function getOriginalPrice(product, variant) {
@@ -694,6 +717,22 @@ export function DetailPage({ type }) {
   const { data, loading } = useApi(() => fetcher(id), [id])
   const [relatedItems, setRelatedItems] = useState([])
   const [reviews, setReviews] = useState([])
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors, isSubmitting },
+  } = useForm({
+    defaultValues: {
+      name: '',
+      email: '',
+      phone: '',
+      subject: '',
+      message: '',
+      budgetMin: '',
+      budgetMax: '',
+    },
+  })
   const item = data
   const productReviews = useMemo(() => {
     if (type !== 'products') return reviews
@@ -720,6 +759,19 @@ export function DetailPage({ type }) {
     }
   }, [addRecentlyViewed, item, type])
 
+  useEffect(() => {
+    if (type !== 'services' || !item) return
+    reset({
+      name: '',
+      email: '',
+      phone: '',
+      subject: `Enquiry for ${item.title || 'service'}`,
+      message: '',
+      budgetMin: '',
+      budgetMax: '',
+    })
+  }, [type, item, reset])
+
   if (loading) return <LoadingScreen label="Loading product details..." />
   if (!item) return <EmptyState title="Product not found" description="The requested item may have been removed or is unavailable." />
 
@@ -735,6 +787,152 @@ export function DetailPage({ type }) {
           </div>
         </div>
       </section>
+    )
+  }
+
+  if (type === 'services') {
+    const vendor = item.vendor || {}
+    const providerName = vendor.user?.name || vendor.ownerName || 'Gloaro vendor'
+    const businessName = vendor.businessName || 'Gloaro business'
+    const addressObj = vendor.address || {}
+    const fullAddress = [addressObj.street, addressObj.city, addressObj.state, addressObj.pincode].filter(Boolean).join(', ') || 'Address not listed'
+    const gallery = item.gallery || []
+
+    const submitServiceEnquiry = async (values) => {
+      if (!vendor?._id) {
+        toast.error('Vendor details are missing for this service.')
+        return
+      }
+
+      const budget = {}
+      if (values.budgetMin) budget.min = Number(values.budgetMin)
+      if (values.budgetMax) budget.max = Number(values.budgetMax)
+
+      try {
+        await customerApi.submitEnquiry({
+          vendor: vendor._id,
+          service: item._id,
+          name: values.name.trim(),
+          email: values.email.trim(),
+          phone: values.phone.trim(),
+          subject: values.subject.trim(),
+          message: values.message.trim(),
+          ...(Object.keys(budget).length ? { budget } : {}),
+        })
+        toast.success('Your enquiry has been sent to the vendor.')
+        reset({
+          name: '',
+          email: '',
+          phone: '',
+          subject: `Enquiry for ${item.title || 'service'}`,
+          message: '',
+          budgetMin: '',
+          budgetMax: '',
+        })
+      } catch (error) {
+        toast.error(error.response?.data?.message || 'Unable to send enquiry right now.')
+      }
+    }
+
+    return (
+      <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        <div className="grid gap-8 lg:grid-cols-3">
+          <section className="space-y-6 lg:col-span-2">
+            <div className="overflow-hidden rounded-[2.5rem] border border-slate-200/80 bg-white shadow-[0_15px_50px_rgba(11,36,81,0.08)]">
+              <div className="grid gap-2 p-2 sm:grid-cols-2">
+                {gallery.length ? gallery.map((image, index) => (
+                  <img key={`${image.url}-${index}`} src={image.url} alt="" className="h-60 w-full rounded-2xl object-cover" />
+                )) : (
+                  <img src="/logo.png" alt="" className="h-60 w-full rounded-2xl object-cover sm:col-span-2" />
+                )}
+              </div>
+            </div>
+
+            <div className="rounded-[2.5rem] border border-slate-200/80 bg-white p-6 shadow-[0_15px_50px_rgba(11,36,81,0.08)]">
+              <div className="flex flex-wrap items-center gap-2">
+                <StatusBadge value={item.status || 'active'} />
+                <span className="rounded-lg bg-slate-100 px-3 py-1 text-xs font-black uppercase tracking-[0.18em] text-slate-500">{item.category?.name || 'Service'}</span>
+                <span className="rounded-lg bg-emerald-50 px-3 py-1 text-xs font-black uppercase tracking-[0.18em] text-emerald-700">Service {item.serviceId || item._id}</span>
+              </div>
+              <h1 className="mt-4 font-playfair text-4xl font-black text-navy">{item.title}</h1>
+              <p className="mt-3 max-w-3xl text-base leading-8 text-slate-600 whitespace-pre-line">{item.description}</p>
+            </div>
+
+            <div className="rounded-[2.5rem] border border-slate-200/80 bg-white p-6 shadow-[0_15px_50px_rgba(11,36,81,0.08)]">
+              <h2 className="text-2xl font-black text-navy">Request this service</h2>
+              <p className="mt-2 text-sm font-semibold text-slate-500">Submit the form and the enquiry will appear in the vendor dashboard lead inbox.</p>
+              <form onSubmit={handleSubmit(submitServiceEnquiry)} className="mt-5 grid gap-4">
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <label className="block">
+                    <span className="text-sm font-bold text-slate-700">Full Name</span>
+                    <input {...register('name', { required: 'Name is required' })} className="mt-1 h-11 w-full rounded-xl border border-slate-200 px-3 text-sm font-semibold outline-none focus:border-navy/40" placeholder="Your name" />
+                    {errors.name && <p className="mt-1 text-xs font-bold text-rose-600">{errors.name.message}</p>}
+                  </label>
+                  <label className="block">
+                    <span className="text-sm font-bold text-slate-700">Email</span>
+                    <input {...register('email', { required: 'Email is required', pattern: { value: /^\S+@\S+\.\S+$/, message: 'Enter a valid email address' } })} type="email" className="mt-1 h-11 w-full rounded-xl border border-slate-200 px-3 text-sm font-semibold outline-none focus:border-navy/40" placeholder="you@example.com" />
+                    {errors.email && <p className="mt-1 text-xs font-bold text-rose-600">{errors.email.message}</p>}
+                  </label>
+                </div>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <label className="block">
+                    <span className="text-sm font-bold text-slate-700">Phone</span>
+                    <input {...register('phone', { required: 'Phone number is required' })} type="tel" className="mt-1 h-11 w-full rounded-xl border border-slate-200 px-3 text-sm font-semibold outline-none focus:border-navy/40" placeholder="Phone number" />
+                    {errors.phone && <p className="mt-1 text-xs font-bold text-rose-600">{errors.phone.message}</p>}
+                  </label>
+                  <label className="block">
+                    <span className="text-sm font-bold text-slate-700">Subject</span>
+                    <input {...register('subject', { required: 'Subject is required' })} className="mt-1 h-11 w-full rounded-xl border border-slate-200 px-3 text-sm font-semibold outline-none focus:border-navy/40" placeholder="What do you need?" />
+                    {errors.subject && <p className="mt-1 text-xs font-bold text-rose-600">{errors.subject.message}</p>}
+                  </label>
+                </div>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <label className="block">
+                    <span className="text-sm font-bold text-slate-700">Budget Min</span>
+                    <input {...register('budgetMin')} type="number" min="0" className="mt-1 h-11 w-full rounded-xl border border-slate-200 px-3 text-sm font-semibold outline-none focus:border-navy/40" placeholder="Optional" />
+                  </label>
+                  <label className="block">
+                    <span className="text-sm font-bold text-slate-700">Budget Max</span>
+                    <input {...register('budgetMax')} type="number" min="0" className="mt-1 h-11 w-full rounded-xl border border-slate-200 px-3 text-sm font-semibold outline-none focus:border-navy/40" placeholder="Optional" />
+                  </label>
+                </div>
+                <label className="block">
+                  <span className="text-sm font-bold text-slate-700">Message</span>
+                  <textarea {...register('message', { required: 'Message is required', minLength: { value: 10, message: 'Message should be at least 10 characters' } })} rows={6} className="mt-1 w-full rounded-2xl border border-slate-200 px-3 py-3 text-sm font-semibold outline-none focus:border-navy/40" placeholder="Tell the vendor what you need..." />
+                  {errors.message && <p className="mt-1 text-xs font-bold text-rose-600">{errors.message.message}</p>}
+                </label>
+                <button type="submit" disabled={isSubmitting} className="h-12 rounded-2xl bg-navy px-4 text-sm font-black text-white transition hover:bg-navy/90 disabled:cursor-not-allowed disabled:opacity-60">
+                  {isSubmitting ? 'Sending Enquiry...' : 'Submit Enquiry'}
+                </button>
+              </form>
+            </div>
+          </section>
+
+          <aside className="space-y-6">
+            <div className="rounded-[2.5rem] border border-slate-200/80 bg-white p-6 shadow-[0_15px_50px_rgba(11,36,81,0.08)]">
+              <p className="font-jakarta text-[10px] font-black uppercase tracking-[0.28em] text-slate-400">Starting Price</p>
+              <h2 className="mt-1 font-playfair text-3xl font-black text-navy">{getServicePriceText(item)}</h2>
+              <p className="mt-2 text-sm font-semibold text-slate-500">Send your enquiry directly to the vendor.</p>
+            </div>
+
+            <div className="rounded-[2.5rem] border border-slate-200/80 bg-white p-6 shadow-[0_15px_50px_rgba(11,36,81,0.08)]">
+              <div className="flex items-center gap-3">
+                <img src={vendor.logo?.url || '/logo.png'} alt="" className="h-12 w-12 rounded-full border object-cover" />
+                <div>
+                  <h3 className="text-base font-extrabold text-slate-900">{businessName}</h3>
+                  <Link to={`/vendors/${vendor._id}`} className="text-xs font-extrabold text-navy hover:underline">View Vendor Profile</Link>
+                </div>
+              </div>
+              <div className="mt-4 space-y-2 border-t border-slate-100 pt-4 text-xs font-semibold text-slate-650">
+                <p><span className="text-slate-400">Owner:</span> {providerName}</p>
+                {vendor.phone && <p><span className="text-slate-400">📞 Phone:</span> <a href={`tel:${vendor.phone}`} className="hover:underline">{vendor.phone}</a></p>}
+                {vendor.email && <p><span className="text-slate-400">✉ Email:</span> <a href={`mailto:${vendor.email}`} className="hover:underline">{vendor.email}</a></p>}
+                <p><span className="text-slate-400">📍 Address:</span> {fullAddress}</p>
+              </div>
+            </div>
+          </aside>
+        </div>
+      </main>
     )
   }
 
@@ -1685,6 +1883,7 @@ export function OrderDetailPage() {
   ]
   const vendorShipments = Array.isArray(order.shiprocket?.shipments) ? order.shiprocket.shipments : []
   const trackingSnapshots = Array.isArray(order.shiprocket?.trackingSnapshots) ? order.shiprocket.trackingSnapshots : []
+  const isSuccessfulOrder = ['confirmed', 'processing', 'shipped', 'delivered'].includes(String(order.status || '')) || String(order.paymentStatus || '') === 'paid'
   const openReturnModal = (items = []) => {
     setReturnModalItems(items.length ? items : order.items)
     setShowReturnModal(true)
@@ -1694,6 +1893,17 @@ export function OrderDetailPage() {
     <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
       <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
         <section className="rounded-[2.5rem] border border-slate-200/80 bg-white p-6 shadow-[0_15px_50px_rgba(11,36,81,0.08)]">
+          {isSuccessfulOrder && (
+            <div className="mb-5 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3">
+              <p className="text-sm font-black text-emerald-800">Order placed successfully</p>
+              <p className="mt-1 text-xs font-semibold text-emerald-700">
+                {order.paymentMethod === 'cod'
+                  ? 'Your COD order has been confirmed and is now ready for fulfillment.'
+                  : 'Your Razorpay payment was successful and the order is confirmed.'}
+              </p>
+            </div>
+          )}
+
           <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div>
               <p className="font-jakarta text-[10px] font-black uppercase tracking-[0.28em] text-slate-400">{order.orderNumber}</p>

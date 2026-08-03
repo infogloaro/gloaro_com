@@ -764,6 +764,53 @@ export function VendorLeadsPage() {
   )
 }
 
+export function VendorServiceEnquiriesPage() {
+  const [leads, setLeads] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  const fetchLeads = () => {
+    setLoading(true)
+    vendorApi.leads({ hasService: true, limit: 100 })
+      .then((res) => setLeads(res.data?.data || res.data || []))
+      .catch(() => {})
+      .finally(() => setLoading(false))
+  }
+
+  useEffect(() => {
+    fetchLeads()
+  }, [])
+
+  const rows = useMemo(() => leads.filter((lead) => Boolean(lead.service)), [leads])
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-2xl font-black text-slate-900">Service Enquiries</h2>
+        <p className="text-sm font-semibold text-slate-500">All enquiries submitted from service detail pages appear here.</p>
+      </div>
+
+      <DataTable
+        loading={loading}
+        columns={[
+          { key: 'name', header: 'Customer', render: (row) => row.name || 'Anonymous' },
+          { key: 'phone', header: 'Phone', render: (row) => row.phone || '-' },
+          { key: 'service', header: 'Service', render: (row) => row.service?.title || row.subject || 'Service enquiry' },
+          { key: 'budget', header: 'Budget', render: (row) => {
+            const min = Number(row.budget?.min || 0)
+            const max = Number(row.budget?.max || 0)
+            if (!min && !max) return '-'
+            if (min && max) return `${formatCurrency(min)} - ${formatCurrency(max)}`
+            return formatCurrency(min || max)
+          } },
+          { key: 'status', header: 'Status', render: (row) => <StatusBadge value={row.status} /> },
+          { key: 'createdAt', header: 'Submitted', render: (row) => formatDate(row.createdAt) },
+        ]}
+        rows={rows}
+      />
+    </div>
+  )
+}
+
 export function VendorOrdersPage() {
   const [orders, setOrders] = useState([])
   const [dashboard, setDashboard] = useState(null)

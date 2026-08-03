@@ -92,6 +92,7 @@ import {
   VendorAnalyticsPage,
   VendorProductsPage,
   VendorProfilePage,
+  VendorServiceEnquiriesPage,
   VendorReviewsPage,
   VendorServicesPage,
   VendorOrdersPage,
@@ -324,6 +325,7 @@ function App() {
               <Route path="/vendor/services" element={<VendorServicesPage />} />
               <Route path="/vendor/orders" element={<VendorOrdersPage />} />
               <Route path="/vendor/leads" element={<VendorLeadsPage />} />
+              <Route path="/vendor/service-enquiries" element={<VendorServiceEnquiriesPage />} />
               <Route path="/vendor/reviews" element={<VendorReviewsPage />} />
               <Route path="/vendor/payments" element={<VendorPaymentsPage />} />
               <Route path="/vendor/analytics" element={<VendorAnalyticsPage />} />

@@ -128,6 +128,7 @@ export const vendorNav = [
   ['Services', '/vendor/services', BriefcaseBusiness],
   ['Orders', '/vendor/orders', ShoppingBag],
   ['Reviews', '/vendor/reviews', Star],
+  ['Service Enquiries', '/vendor/service-enquiries', Ticket],
   ['Payments', '/vendor/payments', CreditCard],
   ['Analytics', '/vendor/analytics', BarChart3],
   ['Notifications', '/vendor/notifications', Bell],
