@@ -48,6 +48,9 @@ export const adminNav = [
     label: 'Communication',
     icon: MessageSquare,
     children: [
+      ['Gloaro Community', '/network', Network],
+      ['Chapter Community', '/wall', Volume2],
+      ['Direct Messages', '/chat', MessageSquare],
       ['Notifications', '/notifications', Bell],
     ],
   },
@@ -491,7 +494,7 @@ export function getSidebarNav(role, options = {}) {
       if ([ROLES.REGION_DIRECTOR, ROLES.STATE_DIRECTOR, ROLES.DISTRICT_DIRECTOR].includes(normalizedRole)) {
         children = children.filter(([label]) => {
           if (label === 'Chapter Community') return hasChapterAssignment(user)
-          return ['Gloaro Network', 'Messages'].includes(label)
+          return ['Gloaro Network', 'Messages', 'Referrals'].includes(label)
         })
       } else if ([ROLES.CUSTOMER, ROLES.USER, ROLES.VENDOR].includes(normalizedRole)) {
         children = children.filter(([label]) => ['Chapter Community', 'Gloaro Network', 'Messages', 'Referrals'].includes(label))

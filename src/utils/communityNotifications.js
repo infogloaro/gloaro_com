@@ -1,6 +1,8 @@
 import { ROLES } from '../constants/roleConfig'
 
 const communityRoutePrefixes = {
+  [ROLES.SUPERADMIN]: '/super-admin',
+  [ROLES.ADMIN]: '/admin',
   [ROLES.REGION_DIRECTOR]: '/region-director',
   [ROLES.STATE_DIRECTOR]: '/state-director',
   [ROLES.DISTRICT_DIRECTOR]: '/district-director',

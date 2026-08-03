@@ -165,11 +165,13 @@ const ADMIN_ROUTE_RULES = [
   { path: '/global-search', module: 'settings', section: 'global_search' },
   { path: '/notifications', module: 'settings', section: 'notifications' },
   { path: '/notification-automation', module: 'settings', section: 'notification_automation' },
+  { path: '/network', module: 'community', section: 'network' },
+  { path: '/wall', module: 'community', section: 'chapter' },
+  { path: '/chat', module: 'chat', section: 'direct_messages' },
   { path: '/tasks', module: 'settings', section: 'tasks' },
   { path: '/calendar', module: 'events', section: 'calendar' },
   { path: '/member-journey', module: 'members', section: 'member_journey' },
   { path: '/ai-insights', module: 'reports', section: 'ai_insights' },
-  { path: '/broadcast-notifications', module: 'settings', section: 'notifications' },
   { path: '/audit-logs', module: 'reports', section: 'audit_logs' },
   { path: '/system-logs', module: 'reports', section: 'audit_logs' },
 ]
@@ -250,7 +252,9 @@ export function translatePermissionsToConfig(permissionsArray = []) {
 }
 
 export function createPermissionHelpers(user, permissionConfig = null) {
-  const isSuperAdmin = normalizeRole(user?.role) === ROLES.SUPERADMIN
+  const role = normalizeRole(user?.role)
+  const isSuperAdmin = role === ROLES.SUPERADMIN
+  const isCoreAdmin = role === ROLES.ADMIN || role === ROLES.SUPERADMIN
   let config = permissionConfig
   if (Array.isArray(permissionConfig)) {
     config = translatePermissionsToConfig(permissionConfig)
@@ -341,6 +345,7 @@ export function createPermissionHelpers(user, permissionConfig = null) {
 
     const rule = getRouteRule(pathname)
     if (!rule) return true
+    if (isCoreAdmin && ['/network', '/wall', '/chat', '/notifications'].includes(rule.path)) return true
     if (rule.superadminOnly) return false
     if (rule.module && !hasModule(rule.module)) return false
     if (rule.section && !hasSection(rule.module, rule.section)) return false
