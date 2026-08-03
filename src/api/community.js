@@ -45,9 +45,6 @@ export const communityApi = {
   getDistricts: (stateId, scope) => api.get('/organization/districts', { params: { stateId, ...(scope ? { scope } : {}) } }),
   getChapters: (districtId, scope) => api.get('/organization/chapters', { params: { districtId, ...(scope ? { scope } : {}) } }),
 
-  // 7. Leaderboards
-  getLeaderboards: () => api.get('/community/leaderboards'),
-
   // 8. Chapter Performance Dashboard
   getChapterStats: () => api.get('/community/chapter-stats'),
 

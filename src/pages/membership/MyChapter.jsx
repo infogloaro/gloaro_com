@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from 'react'
+import { useCallback, useEffect, useState, useMemo } from 'react'
 import { useAuth } from '../../hooks/useAuth'
 import LoadingScreen from '../../components/common/LoadingScreen'
 import {
@@ -55,31 +55,39 @@ export default function MyChapter() {
     }
   }, [user])
 
-  useEffect(() => {
+  const loadChapterData = useCallback(async ({ silent = false } = {}) => {
     if (!scopeInfo?.id) {
-      setLoading(false)
+      if (!silent) setLoading(false)
       return
     }
 
-    setLoading(true)
+    if (!silent) setLoading(true)
     setError(null)
-
-    // Load both full hierarchy for counters and specific details for the assigned scope entity
-    Promise.all([
-      api.get('/directory/organization-hierarchy'),
-      api.get('/directory/scope-overview').catch(() => ({ data: { data: null } }))
-    ])
-      .then(([hierarchyRes, overviewRes]) => {
-        setHierarchy(hierarchyRes.data?.data || [])
-        setOverview(overviewRes.data?.data || null)
-      })
-      .catch((err) => {
-        setError(err.response?.data?.message || 'Failed to retrieve organization hierarchy.')
-      })
-      .finally(() => {
-        setLoading(false)
-      })
+    try {
+      const [hierarchyRes, overviewRes] = await Promise.all([
+        api.get('/directory/organization-hierarchy'),
+        api.get('/directory/scope-overview'),
+      ])
+      setHierarchy(Array.isArray(hierarchyRes.data?.data) ? hierarchyRes.data.data : [])
+      setOverview(overviewRes.data?.data || null)
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to retrieve organization hierarchy.')
+    } finally {
+      if (!silent) setLoading(false)
+    }
   }, [scopeInfo])
+
+  useEffect(() => {
+    const initialLoad = window.setTimeout(() => loadChapterData(), 0)
+    const refresh = () => loadChapterData({ silent: true })
+    window.addEventListener('focus', refresh)
+    const interval = window.setInterval(refresh, 30000)
+    return () => {
+      window.clearTimeout(initialLoad)
+      window.removeEventListener('focus', refresh)
+      window.clearInterval(interval)
+    }
+  }, [loadChapterData])
 
   if (loading) {
     return <LoadingScreen label="Loading organization overview..." />
@@ -136,7 +144,8 @@ export default function MyChapter() {
         states: states.length,
         districts: districts.length,
         chapters: chapters.length,
-        members: overview?.activeMembers ?? 'Unavailable',
+        totalMembers: overview?.totalMembers ?? 0,
+        activeMembers: overview?.activeMembers ?? 0,
       }
     }
 
@@ -147,7 +156,8 @@ export default function MyChapter() {
       return {
         districts: districts.length,
         chapters: chapters.length,
-        members: overview?.activeMembers ?? 'Unavailable',
+        totalMembers: overview?.totalMembers ?? 0,
+        activeMembers: overview?.activeMembers ?? 0,
       }
     }
 
@@ -155,13 +165,15 @@ export default function MyChapter() {
       const chapters = hierarchy.filter((r) => r.type === 'chapter' && r.parent === scopeInfo.id)
       return {
         chapters: chapters.length,
-        members: overview?.activeMembers ?? 'Unavailable',
+        totalMembers: overview?.totalMembers ?? 0,
+        activeMembers: overview?.activeMembers ?? 0,
       }
     }
 
     // Chapter scope
     return {
-      members: overview?.activeMembers ?? 'Unavailable',
+      totalMembers: overview?.totalMembers ?? 0,
+      activeMembers: overview?.activeMembers ?? 0,
     }
   })()
 
@@ -192,7 +204,8 @@ export default function MyChapter() {
         {stats.chapters !== undefined && (
           <StatItem title="Chapters" value={stats.chapters} icon={Building2} />
         )}
-        <StatItem title="Active Members" value={stats.members} icon={UsersRound} />
+        <StatItem title="Total Members" value={stats.totalMembers} icon={UsersRound} />
+        <StatItem title="Active Members" value={stats.activeMembers} icon={UsersRound} />
       </div>
 
       {/* Chapter Leadership (Only for Chapter-level roles) */}

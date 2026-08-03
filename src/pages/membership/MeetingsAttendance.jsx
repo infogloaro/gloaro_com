@@ -1,22 +1,14 @@
-import { useEffect, useState } from 'react'
-import { attendanceApi } from '../../api/attendance'
+
+import { useCallback, useEffect, useMemo, useState } from 'react'
+
 import { customerApi } from '../../api/customer'
-import { useApi } from '../../hooks/useApi'
+import { attendanceApi } from '../../api/attendance'
 import LoadingScreen from '../../components/common/LoadingScreen'
-import toast from 'react-hot-toast'
 import {
-  CalendarDays,
-  CheckCircle,
-  XCircle,
   Eye,
-  FileText,
-  UserCheck,
-  Building,
-  PlusCircle,
   ClipboardList
 } from 'lucide-react'
 import { formatDate } from '../../utils/format'
-import { useAuth } from '../../hooks/useAuth'
 
 const getVenueString = (venue) => {
   if (!venue) return 'Venue not specified';
@@ -26,75 +18,78 @@ const getVenueString = (venue) => {
 };
 
 export default function MeetingsAttendance() {
-  const { user } = useAuth()
-  // Retrieve events mapped as meetings
-  const { data, loading } = useApi(() => customerApi.events({ limit: 12 }))
   const [meetings, setMeetings] = useState([])
-  const [showLeaveModal, setShowLeaveModal] = useState(false)
-  const [leaveReason, setLeaveReason] = useState('')
-  const [leaveMeetingId, setLeaveMeetingId] = useState('')
-  const [leaveRequests, setLeaveRequests] = useState([])
+  const [attendanceRows, setAttendanceRows] = useState([])
+  const [attendanceSummary, setAttendanceSummary] = useState({ present: 0, absent: 0, attendanceRate: 0 })
+  const [loading, setLoading] = useState(true)
   const [selectedMeeting, setSelectedMeeting] = useState(null)
   const [summary, setSummary] = useState({ attendanceRate: 0, present: 0, absent: 0 })
 
-  useEffect(() => {
-    if (data) {
-      // Filter meetings from events or use all events as community sessions
-      setMeetings(data.data || data || [])
+  const loadPageData = useCallback(async ({ silent = false } = {}) => {
+    if (!silent) setLoading(true)
+    try {
+      const [meetingResponse, attendanceResponse] = await Promise.all([
+        customerApi.events({ page: 1, limit: 100 }),
+        attendanceApi.list({ page: 1, limit: 100 }),
+      ])
+      const meetingPayload = meetingResponse.data?.data ?? meetingResponse.data ?? []
+      setMeetings(Array.isArray(meetingPayload) ? meetingPayload : [])
+      setAttendanceRows(Array.isArray(attendanceResponse.data?.data) ? attendanceResponse.data.data : [])
+      setAttendanceSummary(attendanceResponse.data?.summary || { present: 0, absent: 0, attendanceRate: 0 })
+    } finally {
+      if (!silent) setLoading(false)
     }
-  }, [data])
-
-  useEffect(() => {
-    attendanceApi.list()
-      .then((res) => {
-        if (res.data?.summary) {
-          setSummary(res.data.summary)
-        }
-      })
-      .catch(() => {})
   }, [])
 
-  const handleApplyLeave = (e) => {
-    e.preventDefault()
-    if (!leaveReason.trim()) return
-
-    const newRequest = {
-      meetingId: leaveMeetingId,
-      reason: leaveReason,
-      status: 'pending',
-      date: new Date().toISOString()
+  useEffect(() => {
+    const initialLoad = window.setTimeout(() => loadPageData().catch(() => {}), 0)
+    const refresh = () => loadPageData({ silent: true }).catch(() => {})
+    window.addEventListener('focus', refresh)
+    const interval = window.setInterval(refresh, 30000)
+    return () => {
+      window.clearTimeout(initialLoad)
+      window.removeEventListener('focus', refresh)
+      window.clearInterval(interval)
     }
+  }, [loadPageData])
 
-    setLeaveRequests(prev => [newRequest, ...prev])
-    toast.success('Leave application submitted to Chapter Secretary')
-    setShowLeaveModal(false)
-    setLeaveReason('')
-  }
+  const attendanceByEvent = useMemo(() => {
+    const grouped = new Map()
+    attendanceRows.forEach((row) => {
+      const eventId = String(row.eventId || '')
+      if (!eventId) return
+      const current = grouped.get(eventId) || { present: 0, absent: 0, pending: 0 }
+      if (row.status === 'present') current.present += 1
+      else if (row.status === 'absent') current.absent += 1
+      else current.pending += 1
+      grouped.set(eventId, current)
+    })
+    return grouped
+  }, [attendanceRows])
 
   if (loading) {
     return <LoadingScreen label="Loading meetings and attendance logs..." />
   }
-
-  // Calculate Attendance KPIs from Live Database
-  const attendedCount = summary.present || 0
-  const missedCount = summary.absent || 0
-  const pct = summary.attendanceRate != null ? summary.attendanceRate : 0
 
   return (
     <div className="space-y-6">
       {/* Attendance Stats Cards */}
       <div className="grid gap-4 sm:grid-cols-3">
         <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-          <p className="text-xs font-extrabold uppercase tracking-wider text-slate-400">Attendance Rate</p>
-          <p className="mt-2 text-2xl font-black text-[#0d4697]">{pct}%</p>
+          <p className="text-xs font-extrabold uppercase tracking-wider text-slate-400">Total Meetings</p>
+          <p className="mt-2 text-2xl font-black text-[#0d4697]">{meetings.length}</p>
         </div>
         <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-          <p className="text-xs font-extrabold uppercase tracking-wider text-slate-400">Meetings Attended</p>
-          <p className="mt-2 text-2xl font-black text-emerald-600">{attendedCount}</p>
+          <p className="text-xs font-extrabold uppercase tracking-wider text-slate-400">Present Records</p>
+          <p className="mt-2 text-2xl font-black text-emerald-600">{attendanceSummary.present || 0}</p>
         </div>
         <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
           <p className="text-xs font-extrabold uppercase tracking-wider text-slate-400">Absent Logs</p>
-          <p className="mt-2 text-2xl font-black text-red-600">{missedCount}</p>
+          <p className="mt-2 text-2xl font-black text-red-600">{attendanceSummary.absent || 0}</p>
+        </div>
+        <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+          <p className="text-xs font-extrabold uppercase tracking-wider text-slate-400">Attendance Rate</p>
+          <p className="mt-2 text-2xl font-black text-[#0d4697]">{attendanceSummary.attendanceRate || 0}%</p>
         </div>
       </div>
 
@@ -110,14 +105,13 @@ export default function MeetingsAttendance() {
         <div className="divide-y divide-slate-100">
           {meetings.map((meeting, index) => {
             const event = meeting.event || meeting
-            const registration = meeting.registration || event.attendees?.find((attendee) => attendee.user?._id === user?._id || attendee.user === user?._id)
             if (meeting.event) Object.assign(meeting, event)
-            const isAttended = registration ? registration.status === 'attended' : index > 0 // fallback for legacy records
+            const eventAttendance = attendanceByEvent.get(String(event._id)) || { present: 0, absent: 0, pending: 0 }
             return (
               <div key={event._id || index} className="flex justify-between items-center py-4 first:pt-0 last:pb-0">
                 <div className="flex items-start gap-3">
                   <span className="grid h-9 w-9 place-items-center rounded-lg bg-blue-50 text-xs font-black text-[#0d4697]">
-                    {new Date(event.startDate || Date.now()).getDate()}
+                    {event.startDate ? new Date(event.startDate).getDate() : '—'}
                   </span>
                   <div>
                     <p className="text-sm font-extrabold text-slate-800 leading-tight">{event.title || 'Weekly Chapter Meeting'}</p>
@@ -130,7 +124,7 @@ export default function MeetingsAttendance() {
                 <div className="flex items-center gap-2">
                   <button
                     type="button"
-                    onClick={() => setSelectedMeeting({ meeting: event, registration, isAttended })}
+                    onClick={() => setSelectedMeeting({ meeting: event, eventAttendance })}
                     className="inline-flex items-center gap-1.5 rounded-lg border border-blue-100 bg-blue-50 px-3 py-1.5 text-xs font-extrabold text-[#0d4697] transition hover:border-[#0d4697] hover:bg-blue-100"
                   >
                     <Eye className="h-3.5 w-3.5" />
@@ -165,6 +159,12 @@ export default function MeetingsAttendance() {
                 <div className="rounded-xl bg-slate-50 p-3"><p className="text-[10px] font-extrabold uppercase text-slate-400">Time</p><p className="mt-1 text-sm font-bold text-slate-800">{selectedMeeting.meeting.startDate ? new Date(selectedMeeting.meeting.startDate).toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit' }) : '—'}</p></div>
               </div>
 
+              <div className="grid grid-cols-3 gap-3">
+                <div className="rounded-xl bg-emerald-50 p-3 text-center"><p className="text-[10px] font-extrabold uppercase text-emerald-600">Present</p><p className="mt-1 text-lg font-black text-emerald-700">{selectedMeeting.eventAttendance.present}</p></div>
+                <div className="rounded-xl bg-red-50 p-3 text-center"><p className="text-[10px] font-extrabold uppercase text-red-600">Absent</p><p className="mt-1 text-lg font-black text-red-700">{selectedMeeting.eventAttendance.absent}</p></div>
+                <div className="rounded-xl bg-amber-50 p-3 text-center"><p className="text-[10px] font-extrabold uppercase text-amber-600">Pending</p><p className="mt-1 text-lg font-black text-amber-700">{selectedMeeting.eventAttendance.pending}</p></div>
+              </div>
+
               {selectedMeeting.meeting.attendees?.length > 0 && (
                 <div className="border-t border-slate-100 pt-5">
                   <p className="text-xs font-extrabold uppercase tracking-wider text-slate-400">Event members</p>
@@ -189,59 +189,6 @@ export default function MeetingsAttendance() {
         </div>
       )}
 
-      {/* Leave Application Modal */}
-      {showLeaveModal && (
-        <div className="fixed inset-0 z-50 grid place-items-center bg-slate-950/60 p-4">
-          <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl relative animate-in fade-in zoom-in duration-200">
-            <h3 className="text-base font-extrabold text-slate-900 border-b border-slate-100 pb-3 mb-4">Apply for Leave</h3>
-            
-            <form onSubmit={handleApplyLeave} className="space-y-4">
-              <div>
-                <label className="block text-xs font-bold text-slate-600 mb-1">Select Meeting</label>
-                <select 
-                  value={leaveMeetingId}
-                  onChange={(e) => setLeaveMeetingId(e.target.value)}
-                  required
-                  className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-semibold text-slate-700 outline-none focus:border-[#0d4697]"
-                >
-                  <option value="">Select an upcoming meeting...</option>
-                  {meetings.map((m) => (
-                    <option key={m._id} value={m._id}>{m.title} ({formatDate(m.startDate)})</option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-600 mb-1">Reason for Absence</label>
-                <textarea 
-                  value={leaveReason}
-                  onChange={(e) => setLeaveReason(e.target.value)}
-                  rows={4} 
-                  required
-                  placeholder="Explain why you are unable to attend..." 
-                  className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-700 outline-none focus:border-[#0d4697]"
-                />
-              </div>
-
-              <div className="flex justify-end gap-2 border-t border-slate-100 pt-4">
-                <button 
-                  type="button" 
-                  onClick={() => setShowLeaveModal(false)}
-                  className="rounded-lg border border-slate-200 px-4 py-2 text-xs font-extrabold text-slate-600 hover:bg-slate-50"
-                >
-                  Cancel
-                </button>
-                <button 
-                  type="submit" 
-                  className="rounded-lg bg-[#0d4697] px-4 py-2 text-xs font-extrabold text-white hover:bg-blue-800"
-                >
-                  Submit Application
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
     </div>
   )
 }

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import toast from 'react-hot-toast'
 import { CheckCircle2, ExternalLink, Eye, FileText, Loader2, XCircle, Package, BriefcaseBusiness, AlertCircle, MapPinned } from 'lucide-react'
 import api from '../../api/axios'
@@ -956,21 +956,29 @@ export function AdminSettingsPage() {
 }
 
 export function AdminMembersPage() {
+  const { user } = useAuth()
   const [locations, setLocations] = useState([])
   const [loadingLocations, setLoadingLocations] = useState(true)
   const [rows, setRows] = useState([])
   const [pagination, setPagination] = useState({})
   const [loadingMembers, setLoadingMembers] = useState(true)
   const [search, setSearch] = useState('')
+  const [debouncedSearch, setDebouncedSearch] = useState('')
   const [page, setPage] = useState(1)
   const [filters, setFilters] = useState({ region: '', state: '', district: '', chapter: '' })
+  const memberRequestSequence = useRef(0)
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => setDebouncedSearch(search.trim()), 300)
+    return () => window.clearTimeout(timer)
+  }, [search])
 
   useEffect(() => {
     let mounted = true
-    api.get('/organization/locations')
+    api.get('/directory/organization-hierarchy')
       .then((res) => {
         if (!mounted) return
-        setLocations(res.data?.data?.locations || [])
+        setLocations(Array.isArray(res.data?.data) ? res.data.data : [])
       })
       .catch((err) => {
         console.error('Error loading locations', err)
@@ -1001,6 +1009,19 @@ export function AdminMembersPage() {
 
   const getParentId = (location) => location?.parent?._id || location?.parent || ''
 
+  const assignedOrganization = user?.meta?.adminProfile?.organization || user?.meta?.memberProfile?.organization || {}
+  const chapterScopedRole = [ROLES.EXECUTIVE_DIRECTOR, ROLES.LAUNCH_DIRECTOR, ROLES.DIRECT_CONSULTANT, ROLES.CHAPTER_PRESIDENT, ROLES.VICE_PRESIDENT, ROLES.SECRETARY].includes(user?.role)
+
+  const assignedLocationOption = useCallback((key) => {
+    const assignedKey = `assigned${key.charAt(0).toUpperCase()}${key.slice(1)}`
+    const assigned = assignedOrganization[assignedKey]
+    const assignedId = assigned?._id || assignedOrganization[key]
+    const record = locations.find((location) => String(location._id) === String(assignedId))
+    const location = record || assigned
+    if (!location?._id || !location?.name) return []
+    return [{ value: location._id, label: location.name }]
+  }, [assignedOrganization, locations])
+
   const isDescendantOf = useCallback((location, ancestorId) => {
     if (!location || !ancestorId) return false
     let currentParentId = getParentId(location)
@@ -1015,53 +1036,69 @@ export function AdminMembersPage() {
     return false
   }, [locationIndex])
 
-  const regionOptions = useMemo(() => locations.filter((location) => location.type === 'region').map((location) => ({ value: location._id, label: location.name })), [locations])
+  const regionOptions = useMemo(() => chapterScopedRole ? assignedLocationOption('region') : locations.filter((location) => location.type === 'region').map((location) => ({ value: location._id, label: location.name })), [assignedLocationOption, chapterScopedRole, locations])
   const stateOptions = useMemo(() => {
+    if (chapterScopedRole) return assignedLocationOption('state')
     const allStates = locations.filter((location) => location.type === 'state')
     if (!filters.region) return allStates.map((location) => ({ value: location._id, label: location.name }))
     return allStates.filter((location) => isDescendantOf(location, filters.region)).map((location) => ({ value: location._id, label: location.name }))
-  }, [filters.region, locations, isDescendantOf])
+  }, [assignedLocationOption, chapterScopedRole, filters.region, locations, isDescendantOf])
   const districtOptions = useMemo(() => {
+    if (chapterScopedRole) return assignedLocationOption('district')
     const allDistricts = locations.filter((location) => location.type === 'district')
     if (!filters.state) return allDistricts.map((location) => ({ value: location._id, label: location.name }))
     return allDistricts.filter((location) => isDescendantOf(location, filters.state)).map((location) => ({ value: location._id, label: location.name }))
-  }, [filters.state, locations, isDescendantOf])
+  }, [assignedLocationOption, chapterScopedRole, filters.state, locations, isDescendantOf])
   const chapterOptions = useMemo(() => {
+    if (chapterScopedRole) return assignedLocationOption('chapter')
     const allChapters = locations.filter((location) => location.type === 'chapter')
     if (!filters.district) return allChapters.map((location) => ({ value: location._id, label: location.name }))
     return allChapters.filter((location) => isDescendantOf(location, filters.district)).map((location) => ({ value: location._id, label: location.name }))
-  }, [filters.district, locations, isDescendantOf])
+  }, [assignedLocationOption, chapterScopedRole, filters.district, locations, isDescendantOf])
 
   const loadMembers = useCallback(async () => {
+    const sequence = ++memberRequestSequence.current
     setLoadingMembers(true)
     try {
       const params = {
         page,
         limit: 10,
-        search: search.trim() || undefined,
+        search: debouncedSearch || undefined,
         region: filters.region || undefined,
         state: filters.state || undefined,
         district: filters.district || undefined,
         chapter: filters.chapter || undefined,
       }
       const response = await adminApi.members(params)
+      if (sequence !== memberRequestSequence.current) return
       const nextRows = getList(response.data)
       setRows(nextRows)
       setPagination(getPagination(response.data))
     } catch (error) {
+      if (sequence !== memberRequestSequence.current) return
       toast.error(error.response?.data?.message || 'Failed to load members')
       setRows([])
       setPagination({})
     } finally {
-      setLoadingMembers(false)
+      if (sequence === memberRequestSequence.current) setLoadingMembers(false)
     }
-  }, [filters.chapter, filters.district, filters.region, filters.state, page, search])
+  }, [debouncedSearch, filters.chapter, filters.district, filters.region, filters.state, page])
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
       loadMembers()
     }, 200)
     return () => window.clearTimeout(timer)
+  }, [loadMembers])
+
+  useEffect(() => {
+    const refresh = () => loadMembers()
+    window.addEventListener('focus', refresh)
+    const interval = window.setInterval(refresh, 30000)
+    return () => {
+      window.removeEventListener('focus', refresh)
+      window.clearInterval(interval)
+    }
   }, [loadMembers])
 
   const updateFilter = (key, value) => {
@@ -1131,7 +1168,9 @@ export function AdminMembersPage() {
         <DataTable
           columns={columns}
           rows={rows}
-          loading={loadingMembers}
+          loading={loadingMembers && !rows.length && !debouncedSearch}
+          emptyTitle={debouncedSearch ? `No approved members found for "${debouncedSearch}"` : 'No approved members found'}
+          emptyDescription={debouncedSearch ? 'No approved member in the selected organization scope matches this name, email, phone, or Member ID.' : 'There are no approved members in the selected organization scope.'}
           pagination={pagination}
           onPageChange={setPage}
         />

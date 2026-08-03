@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import toast from 'react-hot-toast'
 import { Copy, Eye, EyeOff, KeyRound, LogIn, Plus, ShieldCheck, UserCog } from 'lucide-react'
 import { adminApi } from '../../api/admin'
@@ -60,6 +60,7 @@ export default function AdminManagementPage({ role: overrideRole }) {
   const [loading, setLoading] = useState(true)
   const [page, setPage] = useState(1)
   const [search, setSearch] = useState('')
+  const [debouncedSearch, setDebouncedSearch] = useState('')
   const [role, setRole] = useState('')
   const [status, setStatus] = useState('')
   const [wizardOpen, setWizardOpen] = useState(false)
@@ -69,6 +70,7 @@ export default function AdminManagementPage({ role: overrideRole }) {
   const [form, setForm] = useState(emptyForm)
   const [saving, setSaving] = useState(false)
   const [selectedPermUser, setSelectedPermUser] = useState(null)
+  const requestSequence = useRef(0)
 
   const CREATOR_CHILD_ROLE = useMemo(() => ({
     [ROLES.SUPERADMIN]: ROLES.ADMIN,
@@ -85,30 +87,46 @@ export default function AdminManagementPage({ role: overrideRole }) {
 
   const childRole = overrideRole || CREATOR_CHILD_ROLE[user?.role]
 
+  useEffect(() => {
+    const timer = window.setTimeout(() => setDebouncedSearch(search.trim()), 300)
+    return () => window.clearTimeout(timer)
+  }, [search])
+
   const params = useMemo(() => {
     const filterRole = user?.role === ROLES.SUPERADMIN ? (role || undefined) : childRole
     return {
       page,
       limit: 10,
-      search: search || undefined,
+      search: debouncedSearch || undefined,
       role: filterRole,
       status: status || undefined
     }
-  }, [page, role, search, status, user?.role, childRole])
+  }, [page, role, debouncedSearch, status, user?.role, childRole])
 
   const load = useCallback(async () => {
+    const sequence = ++requestSequence.current
     setLoading(true)
     try {
       const response = await adminApi.adminAccounts(params)
-      setPayload(response.data)
+      if (sequence === requestSequence.current) setPayload(response.data)
     } finally {
-      setLoading(false)
+      if (sequence === requestSequence.current) setLoading(false)
     }
   }, [params])
 
   useEffect(() => {
     const timer = window.setTimeout(() => load(), 0)
     return () => window.clearTimeout(timer)
+  }, [load])
+
+  useEffect(() => {
+    const refresh = () => load()
+    window.addEventListener('focus', refresh)
+    const interval = window.setInterval(refresh, 30000)
+    return () => {
+      window.removeEventListener('focus', refresh)
+      window.clearInterval(interval)
+    }
   }, [load])
 
   const rows = getList(payload)
@@ -306,9 +324,18 @@ const saveAdmin = async () => {
             )}
             <select value={status} onChange={(event) => { setStatus(event.target.value); setPage(1) }} className="h-10 rounded-md border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-900">
               <option value="">All Status</option>
-              <option value="active">Active</option>
-              <option value="suspended">Suspended</option>
-              <option value="blocked">Locked</option>
+              {childRole === ROLES.CUSTOMER ? (
+                <>
+                  <option value="approved">Approved</option>
+                  <option value="pending_approval">Pending Approval</option>
+                </>
+              ) : (
+                <>
+                  <option value="active">Active</option>
+                  <option value="suspended">Suspended</option>
+                  <option value="blocked">Locked</option>
+                </>
+              )}
             </select>
           </div>
           {showCreateButton && (
@@ -335,7 +362,9 @@ const saveAdmin = async () => {
           { key: 'status', header: 'Status', render: (row) => <StatusBadge value={row.role === ROLES.CUSTOMER ? row.status : (row.isBlocked ? 'locked' : row.isSuspended ? 'suspended' : row.isActive ? 'active' : 'inactive')} /> },
         ]}
         rows={rows}
-        loading={loading}
+        loading={loading && !payload}
+        emptyTitle={debouncedSearch ? `No members found for "${debouncedSearch}"` : 'No members found'}
+        emptyDescription={debouncedSearch ? 'No real member record in this chapter matches the entered name, email, phone, member ID, or official ID.' : 'No members have been added to this chapter yet.'}
         pagination={pagination}
         onPageChange={setPage}
         actions={(row) => {

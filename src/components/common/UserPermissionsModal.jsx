@@ -11,7 +11,7 @@ const ALL_MODULES = [
   ROLES.VENDOR, "products", "services", "payments", "orders", "coupons", "subscriptions",
   "support", "organization", "users", "roles", "permissions", "audit_logs",
   "settings", "notifications", "community", "ai_insights", "calendar",
-  "leaderboard", "business_directory", "chat", "tasks", "help_desk",
+  "business_directory", "chat", "tasks", "help_desk",
   "qr_attendance", "digital_membership_card"
 ];
 

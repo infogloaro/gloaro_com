@@ -18,7 +18,6 @@ import {
   Handshake,
   Volume2,
   Ticket,
-  Trophy,
   MessageSquare,
   ClipboardCheck,
   QrCode
@@ -43,7 +42,6 @@ import MyChapter from './MyChapter'
 // Import new additive enterprise sub-pages
 import BusinessDirectory from './BusinessDirectory'
 import ChapterDashboard from './ChapterDashboard'
-import Leaderboard from './Leaderboard'
 import UnifiedCalendar from './UnifiedCalendar'
 import ChatSystem from './ChatSystem'
 import TasksAndHelpDesk from './TasksAndHelpDesk'
@@ -61,6 +59,7 @@ export default function MemberDashboard() {
     if (tab === 'one-to-ones') return 'oneToOnes';
     if (tab === 'performance') return 'chapterDashboard';
     if (tab === 'digital-card') return 'digitalCard';
+    if (tab === 'leaderboard') return 'overview';
     return tab;
   }, [tab]);
 
@@ -491,7 +490,6 @@ export default function MemberDashboard() {
       {/* Mount remaining enterprise sub-pages */}
       {activeTab === 'directory' && <BusinessDirectory />}
       {activeTab === 'chapterDashboard' && <ChapterDashboard />}
-      {activeTab === 'leaderboard' && <Leaderboard />}
       {activeTab === 'calendar' && <UnifiedCalendar />}
       {activeTab === 'chat' && <ChatSystem />}
       {activeTab === 'tasks' && <TasksAndHelpDesk />}

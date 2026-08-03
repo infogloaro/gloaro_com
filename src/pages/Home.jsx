@@ -193,7 +193,7 @@ const leaders = [
     image: leader2,
   },
   {
-    name: 'Yuvaraj',
+    name: 'Kannan',
     role: 'Co-Founder and CEO',
     bio: 'Operations expert focused on delivering excellence and scaling impact.',
     image: leader1,

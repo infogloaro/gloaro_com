@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
-import { Bell, Check, Eye, MailOpen, Mail, Search, Trash2 } from 'lucide-react'
+import { Bell, Check, Eye, MailOpen, Mail, Search, Trash2, X } from 'lucide-react'
 import { notificationApi } from '../../api/notification'
 import LoadingScreen from '../../components/common/LoadingScreen'
 import Pagination from '../../components/common/Pagination'
@@ -29,6 +29,8 @@ export default function NotificationsPage({ systemView = false }) {
   const navigate = useNavigate()
   const [notifications, setNotifications] = useState([])
   const [loading, setLoading] = useState(true)
+  const [searching, setSearching] = useState(false)
+  const hasLoadedRef = useRef(false)
   const [unreadCount, setUnreadCount] = useState(0)
   const [stats, setStats] = useState({ total: 0, unread: 0, read: 0, highPriority: 0, today: 0 })
   const [pagination, setPagination] = useState({ currentPage: 1, totalPages: 1 })
@@ -45,11 +47,14 @@ export default function NotificationsPage({ systemView = false }) {
     limit: 10,
   })
 
-  const loadNotifications = useCallback(async () => {
-    setLoading(true)
+  const loadNotifications = useCallback(async (signal) => {
+    if (hasLoadedRef.current) setSearching(true)
+    else setLoading(true)
     try {
       const [listRes, countRes] = await Promise.all([
-        systemView ? notificationApi.systemList(filters) : notificationApi.list(filters),
+        systemView
+          ? notificationApi.systemList(filters, { signal, silent: true })
+          : notificationApi.list(filters, { signal, silent: true }),
         systemView ? Promise.resolve({ data: { data: { count: 0 } } }) : notificationApi.unreadCount(),
       ])
       const payload = listRes.data || {}
@@ -57,19 +62,28 @@ export default function NotificationsPage({ systemView = false }) {
       setStats(payload.stats || { total: 0, unread: 0, read: 0, highPriority: 0, today: 0 })
       setPagination(payload.pagination || { currentPage: filters.page, totalPages: 1 })
       setUnreadCount(Number(countRes.data?.data?.count || countRes.data?.count || payload.stats?.unread || 0))
-    } catch {
+    } catch (error) {
+      if (error?.name === 'CanceledError' || error?.code === 'ERR_CANCELED') return
       toast.error('Failed to load notifications')
     } finally {
-      setLoading(false)
+      if (!signal?.aborted) {
+        hasLoadedRef.current = true
+        setLoading(false)
+        setSearching(false)
+      }
     }
   }, [filters, systemView])
 
   useEffect(() => {
+    const controller = new AbortController()
     const timer = window.setTimeout(() => {
-      loadNotifications()
-    }, 0)
-    return () => window.clearTimeout(timer)
-  }, [loadNotifications])
+      loadNotifications(controller.signal)
+    }, filters.search ? 300 : 0)
+    return () => {
+      window.clearTimeout(timer)
+      controller.abort()
+    }
+  }, [filters.search, loadNotifications])
 
   useEffect(() => {
     if (!socket || systemView) return undefined
@@ -205,6 +219,8 @@ export default function NotificationsPage({ systemView = false }) {
             <label className="flex h-10 items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 text-sm font-medium text-slate-700">
               <Search className="h-4 w-4 text-slate-400" />
               <input value={filters.search} onChange={(event) => updateFilter('search', event.target.value)} className="min-w-0 flex-1 outline-none" placeholder="Search" />
+              {searching && <span aria-label="Searching" className="h-4 w-4 shrink-0 animate-spin rounded-full border-2 border-slate-200 border-t-[#0d4697]" />}
+              {filters.search && !searching && <button type="button" onClick={() => updateFilter('search', '')} aria-label="Clear search" className="grid h-6 w-6 shrink-0 place-items-center rounded-full text-slate-400 hover:bg-slate-100 hover:text-slate-700"><X className="h-3.5 w-3.5" /></button>}
             </label>
             <select value={filters.category} onChange={(event) => updateFilter('category', event.target.value)} className="h-10 rounded-lg border border-slate-300 bg-white px-3 text-sm font-medium text-slate-700">
               <option value="">Category</option>
