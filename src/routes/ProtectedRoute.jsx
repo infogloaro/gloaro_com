@@ -18,7 +18,12 @@ const roleMatches = (allowed, actual) => {
   return false
 }
 
-export default function ProtectedRoute({ roles, requirePathAccess = false, fallback = '/dashboard' }) {
+export default function ProtectedRoute({
+  roles,
+  requirePathAccess = false,
+  fallback = '/dashboard',
+  unauthenticatedMessage = '',
+}) {
   const { loading, isAuthenticated, role, permissionsLoading, canAccessPath, user } = useAuth()
   const location = useLocation()
   const account = getAccountClassification(user)
@@ -26,7 +31,18 @@ export default function ProtectedRoute({ roles, requirePathAccess = false, fallb
 
   const isHydrating = loading || (storage.getAccessToken() && !user)
   if (isHydrating) return <LoadingScreen label="Checking session..." />
-  if (!isAuthenticated) return <Navigate to="/login" replace state={{ from: location }} />
+  if (!isAuthenticated) {
+    return (
+      <Navigate
+        to="/login"
+        replace
+        state={{
+          from: location,
+          error: unauthenticatedMessage || 'Please sign in to continue.',
+        }}
+      />
+    )
+  }
 
   if (account.isOnlineVendor && location.pathname.startsWith('/member/')) {
     return <Navigate to="/vendor" replace />

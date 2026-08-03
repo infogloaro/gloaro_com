@@ -301,7 +301,9 @@ function App() {
           <Route path="/cart" element={<CartPage />} />
           <Route path="/wishlist" element={<ShopWishlistPage />} />
           <Route path="/customer/wishlist" element={<Navigate to="/wishlist" replace />} />
-          <Route path="/checkout" element={<CheckoutPage />} />
+          <Route element={<ProtectedRoute unauthenticatedMessage="Please sign in before checkout." />}>
+            <Route path="/checkout" element={<CheckoutPage />} />
+          </Route>
           <Route path="/orders" element={<OrdersPage />} />
           <Route path="/orders/:orderId" element={<OrderDetailPage />} />
           <Route path="/services" element={<ServicesPage />} />

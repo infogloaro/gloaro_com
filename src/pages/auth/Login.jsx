@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { Eye, EyeOff } from 'lucide-react'
+import toast from 'react-hot-toast'
 import FormField from '../../components/forms/FormField'
 import { useAuth } from '../../hooks/useAuth'
 import { getVendorOnboardingRoutes } from '../../utils/onboarding'
@@ -14,6 +15,11 @@ export default function Login() {
   const location = useLocation()
   const [showPassword, setShowPassword] = useState(false)
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm({ defaultValues: { remember: true } })
+  const redirectError = location.state?.error
+
+  useEffect(() => {
+    if (redirectError) toast.error(redirectError)
+  }, [redirectError])
 
   const onSubmit = async (values) => {
     try {
@@ -53,6 +59,11 @@ export default function Login() {
     <form onSubmit={handleSubmit(onSubmit)} className="w-full rounded-lg bg-white p-6 shadow-[0_22px_70px_rgba(15,23,42,.12)]">
       <h2 className="font-playfair text-4xl font-bold text-[#0d4697]">Sign In</h2>
       <p className="mt-1 text-sm font-medium text-slate-500">Access your Gloaro account.</p>
+      {redirectError ? (
+        <div className="mt-4 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-800">
+          {redirectError}
+        </div>
+      ) : null}
       <div className="mt-6 space-y-4">
         <FormField label="Email" error={errors.email?.message}>
           <input {...register('email', { required: 'Email is required' })} type="email" className="h-11 w-full rounded-md border border-slate-300 px-3 outline-none focus:border-[#0d4697]" />
