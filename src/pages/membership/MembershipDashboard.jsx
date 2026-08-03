@@ -42,7 +42,7 @@ export default function MembershipDashboard() {
           <div className="mt-4 grid gap-3 sm:grid-cols-3">
             <Status label="Application" value="Approved" />
             <Status label="Access" value="Active" />
-            <Status label="Plan" value="Executive Member" />
+            <Status label="Membership" value="Executive Member" />
           </div>
         </section>
 

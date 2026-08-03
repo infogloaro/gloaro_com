@@ -5,9 +5,10 @@ import api from '../../api/axios'
 import { adminApi } from '../../api/admin'
 import DataTable from '../../components/tables/DataTable'
 import Modal from '../../components/common/Modal'
+import SearchBar from '../../components/common/SearchBar'
 import StatusBadge from '../../components/common/StatusBadge'
 import { useAuth } from '../../hooks/useAuth'
-import { formatCurrency, formatDate } from '../../utils/format'
+import { formatCurrency, formatDate, getList, getPagination } from '../../utils/format'
 import ResourceListPage from '../shared/ResourceListPage'
 import SimpleJsonForm from '../shared/SimpleJsonForm'
 import { ROLES } from '../../constants/roleConfig.js'
@@ -374,71 +375,342 @@ export function AdminProductsPage() {
 }
 
 export function AdminOrdersPage() {
+  const [payload, setPayload] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [page, setPage] = useState(1)
+  const [search, setSearch] = useState('')
+  const [debouncedSearch, setDebouncedSearch] = useState('')
+  const [filterValues, setFilterValues] = useState({ status: 'all', paymentStatus: 'all' })
+  const [selectedSlice, setSelectedSlice] = useState(null)
+  const [selectedOrder, setSelectedOrder] = useState(null)
+  const [detailsLoading, setDetailsLoading] = useState(false)
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => setDebouncedSearch(search.trim()), 300)
+    return () => window.clearTimeout(timer)
+  }, [search])
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      void (async () => {
+        setLoading(true)
+        try {
+          const response = await adminApi.orders({
+            page,
+            limit: 10,
+            search: debouncedSearch || undefined,
+            status: filterValues.status && filterValues.status !== 'all' ? filterValues.status : undefined,
+            paymentStatus: filterValues.paymentStatus && filterValues.paymentStatus !== 'all' ? filterValues.paymentStatus : undefined,
+          })
+          setPayload(response.data)
+        } catch (error) {
+          toast.error(error.response?.data?.message || 'Failed to load orders')
+        } finally {
+          setLoading(false)
+        }
+      })()
+    }, 0)
+    return () => window.clearTimeout(timer)
+  }, [page, debouncedSearch, filterValues.status, filterValues.paymentStatus])
+
+  const rows = useMemo(() => {
+    const orders = getList(payload)
+    const slices = orders.flatMap((order) => splitOrderByVendor(order))
+    const term = debouncedSearch.toLowerCase()
+
+    if (!term) return slices
+
+    return slices.filter((row) => {
+      return [
+        row.orderNumber,
+        row.customerName,
+        row.customerEmail,
+        row.customerPhone,
+        row.vendorLabel,
+        row.vendorBusinessName,
+        row.itemSummary,
+      ].some((value) => String(value || '').toLowerCase().includes(term))
+    })
+  }, [debouncedSearch, payload])
+
+  const pagination = getPagination(payload)
+
+  const openDetails = async (row) => {
+    setSelectedSlice(row)
+    setSelectedOrder(null)
+    setDetailsLoading(true)
+    try {
+      const response = await adminApi.order(row.originalOrderId)
+      setSelectedOrder(response.data?.data || response.data || null)
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to load order details')
+    } finally {
+      setDetailsLoading(false)
+    }
+  }
+
+  const selectedVendorSlices = useMemo(() => {
+    if (!selectedOrder || !selectedSlice) return []
+    return splitOrderByVendor(selectedOrder)
+  }, [selectedOrder, selectedSlice])
+
+  const activeVendorSlice = selectedVendorSlices.find((entry) => entry._id === selectedSlice?._id) || selectedSlice
+  const otherVendorSlices = selectedVendorSlices.filter((entry) => entry._id !== activeVendorSlice?._id)
+
   return (
-    <ResourceListPage
-      module="orders"
-      section="list"
-      title="Order Management"
-      description="Track customer purchases created from the shop checkout flow."
-      fetcher={adminApi.orders}
-      detailFetcher={adminApi.order}
-      filters={[
-        { key: 'status', label: 'Status', options: ['all', 'placed', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled', 'refunded'].map((value) => ({ value, label: value })) },
-        { key: 'paymentStatus', label: 'Payment', options: ['all', 'pending', 'paid', 'failed', 'refunded'].map((value) => ({ value, label: value })) },
-      ]}
-      columns={[
-        { key: 'orderNumber', header: 'Order #', render: (row) => row.orderNumber || row._id },
-        { key: 'customer', header: 'Customer', render: (row) => row.customerSnapshot?.name || row.user?.name || row.customerSnapshot?.email || 'Guest' },
-        { key: 'phone', header: 'Phone', render: (row) => row.customerSnapshot?.phone || row.user?.phone || '-' },
-        { key: 'amount', header: 'Amount', render: (row) => formatCurrency(row.total, row.currency) },
-        { key: 'paymentStatus', header: 'Payment', render: (row) => <StatusBadge value={row.paymentStatus} /> },
-        { key: 'status', header: 'Order Status', render: (row) => <StatusBadge value={row.status} /> },
-        { key: 'createdAt', header: 'Created', render: (row) => formatDate(row.createdAt) },
-      ]}
-      renderDetails={(order) => (
-        <div className="space-y-4 text-sm">
-          <div className="grid gap-3 sm:grid-cols-2">
-            <div className="rounded-lg border border-slate-200 p-3">
-              <p className="text-[10px] font-black uppercase text-slate-400">Customer</p>
-              <p className="mt-1 font-bold text-slate-900">{order.customerSnapshot?.name || order.user?.name || 'Guest'}</p>
-              <p className="text-xs font-medium text-slate-500">{order.customerSnapshot?.email || order.user?.email || '-'}</p>
-              <p className="text-xs font-medium text-slate-500">{order.customerSnapshot?.phone || order.user?.phone || '-'}</p>
-            </div>
-            <div className="rounded-lg border border-slate-200 p-3">
-              <p className="text-[10px] font-black uppercase text-slate-400">Order</p>
-              <p className="mt-1 font-bold text-slate-900">{order.orderNumber}</p>
-              <p className="text-xs font-medium text-slate-500">{formatDate(order.createdAt)}</p>
-              <p className="text-xs font-medium text-slate-500">Payment: {order.paymentStatus}</p>
-            </div>
+    <>
+      <section>
+        <div className="mb-5 flex flex-col justify-between gap-4 lg:flex-row lg:items-end">
+          <div>
+            <h2 className="text-2xl font-extrabold text-slate-950 dark:text-white">Order Management</h2>
+            <p className="mt-1 text-sm font-semibold text-slate-500">Track customer purchases and inspect each vendor share inside the order.</p>
           </div>
-          <div className="rounded-lg border border-slate-200 p-3">
-            <p className="text-[10px] font-black uppercase text-slate-400">Shipping Address</p>
-            <p className="mt-1 text-xs font-medium text-slate-600">
-              {[order.address?.fullName, order.address?.line1, order.address?.line2, order.address?.city, order.address?.state, order.address?.pincode].filter(Boolean).join(', ') || 'Address unavailable'}
-            </p>
-          </div>
-          <div className="rounded-lg border border-slate-200 p-3">
-            <p className="text-[10px] font-black uppercase text-slate-400">Items</p>
-            <div className="mt-3 space-y-3">
-              {order.items?.map((item) => (
-                <div key={`${order._id}-${item.productId}`} className="flex items-center justify-between gap-4 rounded-md bg-slate-50 px-3 py-2">
-                  <div>
-                    <p className="font-bold text-slate-800">{item.productSnapshot?.title || 'Product'}</p>
-                    <p className="text-xs text-slate-500">Qty {item.quantity}</p>
-                  </div>
-                  <p className="font-bold text-slate-900">{formatCurrency(item.lineTotal)}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-3 text-xs">
-            <div className="rounded-md bg-slate-50 p-3">Subtotal: {formatCurrency(order.subtotal)}</div>
-            <div className="rounded-md bg-slate-50 p-3">Total: {formatCurrency(order.total)}</div>
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <SearchBar value={search} onChange={(value) => { setSearch(value); setPage(1) }} placeholder="Search order, customer, vendor, item..." />
+            <select value={filterValues.status} onChange={(event) => setFilterValues((current) => ({ ...current, status: event.target.value }))} className="h-10 rounded-md border border-slate-200 bg-white px-3 text-sm font-bold text-slate-800">
+              {['all', 'placed', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled', 'refunded'].map((value) => <option key={value} value={value}>{value}</option>)}
+            </select>
+            <select value={filterValues.paymentStatus} onChange={(event) => setFilterValues((current) => ({ ...current, paymentStatus: event.target.value }))} className="h-10 rounded-md border border-slate-200 bg-white px-3 text-sm font-bold text-slate-800">
+              {['all', 'pending', 'paid', 'failed', 'refunded'].map((value) => <option key={value} value={value}>{value}</option>)}
+            </select>
           </div>
         </div>
-      )}
-    />
+
+        <div className="mb-4 rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-xs font-semibold text-slate-600">
+          Each row represents a vendor-specific slice of a customer order, so split-cart purchases are visible separately.
+        </div>
+
+        <DataTable
+          columns={[
+            {
+              key: 'orderNumber',
+              header: 'Order / Vendor',
+              render: (row) => (
+                <div>
+                  <p className="font-bold text-slate-900">{row.orderNumber}</p>
+                  <p className="text-xs font-semibold text-slate-500">{row.vendorLabel}</p>
+                  {row.vendorCount > 1 && <p className="text-[11px] font-bold uppercase tracking-wide text-[#0d4697]">Split order</p>}
+                </div>
+              ),
+            },
+            {
+              key: 'customer',
+              header: 'Customer',
+              render: (row) => (
+                <div>
+                  <p className="font-bold text-slate-900">{row.customerName || 'Guest'}</p>
+                  <p className="text-xs font-medium text-slate-500">{row.customerPhone || row.customerEmail || '-'}</p>
+                </div>
+              ),
+            },
+            {
+              key: 'items',
+              header: 'Items',
+              render: (row) => (
+                <div>
+                  <p className="font-bold text-slate-900">{row.itemCount} item{row.itemCount === 1 ? '' : 's'}</p>
+                  <p className="text-xs font-medium text-slate-500">{row.itemSummary}</p>
+                </div>
+              ),
+            },
+            {
+              key: 'amount',
+              header: 'Vendor Amount',
+              render: (row) => (
+                <div>
+                  <p className="font-bold text-slate-900">{formatCurrency(row.vendorTotal, row.currency)}</p>
+                  <p className="text-xs font-medium text-slate-500">Order total {formatCurrency(row.orderTotal, row.currency)}</p>
+                </div>
+              ),
+            },
+            { key: 'paymentStatus', header: 'Payment', render: (row) => <StatusBadge value={row.paymentStatus} /> },
+            { key: 'status', header: 'Order Status', render: (row) => <StatusBadge value={row.status} /> },
+            { key: 'createdAt', header: 'Created', render: (row) => formatDate(row.createdAt) },
+          ]}
+          rows={rows}
+          loading={loading}
+          pagination={pagination}
+          onPageChange={setPage}
+          actions={(row) => (
+            <button
+              type="button"
+              onClick={() => openDetails(row)}
+              className="inline-flex items-center gap-1 rounded-md border border-[#0d4697] bg-white px-3 py-1.5 text-xs font-bold text-[#0d4697] hover:bg-blue-50 transition duration-150"
+            >
+              <Eye className="h-3 w-3" />
+              View details
+            </button>
+          )}
+        />
+      </section>
+
+      <Modal
+        open={Boolean(selectedSlice)}
+        title={selectedSlice ? `${selectedSlice.orderNumber} • ${selectedSlice.vendorLabel}` : 'Order details'}
+        onClose={() => {
+          setSelectedSlice(null)
+          setSelectedOrder(null)
+        }}
+        maxWidth="max-w-6xl"
+      >
+        {detailsLoading || !selectedOrder ? (
+          <div className="grid min-h-48 place-items-center">
+            <Loader2 className="h-8 w-8 animate-spin text-[#0d4697]" />
+          </div>
+        ) : (
+          <div className="space-y-4 text-sm">
+            <div className="grid gap-3 lg:grid-cols-3">
+              <div className="rounded-lg border border-slate-200 p-3">
+                <p className="text-[10px] font-black uppercase text-slate-400">Customer</p>
+                <p className="mt-1 font-bold text-slate-900">{selectedOrder.customerSnapshot?.name || selectedOrder.user?.name || 'Guest'}</p>
+                <p className="text-xs font-medium text-slate-500">{selectedOrder.customerSnapshot?.email || selectedOrder.user?.email || '-'}</p>
+                <p className="text-xs font-medium text-slate-500">{selectedOrder.customerSnapshot?.phone || selectedOrder.user?.phone || '-'}</p>
+              </div>
+              <div className="rounded-lg border border-slate-200 p-3">
+                <p className="text-[10px] font-black uppercase text-slate-400">Selected vendor</p>
+                <p className="mt-1 font-bold text-slate-900">{activeVendorSlice?.vendorLabel || 'Vendor'}</p>
+                <p className="text-xs font-medium text-slate-500">{activeVendorSlice?.itemCount || 0} item{(activeVendorSlice?.itemCount || 0) === 1 ? '' : 's'}</p>
+                <p className="text-xs font-medium text-slate-500">Vendor amount: {formatCurrency(activeVendorSlice?.vendorTotal || 0, activeVendorSlice?.currency)}</p>
+              </div>
+              <div className="rounded-lg border border-slate-200 p-3">
+                <p className="text-[10px] font-black uppercase text-slate-400">Order</p>
+                <p className="mt-1 font-bold text-slate-900">{selectedOrder.orderNumber}</p>
+                <p className="text-xs font-medium text-slate-500">{formatDate(selectedOrder.createdAt)}</p>
+                <p className="text-xs font-medium text-slate-500">Payment: {selectedOrder.paymentStatus}</p>
+              </div>
+            </div>
+
+            <div className="rounded-lg border border-slate-200 p-3">
+              <p className="text-[10px] font-black uppercase text-slate-400">Shipping Address</p>
+              <p className="mt-1 text-xs font-medium text-slate-600">
+                {formatOrderAddress(selectedOrder.address)}
+              </p>
+            </div>
+
+            <div className="rounded-lg border border-slate-200 p-3">
+              <p className="text-[10px] font-black uppercase text-slate-400">Vendor items</p>
+              <div className="mt-3 space-y-3">
+                {(activeVendorSlice?.items || []).map((item, index) => (
+                  <div key={`${selectedOrder._id}-${activeVendorSlice?._id}-${index}`} className="flex items-center justify-between gap-4 rounded-md bg-slate-50 px-3 py-2">
+                    <div>
+                      <p className="font-bold text-slate-800">{item.productSnapshot?.title || 'Product'}</p>
+                      <p className="text-xs text-slate-500">Qty {item.quantity}</p>
+                    </div>
+                    <p className="font-bold text-slate-900">{formatCurrency(item.lineTotal || Number(item.unitPrice || 0) * Number(item.quantity || 0), selectedOrder.currency)}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {otherVendorSlices.length > 0 && (
+              <div className="rounded-lg border border-slate-200 p-3">
+                <p className="text-[10px] font-black uppercase text-slate-400">Other vendors in this order</p>
+                <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                  {otherVendorSlices.map((slice) => (
+                    <div key={slice._id} className="rounded-md bg-slate-50 px-3 py-2">
+                      <p className="font-bold text-slate-800">{slice.vendorLabel}</p>
+                      <p className="text-xs text-slate-500">{slice.itemCount} item{slice.itemCount === 1 ? '' : 's'} • {formatCurrency(slice.vendorTotal, slice.currency)}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div className="grid gap-3 md:grid-cols-3">
+              <div className="rounded-md bg-slate-50 p-3 text-xs font-semibold text-slate-700">Subtotal: {formatCurrency(selectedOrder.subtotal, selectedOrder.currency)}</div>
+              <div className="rounded-md bg-slate-50 p-3 text-xs font-semibold text-slate-700">Order total: {formatCurrency(selectedOrder.total, selectedOrder.currency)}</div>
+              <div className="rounded-md bg-slate-50 p-3 text-xs font-semibold text-slate-700">Vendor subtotal: {formatCurrency(activeVendorSlice?.vendorTotal || 0, selectedOrder.currency)}</div>
+            </div>
+          </div>
+        )}
+      </Modal>
+    </>
   )
+}
+
+function splitOrderByVendor(order) {
+  const items = Array.isArray(order?.items) ? order.items : []
+  if (!items.length) return []
+
+  const buckets = new Map()
+
+  items.forEach((item, index) => {
+    const vendor = extractItemVendor(item)
+    const vendorKey = vendor._id ? String(vendor._id) : `unknown-${index}`
+    const current = buckets.get(vendorKey) || {
+      _id: `${order._id}:${vendorKey}`,
+      originalOrderId: order._id,
+      orderNumber: order.orderNumber,
+      invoiceNumber: order.invoiceNumber,
+      customerName: order.customerSnapshot?.name || order.user?.name || 'Guest',
+      customerEmail: order.customerSnapshot?.email || order.user?.email || '',
+      customerPhone: order.customerSnapshot?.phone || order.user?.phone || '',
+      address: order.address,
+      status: order.status,
+      paymentStatus: order.paymentStatus,
+      createdAt: order.createdAt,
+      orderTotal: Number(order.total || 0),
+      subtotal: Number(order.subtotal || 0),
+      currency: order.currency,
+      vendorId: vendor._id || null,
+      vendorLabel: vendor.label,
+      vendorBusinessName: vendor.businessName || '',
+      vendorCount: 0,
+      items: [],
+      itemCount: 0,
+      vendorTotal: 0,
+      itemSummary: '',
+      searchBlob: '',
+    }
+
+    current.vendorCount += 1
+    current.items.push(item)
+    current.itemCount += Number(item.quantity || 1)
+    current.vendorTotal += Number(item.lineTotal || Number(item.unitPrice || 0) * Number(item.quantity || 0))
+    current.vendorLabel = current.vendorLabel || vendor.label
+    current.vendorBusinessName = current.vendorBusinessName || vendor.businessName || ''
+    buckets.set(vendorKey, current)
+  })
+
+  return [...buckets.values()].map((slice) => ({
+    ...slice,
+    itemSummary: slice.items.map((item) => item.productSnapshot?.title || 'Product').join(', '),
+    searchBlob: [
+      slice.orderNumber,
+      slice.customerName,
+      slice.customerEmail,
+      slice.customerPhone,
+      slice.vendorLabel,
+      slice.vendorBusinessName,
+      slice.items.map((item) => item.productSnapshot?.title || 'Product').join(' '),
+    ].join(' '),
+  }))
+}
+
+function extractItemVendor(item = {}) {
+  const vendor = item?.productSnapshot?.vendor || item?.vendor || item?.vendorSnapshot || null
+  if (!vendor) {
+    return { _id: null, label: 'Marketplace', businessName: '' }
+  }
+  if (typeof vendor === 'string') {
+    return { _id: vendor, label: 'Vendor', businessName: '' }
+  }
+  const vendorId = vendor._id || vendor.id || vendor.vendorId || null
+  const label = vendor.businessName || vendor.ownerName || vendor.user?.name || vendor.name || 'Vendor'
+  return { _id: vendorId, label, businessName: vendor.businessName || '' }
+}
+
+function formatOrderAddress(address) {
+  if (!address) return 'Address unavailable'
+  if (typeof address === 'string') return address
+  return [
+    address.fullName,
+    address.line1,
+    address.line2,
+    address.city,
+    address.state,
+    address.pincode,
+  ].filter(Boolean).join(', ') || 'Address unavailable'
 }
 
 export function AdminServicesPage() {
@@ -560,7 +832,7 @@ export function AdminServicesPage() {
 
 export function AdminMembershipsPage() {
   return <ResourceListPage module="members" section="memberships" title="Vendor Memberships" fetcher={adminApi.memberships} filters={statusFilters} columns={[
-    { key: ROLES.VENDOR, header: 'Vendor', render: (row) => row.vendor?.businessName || 'Vendor' }, { key: 'plan', header: 'Plan' }, { key: 'price', header: 'Price', render: (row) => formatCurrency(row.price) }, { key: 'status', header: 'Status', render: (row) => <StatusBadge value={row.status} /> },
+    { key: ROLES.VENDOR, header: 'Vendor', render: (row) => row.vendor?.businessName || 'Vendor' }, { key: 'price', header: 'Price', render: (row) => formatCurrency(row.price) }, { key: 'status', header: 'Status', render: (row) => <StatusBadge value={row.status} /> },
   ]} />
 }
 
@@ -623,7 +895,6 @@ export function AdminMembershipApplicationsPage() {
         { key: 'fullName', header: 'Name', render: (row) => row.personal?.fullName || row.submittedBy?.name },
         { key: 'email', header: 'Email', render: (row) => row.personal?.emailAddress || row.submittedBy?.email || 'Not added' },
         { key: 'mobile', header: 'Mobile', render: (row) => row.personal?.mobileNumber || row.submittedBy?.phone || 'Not added' },
-        { key: 'plan', header: 'Membership Plan', render: (row) => row.professional?.membershipPlan || row.membership?.plan || 'Silver' },
         { key: 'source', header: 'Source', render: (row) => row.source || row.sourceLabel || row.applicationSource || row.applicationSourceLabel || 'Online Member' },
         { key: 'region', header: 'Region', render: (row) => row.regionId?.name || 'Not assigned' },
         { key: 'state', header: 'State', render: (row) => row.stateId?.name || 'Not assigned' },
@@ -972,12 +1243,6 @@ export function AdminModuleApplicationsPage({ title }) {
   )
 }
 
-export function AdminPlansPage() {
-  return <ResourceListPage module="members" section="plans" title="Membership Plans" fetcher={adminApi.plans} createAction={adminApi.createPlan} updateAction={adminApi.updatePlan} columns={[
-    { key: 'displayName', header: 'Plan' }, { key: 'name', header: 'Code' }, { key: 'price', header: 'Monthly', render: (row) => formatCurrency(row.price?.monthly) },
-  ]} renderForm={(props) => <SimpleJsonForm {...props} fields={[{ name: 'name' }, { name: 'displayName' }, { name: 'description', type: 'textarea' }]} />} />
-}
-
 export function AdminEventsPage() {
   return <ResourceListPage module="events" section="events" title="Event Management" fetcher={adminApi.events} detailFetcher={adminApi.event} columns={[{ key: 'title', header: 'Title' }, { key: 'type', header: 'Type' }, { key: 'startDate', header: 'Starts', render: (row) => formatDate(row.startDate) }, { key: 'status', header: 'Status', render: (row) => <StatusBadge value={row.status} /> }]} renderDetails={(event) => <div className="space-y-5 text-sm">
     <div className="grid gap-3 sm:grid-cols-2">
@@ -1072,16 +1337,6 @@ export function AdminMembersPage() {
       options: chapters.map(c => ({ value: c._id, label: c.name }))
     },
     {
-      key: 'plan',
-      label: 'Membership Plan',
-      options: [
-        { value: 'free', label: 'Free' },
-        { value: 'silver', label: 'Silver' },
-        { value: 'gold', label: 'Gold' },
-        { value: 'platinum', label: 'Platinum' }
-      ]
-    },
-    {
       key: 'status',
       label: 'Status',
       options: [
@@ -1097,7 +1352,6 @@ export function AdminMembersPage() {
     { key: 'name', header: 'Name', render: (row) => row.name },
     { key: 'email', header: 'Email', render: (row) => row.email },
     { key: 'phone', header: 'Mobile', render: (row) => row.phone || 'N/A' },
-    { key: 'membershipPlan', header: 'Membership Plan', render: (row) => <span className="uppercase font-bold text-xs bg-slate-100 text-slate-700 px-2 py-0.5 rounded">{row.membershipPlan}</span> },
     { key: 'region', header: 'Region', render: (row) => row.region || 'N/A' },
     { key: 'state', header: 'State', render: (row) => row.state || 'N/A' },
     { key: 'district', header: 'District', render: (row) => row.district || 'N/A' },

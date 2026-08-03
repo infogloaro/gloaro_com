@@ -45,7 +45,7 @@ export function VendorProfilePage() {
           if (error.response?.status === 404) return { data: { data: [] } }
           throw error
         }
-      }} columns={[{ key: 'businessName', header: 'Business' }, { key: 'status', header: 'Verification', render: (row) => <StatusBadge value={row.status} /> }, { key: 'plan', header: 'Plan', render: (row) => row.membership?.plan || 'free' }]} />
+      }} columns={[{ key: 'businessName', header: 'Business' }, { key: 'status', header: 'Verification', render: (row) => <StatusBadge value={row.status} /> }]} />
       <ProfilePage />
     </div>
   )
@@ -885,92 +885,6 @@ export function VendorReviewsPage() {
           ))
         )}
       </div>
-    </div>
-  )
-}
-
-export function VendorMembershipPage() {
-  const [history, setHistory] = useState([])
-  const [activeTab, setActiveTab] = useState('membership')
-
-  useEffect(() => {
-    vendorApi.membershipHistory()
-      .then(res => setHistory(res.data?.data || res.data || []))
-      .catch(() => {})
-  }, [])
-
-  return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-black text-slate-900">Subscription & Billing</h2>
-        <p className="text-sm font-semibold text-slate-500">Manage your vendor membership packages, renewal dates, and billing statements.</p>
-      </div>
-
-      <div className="flex gap-2 border-b border-slate-200 pb-px">
-        {['membership', 'renewal', 'billing'].map((tab) => (
-          <button
-            key={tab}
-            onClick={() => setActiveTab(tab)}
-            className={`border-b-2 px-4 py-2 text-xs font-extrabold capitalize transition-all ${
-              activeTab === tab
-                ? 'border-[#0d4697] text-[#0d4697]'
-                : 'border-transparent text-slate-500 hover:text-slate-800'
-            }`}
-          >
-            {tab}
-          </button>
-        ))}
-      </div>
-
-      {activeTab === 'membership' && (
-        <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm space-y-4 text-left max-w-xl">
-          <div className="flex justify-between items-center">
-            <div>
-              <p className="text-xs font-bold text-slate-400">Current Package</p>
-              <h3 className="text-2xl font-black text-slate-800 mt-1 capitalize">{history[0]?.plan || 'Gold Vendor'}</h3>
-            </div>
-            <StatusBadge value={history[0]?.status || 'active'} />
-          </div>
-          <div className="grid grid-cols-2 gap-4 text-xs pt-4 border-t border-slate-100">
-            <div>
-              <p className="font-bold text-slate-400">Price Rate</p>
-              <p className="font-extrabold text-slate-800 mt-0.5">{formatCurrency(history[0]?.price || 12000)} / year</p>
-            </div>
-            <div>
-              <p className="font-bold text-slate-400">Expires Date</p>
-              <p className="font-extrabold text-slate-800 mt-0.5">{formatDate(history[0]?.endDate || new Date(Date.now() + 31536000000))}</p>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {activeTab === 'renewal' && (
-        <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm space-y-4 text-left max-w-xl">
-          <h3 className="text-sm font-black uppercase text-slate-800">Renew Plan Subscription</h3>
-          <p className="text-xs font-semibold text-slate-500 leading-relaxed">
-            Choose to automatically renew your yearly subscription plan or upgrade to Platinum plan to unlock limitless product listings and zero commission.
-          </p>
-          <button
-            onClick={() => toast.success('Plan renewal scheduled!')}
-            className="rounded-lg bg-[#0d4697] px-4 py-2 text-xs font-extrabold text-white hover:bg-blue-800"
-          >
-            Settle Renewal Package
-          </button>
-        </div>
-      )}
-
-      {activeTab === 'billing' && (
-        <DataTable
-          columns={[
-            { key: 'plan', header: 'Plan' },
-            { key: 'billingCycle', header: 'Billing Cycle' },
-            { key: 'price', header: 'Price', render: (row) => formatCurrency(row.price) },
-            { key: 'endDate', header: 'Ends On', render: (row) => formatDate(row.endDate) },
-            { key: 'status', header: 'Status', render: (row) => <StatusBadge value={row.status} /> }
-          ]}
-          rows={history}
-        />
-      )}
     </div>
   )
 }

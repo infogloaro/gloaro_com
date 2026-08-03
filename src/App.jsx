@@ -72,7 +72,6 @@ import {
   AdminMembersPage,
   AdminPaymentsPage,
   AdminOrdersPage,
-  AdminPlansPage,
   AdminProductsPage,
   AdminReferralsPage,
   AdminReviewsPage,
@@ -87,7 +86,6 @@ import VendorDashboard from './pages/vendor/VendorDashboard'
 import VendorCategoryApprovalsPage from './pages/vendor/VendorCategoryApprovalsPage'
 import {
   VendorLeadsPage,
-  VendorMembershipPage,
   VendorNotificationsPage,
   VendorPaymentsPage,
   VendorAnalyticsPage,
@@ -326,7 +324,6 @@ function App() {
               <Route path="/vendor/orders" element={<VendorOrdersPage />} />
               <Route path="/vendor/leads" element={<VendorLeadsPage />} />
               <Route path="/vendor/reviews" element={<VendorReviewsPage />} />
-              <Route path="/vendor/membership" element={<VendorMembershipPage />} />
               <Route path="/vendor/payments" element={<VendorPaymentsPage />} />
               <Route path="/vendor/analytics" element={<VendorAnalyticsPage />} />
               <Route path="/vendor/notifications" element={<VendorNotificationsPage />} />
@@ -389,7 +386,6 @@ function App() {
               <Route path="/member/dashboard/reviews" element={<VendorReviewsPage />} />
               <Route path="/member/dashboard/payments" element={<VendorPaymentsPage />} />
               <Route path="/member/dashboard/notifications" element={<VendorNotificationsPage />} />
-              <Route path="/member/dashboard/subscription" element={<VendorMembershipPage />} />
               <Route path="/member/dashboard/vendor-analytics" element={<VendorDashboard />} />
             </Route>
             </Route>

@@ -76,19 +76,19 @@ function useQueryState() {
 }
 
 function getProductImage(product, variant) {
-  return variant?.images?.[0]?.url || product.images?.[0]?.url || product.vendor?.logo?.url || '/logo.png'
+  return variant?.images?.[0]?.url || product?.images?.[0]?.url || product?.vendor?.logo?.url || '/logo.png'
 }
 
 function getBrand(product) {
-  return product.brand || product.vendor?.businessName || product.vendor?.ownerName || 'Gloaro partner'
+  return product?.brand || product?.vendor?.businessName || product?.vendor?.ownerName || 'Gloaro partner'
 }
 
 function getPrice(product, variant) {
-  return Number(variant?.price ?? product.pricing?.sellingPrice ?? 0)
+  return Number(variant?.price ?? product?.pricing?.sellingPrice ?? 0)
 }
 
 function getOriginalPrice(product, variant) {
-  return Number(variant?.originalPrice ?? product.pricing?.mrp ?? product.pricing?.sellingPrice ?? 0)
+  return Number(variant?.originalPrice ?? product?.pricing?.mrp ?? product?.pricing?.sellingPrice ?? 0)
 }
 
 function getDiscount(product, variant) {
@@ -99,14 +99,15 @@ function getDiscount(product, variant) {
 }
 
 function getStockStatus(product, variant) {
-  const quantity = Number(variant?.stock ?? product.inventory?.quantity ?? 0)
-  if (product.inventory?.isUnlimited) return 'In stock'
+  const quantity = Number(variant?.stock ?? product?.inventory?.quantity ?? 0)
+  if (product?.inventory?.isUnlimited) return 'In stock'
   if (quantity <= 0) return 'Out of stock'
-  if (quantity <= Number(product.inventory?.lowStockAlert || 10)) return 'Limited stock'
+  if (quantity <= Number(product?.inventory?.lowStockAlert || 10)) return 'Limited stock'
   return 'In stock'
 }
 
 function getBadge(product) {
+  if (!product) return 'Popular'
   if (!product.inventory?.isUnlimited && Number(product.inventory?.quantity || 0) <= 0) return 'Out of stock'
   if (product.isFeatured) return 'Featured'
   if (product.stats?.totalReviews >= 50) return 'Best Seller'
@@ -116,11 +117,11 @@ function getBadge(product) {
 }
 
 function getRating(product) {
-  return Number(product.stats?.avgRating || product.vendor?.stats?.avgRating || 0)
+  return Number(product?.stats?.avgRating || product?.vendor?.stats?.avgRating || 0)
 }
 
 function getReviewCount(product) {
-  return Number(product.stats?.totalReviews || product.vendor?.stats?.totalReviews || 0)
+  return Number(product?.stats?.totalReviews || product?.vendor?.stats?.totalReviews || 0)
 }
 
 function getAverageReviewRating(reviews = [], fallback = 0) {
@@ -130,8 +131,8 @@ function getAverageReviewRating(reviews = [], fallback = 0) {
 }
 
 function getPopularityScore(product) {
-  const sales = Number(product.stats?.orders || product.stats?.sales || product.stats?.totalOrders || product.stats?.sold || 0)
-  const views = Number(product.stats?.views || product.stats?.totalViews || 0)
+  const sales = Number(product?.stats?.orders || product?.stats?.sales || product?.stats?.totalOrders || product?.stats?.sold || 0)
+  const views = Number(product?.stats?.views || product?.stats?.totalViews || 0)
   const reviews = getReviewCount(product)
   return (sales * 1000) + (views * 10) + (reviews * 25) + (getRating(product) * 100)
 }
@@ -802,7 +803,18 @@ export function DetailPage({ type }) {
           </div>
 
           <SpecsSection item={item} />
-          <ReviewsSection reviews={productReviews} vendor={vendor} productId={item._id} />
+          <ReviewsSection
+            reviews={productReviews}
+            vendor={vendor}
+            productId={item._id}
+            onReviewSubmitted={(review) => {
+              if (!review?._id) return
+              setReviews((current) => {
+                if (current.some((entry) => String(entry._id) === String(review._id))) return current
+                return [review, ...current]
+              })
+            }}
+          />
           <FrequentlyBoughtTogether products={relatedItems} />
           {relatedItems.length > 0 && (
             <RelatedStrip items={relatedItems} />
@@ -2194,27 +2206,67 @@ function SpecsSection({ item }) {
   )
 }
 
-function ReviewsSection({ reviews, vendor, productId = null }) {
+function ReviewsSection({ reviews, vendor, productId = null, onReviewSubmitted = null }) {
+  const [sortBy, setSortBy] = useState('newest')
+  const sortedReviews = useMemo(() => {
+    const list = [...reviews]
+    const sorters = {
+      newest: (a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime(),
+      highest: (a, b) => Number(b.rating || 0) - Number(a.rating || 0),
+      lowest: (a, b) => Number(a.rating || 0) - Number(b.rating || 0),
+    }
+    return list.sort(sorters[sortBy] || sorters.newest)
+  }, [reviews, sortBy])
+
   return (
     <section className="rounded-[2.5rem] border border-slate-200/80 bg-white p-6 shadow-[0_15px_50px_rgba(11,36,81,0.08)]">
-      <h2 className="font-playfair text-2xl font-black text-navy">Customer reviews</h2>
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <p className="font-jakarta text-[10px] font-black uppercase tracking-[0.28em] text-slate-400">Customer reviews</p>
+          <h2 className="mt-1 font-playfair text-2xl font-black text-navy">Ratings and feedback</h2>
+        </div>
+        <div className="rounded-2xl bg-amber-50 px-4 py-3 text-right">
+          <div className="text-base font-black text-amber-700">
+            {getAverageReviewRating(sortedReviews, 0).toFixed(1)} <Star className="inline h-4 w-4 fill-current" />
+          </div>
+          <p className="text-[11px] font-semibold text-amber-700/80">{sortedReviews.length} review{sortedReviews.length === 1 ? '' : 's'}</p>
+        </div>
+      </div>
+
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-slate-50 p-3">
+        <p className="text-xs font-black uppercase tracking-[0.22em] text-slate-400">Sort reviews</p>
+        <select value={sortBy} onChange={(event) => setSortBy(event.target.value)} className="h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold outline-none transition focus:border-navy/40">
+          <option value="newest">Newest</option>
+          <option value="highest">Highest Rated</option>
+          <option value="lowest">Lowest Rated</option>
+        </select>
+      </div>
+
       <div className="mt-4 space-y-3">
-        {reviews.length ? reviews.map((review) => (
+        {sortedReviews.length ? sortedReviews.map((review) => (
           <div key={review._id} className="rounded-xl bg-gradient-to-r from-slate-50 to-slate-100/50 p-4">
-            <div className="flex items-center justify-between">
-              <p className="font-bold text-navy">{review.title || 'Review'}</p>
-              <p className="text-xs font-black text-amber-500">{review.rating} / 5</p>
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <p className="font-bold text-navy">{review.title || 'Review'}</p>
+                {review.status && review.status !== 'approved' && (
+                  <span className="rounded-full bg-amber-50 px-2.5 py-1 text-[10px] font-black uppercase tracking-wide text-amber-700 ring-1 ring-amber-200">
+                    {review.status.replace(/_/g, ' ')}
+                  </span>
+                )}
+              </div>
+              <p className="text-xs font-black text-amber-500">{Number(review.rating || 0).toFixed(1)} / 5</p>
             </div>
             <p className="mt-2 text-sm font-medium leading-6 text-slate-600">{review.comment}</p>
+            <p className="mt-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">{formatDate(review.createdAt)}</p>
           </div>
         )) : <EmptyState title="No reviews yet" description={`Be the first to review ${vendor.businessName || 'this store'}.`} />}
       </div>
-      <ReviewBox vendor={vendor?._id} productId={productId} />
+      <ReviewBox vendor={vendor?._id} productId={productId} onSubmitted={onReviewSubmitted} />
     </section>
   )
 }
 
-function ReviewBox({ vendor, productId = null }) {
+function ReviewBox({ vendor, productId = null, onSubmitted = null }) {
   const [form, setForm] = useState({ rating: '5', title: '', comment: '' })
   const [submitting, setSubmitting] = useState(false)
   const submit = async (event) => {
@@ -2230,7 +2282,9 @@ function ReviewBox({ vendor, productId = null }) {
     }
     setSubmitting(true)
     try {
-      await customerApi.createReview({ vendor, product: productId || undefined, rating: Number(form.rating), title: form.title, comment: form.comment })
+      const response = await customerApi.createReview({ vendor, product: productId || undefined, rating: Number(form.rating), title: form.title, comment: form.comment })
+      const createdReview = response?.data?.data || response?.data || null
+      if (createdReview && onSubmitted) onSubmitted(createdReview)
       toast.success('Review submitted')
       setForm({ rating: '5', title: '', comment: '' })
     } catch (error) {
@@ -2242,10 +2296,32 @@ function ReviewBox({ vendor, productId = null }) {
   return (
     <form onSubmit={submit} className="mt-5 rounded-xl border border-slate-200 p-4">
       <h3 className="font-playfair text-lg font-bold text-navy">Write a review</h3>
-      <div className="mt-3 grid gap-3 md:grid-cols-3">
-        <input value={form.rating} onChange={(event) => setForm((current) => ({ ...current, rating: event.target.value }))} type="number" min="1" max="5" step="1" className="h-11 rounded-xl border border-slate-200 px-3 text-sm font-semibold outline-none transition focus:border-navy/40" />
+      <div className="mt-3">
+        <p className="text-sm font-bold text-slate-700">Your rating</p>
+        <div className="mt-2 flex flex-wrap items-center gap-2">
+          {[1, 2, 3, 4, 5].map((value) => (
+            <button
+              key={value}
+              type="button"
+              onClick={() => setForm((current) => ({ ...current, rating: String(value) }))}
+              className={`grid h-11 w-11 place-items-center rounded-xl border transition ${
+                Number(form.rating) >= value
+                  ? 'border-amber-200 bg-amber-50 text-amber-500 shadow-sm'
+                  : 'border-slate-200 bg-white text-slate-300 hover:border-amber-200 hover:text-amber-400'
+              }`}
+              aria-label={`${value} star${value === 1 ? '' : 's'}`}
+              aria-pressed={Number(form.rating) >= value}
+            >
+              <Star className={`h-5 w-5 ${Number(form.rating) >= value ? 'fill-current' : ''}`} />
+            </button>
+          ))}
+          <span className="ml-2 text-sm font-semibold text-slate-500">{form.rating} / 5</span>
+        </div>
+      </div>
+
+      <div className="mt-3 grid gap-3 md:grid-cols-2">
         <input value={form.title} onChange={(event) => setForm((current) => ({ ...current, title: event.target.value }))} placeholder="Review title" className="h-11 rounded-xl border border-slate-200 px-3 text-sm font-semibold outline-none transition focus:border-navy/40" />
-        <input value={form.comment} onChange={(event) => setForm((current) => ({ ...current, comment: event.target.value }))} placeholder="Share your experience" className="h-11 rounded-xl border border-slate-200 px-3 text-sm font-semibold outline-none transition focus:border-navy/40" />
+        <input value={form.comment} onChange={(event) => setForm((current) => ({ ...current, comment: event.target.value }))} placeholder="Share your experience" className="h-11 rounded-xl border border-slate-200 px-3 text-sm font-semibold outline-none transition focus:border-navy/40 md:col-span-1" />
       </div>
       <button type="submit" disabled={submitting} className="mt-4 rounded-xl bg-gradient-to-r from-navy to-royal px-4 py-3 text-sm font-black text-white shadow-md transition hover:from-navy/90 hover:to-royal/90 disabled:opacity-60">
         {submitting ? 'Submitting...' : 'Submit Review'}

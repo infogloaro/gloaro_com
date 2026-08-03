@@ -142,7 +142,6 @@ export const memberVendorNav = [
   ['Leads', '/member/dashboard/leads', Ticket],
   ['Reviews', '/member/dashboard/reviews', Star],
   ['Payments', '/member/dashboard/payments', CreditCard],
-  ['Membership', '/member/dashboard/subscription', ToggleLeft],
   ['Analytics', '/member/dashboard/vendor-analytics', BarChart3],
 ]
 
@@ -236,7 +235,6 @@ const memberVendorMarketplaceChildren = [
   ['Leads', '/member/dashboard/leads', Ticket],
   ['Reviews', '/member/dashboard/reviews', Star],
   ['Payments', '/member/dashboard/payments', CreditCard],
-  ['Subscription', '/member/dashboard/subscription', ToggleLeft],
   ['Analytics', '/member/dashboard/vendor-analytics', BarChart3],
 ]
 
@@ -313,7 +311,6 @@ const commonModules = [
       ['Vendor Category Requests', '/vendor-category-approvals', Workflow],
       ['Orders', '/orders', ShoppingBag],
       ['Payments', '/payments', CreditCard],
-      ['Subscription', '/subscription', ToggleLeft]
     ]
   },
   {

@@ -38,7 +38,6 @@ export default function VendorDashboard() {
 
   const vendor = data.vendor || {}
   const stats = data.stats || {}
-  const membership = data.membership || vendor.membership || {}
   const address = [vendor.address?.street, vendor.address?.city, vendor.address?.state, vendor.address?.pincode].filter(Boolean).join(', ')
 
   return (
@@ -58,21 +57,9 @@ export default function VendorDashboard() {
             <div className="mt-6 flex flex-wrap gap-3">
               <StatusBadge value={vendor.status || 'pending'} />
               <StatusBadge value={vendor.isVerified ? 'verified' : 'verification pending'} />
-              <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-extrabold capitalize text-white">{membership.plan || 'free'} plan</span>
             </div>
           </div>
 
-          <div className="rounded-lg border border-white/15 bg-white/10 p-4">
-            <p className="text-sm font-bold text-slate-200">Membership Status</p>
-            <div className="mt-3 flex items-center justify-between gap-3">
-              <div>
-                <p className="text-2xl font-black capitalize">{membership.plan || 'free'}</p>
-                <p className="mt-1 text-xs font-semibold text-slate-200">Expires {formatDate(membership.endDate)}</p>
-              </div>
-              <StatusBadge value={membership.status || (membership.isActive ? 'active' : 'pending')} />
-            </div>
-            <Link to={routeFor('/membership', '/subscription')} className="mt-4 inline-flex items-center gap-2 rounded-md bg-[#ffb20c] px-4 py-2 text-sm font-extrabold text-[#0b1f3d]">Manage Plan <ArrowRight className="h-4 w-4" /></Link>
-          </div>
         </div>
       </section>
 
