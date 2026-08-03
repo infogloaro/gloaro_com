@@ -1,3 +1,4 @@
+import { lazy, Suspense } from 'react'
 import { Navigate, Route, Routes, Outlet } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
 import { adminNav, customerNav, membershipNav, memberNav, vendorNav, secretaryNav, regionDirectorNav, stateDirectorNav, districtDirectorNav, chapterDirectorNav, presidentNav, vicePresidentNav } from './constants/navigation'
@@ -15,7 +16,6 @@ import ResetPassword from './pages/auth/ResetPassword'
 import VerifyEmail from './pages/auth/VerifyEmail'
 import AdminDashboard from './pages/admin/AdminDashboard'
 import AdminAnalytics from './pages/admin/AdminAnalytics'
-import AdminNotifications from './pages/admin/AdminNotifications'
 import AdminManagementPage from './pages/admin/AdminManagementPage'
 import AdminVendorApplicationsPage from './pages/admin/AdminVendorApplicationsPage'
 import AdminVendorCategoryApprovalsPage from './pages/admin/AdminVendorCategoryApprovalsPage'
@@ -126,6 +126,7 @@ import MembershipApplication from './pages/public/MembershipApplication'
 import MembershipQualification from './pages/public/MembershipQualification'
 import MembershipApplicationTrack from './pages/public/MembershipApplicationTrack'
 import LegalPage from './pages/public/LegalPage'
+const AboutPage = lazy(() => import('./pages/public/AboutPage'))
 import MembershipDashboard from './pages/membership/MembershipDashboard'
 import MemberDashboard from './pages/membership/MemberDashboard'
 import VendorApplicationForm from './pages/membership/VendorApplicationForm'
@@ -235,7 +236,9 @@ function App() {
     { path: '/notifications', element: <NotificationsPage /> },
     { path: '/tasks', element: <TaskManagementPage /> },
     { path: '/calendar', element: <EnterpriseCalendarPage /> },
-    { path: '/broadcast-notifications', element: <AdminNotifications /> },
+    { path: '/network', element: <CommunityPage scope="network" />, roles: [ROLES.ADMIN, ROLES.SUPERADMIN] },
+    { path: '/wall', element: <BusinessWall />, roles: [ROLES.ADMIN, ROLES.SUPERADMIN] },
+    { path: '/chat', element: <ChatSystem />, roles: [ROLES.ADMIN, ROLES.SUPERADMIN] },
     { path: '/audit-logs', element: <AuditLogsPage /> },
     { path: '/system-logs', element: <SystemLogsPage />, roles: [ROLES.SUPERADMIN, ROLES.ADMIN] },
     { path: '/profile', element: <MembershipProfilePage /> },
@@ -291,6 +294,7 @@ function App() {
           <Route path="/membership-applications" element={<MembershipApplicationsRedirect />} />
           <Route path="/membership-qualification" element={<MembershipQualification />} />
           <Route path="/membership-application/track" element={<MembershipApplicationTrack />} />
+          <Route path="/about" element={<Suspense fallback={<LoadingScreen />}><AboutPage /></Suspense>} />
           <Route path="/terms-and-conditions" element={<LegalPage type="terms" />} />
           <Route path="/privacy-policy" element={<LegalPage type="privacy" />} />
         </Route>

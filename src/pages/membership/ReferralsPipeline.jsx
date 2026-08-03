@@ -9,6 +9,7 @@ import {
   Search,
   Shield,
   UserCheck,
+  UserPlus,
   Users,
   X,
 } from 'lucide-react'
@@ -142,14 +143,18 @@ export default function ReferralsPipeline() {
   const [referralCode, setReferralCode] = useState(user?.referralCode || '')
   const [codeStatus, setCodeStatus] = useState(user?.referralCode ? 'active' : 'inactive')
   const [codeLoading, setCodeLoading] = useState(true)
+  const [page, setPage] = useState(1)
+  const [pagination, setPagination] = useState({ page: 1, limit: 10, total: 0 })
 
-  const query = useMemo(() => ({ status, search: search.trim() || undefined }), [status, search])
+  const query = useMemo(() => ({ status, search: search.trim() || undefined, page }), [status, search, page])
 
   useEffect(() => {
     communityApi.getMySignupReferrals(query)
       .then((res) => {
-        setReferrals(res.data?.data || [])
+        const rows = res.data?.data || []
+        setReferrals((current) => page > 1 ? [...current, ...rows] : rows)
         setStats(res.data?.stats || {})
+        setPagination(res.data?.pagination || { page: 1, limit: 10, total: 0 })
       })
       .catch(() => {
         toast.error('Failed to load referral tracking')
@@ -157,6 +162,7 @@ export default function ReferralsPipeline() {
       .finally(() => {
         setLoading(false)
       })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [query])
 
   useEffect(() => {
@@ -198,6 +204,7 @@ export default function ReferralsPipeline() {
     return <LoadingScreen label="Loading referrals command center..." />
   }
 
+  const hasMore = pagination.total > page * pagination.limit
   const isReferralCodeActive = Boolean(referralCode && codeStatus === 'active')
   const referralCodeStatusLabel = codeLoading ? 'Loading' : isReferralCodeActive ? 'Active' : 'Unavailable'
 
@@ -225,10 +232,11 @@ export default function ReferralsPipeline() {
           </div>
         </div>
 
-        <div className="grid gap-4 rounded-xl border border-slate-100 bg-slate-50/50 p-4 sm:grid-cols-2 lg:w-[720px] lg:grid-cols-5">
+        <div className="grid gap-4 rounded-xl border border-slate-100 bg-slate-50/50 p-4 sm:grid-cols-2 lg:w-[780px] lg:grid-cols-3 xl:grid-cols-6">
           <StatCard icon={Users} label="Total Registrations" value={stats.totalRegistrations || stats.totalUsed || 0} tone="text-blue-600" />
           <StatCard icon={AlertCircle} label="Pending Approval" value={stats.pendingApproval || 0} tone="text-amber-600" />
           <StatCard icon={UserCheck} label="Approved Members" value={stats.approvedMembers || 0} tone="text-emerald-600" />
+          <StatCard icon={UserPlus} label="Joined Members" value={stats.joined || 0} tone="text-teal-600" />
           <StatCard icon={Shield} label="Rejected" value={stats.rejected || 0} tone="text-red-600" />
           <StatCard icon={CheckCircle} label="Conversion Rate" value={`${stats.conversionRate || 0}%`} tone="text-[#0d4697]" />
         </div>
@@ -243,14 +251,14 @@ export default function ReferralsPipeline() {
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
             <div className="flex flex-wrap gap-2">
               {filters.map(([key, label]) => (
-                <button key={key} onClick={() => setStatus(key)} className={`rounded-full px-3 py-1.5 text-[11px] font-black transition ${status === key ? 'bg-[#0d4697] text-white' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}>
+                <button key={key} onClick={() => { setPage(1); setStatus(key) }} className={`rounded-full px-3 py-1.5 text-[11px] font-black transition ${status === key ? 'bg-[#0d4697] text-white' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}>
                   {label}
                 </button>
               ))}
             </div>
             <label className="flex h-10 min-w-0 items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 text-xs font-bold text-slate-500 sm:w-72">
               <Search className="h-4 w-4 shrink-0 text-slate-400" />
-              <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search name, mobile, code, chapter" className="min-w-0 flex-1 bg-transparent text-slate-900 caret-[#0d4697] outline-none placeholder:text-slate-400" />
+              <input value={search} onChange={(event) => { setPage(1); setSearch(event.target.value) }} placeholder="Search name, mobile, code, chapter" className="min-w-0 flex-1 bg-transparent text-slate-900 caret-[#0d4697] outline-none placeholder:text-slate-400" />
             </label>
           </div>
         </div>
@@ -305,6 +313,14 @@ export default function ReferralsPipeline() {
             </tbody>
           </table>
         </div>
+
+        {hasMore && (
+          <div className="mt-4 flex justify-center">
+            <button onClick={() => setPage((p) => p + 1)} className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-2 text-xs font-extrabold text-[#0d4697] shadow-sm transition hover:bg-slate-100">
+              Load more referrals
+            </button>
+          </div>
+        )}
       </section>
 
       {detailLoading && <LoadingScreen label="Loading referral details..." />}

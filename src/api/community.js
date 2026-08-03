@@ -34,6 +34,11 @@ export const communityApi = {
   getDirectory: (params, config) => api.get('/community/directory', { params, ...config }),
   getMentions: (params) => api.get('/community/mentions', { params }),
 
+  // 6b. Chapter Community switcher (Super Admin / Admin)
+  getChapterList: () => api.get('/community/chapters'),
+  getChapterCommunity: (chapterId) => api.get(`/community/chapter/${chapterId}`),
+  getChapterMembers: (chapterId, params, config) => api.get(`/community/members/${chapterId}`, { params, ...config }),
+
   // 6b. Organization filters
   getRegions: (scope) => api.get('/organization/regions', { params: scope ? { scope } : undefined }),
   getStates: (regionId, scope) => api.get('/organization/states', { params: { regionId, ...(scope ? { scope } : {}) } }),

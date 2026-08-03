@@ -12,10 +12,10 @@ const links = {
   ],
   useful: [
     ['Membership', '/register'],
+    ['About', '/about'],
     ['Events', '/#events'],
     ['Shop', '/products'],
     ['Services', '/services'],
-    ['B2B Marketplace', '/vendors'],
   ],
 }
 

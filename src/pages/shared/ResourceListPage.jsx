@@ -60,6 +60,8 @@ export default function ResourceListPage({
     try {
       const response = await fetcher(params)
       setPayload(response.data)
+      const nextPayload = response.data
+      setPayload(nextPayload)
     } finally {
       setLoading(false)
     }

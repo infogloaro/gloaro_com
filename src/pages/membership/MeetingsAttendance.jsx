@@ -1,4 +1,6 @@
+
 import { useCallback, useEffect, useMemo, useState } from 'react'
+
 import { customerApi } from '../../api/customer'
 import { attendanceApi } from '../../api/attendance'
 import LoadingScreen from '../../components/common/LoadingScreen'
@@ -21,6 +23,7 @@ export default function MeetingsAttendance() {
   const [attendanceSummary, setAttendanceSummary] = useState({ present: 0, absent: 0, attendanceRate: 0 })
   const [loading, setLoading] = useState(true)
   const [selectedMeeting, setSelectedMeeting] = useState(null)
+  const [summary, setSummary] = useState({ attendanceRate: 0, present: 0, absent: 0 })
 
   const loadPageData = useCallback(async ({ silent = false } = {}) => {
     if (!silent) setLoading(true)
@@ -71,7 +74,7 @@ export default function MeetingsAttendance() {
   return (
     <div className="space-y-6">
       {/* Attendance Stats Cards */}
-      <div className="grid gap-4 sm:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-3">
         <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
           <p className="text-xs font-extrabold uppercase tracking-wider text-slate-400">Total Meetings</p>
           <p className="mt-2 text-2xl font-black text-[#0d4697]">{meetings.length}</p>
