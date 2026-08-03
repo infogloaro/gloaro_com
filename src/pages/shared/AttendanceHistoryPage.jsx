@@ -1,7 +1,10 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+
+import { useCallback, useEffect, useRef, useMemo, useState } from 'react'
+
 import { useSearchParams } from 'react-router-dom'
 import toast from 'react-hot-toast'
-import { CalendarDays, CheckCircle2, RotateCcw, Search, UserCheck, UserX } from 'lucide-react'
+import { CalendarDays, CheckCircle2, MapPinned, RotateCcw, Search, UserCheck, UserX } from 'lucide-react'
+import api from '../../api/axios'
 import { attendanceApi } from '../../api/attendance'
 import { secretaryApi } from '../../api/secretary'
 import EmptyState from '../../components/common/EmptyState'
@@ -10,10 +13,12 @@ import Pagination from '../../components/common/Pagination'
 import StatusBadge from '../../components/common/StatusBadge'
 import StatCard from '../../components/dashboard/StatCard'
 
-const emptyFilters = { search: '', status: '', role: '', event: '', member: '', secretary: '', startDate: '', endDate: '', region: '', state: '', district: '', chapter: '', sort: 'newest' }
-const formatDate = (value) => value ? new Date(value).toLocaleDateString('en-IN') : '-'
-const formatTime = (value) => value ? new Date(value).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) : '-'
+const emptyFilters = { search: '', status: '', event: '', date: '', region: '' }
+const formatDate = (value) => (value ? new Date(value).toLocaleDateString('en-IN') : '-')
+const formatTime = (value) => (value ? new Date(value).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) : '-')
 const fieldClass = 'h-10 min-w-0 rounded-md border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-800 outline-none focus:border-[#1558b0]'
+
+const normalizeSearch = (value = '') => value.trim().replace(/\s+/g, ' ')
 
 export default function AttendanceHistoryPage() {
   const [searchParams] = useSearchParams()
@@ -27,11 +32,57 @@ export default function AttendanceHistoryPage() {
   const [loading, setLoading] = useState(true)
   const [savingId, setSavingId] = useState('')
   const hasLoadedRef = useRef(false)
+  const [locations, setLocations] = useState([])
+  const [loadingLocations, setLoadingLocations] = useState(true)
+
+  useEffect(() => {
+    let active = true
+
+    api.get('/organization/locations')
+      .then((response) => {
+        if (!active) return
+        setLocations(response.data?.data?.locations || [])
+      })
+      .catch((error) => {
+        console.error('Unable to load attendance location filters', error)
+        if (active) setLocations([])
+      })
+      .finally(() => {
+        if (active) setLoadingLocations(false)
+      })
+
+    return () => {
+      active = false
+    }
+  }, [])
+
+  const regionOptions = useMemo(
+    () => locations
+      .filter((location) => location.type === 'region')
+      .map((location) => ({
+        value: location.code || location.name || location._id,
+        label: location.name || location.code || 'Region',
+      })),
+    [locations],
+  )
 
   const load = useCallback(async () => {
     if (!hasLoadedRef.current) setLoading(true)
     try {
-      const response = await attendanceApi.list({ ...filters, eventId: eventId || undefined, page, limit: 20 })
+      const search = normalizeSearch(filters.search)
+      const event = normalizeSearch(filters.event)
+      const response = await attendanceApi.list({
+        eventId: eventId || undefined,
+        page,
+        limit: 20,
+        search: search || undefined,
+        status: filters.status || undefined,
+        event: event || undefined,
+        region: filters.region || undefined,
+        startDate: filters.date || undefined,
+        endDate: filters.date || undefined,
+      })
+
       setRows(response.data?.data || [])
       const hasActiveFilters = Boolean(
         filters.search || filters.status || filters.role || filters.event || filters.member ||
@@ -47,16 +98,23 @@ export default function AttendanceHistoryPage() {
       hasLoadedRef.current = true
       setLoading(false)
     }
-  }, [eventId, filters, page])
+  }, [eventId, filters.date, filters.event, filters.region, filters.search, filters.status, page])
 
   useEffect(() => {
     const timer = window.setTimeout(load, filters.search ? 300 : 0)
     return () => window.clearTimeout(timer)
   }, [filters.search, load])
 
-  const setFilter = (key, value) => { setFilters((current) => ({ ...current, [key]: value })); setPage(1) }
+  const setFilter = (key, value) => {
+    setFilters((current) => ({ ...current, [key]: value }))
+    setPage(1)
+  }
+
   const visible = (key) => permissions.visibleColumns?.includes(key)
-  const reset = () => { setFilters(emptyFilters); setPage(1) }
+  const reset = () => {
+    setFilters(emptyFilters)
+    setPage(1)
+  }
 
   const mark = async (row, status) => {
     setSavingId(row._id)

@@ -127,7 +127,7 @@ export default function ProfilePage() {
       {/* Top Banner Card */}
       <div className="relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-          <div className="grid h-16 w-16 place-items-center rounded-2xl bg-[#0d4697] text-2xl font-black text-white">
+          <div className="grid h-16 w-16 place-items-center rounded-2xl bg-[#0d4697] text-2xl font-black text-white shadow-md">
             {user?.name?.slice(0, 2).toUpperCase()}
           </div>
           <div>
@@ -184,31 +184,16 @@ export default function ProfilePage() {
                 </h3>
                 <div className="mt-5 grid gap-4 sm:grid-cols-2">
                   <FormField label="Full Name">
-                    <input {...regProfile('name', { required: true })} className="h-11 w-full rounded-md border border-slate-300 bg-white px-3 text-slate-900 outline-none focus:border-[#0d4697]" />
+                    <input {...regProfile('name')} className="h-11 w-full rounded-md border border-slate-300 bg-white px-3 text-slate-800 outline-none focus:border-[#0d4697]" />
                   </FormField>
                   <FormField label="Email (Read-only)">
-                    <input {...regProfile('email')} disabled className="h-11 w-full rounded-md border border-slate-300 bg-slate-100 px-3 text-slate-500 outline-none" />
+                    <input {...regProfile('email')} disabled className="h-11 w-full rounded-md border border-slate-300 bg-slate-50 px-3 text-slate-500 outline-none" />
                   </FormField>
                   <FormField label="Mobile Number">
-                    <input {...regProfile('phone')} className="h-11 w-full rounded-md border border-slate-300 bg-white px-3 text-slate-900 outline-none focus:border-[#0d4697]" />
-                  </FormField>
-                  <FormField label="Street Address">
-                    <input {...regProfile('address.street')} className="h-11 w-full rounded-md border border-slate-300 bg-white px-3 text-slate-900 outline-none focus:border-[#0d4697]" />
-                  </FormField>
-                  <FormField label="City">
-                    <input {...regProfile('address.city')} className="h-11 w-full rounded-md border border-slate-300 bg-white px-3 text-slate-900 outline-none focus:border-[#0d4697]" />
-                  </FormField>
-                  <FormField label="State">
-                    <input {...regProfile('address.state')} className="h-11 w-full rounded-md border border-slate-300 bg-white px-3 text-slate-900 outline-none focus:border-[#0d4697]" />
-                  </FormField>
-                  <FormField label="Country">
-                    <input {...regProfile('address.country')} className="h-11 w-full rounded-md border border-slate-300 bg-white px-3 text-slate-900 outline-none focus:border-[#0d4697]" />
-                  </FormField>
-                  <FormField label="Pincode">
-                    <input {...regProfile('address.pincode')} className="h-11 w-full rounded-md border border-slate-300 bg-white px-3 text-slate-900 outline-none focus:border-[#0d4697]" />
+                    <input {...regProfile('phone')} className="h-11 w-full rounded-md border border-slate-300 bg-white px-3 text-slate-800 outline-none focus:border-[#0d4697]" />
                   </FormField>
                 </div>
-                <button disabled={isSubmitting} type="submit" className="mt-5 h-11 rounded-md bg-[#0d4697] px-5 text-sm font-extrabold text-white hover:bg-blue-800">
+                <button disabled={isSubmitting} type="submit" className="mt-5 h-11 rounded-md bg-[#0d4697] px-5 text-sm font-extrabold text-white hover:bg-blue-800 transition">
                   Update Profile
                 </button>
               </form>
@@ -221,16 +206,16 @@ export default function ProfilePage() {
                 </h3>
                 <div className="mt-5 grid gap-4 sm:grid-cols-3">
                   <FormField label="Old Password">
-                    <input type="password" {...regPassword('oldPassword', { required: true })} className="h-11 w-full rounded-md border border-slate-300 bg-white px-3 text-slate-900 outline-none focus:border-[#0d4697]" />
+                    <input type="password" {...regPassword('oldPassword', { required: true })} className="h-11 w-full rounded-md border border-slate-300 bg-white px-3 text-slate-800 outline-none focus:border-[#0d4697]" />
                   </FormField>
                   <FormField label="New Password">
-                    <input type="password" {...regPassword('newPassword', { required: true })} className="h-11 w-full rounded-md border border-slate-300 bg-white px-3 text-slate-900 outline-none focus:border-[#0d4697]" />
+                    <input type="password" {...regPassword('newPassword', { required: true })} className="h-11 w-full rounded-md border border-slate-300 bg-white px-3 text-slate-800 outline-none focus:border-[#0d4697]" />
                   </FormField>
                   <FormField label="Confirm New Password">
-                    <input type="password" {...regPassword('confirmPassword', { required: true })} className="h-11 w-full rounded-md border border-slate-300 bg-white px-3 text-slate-900 outline-none focus:border-[#0d4697]" />
+                    <input type="password" {...regPassword('confirmPassword', { required: true })} className="h-11 w-full rounded-md border border-slate-300 bg-white px-3 text-slate-800 outline-none focus:border-[#0d4697]" />
                   </FormField>
                 </div>
-                <button disabled={updatingPassword} type="submit" className="mt-5 h-11 rounded-md bg-slate-950 px-5 text-sm font-extrabold text-white hover:bg-slate-800">
+                <button disabled={updatingPassword} type="submit" className="mt-5 h-11 rounded-md bg-slate-950 px-5 text-sm font-extrabold text-white hover:bg-slate-800 transition">
                   Change Password
                 </button>
               </form>
@@ -248,7 +233,7 @@ export default function ProfilePage() {
             </h3>
             <div className="mt-4 space-y-4">
               <div className="flex items-start gap-3">
-                <MapPin className="h-5 w-5 shrink-0 text-slate-400" />
+                <MapPin className="h-5 w-5 shrink-0 text-[#0d4697]" />
                 <div>
                   <p className="text-[10px] font-extrabold uppercase tracking-wide text-slate-400">Assigned Location</p>
                   <p className="text-sm font-bold text-slate-800">{orgLabel}</p>
@@ -256,7 +241,7 @@ export default function ProfilePage() {
               </div>
 
               <div className="flex items-start gap-3">
-                <UserCheck className="h-5 w-5 shrink-0 text-slate-400" />
+                <UserCheck className="h-5 w-5 shrink-0 text-[#0d4697]" />
                 <div>
                   <p className="text-[10px] font-extrabold uppercase tracking-wide text-slate-400">Reporting Manager</p>
                   <p className="text-sm font-bold text-slate-800">
@@ -266,7 +251,7 @@ export default function ProfilePage() {
               </div>
 
               <div className="flex items-start gap-3">
-                <User className="h-5 w-5 shrink-0 text-slate-400" />
+                <User className="h-5 w-5 shrink-0 text-[#0d4697]" />
                 <div>
                   <p className="text-[10px] font-extrabold uppercase tracking-wide text-slate-400">Created By</p>
                   <p className="text-sm font-bold text-slate-800">
@@ -276,7 +261,7 @@ export default function ProfilePage() {
               </div>
 
               <div className="flex items-start gap-3">
-                <Calendar className="h-5 w-5 shrink-0 text-slate-400" />
+                <Calendar className="h-5 w-5 shrink-0 text-[#0d4697]" />
                 <div>
                   <p className="text-[10px] font-extrabold uppercase tracking-wide text-slate-400">Created Date</p>
                   <p className="text-sm font-bold text-slate-800">{formatDate(user?.createdAt)}</p>
