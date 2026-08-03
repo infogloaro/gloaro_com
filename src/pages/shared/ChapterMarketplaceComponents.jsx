@@ -298,19 +298,9 @@ export function ChapterMarketplaceVendors({
   showStatus = true,
 }) {
   const [selected, setSelected] = useState(null)
-  const [categories, setCategories] = useState([])
-
-  useEffect(() => {
-    adminApi.categories({ limit: 100 })
-      .then((res) => {
-        setCategories((res.data?.data || res.data || []).map(cat => ({ value: cat._id, label: cat.name })))
-      })
-      .catch(() => {})
-  }, [])
 
   const filters = [
-    ...(showStatus ? [{ key: 'status', label: 'Status', options: ['pending', 'approved', 'rejected', 'suspended'].map(s => ({ value: s, label: s.toUpperCase() })) }] : []),
-    { key: 'category', label: 'Category', options: categories }
+    ...(showStatus ? [{ key: 'status', label: 'Status', options: ['pending', 'approved', 'rejected', 'suspended'].map(s => ({ value: s, label: s.toUpperCase() })) }] : [])
   ]
 
   return (

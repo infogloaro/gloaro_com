@@ -104,6 +104,18 @@ export default function EnterpriseScorecardPage() {
     limit: 10,
   })
   const [data, setData] = useState(emptyData)
+  const [searchNameInput, setSearchNameInput] = useState('')
+  const [searchOfficialIdInput, setSearchOfficialIdInput] = useState('')
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setFilters((current) => {
+        if (current.searchName === searchNameInput && current.searchOfficialId === searchOfficialIdInput) return current
+        return { ...current, searchName: searchNameInput, searchOfficialId: searchOfficialIdInput, page: 1 }
+      })
+    }, 300)
+    return () => clearTimeout(timer)
+  }, [searchNameInput, searchOfficialIdInput])
 
   useEffect(() => {
     let cancelled = false
@@ -227,12 +239,12 @@ export default function EnterpriseScorecardPage() {
           Name
           <div className="mt-1 flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2">
             <Search className="h-4 w-4 text-slate-400" />
-            <input value={filters.searchName} onChange={(event) => updateFilter('searchName', event.target.value)} className="min-w-0 flex-1 outline-none" placeholder="Search name" />
+            <input value={searchNameInput} onChange={(event) => setSearchNameInput(event.target.value)} className="min-w-0 flex-1 outline-none" placeholder="Search name" />
           </div>
         </label>
         <label className="text-xs font-black uppercase text-slate-500">
           Official ID
-          <input value={filters.searchOfficialId} onChange={(event) => updateFilter('searchOfficialId', event.target.value)} className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 outline-none" placeholder="Search ID" />
+          <input value={searchOfficialIdInput} onChange={(event) => setSearchOfficialIdInput(event.target.value)} className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 outline-none" placeholder="Search ID" />
         </label>
         <label className="text-xs font-black uppercase text-slate-500">
           Role

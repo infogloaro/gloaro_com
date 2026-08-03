@@ -162,65 +162,8 @@ export default function StateDirectorDashboard() {
         ))}
       </div>
 
-      {/* Quick Actions */}
-      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h3 className="text-base font-extrabold text-slate-900 mb-4">Quick Actions</h3>
-        <div className="grid gap-4 sm:grid-cols-3">
-          <button
-            onClick={() => navigate('/state-director/districts')}
-            className="flex items-center justify-between p-4 rounded-xl border border-slate-100 bg-slate-50/50 hover:bg-[#eef4ff] transition group text-left"
-          >
-            <div>
-              <p className="font-extrabold text-slate-900 text-sm">Add Districts</p>
-              <p className="text-xs font-semibold text-slate-500 mt-1">Manage geography tree</p>
-            </div>
-            <ArrowRight className="h-4 w-4 text-slate-400 group-hover:translate-x-1 transition" />
-          </button>
-          <button
-            onClick={() => navigate('/state-director/district-directors')}
-            className="flex items-center justify-between p-4 rounded-xl border border-slate-100 bg-slate-50/50 hover:bg-[#eef4ff] transition group text-left"
-          >
-            <div>
-              <p className="font-extrabold text-slate-900 text-sm">District Directors</p>
-              <p className="text-xs font-semibold text-slate-500 mt-1">Create or manage team</p>
-            </div>
-            <ArrowRight className="h-4 w-4 text-slate-400 group-hover:translate-x-1 transition" />
-          </button>
-          <button
-            onClick={() => navigate('/state-director/memberships')}
-            className="flex items-center justify-between p-4 rounded-xl border border-slate-100 bg-slate-50/50 hover:bg-[#eef4ff] transition group text-left"
-          >
-            <div>
-              <p className="font-extrabold text-slate-900 text-sm">View Memberships</p>
-              <p className="text-xs font-semibold text-slate-500 mt-1">Track state memberships</p>
-            </div>
-            <ArrowRight className="h-4 w-4 text-slate-400 group-hover:translate-x-1 transition" />
-          </button>
-        </div>
-      </section>
 
-      {/* Analytics Growth Charts */}
-      <section className="grid gap-5 xl:grid-cols-2">
-        {report.monthlyUsers?.length ? (
-          <ChartCard title="Membership Growth" data={report.monthlyUsers.map((item) => ({ label: monthLabel(item), members: item.users }))} dataKey="members" />
-        ) : (
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm flex flex-col items-center justify-center min-h-[300px]">
-            <p className="text-sm font-semibold text-slate-500">No data available</p>
-          </div>
-        )}
-        {report.membershipSales?.length ? (
-          <ChartCard title="Membership Sales" type="bar" data={report.membershipSales.map((item) => ({ label: item._id, sales: item.sales }))} dataKey="sales" />
-        ) : (
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm flex flex-col items-center justify-center min-h-[300px]">
-            <p className="text-sm font-semibold text-slate-500">No data available</p>
-          </div>
-        )}
-      </section>
 
-      {/* Recent Activity */}
-      <section className="grid gap-5">
-        <ActivityTimeline />
-      </section>
     </section>
   )
 }

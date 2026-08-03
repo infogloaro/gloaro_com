@@ -28,7 +28,8 @@ export default function NotificationsPage({ systemView = false }) {
   const { socket, user, canAccessPath } = useAuth()
   const navigate = useNavigate()
   const [notifications, setNotifications] = useState([])
-  const [loading, setLoading] = useState(true)
+  const [initialLoading, setInitialLoading] = useState(true)
+  const [isFetching, setIsFetching] = useState(false)
   const [unreadCount, setUnreadCount] = useState(0)
   const [stats, setStats] = useState({ total: 0, unread: 0, read: 0, highPriority: 0, today: 0 })
   const [pagination, setPagination] = useState({ currentPage: 1, totalPages: 1 })
@@ -44,9 +45,20 @@ export default function NotificationsPage({ systemView = false }) {
     page: 1,
     limit: 10,
   })
+  const [searchTerm, setSearchTerm] = useState('')
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setFilters((current) => {
+        if (current.search === searchTerm) return current
+        return { ...current, search: searchTerm, page: 1 }
+      })
+    }, 300)
+    return () => clearTimeout(timer)
+  }, [searchTerm])
 
   const loadNotifications = useCallback(async () => {
-    setLoading(true)
+    setIsFetching(true)
     try {
       const [listRes, countRes] = await Promise.all([
         systemView ? notificationApi.systemList(filters) : notificationApi.list(filters),
@@ -60,7 +72,8 @@ export default function NotificationsPage({ systemView = false }) {
     } catch {
       toast.error('Failed to load notifications')
     } finally {
-      setLoading(false)
+      setInitialLoading(false)
+      setIsFetching(false)
     }
   }, [filters, systemView])
 
@@ -159,7 +172,7 @@ export default function NotificationsPage({ systemView = false }) {
 
   const activeTab = tabs.find((tab) => tab.isRead === filters.isRead)?.key || 'all'
 
-  if (loading) return <LoadingScreen label="Loading notification history..." />
+  if (initialLoading) return <LoadingScreen label="Loading notification history..." />
 
   return (
     <div className="space-y-6">
@@ -204,7 +217,12 @@ export default function NotificationsPage({ systemView = false }) {
           <div className="grid gap-2 md:grid-cols-5">
             <label className="flex h-10 items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 text-sm font-medium text-slate-700">
               <Search className="h-4 w-4 text-slate-400" />
-              <input value={filters.search} onChange={(event) => updateFilter('search', event.target.value)} className="min-w-0 flex-1 outline-none" placeholder="Search" />
+              <input
+                value={searchTerm}
+                onChange={(event) => setSearchTerm(event.target.value)}
+                className="min-w-0 flex-1 outline-none"
+                placeholder="Search"
+              />
             </label>
             <select value={filters.category} onChange={(event) => updateFilter('category', event.target.value)} className="h-10 rounded-lg border border-slate-300 bg-white px-3 text-sm font-medium text-slate-700">
               <option value="">Category</option>
@@ -219,7 +237,7 @@ export default function NotificationsPage({ systemView = false }) {
           </div>
         </div>
 
-        <div className="mt-4 overflow-x-auto rounded-lg border border-slate-200">
+        <div className={`mt-4 overflow-x-auto rounded-lg border border-slate-200 ${isFetching ? 'opacity-60 transition-opacity duration-200' : ''}`}>
           <table className="min-w-[1050px] w-full text-left text-sm">
             <thead className="bg-slate-50 text-xs uppercase text-slate-500">
               <tr>

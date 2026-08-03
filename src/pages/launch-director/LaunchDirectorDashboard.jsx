@@ -161,53 +161,8 @@ export default function LaunchDirectorDashboard() {
         ))}
       </div>
 
-      {/* Quick Actions */}
-      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h3 className="text-base font-extrabold text-slate-900 mb-4">Quick Actions</h3>
-        <div className="grid gap-4 sm:grid-cols-3">
-          <button
-            onClick={() => navigate('/launch-director/direct-consultants')}
-            className="flex items-center justify-between p-4 rounded-xl border border-slate-100 bg-slate-50/50 hover:bg-[#eef4ff] transition group text-left"
-          >
-            <div>
-              <p className="font-extrabold text-slate-900 text-sm">Direct Consultants Management</p>
-              <p className="text-xs font-semibold text-slate-500 mt-1">Manage Direct Consultants</p>
-            </div>
-            <ArrowRight className="h-4 w-4 text-slate-400 group-hover:translate-x-1 transition" />
-          </button>
-          <button
-            onClick={() => navigate('/launch-director/members')}
-            className="flex items-center justify-between p-4 rounded-xl border border-slate-100 bg-slate-50/50 hover:bg-[#eef4ff] transition group text-left"
-          >
-            <div>
-              <p className="font-extrabold text-slate-900 text-sm">Memberships</p>
-              <p className="text-xs font-semibold text-slate-500 mt-1">Track memberships list</p>
-            </div>
-            <ArrowRight className="h-4 w-4 text-slate-400 group-hover:translate-x-1 transition" />
-          </button>
-          <button
-            onClick={() => navigate('/launch-director/profile')}
-            className="flex items-center justify-between p-4 rounded-xl border border-slate-100 bg-slate-50/50 hover:bg-[#eef4ff] transition group text-left"
-          >
-            <div>
-              <p className="font-extrabold text-slate-900 text-sm">Settings</p>
-              <p className="text-xs font-semibold text-slate-500 mt-1">Configure profile & session</p>
-            </div>
-            <ArrowRight className="h-4 w-4 text-slate-400 group-hover:translate-x-1 transition" />
-          </button>
-        </div>
-      </section>
 
-      {/* Analytics Growth Charts */}
-      <section className="grid gap-5 xl:grid-cols-2">
-        <ChartCard title="Membership Growth" data={(report.monthlyUsers || []).map((item) => ({ label: monthLabel(item), members: item.users }))} dataKey="members" />
-        <ChartCard title="Membership Sales" type="bar" data={(report.membershipSales || []).map((item) => ({ label: item._id, sales: item.sales }))} dataKey="sales" />
-      </section>
 
-      {/* Recent Activity */}
-      <section className="grid gap-5">
-        <ActivityTimeline />
-      </section>
     </section>
   )
 }
