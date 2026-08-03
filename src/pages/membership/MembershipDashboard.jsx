@@ -1,6 +1,9 @@
 import { CalendarDays, Download, Gem, Handshake, ShieldCheck, UsersRound } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../../hooks/useAuth'
+import { useApi } from '../../hooks/useApi'
+import { membershipApplicationApi } from '../../api/membershipApplication'
+import LoadingScreen from '../../components/common/LoadingScreen'
 
 const benefits = [
   ['Member Benefits', 'Access networking benefits, member resources, and priority opportunities.', Gem],
@@ -11,6 +14,14 @@ const benefits = [
 
 export default function MembershipDashboard() {
   const { user } = useAuth()
+  const application = useApi(membershipApplicationApi.getMyApplication)
+
+  if (application.loading) return <LoadingScreen label="Loading membership dashboard..." />
+
+  const applicationData = application.data || {}
+  const applicationStatus = applicationData.status || 'Unavailable'
+  const accessStatus = user?.isActive ? 'Active' : user ? 'Inactive' : 'Unavailable'
+  const membershipPlan = applicationData.professional?.membershipPlan || applicationData.membership?.plan || 'Unavailable'
 
   return (
     <section className="space-y-6">
@@ -40,9 +51,14 @@ export default function MembershipDashboard() {
         <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
           <h2 className="text-lg font-extrabold text-slate-950">Membership Status</h2>
           <div className="mt-4 grid gap-3 sm:grid-cols-3">
-            <Status label="Application" value="Approved" />
-            <Status label="Access" value="Active" />
+
+            <Status label="Application" value={applicationStatus} />
+            <Status label="Access" value={accessStatus} />
+            
+
+
             <Status label="Membership" value="Executive Member" />
+
           </div>
         </section>
 

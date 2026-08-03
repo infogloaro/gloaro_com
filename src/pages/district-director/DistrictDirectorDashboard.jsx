@@ -162,49 +162,9 @@ export default function DistrictDirectorDashboard() {
         ))}
       </div>
 
-      {/* Quick Actions */}
-      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h3 className="text-base font-extrabold text-slate-900 mb-4">Quick Actions</h3>
-        <div className="grid gap-4 sm:grid-cols-3">
-          <button
-            onClick={() => navigate('/district-director/chapters')}
-            className="flex items-center justify-between p-4 rounded-xl border border-slate-100 bg-slate-50/50 hover:bg-[#eef4ff] transition group text-left"
-          >
-            <div>
-              <p className="font-extrabold text-slate-900 text-sm">Add Chapters</p>
-              <p className="text-xs font-semibold text-slate-500 mt-1">Manage geography tree</p>
-            </div>
-            <ArrowRight className="h-4 w-4 text-slate-400 group-hover:translate-x-1 transition" />
-          </button>
-          <button
-            onClick={() => navigate('/district-director/executive-directors')}
-            className="flex items-center justify-between p-4 rounded-xl border border-slate-100 bg-slate-50/50 hover:bg-[#eef4ff] transition group text-left"
-          >
-            <div>
-              <p className="font-extrabold text-slate-900 text-sm">Executive Directors</p>
-              <p className="text-xs font-semibold text-slate-500 mt-1">Create or manage team</p>
-            </div>
-            <ArrowRight className="h-4 w-4 text-slate-400 group-hover:translate-x-1 transition" />
-          </button>
-          <button
-            onClick={() => navigate('/district-director/memberships')}
-            className="flex items-center justify-between p-4 rounded-xl border border-slate-100 bg-slate-50/50 hover:bg-[#eef4ff] transition group text-left"
-          >
-            <div>
-              <p className="font-extrabold text-slate-900 text-sm">View Memberships</p>
-              <p className="text-xs font-semibold text-slate-500 mt-1">Track district memberships</p>
-            </div>
-            <ArrowRight className="h-4 w-4 text-slate-400 group-hover:translate-x-1 transition" />
-          </button>
-        </div>
-      </section>
 
 
 
-      {/* Recent Activity */}
-      <section className="grid gap-5">
-        <ActivityTimeline />
-      </section>
     </section>
   )
 }

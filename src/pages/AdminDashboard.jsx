@@ -2,36 +2,6 @@ import { useEffect, useMemo, useState } from 'react'
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api/v1'
 
-const fallbackDashboard = {
-  totalUsers: 12480,
-  totalVendors: 3186,
-  pendingVendors: 42,
-  activeVendors: 2794,
-  newUsersToday: 128,
-  newVendorsToday: 18,
-}
-
-const fallbackApprovals = [
-  { _id: '1', businessName: 'Nexa Cloud Systems', ownerName: 'Arjun Mehta', status: 'pending', address: { city: 'Bengaluru' }, createdAt: '2026-06-25T06:10:00.000Z' },
-  { _id: '2', businessName: 'BrightPath Logistics', ownerName: 'Meera Shah', status: 'pending', address: { city: 'Mumbai' }, createdAt: '2026-06-25T04:45:00.000Z' },
-  { _id: '3', businessName: 'Urban Legal Desk', ownerName: 'Vikram Rao', status: 'pending', address: { city: 'Chennai' }, createdAt: '2026-06-24T15:20:00.000Z' },
-]
-
-const fallbackLeads = [
-  ['New', 184, '#1558b0'],
-  ['Contacted', 96, '#0f9f6e'],
-  ['Proposal', 54, '#d6a744'],
-  ['Won', 31, '#16a34a'],
-  ['Lost', 17, '#dc2626'],
-]
-
-const auditTrail = [
-  ['Vendor approved', 'Admin approved Prime Foods listing', '2 min ago'],
-  ['Membership updated', 'Gold plan activated for BluePeak Tech', '16 min ago'],
-  ['Review moderated', 'Flagged review moved to pending queue', '44 min ago'],
-  ['Support assigned', 'Ticket #4821 assigned to operations', '1 hr ago'],
-]
-
 const navItems = ['Overview', 'Approvals', 'Vendors', 'Payments', 'Reports']
 
 const Icon = ({ children }) => (
@@ -47,18 +17,21 @@ const Card = ({ children, className = '' }) => (
 )
 
 export default function AdminDashboard() {
-  const [dashboard, setDashboard] = useState(fallbackDashboard)
-  const [approvals, setApprovals] = useState(fallbackApprovals)
+  const [dashboard, setDashboard] = useState({})
+  const [approvals, setApprovals] = useState([])
   const [membershipApps, setMembershipApps] = useState([])
   const [activeApprovalTab, setActiveApprovalTab] = useState('vendors')
-  const [apiState, setApiState] = useState('demo')
+  const [apiState, setApiState] = useState('loading')
 
   const token = useMemo(() => (
     localStorage.getItem('gloaro_access_token') || sessionStorage.getItem('gloaro_access_token')
   ), [])
 
   useEffect(() => {
-    if (!token) return
+    if (!token) {
+      setApiState('error')
+      return
+    }
 
     const headers = { Authorization: `Bearer ${token}` }
 
@@ -83,12 +56,12 @@ export default function AdminDashboard() {
           membershipData = membershipResult.data?.data || membershipResult.data || []
         }
 
-        setDashboard({ ...fallbackDashboard, ...dashboardResult.data })
-        setApprovals(approvalResult.data || fallbackApprovals)
+        setDashboard(dashboardResult.data || {})
+        setApprovals(approvalResult.data || [])
         setMembershipApps(membershipData)
         setApiState('live')
       } catch {
-        setApiState('demo')
+        setApiState('error')
         setMembershipApps([])
       }
     }
@@ -121,7 +94,7 @@ export default function AdminDashboard() {
         </nav>
         <div className="absolute bottom-5 left-3 right-3 rounded-lg border border-[#d6a744]/40 bg-[#fff8e7] p-4">
           <p className="text-sm font-extrabold text-[#172033]">API status</p>
-          <p className="mt-1 text-sm font-semibold text-slate-600">{apiState === 'live' ? 'Connected to backend' : 'Using dashboard preview data'}</p>
+          <p className="mt-1 text-sm font-semibold text-slate-600">{apiState === 'live' ? 'Connected to backend' : apiState === 'loading' ? 'Loading dashboard data' : 'Dashboard data unavailable'}</p>
         </div>
       </aside>
 
@@ -162,7 +135,7 @@ export default function AdminDashboard() {
               <h2 className="text-lg font-extrabold text-[#101827]">Lead Pipeline</h2>
               <p className="text-sm font-semibold text-slate-500">Current lead status distribution</p>
               <div className="mt-5 space-y-4">
-                {fallbackLeads.map(([label, count, color]) => (
+                {[].map(([label, count, color]) => (
                   <div key={label}>
                     <div className="flex justify-between text-sm font-bold">
                       <span>{label}</span>
@@ -173,6 +146,7 @@ export default function AdminDashboard() {
                     </div>
                   </div>
                 ))}
+                <p className="text-sm font-semibold text-slate-500">Lead pipeline data is unavailable.</p>
               </div>
             </Card>
           </section>
@@ -262,16 +236,7 @@ export default function AdminDashboard() {
             <Card className="p-5">
               <h2 className="text-lg font-extrabold text-[#101827]">Recent Activity</h2>
               <div className="mt-4 space-y-4">
-                {auditTrail.map(([title, detail, time]) => (
-                  <div key={detail} className="flex gap-3">
-                    <span className="mt-1 h-2.5 w-2.5 rounded-full bg-[#0d4697]" />
-                    <div>
-                      <p className="font-extrabold text-[#101827]">{title}</p>
-                      <p className="text-sm font-semibold text-slate-500">{detail}</p>
-                      <p className="mt-1 text-xs font-bold text-slate-400">{time}</p>
-                    </div>
-                  </div>
-                ))}
+                <p className="text-sm font-semibold text-slate-500">Recent activity is unavailable.</p>
               </div>
             </Card>
           </section>

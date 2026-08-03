@@ -256,6 +256,7 @@ export default function VicePresidentDashboard() {
         </div>}
       </section>
 
+
       {/* 4. Quick Actions */}
       {showExtendedDashboard && <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <h3 className="text-sm font-black uppercase text-slate-800 tracking-wider mb-4">Quick Actions Console</h3>
