@@ -1,10 +1,11 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import toast from 'react-hot-toast'
 import { CheckCircle2, ExternalLink, Eye, FileText, Loader2, XCircle, Package, BriefcaseBusiness, AlertCircle, MapPinned } from 'lucide-react'
 import api from '../../api/axios'
 import { adminApi } from '../../api/admin'
 import DataTable from '../../components/tables/DataTable'
 import Modal from '../../components/common/Modal'
+import SearchBar from '../../components/common/SearchBar'
 import StatusBadge from '../../components/common/StatusBadge'
 import SearchBar from '../../components/common/SearchBar'
 import { useAuth } from '../../hooks/useAuth'
@@ -374,6 +375,485 @@ export function AdminProductsPage() {
   )
 }
 
+export function AdminOrdersPage() {
+  const [payload, setPayload] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [page, setPage] = useState(1)
+  const [search, setSearch] = useState('')
+  const [debouncedSearch, setDebouncedSearch] = useState('')
+  const [filterValues, setFilterValues] = useState({ status: 'all', paymentStatus: 'all' })
+  const [selectedSlice, setSelectedSlice] = useState(null)
+  const [selectedOrder, setSelectedOrder] = useState(null)
+  const [detailsLoading, setDetailsLoading] = useState(false)
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => setDebouncedSearch(search.trim()), 300)
+    return () => window.clearTimeout(timer)
+  }, [search])
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      void (async () => {
+        setLoading(true)
+        try {
+          const response = await adminApi.orders({
+            page,
+            limit: 10,
+            search: debouncedSearch || undefined,
+            status: filterValues.status && filterValues.status !== 'all' ? filterValues.status : undefined,
+            paymentStatus: filterValues.paymentStatus && filterValues.paymentStatus !== 'all' ? filterValues.paymentStatus : undefined,
+          })
+          setPayload(response.data)
+        } catch (error) {
+          toast.error(error.response?.data?.message || 'Failed to load orders')
+        } finally {
+          setLoading(false)
+        }
+      })()
+    }, 0)
+    return () => window.clearTimeout(timer)
+  }, [page, debouncedSearch, filterValues.status, filterValues.paymentStatus])
+
+  const rows = useMemo(() => {
+    const orders = getList(payload)
+    const slices = orders.flatMap((order) => splitOrderByVendor(order))
+    const term = debouncedSearch.toLowerCase()
+
+    if (!term) return slices
+
+    return slices.filter((row) => {
+      return [
+        row.orderNumber,
+        row.customerName,
+        row.customerEmail,
+        row.customerPhone,
+        row.vendorLabel,
+        row.vendorBusinessName,
+        row.itemSummary,
+      ].some((value) => String(value || '').toLowerCase().includes(term))
+    })
+  }, [debouncedSearch, payload])
+
+  const pagination = getPagination(payload)
+
+  const openDetails = async (row) => {
+    setSelectedSlice(row)
+    setSelectedOrder(null)
+    setDetailsLoading(true)
+    try {
+      const response = await adminApi.order(row.originalOrderId)
+      setSelectedOrder(response.data?.data || response.data || null)
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to load order details')
+    } finally {
+      setDetailsLoading(false)
+    }
+  }
+
+  const selectedVendorSlices = useMemo(() => {
+    if (!selectedOrder || !selectedSlice) return []
+    return splitOrderByVendor(selectedOrder)
+  }, [selectedOrder, selectedSlice])
+
+  const activeVendorSlice = selectedVendorSlices.find((entry) => entry._id === selectedSlice?._id) || selectedSlice
+  const otherVendorSlices = selectedVendorSlices.filter((entry) => entry._id !== activeVendorSlice?._id)
+
+  return (
+    <>
+      <section>
+        <div className="mb-5 flex flex-col justify-between gap-4 lg:flex-row lg:items-end">
+          <div>
+            <h2 className="text-2xl font-extrabold text-slate-950 dark:text-white">Order Management</h2>
+            <p className="mt-1 text-sm font-semibold text-slate-500">Track customer purchases and inspect each vendor share inside the order.</p>
+          </div>
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <SearchBar value={search} onChange={(value) => { setSearch(value); setPage(1) }} placeholder="Search order, customer, vendor, item..." />
+            <select value={filterValues.status} onChange={(event) => setFilterValues((current) => ({ ...current, status: event.target.value }))} className="h-10 rounded-md border border-slate-200 bg-white px-3 text-sm font-bold text-slate-800">
+              {['all', 'placed', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled', 'refunded'].map((value) => <option key={value} value={value}>{value}</option>)}
+            </select>
+            <select value={filterValues.paymentStatus} onChange={(event) => setFilterValues((current) => ({ ...current, paymentStatus: event.target.value }))} className="h-10 rounded-md border border-slate-200 bg-white px-3 text-sm font-bold text-slate-800">
+              {['all', 'pending', 'paid', 'failed', 'refunded'].map((value) => <option key={value} value={value}>{value}</option>)}
+            </select>
+          </div>
+        </div>
+
+        <div className="mb-4 rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-xs font-semibold text-slate-600">
+          Each row represents a vendor-specific slice of a customer order, so split-cart purchases are visible separately.
+        </div>
+
+        <DataTable
+          columns={[
+            {
+              key: 'orderNumber',
+              header: 'Order / Vendor',
+              render: (row) => (
+                <div>
+                  <p className="font-bold text-slate-900">{row.orderNumber}</p>
+                  <p className="text-xs font-semibold text-slate-500">{row.vendorLabel}</p>
+                  {row.vendorCount > 1 && <p className="text-[11px] font-bold uppercase tracking-wide text-[#0d4697]">Split order</p>}
+                </div>
+              ),
+            },
+            {
+              key: 'customer',
+              header: 'Customer',
+              render: (row) => (
+                <div>
+                  <p className="font-bold text-slate-900">{row.customerName || 'Guest'}</p>
+                  <p className="text-xs font-medium text-slate-500">{row.customerPhone || row.customerEmail || '-'}</p>
+                </div>
+              ),
+            },
+            {
+              key: 'items',
+              header: 'Items',
+              render: (row) => (
+                <div>
+                  <p className="font-bold text-slate-900">{row.itemCount} item{row.itemCount === 1 ? '' : 's'}</p>
+                  <p className="text-xs font-medium text-slate-500">{row.itemSummary}</p>
+                </div>
+              ),
+            },
+            {
+              key: 'amount',
+              header: 'Vendor Amount',
+              render: (row) => (
+                <div>
+                  <p className="font-bold text-slate-900">{formatCurrency(row.vendorTotal, row.currency)}</p>
+                  <p className="text-xs font-medium text-slate-500">Order total {formatCurrency(row.orderTotal, row.currency)}</p>
+                </div>
+              ),
+            },
+            {
+              key: 'flags',
+              header: 'Flags',
+              render: (row) => (
+                <div className="flex flex-wrap gap-1.5">
+                  {row.cancellationRequest && <MiniFlag tone="rose" label="Cancel" />}
+                  {row.returnRequest && <MiniFlag tone="amber" label="Return" />}
+                  {row.refund && <MiniFlag tone="emerald" label="Refund" />}
+                  {!row.cancellationRequest && !row.returnRequest && !row.refund && (
+                    <span className="rounded-full bg-slate-100 px-2 py-1 text-[10px] font-black uppercase tracking-wide text-slate-500">None</span>
+                  )}
+                </div>
+              ),
+            },
+            { key: 'paymentStatus', header: 'Payment', render: (row) => <StatusBadge value={row.paymentStatus} /> },
+            { key: 'status', header: 'Order Status', render: (row) => <StatusBadge value={row.status} /> },
+            { key: 'createdAt', header: 'Created', render: (row) => formatDate(row.createdAt) },
+          ]}
+          rows={rows}
+          loading={loading}
+          pagination={pagination}
+          onPageChange={setPage}
+          actions={(row) => (
+            <button
+              type="button"
+              onClick={() => openDetails(row)}
+              className="inline-flex items-center gap-1 rounded-md border border-[#0d4697] bg-white px-3 py-1.5 text-xs font-bold text-[#0d4697] hover:bg-blue-50 transition duration-150"
+            >
+              <Eye className="h-3 w-3" />
+              View details
+            </button>
+          )}
+        />
+      </section>
+
+      <Modal
+        open={Boolean(selectedSlice)}
+        title={selectedSlice ? `${selectedSlice.orderNumber} • ${selectedSlice.vendorLabel}` : 'Order details'}
+        onClose={() => {
+          setSelectedSlice(null)
+          setSelectedOrder(null)
+        }}
+        maxWidth="max-w-6xl"
+      >
+        {detailsLoading || !selectedOrder ? (
+          <div className="grid min-h-48 place-items-center">
+            <Loader2 className="h-8 w-8 animate-spin text-[#0d4697]" />
+          </div>
+        ) : (
+          <div className="space-y-4 text-sm">
+            <div className="grid gap-3 lg:grid-cols-3">
+              <div className="rounded-lg border border-slate-200 p-3">
+                <p className="text-[10px] font-black uppercase text-slate-400">Customer</p>
+                <p className="mt-1 font-bold text-slate-900">{selectedOrder.customerSnapshot?.name || selectedOrder.user?.name || 'Guest'}</p>
+                <p className="text-xs font-medium text-slate-500">{selectedOrder.customerSnapshot?.email || selectedOrder.user?.email || '-'}</p>
+                <p className="text-xs font-medium text-slate-500">{selectedOrder.customerSnapshot?.phone || selectedOrder.user?.phone || '-'}</p>
+              </div>
+              <div className="rounded-lg border border-slate-200 p-3">
+                <p className="text-[10px] font-black uppercase text-slate-400">Selected vendor</p>
+                <p className="mt-1 font-bold text-slate-900">{activeVendorSlice?.vendorLabel || 'Vendor'}</p>
+                <p className="text-xs font-medium text-slate-500">{activeVendorSlice?.itemCount || 0} item{(activeVendorSlice?.itemCount || 0) === 1 ? '' : 's'}</p>
+                <p className="text-xs font-medium text-slate-500">Vendor amount: {formatCurrency(activeVendorSlice?.vendorTotal || 0, activeVendorSlice?.currency)}</p>
+              </div>
+              <div className="rounded-lg border border-slate-200 p-3">
+                <p className="text-[10px] font-black uppercase text-slate-400">Order</p>
+                <p className="mt-1 font-bold text-slate-900">{selectedOrder.orderNumber}</p>
+                <p className="text-xs font-medium text-slate-500">{formatDate(selectedOrder.createdAt)}</p>
+                <p className="text-xs font-medium text-slate-500">Payment: {selectedOrder.paymentStatus}</p>
+              </div>
+            </div>
+
+            <div className="rounded-lg border border-slate-200 p-3">
+              <p className="text-[10px] font-black uppercase text-slate-400">Shipping Address</p>
+              <p className="mt-1 text-xs font-medium text-slate-600">
+                {formatOrderAddress(selectedOrder.address)}
+              </p>
+            </div>
+
+            <div className="rounded-lg border border-slate-200 p-3">
+              <p className="text-[10px] font-black uppercase text-slate-400">Vendor items</p>
+              <div className="mt-3 space-y-3">
+                {(activeVendorSlice?.items || []).map((item, index) => (
+                  <div key={`${selectedOrder._id}-${activeVendorSlice?._id}-${index}`} className="flex items-center justify-between gap-4 rounded-md bg-slate-50 px-3 py-2">
+                    <div>
+                      <p className="font-bold text-slate-800">{item.productSnapshot?.title || 'Product'}</p>
+                      <p className="text-xs text-slate-500">Qty {item.quantity}</p>
+                    </div>
+                    <p className="font-bold text-slate-900">{formatCurrency(item.lineTotal || Number(item.unitPrice || 0) * Number(item.quantity || 0), selectedOrder.currency)}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {otherVendorSlices.length > 0 && (
+              <div className="rounded-lg border border-slate-200 p-3">
+                <p className="text-[10px] font-black uppercase text-slate-400">Other vendors in this order</p>
+                <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                  {otherVendorSlices.map((slice) => (
+                    <div key={slice._id} className="rounded-md bg-slate-50 px-3 py-2">
+                      <p className="font-bold text-slate-800">{slice.vendorLabel}</p>
+                      <p className="text-xs text-slate-500">{slice.itemCount} item{slice.itemCount === 1 ? '' : 's'} • {formatCurrency(slice.vendorTotal, slice.currency)}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div className="grid gap-3 md:grid-cols-3">
+              <div className="rounded-md bg-slate-50 p-3 text-xs font-semibold text-slate-700">Subtotal: {formatCurrency(selectedOrder.subtotal, selectedOrder.currency)}</div>
+              <div className="rounded-md bg-slate-50 p-3 text-xs font-semibold text-slate-700">Order total: {formatCurrency(selectedOrder.total, selectedOrder.currency)}</div>
+              <div className="rounded-md bg-slate-50 p-3 text-xs font-semibold text-slate-700">Vendor subtotal: {formatCurrency(activeVendorSlice?.vendorTotal || 0, selectedOrder.currency)}</div>
+            </div>
+
+            {(selectedOrder.cancellationRequest || selectedOrder.returnRequest || selectedOrder.refund) && (
+              <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
+                <p className="text-[10px] font-black uppercase text-slate-400">Customer Actions</p>
+                <div className="mt-3 grid gap-4 xl:grid-cols-3">
+                  {selectedOrder.cancellationRequest && (
+                    <RequestDetailCard
+                      title="Cancellation"
+                      tone="rose"
+                      request={selectedOrder.cancellationRequest}
+                      fields={[
+                        { label: 'Status', value: selectedOrder.cancellationRequest.status?.replace(/_/g, ' ') || 'requested' },
+                        { label: 'Reason', value: selectedOrder.cancellationRequest.reason },
+                        { label: 'UPI ID', value: selectedOrder.cancellationRequest.upiId || '-' },
+                        { label: 'Requested At', value: selectedOrder.cancellationRequest.requestedAt ? formatDate(selectedOrder.cancellationRequest.requestedAt) : '-' },
+                        { label: 'Completed At', value: selectedOrder.cancellationRequest.completedAt ? formatDate(selectedOrder.cancellationRequest.completedAt) : '-' },
+                        { label: 'Failure Reason', value: selectedOrder.cancellationRequest.failureReason || '-' },
+                        { label: 'Refund ID', value: selectedOrder.cancellationRequest.refundId || '-' },
+                      ]}
+                    />
+                  )}
+                  {selectedOrder.returnRequest && (
+                    <RequestDetailCard
+                      title="Return"
+                      tone="amber"
+                      request={selectedOrder.returnRequest}
+                      fields={[
+                        { label: 'Status', value: selectedOrder.returnRequest.status?.replace(/_/g, ' ') || 'requested' },
+                        { label: 'Reason', value: selectedOrder.returnRequest.reasonLabel || selectedOrder.returnRequest.reason },
+                        { label: 'UPI ID', value: selectedOrder.returnRequest.upiId || '-' },
+                        { label: 'Return Method', value: selectedOrder.returnRequest.returnMethod || '-' },
+                        { label: 'Refund Method', value: selectedOrder.returnRequest.refundMethod || '-' },
+                        { label: 'Requested At', value: selectedOrder.returnRequest.requestedAt ? formatDate(selectedOrder.returnRequest.requestedAt) : '-' },
+                        { label: 'Window Ends', value: selectedOrder.returnRequest.returnWindowEndsAt ? formatDate(selectedOrder.returnRequest.returnWindowEndsAt) : '-' },
+                        { label: 'Rejection Reason', value: selectedOrder.returnRequest.rejectionReason || '-' },
+                      ]}
+                    />
+                  )}
+                  {selectedOrder.refund && (
+                    <RequestDetailCard
+                      title="Refund"
+                      tone="emerald"
+                      request={selectedOrder.refund}
+                      fields={[
+                        { label: 'Status', value: selectedOrder.refund.status || 'requested' },
+                        { label: 'Reason', value: selectedOrder.refund.reason || selectedOrder.refund.reasonLabel || '-' },
+                        { label: 'UPI ID', value: selectedOrder.refund.upiId || '-' },
+                        { label: 'Amount', value: formatCurrency(selectedOrder.refund.amount || selectedOrder.refund.refundAmount || 0) },
+                        { label: 'Refund ID', value: selectedOrder.refund.refundId || '-' },
+                        { label: 'Requested At', value: selectedOrder.refund.requestedAt ? formatDate(selectedOrder.refund.requestedAt) : '-' },
+                        { label: 'Completed At', value: selectedOrder.refund.refundedAt ? formatDate(selectedOrder.refund.refundedAt) : '-' },
+                        { label: 'Failure Reason', value: selectedOrder.refund.failureReason || '-' },
+                      ]}
+                    />
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </Modal>
+    </>
+  )
+}
+
+function splitOrderByVendor(order) {
+  const items = Array.isArray(order?.items) ? order.items : []
+  if (!items.length) return []
+
+  const buckets = new Map()
+
+  items.forEach((item, index) => {
+    const vendor = extractItemVendor(item)
+    const vendorKey = vendor._id ? String(vendor._id) : `unknown-${index}`
+    const current = buckets.get(vendorKey) || {
+      _id: `${order._id}:${vendorKey}`,
+      originalOrderId: order._id,
+      orderNumber: order.orderNumber,
+      invoiceNumber: order.invoiceNumber,
+      customerName: order.customerSnapshot?.name || order.user?.name || 'Guest',
+      customerEmail: order.customerSnapshot?.email || order.user?.email || '',
+      customerPhone: order.customerSnapshot?.phone || order.user?.phone || '',
+      address: order.address,
+      status: order.status,
+      paymentStatus: order.paymentStatus,
+      createdAt: order.createdAt,
+      orderTotal: Number(order.total || 0),
+      subtotal: Number(order.subtotal || 0),
+      currency: order.currency,
+      vendorId: vendor._id || null,
+      vendorLabel: vendor.label,
+      vendorBusinessName: vendor.businessName || '',
+      vendorCount: 0,
+      items: [],
+      itemCount: 0,
+      vendorTotal: 0,
+      cancellationRequest: order.cancellationRequest || null,
+      returnRequest: order.returnRequest || null,
+      refund: order.refund || null,
+      itemSummary: '',
+      searchBlob: '',
+    }
+
+    current.vendorCount += 1
+    current.items.push(item)
+    current.itemCount += Number(item.quantity || 1)
+    current.vendorTotal += Number(item.lineTotal || Number(item.unitPrice || 0) * Number(item.quantity || 0))
+    current.vendorLabel = current.vendorLabel || vendor.label
+    current.vendorBusinessName = current.vendorBusinessName || vendor.businessName || ''
+    buckets.set(vendorKey, current)
+  })
+
+  return [...buckets.values()].map((slice) => ({
+    ...slice,
+    itemSummary: slice.items.map((item) => item.productSnapshot?.title || 'Product').join(', '),
+    searchBlob: [
+      slice.orderNumber,
+      slice.customerName,
+      slice.customerEmail,
+      slice.customerPhone,
+      slice.vendorLabel,
+      slice.vendorBusinessName,
+      slice.items.map((item) => item.productSnapshot?.title || 'Product').join(' '),
+    ].join(' '),
+  }))
+}
+
+function extractItemVendor(item = {}) {
+  const vendor = item?.productSnapshot?.vendor || item?.vendor || item?.vendorSnapshot || null
+  if (!vendor) {
+    return { _id: null, label: 'Marketplace', businessName: '' }
+  }
+  if (typeof vendor === 'string') {
+    return { _id: vendor, label: 'Vendor', businessName: '' }
+  }
+  const vendorId = vendor._id || vendor.id || vendor.vendorId || null
+  const label = vendor.businessName || vendor.ownerName || vendor.user?.name || vendor.name || 'Vendor'
+  return { _id: vendorId, label, businessName: vendor.businessName || '' }
+}
+
+function formatOrderAddress(address) {
+  if (!address) return 'Address unavailable'
+  if (typeof address === 'string') return address
+  return [
+    address.fullName,
+    address.line1,
+    address.line2,
+    address.city,
+    address.state,
+    address.pincode,
+  ].filter(Boolean).join(', ') || 'Address unavailable'
+}
+
+function RequestDetailCard({ title, tone = 'slate', request, fields = [] }) {
+  const toneMap = {
+    amber: 'border-amber-200 bg-amber-50/70 text-amber-800',
+    rose: 'border-rose-200 bg-rose-50/70 text-rose-800',
+    emerald: 'border-emerald-200 bg-emerald-50/70 text-emerald-800',
+    slate: 'border-slate-200 bg-white text-slate-800',
+  }
+  const chipClass = toneMap[tone] || toneMap.slate
+
+  return (
+    <div className={`rounded-2xl border p-4 ${chipClass}`}>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="text-sm font-black">{title}</p>
+          <p className="mt-1 text-[11px] font-semibold opacity-80">
+            {request?.status ? String(request.status).replace(/_/g, ' ') : 'requested'}
+          </p>
+        </div>
+        <StatusBadge value={request?.status || 'requested'} />
+      </div>
+
+      <div className="mt-4 space-y-2 rounded-xl bg-white/80 p-3 ring-1 ring-black/5">
+        {fields.map((field) => (
+          <div key={`${title}-${field.label}`} className="flex items-start justify-between gap-3">
+            <p className="text-[10px] font-black uppercase tracking-wide text-slate-400">{field.label}</p>
+            <p className="max-w-[60%] text-right text-xs font-semibold text-slate-700">{displayValue(field.value)}</p>
+          </div>
+        ))}
+      </div>
+
+      {Array.isArray(request?.tracking) && request.tracking.length > 0 && (
+        <div className="mt-4">
+          <p className="text-[10px] font-black uppercase tracking-wide text-slate-400">Timeline</p>
+          <div className="mt-2 space-y-2">
+            {request.tracking.slice(0, 5).map((step, index) => (
+              <div key={`${title}-timeline-${step.status || index}`} className="flex items-start gap-2">
+                <div className={`mt-1 h-2.5 w-2.5 rounded-full ${step.at ? 'bg-[#0d4697]' : 'bg-slate-300'}`} />
+                <div>
+                  <p className="text-xs font-bold text-slate-800">{displayValue(step.label || step.status)}</p>
+                  <p className="text-[11px] font-semibold text-slate-500">{step.at ? formatDate(step.at) : step.description || 'Waiting'}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function MiniFlag({ tone = 'slate', label }) {
+  const toneMap = {
+    amber: 'bg-amber-50 text-amber-700 ring-amber-200',
+    rose: 'bg-rose-50 text-rose-700 ring-rose-200',
+    emerald: 'bg-emerald-50 text-emerald-700 ring-emerald-200',
+    slate: 'bg-slate-50 text-slate-600 ring-slate-200',
+  }
+
+  return (
+    <span className={`rounded-full px-2 py-1 text-[10px] font-black uppercase tracking-wide ring-1 ${toneMap[tone] || toneMap.slate}`}>
+      {label}
+    </span>
+  )
+}
+
 export function AdminServicesPage() {
   const [selectedService, setSelectedService] = useState(null)
 
@@ -493,7 +973,7 @@ export function AdminServicesPage() {
 
 export function AdminMembershipsPage() {
   return <ResourceListPage module="members" section="memberships" title="Vendor Memberships" fetcher={adminApi.memberships} filters={statusFilters} columns={[
-    { key: ROLES.VENDOR, header: 'Vendor', render: (row) => row.vendor?.businessName || 'Vendor' }, { key: 'plan', header: 'Plan' }, { key: 'price', header: 'Price', render: (row) => formatCurrency(row.price) }, { key: 'status', header: 'Status', render: (row) => <StatusBadge value={row.status} /> },
+    { key: ROLES.VENDOR, header: 'Vendor', render: (row) => row.vendor?.businessName || 'Vendor' }, { key: 'price', header: 'Price', render: (row) => formatCurrency(row.price) }, { key: 'status', header: 'Status', render: (row) => <StatusBadge value={row.status} /> },
   ]} />
 }
 
@@ -545,7 +1025,9 @@ export function AdminMembershipApplicationsPage() {
       toast.success(`Application marked ${status.replaceAll('_', ' ')}`)
       reload?.()
     } catch (error) {
+
       console.error('Failed to update membership application status', error)
+
     }
   }
 
@@ -556,7 +1038,6 @@ export function AdminMembershipApplicationsPage() {
         { key: 'fullName', header: 'Name', render: (row) => row.personal?.fullName || row.submittedBy?.name },
         { key: 'email', header: 'Email', render: (row) => row.personal?.emailAddress || row.submittedBy?.email || 'Not added' },
         { key: 'mobile', header: 'Mobile', render: (row) => row.personal?.mobileNumber || row.submittedBy?.phone || 'Not added' },
-        { key: 'plan', header: 'Membership Plan', render: (row) => row.professional?.membershipPlan || row.membership?.plan || 'Silver' },
         { key: 'source', header: 'Source', render: (row) => row.source || row.sourceLabel || row.applicationSource || row.applicationSourceLabel || 'Online Member' },
         { key: 'region', header: 'Region', render: (row) => row.regionId?.name || 'Not assigned' },
         { key: 'state', header: 'State', render: (row) => row.stateId?.name || 'Not assigned' },
@@ -905,12 +1386,6 @@ export function AdminModuleApplicationsPage({ title }) {
   )
 }
 
-export function AdminPlansPage() {
-  return <ResourceListPage module="members" section="plans" title="Membership Plans" fetcher={adminApi.plans} createAction={adminApi.createPlan} updateAction={adminApi.updatePlan} columns={[
-    { key: 'displayName', header: 'Plan' }, { key: 'name', header: 'Code' }, { key: 'price', header: 'Monthly', render: (row) => formatCurrency(row.price?.monthly) },
-  ]} renderForm={(props) => <SimpleJsonForm {...props} fields={[{ name: 'name' }, { name: 'displayName' }, { name: 'description', type: 'textarea' }]} />} />
-}
-
 export function AdminEventsPage() {
   return <ResourceListPage module="events" section="events" title="Event Management" fetcher={adminApi.events} detailFetcher={adminApi.event} columns={[{ key: 'title', header: 'Title' }, { key: 'type', header: 'Type' }, { key: 'startDate', header: 'Starts', render: (row) => formatDate(row.startDate) }, { key: 'status', header: 'Status', render: (row) => <StatusBadge value={row.status} /> }]} renderDetails={(event) => <div className="space-y-5 text-sm">
     <div className="grid gap-3 sm:grid-cols-2">
@@ -956,21 +1431,29 @@ export function AdminSettingsPage() {
 }
 
 export function AdminMembersPage() {
+  const { user } = useAuth()
   const [locations, setLocations] = useState([])
   const [loadingLocations, setLoadingLocations] = useState(true)
   const [rows, setRows] = useState([])
   const [pagination, setPagination] = useState({})
   const [loadingMembers, setLoadingMembers] = useState(true)
   const [search, setSearch] = useState('')
+  const [debouncedSearch, setDebouncedSearch] = useState('')
   const [page, setPage] = useState(1)
   const [filters, setFilters] = useState({ region: '', state: '', district: '', chapter: '' })
+  const memberRequestSequence = useRef(0)
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => setDebouncedSearch(search.trim()), 300)
+    return () => window.clearTimeout(timer)
+  }, [search])
 
   useEffect(() => {
     let mounted = true
-    api.get('/organization/locations')
+    api.get('/directory/organization-hierarchy')
       .then((res) => {
         if (!mounted) return
-        setLocations(res.data?.data?.locations || [])
+        setLocations(Array.isArray(res.data?.data) ? res.data.data : [])
       })
       .catch((err) => {
         console.error('Error loading locations', err)
@@ -1001,6 +1484,19 @@ export function AdminMembersPage() {
 
   const getParentId = (location) => location?.parent?._id || location?.parent || ''
 
+  const assignedOrganization = user?.meta?.adminProfile?.organization || user?.meta?.memberProfile?.organization || {}
+  const chapterScopedRole = [ROLES.EXECUTIVE_DIRECTOR, ROLES.LAUNCH_DIRECTOR, ROLES.DIRECT_CONSULTANT, ROLES.CHAPTER_PRESIDENT, ROLES.VICE_PRESIDENT, ROLES.SECRETARY].includes(user?.role)
+
+  const assignedLocationOption = useCallback((key) => {
+    const assignedKey = `assigned${key.charAt(0).toUpperCase()}${key.slice(1)}`
+    const assigned = assignedOrganization[assignedKey]
+    const assignedId = assigned?._id || assignedOrganization[key]
+    const record = locations.find((location) => String(location._id) === String(assignedId))
+    const location = record || assigned
+    if (!location?._id || !location?.name) return []
+    return [{ value: location._id, label: location.name }]
+  }, [assignedOrganization, locations])
+
   const isDescendantOf = useCallback((location, ancestorId) => {
     if (!location || !ancestorId) return false
     let currentParentId = getParentId(location)
@@ -1015,53 +1511,98 @@ export function AdminMembersPage() {
     return false
   }, [locationIndex])
 
-  const regionOptions = useMemo(() => locations.filter((location) => location.type === 'region').map((location) => ({ value: location._id, label: location.name })), [locations])
+  const regionOptions = useMemo(() => chapterScopedRole ? assignedLocationOption('region') : locations.filter((location) => location.type === 'region').map((location) => ({ value: location._id, label: location.name })), [assignedLocationOption, chapterScopedRole, locations])
   const stateOptions = useMemo(() => {
+    if (chapterScopedRole) return assignedLocationOption('state')
     const allStates = locations.filter((location) => location.type === 'state')
     if (!filters.region) return allStates.map((location) => ({ value: location._id, label: location.name }))
     return allStates.filter((location) => isDescendantOf(location, filters.region)).map((location) => ({ value: location._id, label: location.name }))
-  }, [filters.region, locations, isDescendantOf])
+  }, [assignedLocationOption, chapterScopedRole, filters.region, locations, isDescendantOf])
   const districtOptions = useMemo(() => {
+    if (chapterScopedRole) return assignedLocationOption('district')
     const allDistricts = locations.filter((location) => location.type === 'district')
     if (!filters.state) return allDistricts.map((location) => ({ value: location._id, label: location.name }))
     return allDistricts.filter((location) => isDescendantOf(location, filters.state)).map((location) => ({ value: location._id, label: location.name }))
-  }, [filters.state, locations, isDescendantOf])
+  }, [assignedLocationOption, chapterScopedRole, filters.state, locations, isDescendantOf])
   const chapterOptions = useMemo(() => {
+    if (chapterScopedRole) return assignedLocationOption('chapter')
     const allChapters = locations.filter((location) => location.type === 'chapter')
     if (!filters.district) return allChapters.map((location) => ({ value: location._id, label: location.name }))
     return allChapters.filter((location) => isDescendantOf(location, filters.district)).map((location) => ({ value: location._id, label: location.name }))
-  }, [filters.district, locations, isDescendantOf])
+  }, [assignedLocationOption, chapterScopedRole, filters.district, locations, isDescendantOf])
 
   const loadMembers = useCallback(async () => {
+    const sequence = ++memberRequestSequence.current
     setLoadingMembers(true)
     try {
       const params = {
         page,
         limit: 10,
-        search: search.trim() || undefined,
+        search: debouncedSearch || undefined,
         region: filters.region || undefined,
         state: filters.state || undefined,
         district: filters.district || undefined,
         chapter: filters.chapter || undefined,
       }
       const response = await adminApi.members(params)
+      if (sequence !== memberRequestSequence.current) return
       const nextRows = getList(response.data)
       setRows(nextRows)
       setPagination(getPagination(response.data))
     } catch (error) {
+      if (sequence !== memberRequestSequence.current) return
       toast.error(error.response?.data?.message || 'Failed to load members')
       setRows([])
       setPagination({})
     } finally {
-      setLoadingMembers(false)
+      if (sequence === memberRequestSequence.current) setLoadingMembers(false)
     }
-  }, [filters.chapter, filters.district, filters.region, filters.state, page, search])
+  }, [debouncedSearch, filters.chapter, filters.district, filters.region, filters.state, page])
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
       loadMembers()
     }, 200)
     return () => window.clearTimeout(timer)
+  }, [loadMembers])
+
+  const filters = useMemo(() => [
+    {
+      key: 'region',
+      label: 'Region',
+      options: regions.map(r => ({ value: r._id, label: r.name }))
+    },
+    {
+      key: 'state',
+      label: 'State',
+      options: states.map(s => ({ value: s._id, label: s.name }))
+    },
+    {
+      key: 'district',
+      label: 'District',
+      options: districts.map(d => ({ value: d._id, label: d.name }))
+    },
+    {
+      key: 'chapter',
+      label: 'Chapter',
+      options: chapters.map(c => ({ value: c._id, label: c.name }))
+    },
+    {
+      key: 'status',
+      label: 'Status',
+      options: [
+        { value: 'active', label: 'Active' },
+        { value: 'suspended', label: 'Suspended' },
+        { value: 'blocked', label: 'Blocked' }
+      ]
+  useEffect(() => {
+    const refresh = () => loadMembers()
+    window.addEventListener('focus', refresh)
+    const interval = window.setInterval(refresh, 30000)
+    return () => {
+      window.removeEventListener('focus', refresh)
+      window.clearInterval(interval)
+    }
   }, [loadMembers])
 
   const updateFilter = (key, value) => {
@@ -1131,7 +1672,9 @@ export function AdminMembersPage() {
         <DataTable
           columns={columns}
           rows={rows}
-          loading={loadingMembers}
+          loading={loadingMembers && !rows.length && !debouncedSearch}
+          emptyTitle={debouncedSearch ? `No approved members found for "${debouncedSearch}"` : 'No approved members found'}
+          emptyDescription={debouncedSearch ? 'No approved member in the selected organization scope matches this name, email, phone, or Member ID.' : 'There are no approved members in the selected organization scope.'}
           pagination={pagination}
           onPageChange={setPage}
         />

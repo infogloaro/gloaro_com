@@ -12,7 +12,6 @@ import {
   HelpCircle,
   Home,
   LayoutDashboard,
-  LayoutGrid,
   ListTree,
   Lock,
   MapPinned,
@@ -22,6 +21,7 @@ import {
   ShieldCheck,
   ShoppingBag,
   Star,
+  Truck,
   Ticket,
   ToggleLeft,
   Users,
@@ -31,6 +31,8 @@ import {
   Volume2,
   Handshake,
   Trophy,
+  Sparkles,
+  QrCode,
   MessageSquare,
   ClipboardCheck,
   User,
@@ -48,6 +50,9 @@ export const adminNav = [
     label: 'Communication',
     icon: MessageSquare,
     children: [
+      ['Gloaro Community', '/network', Network],
+      ['Chapter Community', '/wall', Volume2],
+      ['Direct Messages', '/chat', MessageSquare],
       ['Notifications', '/notifications', Bell],
     ],
   },
@@ -104,6 +109,8 @@ export const adminNav = [
       ['Vendors', '/vendors', Building2],
       ['Products', '/products', Package],
       ['Services', '/services', BriefcaseBusiness],
+      ['Orders', '/orders', ShoppingBag],
+      ['Shipments', '/shipments', Truck],
       ['Marketplace Approval', '/marketplace-approval', Workflow],
       ['Vendor Category Requests', '/vendor-category-approvals', Workflow],
     ],
@@ -128,11 +135,11 @@ export const vendorNav = [
   ['Products', '/vendor/products', Package],
   ['Services', '/vendor/services', BriefcaseBusiness],
   ['Orders', '/vendor/orders', ShoppingBag],
-  ['Leads', '/vendor/leads', Ticket],
   ['Reviews', '/vendor/reviews', Star],
-  ['Membership', '/vendor/membership', CreditCard],
+  ['Service Enquiries', '/vendor/service-enquiries', Ticket],
   ['Payments', '/vendor/payments', CreditCard],
   ['Analytics', '/vendor/analytics', BarChart3],
+  ['Notifications', '/vendor/notifications', Bell],
   ['Support', '/vendor/support', HelpCircle],
 ]
 
@@ -148,7 +155,6 @@ export const memberVendorNav = [
   ['Leads', '/member/dashboard/leads', Ticket],
   ['Reviews', '/member/dashboard/reviews', Star],
   ['Payments', '/member/dashboard/payments', CreditCard],
-  ['Membership', '/member/dashboard/subscription', ToggleLeft],
   ['Analytics', '/member/dashboard/vendor-analytics', BarChart3],
 ]
 
@@ -189,7 +195,7 @@ export const customerNav = [
   ['Vendors', '/vendors', Building2],
   ['Products', '/products', ShoppingBag],
   ['Services', '/services', BriefcaseBusiness],
-  ['Wishlist', '/customer/wishlist', Heart],
+  ['Wishlist', '/wishlist', Heart],
   ['Referral', '/customer/referral', Ticket],
   ['Events', '/events', CalendarDays],
   ['Profile', '/customer/profile', Users],
@@ -226,6 +232,10 @@ export const presidentNav = [];
 export const vicePresidentNav = [];
 export const regionDirectorNav = [];
 
+// Keep the Business Directory feature and routes available in code, but do not
+// expose its navigation entry anywhere in the dashboard UI.
+const SHOW_BUSINESS_DIRECTORY_IN_NAVIGATION = false
+
 const removeMarketplaceSection = (navItems = []) => navItems.filter((item) => Array.isArray(item) || item.label !== 'Marketplace')
 
 const getUserOrganization = (user) => (
@@ -250,7 +260,6 @@ const memberVendorMarketplaceChildren = [
   ['Leads', '/member/dashboard/leads', Ticket],
   ['Reviews', '/member/dashboard/reviews', Star],
   ['Payments', '/member/dashboard/payments', CreditCard],
-  ['Subscription', '/member/dashboard/subscription', ToggleLeft],
   ['Analytics', '/member/dashboard/vendor-analytics', BarChart3],
 ]
 
@@ -319,8 +328,7 @@ const commonModules = [
       ['Gloaro Network', '/network', Network],
       ['Messages', '/chat', MessageSquare],
       ['Referrals', '/referrals', Handshake],
-      ['Business Directory', '/directory', Users],
-      ['Leaderboard', '/leaderboard', Trophy]
+      ['Business Directory', '/directory', Users]
     ]
   },
   {
@@ -335,7 +343,6 @@ const commonModules = [
       ['Vendor Category Requests', '/vendor-category-approvals', Workflow],
       ['Orders', '/orders', ShoppingBag],
       ['Payments', '/payments', CreditCard],
-      ['Subscription', '/subscription', ToggleLeft]
     ]
   },
   {
@@ -488,10 +495,13 @@ export function getSidebarNav(role, options = {}) {
       }
     }
     if (item.label === 'Community') {
+      if (!SHOW_BUSINESS_DIRECTORY_IN_NAVIGATION) {
+        children = children.filter(([label]) => label !== 'Business Directory')
+      }
       if ([ROLES.REGION_DIRECTOR, ROLES.STATE_DIRECTOR, ROLES.DISTRICT_DIRECTOR].includes(normalizedRole)) {
         children = children.filter(([label]) => {
           if (label === 'Chapter Community') return hasChapterAssignment(user)
-          return ['Gloaro Network', 'Messages'].includes(label)
+          return ['Gloaro Network', 'Messages', 'Referrals'].includes(label)
         })
       } else if ([ROLES.CUSTOMER, ROLES.USER, ROLES.VENDOR].includes(normalizedRole)) {
         children = children.filter(([label]) => ['Chapter Community', 'Gloaro Network', 'Messages', 'Referrals'].includes(label))

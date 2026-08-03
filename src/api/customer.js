@@ -1,5 +1,20 @@
 import api from './axios'
 
+function normalizeReviewPayload(data = {}) {
+  const vendor = data.vendorId || data.vendor?._id || data.vendor?.id || data.vendor
+  const product = data.productId || data.product?._id || data.product?.id || data.product
+  const service = data.serviceId || data.service?._id || data.service?.id || data.service
+  return {
+    ...data,
+    vendor: vendor?._id || vendor?.id ? String(vendor._id || vendor.id) : vendor,
+    product: product?._id || product?.id ? String(product._id || product.id) : product || undefined,
+    service: service?._id || service?.id ? String(service._id || service.id) : service || undefined,
+    rating: Number(data.rating),
+    title: String(data.title || '').trim(),
+    comment: String(data.comment || '').trim(),
+  }
+}
+
 export const customerApi = {
   dashboard: () => api.get('/customers/dashboard'),
   profile: () => api.get('/customers/profile'),
@@ -24,8 +39,8 @@ export const customerApi = {
   globalSearch: (params) => api.get('/directory/global-search', { params }),
   submitEnquiry: (data) => api.post('/leads', data),
   wishlist: (params) => api.get('/customers/wishlist', { params }),
-  addWishlist: (data) => api.post('/customers/wishlist', data),
-  removeWishlist: (id, itemType) => api.delete(`/customers/wishlist/${id}`, { params: { itemType } }),
+  addWishlist: (data, config = {}) => api.post('/customers/wishlist', data, config),
+  removeWishlist: (id, itemType, config = {}) => api.delete(`/customers/wishlist/${id}`, { ...config, params: { itemType, ...(config.params || {}) } }),
   enquiries: (params) => api.get('/customers/enquiries', { params }),
   referrals: () => api.get('/referrals/my'),
   referralCode: () => api.get('/referrals/my/code'),
@@ -36,7 +51,7 @@ export const customerApi = {
   training: () => api.get('/customers/training', { silent: true }),
   completeTrainingAssignment: (courseId, assignmentIndex) => api.patch(`/customers/training/${courseId}/assignments/${assignmentIndex}/complete`),
   reviews: (vendorId, params) => api.get(`/reviews/vendor/${vendorId}`, { params }),
-  createReview: (data) => api.post('/reviews', data),
+  createReview: (data) => api.post('/reviews', normalizeReviewPayload(data)),
   support: (params) => api.get('/support/my', { params }),
   createTicket: (data) => api.post('/support', data),
 }

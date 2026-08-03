@@ -30,7 +30,6 @@ export function ChapterMarketplaceProducts({
     <>
       <ResourceListPage
         readOnly={true}
-        retainRowsOnEmptySearch={true}
         title={title}
         description={description}
         fetcher={adminApi.products}

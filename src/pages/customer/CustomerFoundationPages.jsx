@@ -135,13 +135,26 @@ export function CustomerAddressesPage() {
 
   const loadAddresses = async () => {
     const response = await customerApi.addresses()
-    const nextAddresses = response.data?.data?.addresses || []
+    const nextAddresses = response.data?.data?.addresses || response.data?.data || []
     setAddresses(nextAddresses)
     return nextAddresses
   }
 
   useEffect(() => {
-    loadAddresses().finally(() => setLoading(false))
+    let active = true
+    ;(async () => {
+      try {
+        await loadAddresses()
+      } catch (error) {
+        toast.error(error.response?.data?.message || 'Unable to load addresses')
+      } finally {
+        if (active) setLoading(false)
+      }
+    })()
+
+    return () => {
+      active = false
+    }
   }, [])
 
   const startEdit = (address) => {

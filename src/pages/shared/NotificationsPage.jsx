@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
-import { Bell, Check, Eye, MailOpen, Mail, Search, Trash2 } from 'lucide-react'
+import { Bell, Check, Eye, MailOpen, Mail, Search, Trash2, X } from 'lucide-react'
 import { notificationApi } from '../../api/notification'
 import LoadingScreen from '../../components/common/LoadingScreen'
 import Pagination from '../../components/common/Pagination'
@@ -61,7 +61,9 @@ export default function NotificationsPage({ systemView = false }) {
     setIsFetching(true)
     try {
       const [listRes, countRes] = await Promise.all([
-        systemView ? notificationApi.systemList(filters) : notificationApi.list(filters),
+        systemView
+          ? notificationApi.systemList(filters, { signal, silent: true })
+          : notificationApi.list(filters, { signal, silent: true }),
         systemView ? Promise.resolve({ data: { data: { count: 0 } } }) : notificationApi.unreadCount(),
       ])
       const payload = listRes.data || {}
@@ -69,7 +71,8 @@ export default function NotificationsPage({ systemView = false }) {
       setStats(payload.stats || { total: 0, unread: 0, read: 0, highPriority: 0, today: 0 })
       setPagination(payload.pagination || { currentPage: filters.page, totalPages: 1 })
       setUnreadCount(Number(countRes.data?.data?.count || countRes.data?.count || payload.stats?.unread || 0))
-    } catch {
+    } catch (error) {
+      if (error?.name === 'CanceledError' || error?.code === 'ERR_CANCELED') return
       toast.error('Failed to load notifications')
     } finally {
       setInitialLoading(false)
@@ -78,11 +81,15 @@ export default function NotificationsPage({ systemView = false }) {
   }, [filters, systemView])
 
   useEffect(() => {
+    const controller = new AbortController()
     const timer = window.setTimeout(() => {
-      loadNotifications()
-    }, 0)
-    return () => window.clearTimeout(timer)
-  }, [loadNotifications])
+      loadNotifications(controller.signal)
+    }, filters.search ? 300 : 0)
+    return () => {
+      window.clearTimeout(timer)
+      controller.abort()
+    }
+  }, [filters.search, loadNotifications])
 
   useEffect(() => {
     if (!socket || systemView) return undefined

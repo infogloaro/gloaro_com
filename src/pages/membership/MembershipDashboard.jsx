@@ -51,9 +51,14 @@ export default function MembershipDashboard() {
         <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
           <h2 className="text-lg font-extrabold text-slate-950">Membership Status</h2>
           <div className="mt-4 grid gap-3 sm:grid-cols-3">
+
             <Status label="Application" value={applicationStatus} />
             <Status label="Access" value={accessStatus} />
-            <Status label="Plan" value={membershipPlan} />
+            
+
+
+            <Status label="Membership" value="Executive Member" />
+
           </div>
         </section>
 

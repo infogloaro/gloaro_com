@@ -2,9 +2,9 @@ import EmptyState from '../common/EmptyState'
 import LoadingScreen from '../common/LoadingScreen'
 import Pagination from '../common/Pagination'
 
-export default function DataTable({ columns, rows = [], loading, pagination, onPageChange, actions }) {
+export default function DataTable({ columns, rows = [], loading, pagination, onPageChange, actions, emptyTitle, emptyDescription }) {
   if (loading) return <LoadingScreen label="Loading records..." />
-  if (!rows.length) return <EmptyState />
+  if (!rows.length) return <EmptyState title={emptyTitle} description={emptyDescription} />
 
   return (
     <div className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">

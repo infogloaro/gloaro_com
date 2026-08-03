@@ -20,6 +20,7 @@ import { communityApi } from '../../../api/community'
 import LoadingScreen from '../../../components/common/LoadingScreen'
 import { useAuth } from '../../../hooks/useAuth'
 import { formatDate } from '../../../utils/format'
+import { ROLES } from '../../../constants/roleConfig'
 
 const postTypes = [
   ['business_requirement', 'Requirement'],
@@ -278,7 +279,7 @@ function BusinessPostInfo({ post }) {
   )
 }
 
-function PostComposer({ scope, onCreated }) {
+function PostComposer({ scope, onCreated, chapterId, chapterName }) {
   const [content, setContent] = useState('')
   const [type, setType] = useState('announcement')
   const [visibility, setVisibility] = useState(scope === 'chapter' ? 'chapter' : 'global')
@@ -299,7 +300,7 @@ function PostComposer({ scope, onCreated }) {
       ? 'What business support are you looking for?'
       : type === 'offer_deal'
         ? 'Share your offer details...'
-        : scope === 'chapter' ? 'Share an update with your chapter...' : 'Share an update across the Gloaro network...'
+        : scope === 'chapter' ? `Share an update with ${chapterName ? `${chapterName} chapter` : 'your chapter'}...` : 'Share an update across the Gloaro network...'
 
   const handleFiles = (event) => {
     const files = Array.from(event.target.files || [])
@@ -316,7 +317,7 @@ function PostComposer({ scope, onCreated }) {
     let mounted = true
     const timer = setTimeout(() => {
       setMentionLoading(true)
-      communityApi.getMentions({ scope, search: activeMentionQuery, page: 1, limit: 20 })
+      communityApi.getMentions({ scope, chapter: scope === 'chapter' ? chapterId : undefined, search: activeMentionQuery, page: 1, limit: 20 })
         .then((response) => {
           if (!mounted) return
           setMentionResults(response.data?.data || [])
@@ -334,13 +335,13 @@ function PostComposer({ scope, onCreated }) {
       mounted = false
       clearTimeout(timer)
     }
-  }, [activeMentionQuery, scope])
+  }, [activeMentionQuery, scope, chapterId])
 
   const loadMoreMentions = () => {
     if (mentionLoading || mentionPagination.page >= mentionPagination.totalPages) return
     const nextPage = mentionPagination.page + 1
     setMentionLoading(true)
-    communityApi.getMentions({ scope, search: activeMentionQuery || '', page: nextPage, limit: 20 })
+    communityApi.getMentions({ scope, chapter: scope === 'chapter' ? chapterId : undefined, search: activeMentionQuery || '', page: nextPage, limit: 20 })
       .then((response) => {
         setMentionResults((current) => [...current, ...(response.data?.data || [])])
         setMentionPagination(response.data?.pagination || { page: nextPage, totalPages: nextPage })
@@ -369,6 +370,7 @@ function PostComposer({ scope, onCreated }) {
     form.append('visibility', scope === 'chapter' ? 'chapter' : visibility)
     form.append('content', content.trim())
     form.append('mentions', JSON.stringify(selectedMentions.filter((member) => mentionStillPresent(content, member)).map((member) => member._id)))
+    if (scope === 'chapter' && chapterId) form.append('chapterId', chapterId)
     if (isBusinessPost) form.append('businessTarget', businessTarget)
     if (type === 'offer_deal' && offerValidUntil) form.append('offerValidUntil', offerValidUntil)
     media.forEach((file) => form.append('media', file))
@@ -747,6 +749,7 @@ function MemberDiscovery({ members, scope, search }) {
 export default function CommunityPage({ scope = 'chapter' }) {
   const { user } = useAuth()
   const location = useLocation()
+  const isGlobalAdmin = [ROLES.SUPERADMIN, ROLES.ADMIN].includes(user?.role)
   const [posts, setPosts] = useState([])
   const [members, setMembers] = useState([])
   const [initialLoading, setInitialLoading] = useState(true)
@@ -762,12 +765,20 @@ export default function CommunityPage({ scope = 'chapter' }) {
   const [page, setPage] = useState(1)
   const [pagination, setPagination] = useState({ page: 1, limit: 10, total: 0, totalPages: 1 })
   const [refreshKey, setRefreshKey] = useState(0)
+  const [chapters, setChapters] = useState([])
+  const [chaptersLoaded, setChaptersLoaded] = useState(false)
+  const [selectedChapterId, setSelectedChapterId] = useState('')
+  const [chapterOverview, setChapterOverview] = useState(null)
   const abortRef = useRef(null)
   const highlightedPostId = useMemo(() => new URLSearchParams(location.search).get('post'), [location.search])
 
+  const selectedChapter = chapters.find((chapter) => String(chapter._id) === String(selectedChapterId)) || null
+  const chapterFilterValue = isGlobalAdmin && scope === 'chapter' ? (selectedChapterId || undefined) : (filters.chapter || undefined)
+  const loadingChapters = scope === 'chapter' && isGlobalAdmin && !chaptersLoaded
+
   const title = scope === 'chapter' ? 'Chapter Community' : 'Gloaro Network'
   const subtitle = scope === 'chapter'
-    ? 'Create posts, share photos, comment, reply, mention, and connect with members in your chapter.'
+    ? `Create posts, share photos, comment, reply, mention, and connect with members in ${selectedChapter ? `${selectedChapter.name} chapter` : 'your chapter'}.`
     : 'Communicate and discover members across chapters, districts, states, and regions.'
 
   useEffect(() => {
@@ -784,16 +795,20 @@ export default function CommunityPage({ scope = 'chapter' }) {
     type: type || undefined,
     visibility: visibility || undefined,
     dealStatus: type === 'offer_deal' ? dealStatus || undefined : undefined,
-    chapter: filters.chapter || undefined,
+    chapter: chapterFilterValue,
     district: filters.district || undefined,
     state: filters.state || undefined,
     region: filters.region || undefined,
     page,
     limit: 10,
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }), [scope, debouncedSearch, type, visibility, dealStatus, filters, page, refreshKey])
+  }), [scope, debouncedSearch, type, visibility, dealStatus, filters, page, refreshKey, chapterFilterValue])
 
   const fetchCommunity = useCallback(() => {
+    if (isGlobalAdmin && scope === 'chapter' && !selectedChapterId) {
+      setSearching(false)
+      return Promise.resolve()
+    }
     if (abortRef.current) abortRef.current.abort()
     const controller = new AbortController()
     abortRef.current = controller
@@ -802,9 +817,13 @@ export default function CommunityPage({ scope = 'chapter' }) {
 
     if (!isLoadMore) setSearching(true)
 
+    const membersPromise = isGlobalAdmin && scope === 'chapter'
+      ? communityApi.getChapterMembers(selectedChapterId, { search: debouncedSearch || undefined }, { signal: controller.signal, silent: true })
+      : communityApi.getDirectory({ scope, search: debouncedSearch, ...filters }, { signal: controller.signal, silent: true })
+
     return Promise.all([
       communityApi.getPosts(query, { signal: controller.signal, silent: true }),
-      communityApi.getDirectory({ scope, search: debouncedSearch, ...filters }, { signal: controller.signal, silent: true }),
+      membersPromise,
     ]).then(([postRes, directoryRes]) => {
       const newPosts = postRes.data?.data || []
       const pag = postRes.data?.pagination
@@ -818,7 +837,7 @@ export default function CommunityPage({ scope = 'chapter' }) {
       if (!controller.signal.aborted) setSearching(false)
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filters, query, scope, debouncedSearch, page, refreshKey])
+  }, [filters, query, scope, debouncedSearch, page, refreshKey, isGlobalAdmin, selectedChapterId])
 
   useEffect(() => {
     let cancelled = false
@@ -832,6 +851,38 @@ export default function CommunityPage({ scope = 'chapter' }) {
     run()
     return () => { cancelled = true }
   }, [fetchCommunity])
+
+  useEffect(() => {
+    if (scope !== 'chapter' || !isGlobalAdmin) return
+    let mounted = true
+    communityApi.getChapterList()
+      .then((response) => {
+        if (!mounted) return
+        const list = response.data?.data || []
+        setChapters(list)
+        setSelectedChapterId((current) => current || list[0]?._id || '')
+      })
+      .catch(() => {
+        if (mounted) toast.error('Unable to load chapters')
+      })
+      .finally(() => {
+        if (mounted) setChaptersLoaded(true)
+      })
+    return () => { mounted = false }
+  }, [scope, isGlobalAdmin])
+
+  useEffect(() => {
+    if (scope !== 'chapter' || !isGlobalAdmin || !selectedChapterId) return
+    let mounted = true
+    communityApi.getChapterCommunity(selectedChapterId)
+      .then((response) => {
+        if (mounted) setChapterOverview(response.data?.data || null)
+      })
+      .catch(() => {
+        if (mounted) setChapterOverview(null)
+      })
+    return () => { mounted = false }
+  }, [scope, isGlobalAdmin, selectedChapterId])
 
   useEffect(() => {
     if (!highlightedPostId || !posts.length) return
@@ -903,6 +954,26 @@ export default function CommunityPage({ scope = 'chapter' }) {
 
   if (initialLoading) return <LoadingScreen label={`Loading ${title}...`} />
 
+  if (scope === 'chapter' && isGlobalAdmin && !selectedChapterId) {
+    return <LoadingScreen label={loadingChapters ? 'Loading chapters...' : 'Select a chapter...'} />
+  }
+
+  const handleChapterChange = (chapterId) => {
+    setSelectedChapterId(chapterId)
+    setChapterOverview(null)
+    setPage(1)
+    setType('')
+    setVisibility('')
+    setDealStatus('')
+    setSearch('')
+    setDebouncedSearch('')
+    setFilters({ chapter: '', district: '', state: '', region: '' })
+    setPosts([])
+    setMembers([])
+    setPagination({ page: 1, limit: 10, total: 0, totalPages: 1 })
+    setRefreshKey((k) => k + 1)
+  }
+
   const handleFilterChange = (key, value) => {
     setPage(1)
     if (key === 'region') {
@@ -931,6 +1002,39 @@ export default function CommunityPage({ scope = 'chapter' }) {
         <p className="text-[10px] font-extrabold uppercase tracking-[0.25em] text-[#ffbf1a]">Community Communication</p>
         <h1 className="mt-2 text-3xl font-black tracking-tight">{title}</h1>
         <p className="mt-3 max-w-3xl text-sm font-semibold leading-6 text-blue-100">{subtitle}</p>
+        {isGlobalAdmin && scope === 'chapter' && (
+          <div className="mt-6 flex flex-col gap-5 rounded-2xl border border-white/15 bg-white/10 p-5 backdrop-blur sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
+              <label htmlFor="chapter-selector" className="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[#ffbf1a]">
+                Chapter
+              </label>
+              <select
+                id="chapter-selector"
+                value={selectedChapterId}
+                onChange={(event) => handleChapterChange(event.target.value)}
+                disabled={loadingChapters || !chapters.length}
+                className="min-w-[220px] cursor-pointer rounded-lg border border-white/25 bg-white px-4 py-2.5 text-sm font-black text-slate-900 outline-none transition focus:border-[#ffbf1a] disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {loadingChapters && <option value="">Loading chapters...</option>}
+                {!loadingChapters && !chapters.length && <option value="">No active chapters</option>}
+                {chapters.map((chapter) => (
+                  <option key={chapter._id} value={chapter._id}>{chapter.name}</option>
+                ))}
+              </select>
+            </div>
+            <div className="flex items-center gap-6">
+              <div>
+                <p className="text-[10px] font-extrabold uppercase tracking-[0.18em] text-blue-200">Members</p>
+                <p className="mt-1 text-2xl font-black leading-none text-white">{chapterOverview?.membersCount ?? '—'}</p>
+              </div>
+              <div className="h-8 w-px bg-white/20" />
+              <div>
+                <p className="text-[10px] font-extrabold uppercase tracking-[0.18em] text-blue-200">Posts</p>
+                <p className="mt-1 text-2xl font-black leading-none text-white">{chapterOverview?.postsCount ?? '—'}</p>
+              </div>
+            </div>
+          </div>
+        )}
       </section>
       <CommunitySearch search={search} onSearch={setSearch} searching={searching} />
       <CommunityFilters
@@ -956,7 +1060,7 @@ export default function CommunityPage({ scope = 'chapter' }) {
       />
       <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(410px,450px)]">
         <main className="min-w-0 space-y-5">
-          <PostComposer scope={scope} onCreated={() => { setPage(1); setRefreshKey((k) => k + 1) }} />
+          <PostComposer scope={scope} chapterId={selectedChapterId || undefined} chapterName={selectedChapter?.name} onCreated={() => { setPage(1); setRefreshKey((k) => k + 1) }} />
           {searching && (
             <div className="flex items-center justify-center gap-2 rounded-2xl border border-slate-100 bg-white py-3 text-xs font-bold text-slate-400">
               <span className="h-4 w-4 animate-spin rounded-full border-2 border-slate-300 border-t-[#0d4697]" />

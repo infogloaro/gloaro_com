@@ -372,7 +372,7 @@ function normalizeNearbyItem(item, type, location) {
     openNow: isVendorOpenNow(vendor),
     rating: item.stats?.avgRating || vendor.stats?.avgRating || 0,
     distanceKm,
-    price: type === 'service' ? item.pricing?.minPrice : item.pricing?.sellingPrice,
+    price: type === 'service' ? getServiceDisplayPrice(item) : item.pricing?.sellingPrice,
     mrp: item.pricing?.mrp,
     inStock: item.inventory?.isUnlimited || Number(item.inventory?.quantity || 0) > 0,
     detailUrl: type === 'business' ? `/vendors/${item._id || item.id}` : `/${type}s/${item._id || item.id}`,
@@ -415,6 +415,28 @@ function formatDistance(distance) {
 
 function formatRating(value) {
   return `${Number(value || 0).toFixed(1)} rating`
+}
+
+function getServiceDisplayPrice(service) {
+  const pricing = service?.pricing || {}
+  const candidates = [pricing.minPrice, pricing.maxPrice, service?.price, service?.amount]
+  const numeric = candidates.map((value) => Number(value)).find((value) => Number.isFinite(value) && value > 0)
+  return numeric || 0
+}
+
+function getServicePriceText(service) {
+  const pricing = service?.pricing || {}
+  const minPrice = Number(pricing.minPrice)
+  const maxPrice = Number(pricing.maxPrice)
+  const currency = pricing.currency || 'INR'
+
+  if (pricing.type === 'range' && Number.isFinite(minPrice) && minPrice > 0 && Number.isFinite(maxPrice) && maxPrice > 0) {
+    return `${formatCurrency(minPrice, currency)} - ${formatCurrency(maxPrice, currency)}`
+  }
+
+  const price = getServiceDisplayPrice(service)
+  if (price > 0) return formatCurrency(price, currency)
+  return 'Custom quote'
 }
 
 function isVendorOpenNow(vendor) {
@@ -776,7 +798,7 @@ export function ServicesPage() {
                     <div className="flex flex-col">
                       <span className="text-[10px] font-semibold text-slate-400">Starting Price</span>
                       <span className="text-sm font-black text-slate-900">
-                        {formatCurrency(service.pricing?.minPrice)}
+                        {getServicePriceText(service)}
                       </span>
                     </div>
                     <Link 
@@ -823,6 +845,22 @@ export function DetailPage({ type }) {
   const fetcher = type === 'vendors' ? customerApi.vendor : type === 'products' ? customerApi.product : customerApi.service
   const { data, loading } = useApi(() => fetcher(id), [id])
   const [relatedItems, setRelatedItems] = useState([])
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors, isSubmitting },
+  } = useForm({
+    defaultValues: {
+      name: '',
+      email: '',
+      phone: '',
+      subject: '',
+      message: '',
+      budgetMin: '',
+      budgetMax: '',
+    },
+  })
   const item = data
 
   useEffect(() => {
@@ -836,10 +874,23 @@ export function DetailPage({ type }) {
             const list = getList(res.data)
             setRelatedItems(list.filter(i => i._id !== item._id).slice(0, 4))
           })
-          .catch(() => {})
+        .catch(() => {})
       }
     }
   }, [type, item])
+
+  useEffect(() => {
+    if (type !== 'services' || !item) return
+    reset({
+      name: '',
+      email: '',
+      phone: '',
+      subject: `Enquiry for ${item.title || 'service'}`,
+      message: '',
+      budgetMin: '',
+      budgetMax: '',
+    })
+  }, [type, item, reset])
 
   if (loading) return <LoadingScreen label="Loading details..." />
   if (!item) return <EmptyState title="Not Found" />
@@ -861,13 +912,212 @@ export function DetailPage({ type }) {
   const businessName = vendor.businessName || 'Gloaro business'
   const addressObj = vendor.address || {}
   const fullAddress = [addressObj.street, addressObj.city, addressObj.state, addressObj.pincode].filter(Boolean).join(', ') || 'Address not listed'
-  const displayPrice = type === 'products' ? item.pricing?.sellingPrice : item.pricing?.minPrice
+  const displayPrice = type === 'products' ? item.pricing?.sellingPrice : getServiceDisplayPrice(item)
   const originalPrice = type === 'products' ? item.pricing?.mrp : null
-  const discount = originalPrice > displayPrice ? Math.round(((originalPrice - displayPrice) / originalPrice) * 100) : 0
+  const discount = type === 'products' && originalPrice > displayPrice ? Math.round(((originalPrice - displayPrice) / originalPrice) * 100) : 0
 
   const galleryImages = type === 'products' 
     ? (item.images || []) 
     : (item.gallery || [])
+
+  const submitServiceEnquiry = async (values) => {
+    if (!vendor?._id) {
+      toast.error('Vendor details are missing for this service.')
+      return
+    }
+
+    const budget = {}
+    if (values.budgetMin) budget.min = Number(values.budgetMin)
+    if (values.budgetMax) budget.max = Number(values.budgetMax)
+
+    try {
+      await customerApi.submitEnquiry({
+        vendor: vendor._id,
+        service: item._id,
+        name: values.name.trim(),
+        email: values.email.trim(),
+        phone: values.phone.trim(),
+        subject: values.subject.trim(),
+        message: values.message.trim(),
+        ...(Object.keys(budget).length ? { budget } : {}),
+        source: 'service-detail',
+      })
+      toast.success('Your enquiry has been sent to the vendor.')
+      reset({
+        name: '',
+        email: '',
+        phone: '',
+        subject: `Enquiry for ${item.title || 'service'}`,
+        message: '',
+        budgetMin: '',
+        budgetMax: '',
+      })
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Unable to send enquiry right now.')
+    }
+  }
+
+  if (type === 'services') {
+    return (
+      <main className="mx-auto min-h-screen max-w-7xl px-4 py-8 sm:px-6 lg:px-8 bg-slate-50">
+        <div className="grid gap-8 lg:grid-cols-3">
+          <div className="lg:col-span-2 space-y-6">
+            <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white p-2 shadow-sm">
+              <div className="grid gap-2 sm:grid-cols-2">
+                {galleryImages.length ? (
+                  galleryImages.map((img, idx) => (
+                    <img key={idx} src={img.url} alt="" className="h-60 w-full rounded-lg object-cover" />
+                  ))
+                ) : (
+                  <img src="/logo.png" alt="" className="h-60 w-full rounded-lg object-cover sm:col-span-2" />
+                )}
+              </div>
+            </div>
+
+            <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <span className="rounded-full bg-[#0d4697]/10 px-3 py-1 text-xs font-black uppercase tracking-wider text-[#0d4697]">
+                  {item.category?.name || 'Service'}
+                </span>
+                <span className="text-sm font-bold text-slate-400">Service ID: {item.serviceId || item._id}</span>
+              </div>
+              <h1 className="mt-3 font-playfair text-3xl font-black text-slate-900">{item.title}</h1>
+              <p className="mt-4 text-slate-700 leading-relaxed whitespace-pre-line">{item.description}</p>
+            </div>
+
+            {relatedItems.length > 0 && (
+              <div>
+                <h2 className="mb-4 text-xl font-extrabold text-slate-900">Related Services</h2>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  {relatedItems.map((rel) => (
+                    <Link key={rel._id} to={`/services/${rel._id}`} className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white p-3 hover:shadow transition">
+                      <img src={rel.gallery?.[0]?.url || '/logo.png'} alt="" className="h-16 w-16 rounded-lg object-cover" />
+                      <div>
+                        <p className="line-clamp-1 text-sm font-bold text-slate-800">{rel.title}</p>
+                        <p className="mt-0.5 text-xs font-semibold text-slate-500">{getServicePriceText(rel)}</p>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="space-y-6">
+            <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+              <p className="text-xs font-black uppercase tracking-wider text-slate-400">Starting Price</p>
+              <p className="mt-2 text-4xl font-black text-slate-900">{getServicePriceText(item)}</p>
+              <p className="mt-2 text-sm font-semibold text-slate-500">Send a detailed enquiry and the vendor will receive it directly in their dashboard.</p>
+            </div>
+
+            <form onSubmit={handleSubmit(submitServiceEnquiry)} className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+              <h2 className="text-xl font-extrabold text-slate-900">Request this service</h2>
+              <p className="mt-1 text-sm font-semibold text-slate-500">The enquiry goes to {businessName} and appears inside the vendor lead inbox.</p>
+
+              <div className="mt-5 grid gap-4">
+                <FormField label="Full Name" error={errors.name?.message}>
+                  <input
+                    {...register('name', { required: 'Name is required' })}
+                    className="h-11 w-full rounded-md border border-slate-200 px-3 text-sm font-semibold text-slate-900 outline-none focus:border-[#0d4697]"
+                    placeholder="Your name"
+                  />
+                </FormField>
+
+                <FormField label="Email" error={errors.email?.message}>
+                  <input
+                    {...register('email', {
+                      required: 'Email is required',
+                      pattern: { value: /^\S+@\S+\.\S+$/, message: 'Enter a valid email address' },
+                    })}
+                    type="email"
+                    className="h-11 w-full rounded-md border border-slate-200 px-3 text-sm font-semibold text-slate-900 outline-none focus:border-[#0d4697]"
+                    placeholder="you@example.com"
+                  />
+                </FormField>
+
+                <FormField label="Phone" error={errors.phone?.message}>
+                  <input
+                    {...register('phone', { required: 'Phone number is required' })}
+                    type="tel"
+                    className="h-11 w-full rounded-md border border-slate-200 px-3 text-sm font-semibold text-slate-900 outline-none focus:border-[#0d4697]"
+                    placeholder="Phone number"
+                  />
+                </FormField>
+
+                <FormField label="Subject" error={errors.subject?.message}>
+                  <input
+                    {...register('subject', { required: 'Subject is required' })}
+                    className="h-11 w-full rounded-md border border-slate-200 px-3 text-sm font-semibold text-slate-900 outline-none focus:border-[#0d4697]"
+                    placeholder="What do you need?"
+                  />
+                </FormField>
+
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <FormField label="Budget Min">
+                    <input
+                      {...register('budgetMin')}
+                      type="number"
+                      min="0"
+                      className="h-11 w-full rounded-md border border-slate-200 px-3 text-sm font-semibold text-slate-900 outline-none focus:border-[#0d4697]"
+                      placeholder="Optional"
+                    />
+                  </FormField>
+                  <FormField label="Budget Max">
+                    <input
+                      {...register('budgetMax')}
+                      type="number"
+                      min="0"
+                      className="h-11 w-full rounded-md border border-slate-200 px-3 text-sm font-semibold text-slate-900 outline-none focus:border-[#0d4697]"
+                      placeholder="Optional"
+                    />
+                  </FormField>
+                </div>
+
+                <FormField label="Message" error={errors.message?.message}>
+                  <textarea
+                    {...register('message', {
+                      required: 'Message is required',
+                      minLength: { value: 10, message: 'Message should be at least 10 characters' },
+                    })}
+                    rows={6}
+                    className="w-full rounded-md border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-900 outline-none focus:border-[#0d4697]"
+                    placeholder="Tell the vendor what you need..."
+                  />
+                </FormField>
+
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="h-12 rounded-xl bg-[#0d4697] px-4 text-sm font-extrabold text-white transition hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {isSubmitting ? 'Sending Enquiry...' : 'Submit Enquiry'}
+                </button>
+              </div>
+            </form>
+
+            <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-4">
+              <div className="flex items-center gap-3">
+                <img src={vendor.logo?.url || '/logo.png'} alt="" className="h-12 w-12 rounded-full border object-cover" />
+                <div>
+                  <h3 className="text-base font-extrabold text-slate-900">{businessName}</h3>
+                  <Link to={`/vendors/${vendor._id}`} className="text-xs font-extrabold text-[#0d4697] hover:underline">
+                    View Vendor Profile
+                  </Link>
+                </div>
+              </div>
+
+              <div className="border-t border-slate-100 pt-4 space-y-3 text-xs font-semibold text-slate-650">
+                <p><span className="text-slate-400">Owner:</span> {providerName}</p>
+                {vendor.phone && <p><span className="text-slate-400">📞 Phone:</span> <a href={`tel:${vendor.phone}`} className="hover:underline">{vendor.phone}</a></p>}
+                {vendor.email && <p><span className="text-slate-400">✉ Email:</span> <a href={`mailto:${vendor.email}`} className="hover:underline">{vendor.email}</a></p>}
+                <p><span className="text-slate-400">📍 Address:</span> {fullAddress}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+    )
+  }
 
   return (
     <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 bg-slate-50 min-h-screen">
@@ -910,7 +1160,7 @@ export function DetailPage({ type }) {
                     <div>
                       <p className="text-sm font-bold text-slate-800 line-clamp-1">{rel.title}</p>
                       <p className="text-xs font-semibold text-slate-500 mt-0.5">
-                        {formatCurrency(type === 'products' ? rel.pricing?.sellingPrice : rel.pricing?.minPrice)}
+                        {type === 'products' ? formatCurrency(rel.pricing?.sellingPrice) : getServicePriceText(rel)}
                       </p>
                     </div>
                   </Link>
@@ -969,21 +1219,33 @@ export function DetailPage({ type }) {
   )}
 
 function ReviewBox({ vendor }) {
-  const { register, handleSubmit, reset } = useForm()
+  const { register, handleSubmit, reset, formState: { errors } } = useForm()
+  const [submitting, setSubmitting] = useState(false)
   const onSubmit = async (values) => {
-    await customerApi.createReview({ ...values, vendor, rating: Number(values.rating) })
-    toast.success('Review submitted')
-    reset()
+    setSubmitting(true)
+    try {
+      await customerApi.createReview({ ...values, vendor, rating: Number(values.rating) })
+      toast.success('Review submitted')
+      reset()
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Unable to submit review')
+    } finally {
+      setSubmitting(false)
+    }
   }
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="mt-8 rounded-lg border border-slate-200 bg-white p-5">
       <h2 className="text-xl font-extrabold">Write a Review</h2>
       <div className="mt-4 grid gap-3 sm:grid-cols-3">
-        <FormField label="Rating"><input {...register('rating', { required: true })} type="number" min="1" max="5" className="h-10 w-full rounded-md border px-3" /></FormField>
+        <FormField label="Rating"><input {...register('rating', { required: 'Rating is required', min: { value: 1, message: 'Rating must be at least 1' }, max: { value: 5, message: 'Rating must be at most 5' } })} type="number" min="1" max="5" step="1" className="h-10 w-full rounded-md border px-3" /></FormField>
         <FormField label="Title"><input {...register('title')} className="h-10 w-full rounded-md border px-3" /></FormField>
-        <FormField label="Comment"><input {...register('comment', { required: true })} className="h-10 w-full rounded-md border px-3" /></FormField>
+        <FormField label="Comment"><input {...register('comment', { required: 'Comment is required', minLength: { value: 10, message: 'Comment must be at least 10 characters' } })} className="h-10 w-full rounded-md border px-3" /></FormField>
       </div>
-      <button className="mt-4 rounded-md bg-[#0d4697] px-4 py-2 font-bold text-white">Submit Review</button>
+      <div className="mt-3 space-y-1 text-xs font-semibold text-rose-600">
+        {errors.rating && <p>{errors.rating.message}</p>}
+        {errors.comment && <p>{errors.comment.message}</p>}
+      </div>
+      <button type="submit" disabled={submitting} className="mt-4 rounded-md bg-[#0d4697] px-4 py-2 font-bold text-white disabled:opacity-60">{submitting ? 'Submitting...' : 'Submit Review'}</button>
     </form>
   )
 }

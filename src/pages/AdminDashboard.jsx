@@ -206,7 +206,6 @@ export default function AdminDashboard() {
                       <tr>
                         <th className="px-5 py-3">Applicant</th>
                         <th className="px-5 py-3">Company</th>
-                        <th className="px-5 py-3">Plan</th>
                         <th className="px-5 py-3">Status</th>
                         <th className="px-5 py-3">Action</th>
                       </tr>
@@ -217,7 +216,6 @@ export default function AdminDashboard() {
                           <tr key={app._id} className="bg-white">
                             <td className="px-5 py-4 font-extrabold text-[#101827]">{app.personal?.fullName || app.submittedBy?.name || 'New Applicant'}</td>
                             <td className="px-5 py-4 font-semibold text-slate-600">{app.professional?.companyName || 'Not specified'}</td>
-                            <td className="px-5 py-4 font-semibold text-slate-600">{app.professional?.membershipPlan || app.membership?.plan || 'Silver'}</td>
                             <td className="px-5 py-4"><span className="rounded bg-blue-50 px-2 py-1 text-xs font-extrabold text-blue-700">{app.status || 'submitted'}</span></td>
                             <td className="px-5 py-4"><a href="/admin/applications/membership" className="rounded-md border border-slate-200 px-3 py-1.5 text-xs font-extrabold text-[#0d4697] hover:bg-blue-50 transition">Review</a></td>
                           </tr>
