@@ -9,7 +9,8 @@ import { useAuth } from '../hooks/useAuth'
 import { storage } from '../utils/storage'
 import { buildAdminRoute } from '../utils/permissions'
 import { formatDate } from '../utils/format'
-import { getCommunityNotificationPath } from '../utils/communityNotifications'
+import { resolveNotificationNavigation } from '../utils/notificationRouting'
+import NotificationDetailsModal from '../components/common/NotificationDetailsModal'
 import { ROLES } from '../constants/roleConfig.js'
 import { resolveNavigation, NAVIGATION_MODES } from '../utils/navigationResolver'
 
@@ -27,6 +28,8 @@ export default function DashboardLayout({ navItems = [], title = 'Dashboard', th
   const [notificationOpen, setNotificationOpen] = useState(false)
   const [notificationPreview, setNotificationPreview] = useState([])
   const [notificationLoading, setNotificationLoading] = useState(false)
+  const [notificationDetails, setNotificationDetails] = useState(null)
+  const [notificationUnavailable, setNotificationUnavailable] = useState(false)
 
   const hasExplicitNavItems = navItems.length > 0
   const isSuperAdmin = user?.role === ROLES.SUPERADMIN
@@ -60,7 +63,7 @@ export default function DashboardLayout({ navItems = [], title = 'Dashboard', th
     if (!user?._id) return Promise.resolve()
     setNotificationLoading(true)
     return Promise.all([
-      notificationApi.list({ limit: 8 }),
+      notificationApi.list({ limit: 10, isRead: false }),
       notificationApi.unreadCount(),
     ]).then(([listRes, countRes]) => {
       setNotificationPreview(listRes.data?.data || listRes.data || [])
@@ -82,10 +85,13 @@ export default function DashboardLayout({ navItems = [], title = 'Dashboard', th
   }, [refreshChatUnreadCount])
 
   useEffect(() => {
-    const handleRefresh = () => refreshNotificationUnreadCount()
+    const handleRefresh = () => {
+      refreshNotificationUnreadCount()
+      if (notificationOpen) loadNotificationPreview()
+    }
     window.addEventListener('gloaro:notification-unread-refresh', handleRefresh)
     return () => window.removeEventListener('gloaro:notification-unread-refresh', handleRefresh)
-  }, [refreshNotificationUnreadCount])
+  }, [loadNotificationPreview, notificationOpen, refreshNotificationUnreadCount])
 
   const returnToSuperAdmin = () => {
     const raw = sessionStorage.getItem('gloaro_superadmin_session')
@@ -134,7 +140,8 @@ export default function DashboardLayout({ navItems = [], title = 'Dashboard', th
       .map((item) => {
         if (!item) return null
         if (Array.isArray(item)) return (bypassEnabledCheck || isSidebarItemEnabled(item[0])) ? item : null
-        const filteredChildren = [...item.children].filter(([label]) => bypassEnabledCheck || isSidebarItemEnabled(label))
+        const children = Array.isArray(item.children) ? item.children : []
+        const filteredChildren = children.filter(([label]) => bypassEnabledCheck || isSidebarItemEnabled(label))
         return filteredChildren.length ? { ...item, children: filteredChildren } : null
       })
       .filter(Boolean)
@@ -145,8 +152,8 @@ export default function DashboardLayout({ navItems = [], title = 'Dashboard', th
       .map((item) => {
         if (!item) return null
         if (Array.isArray(item)) return item[0].toLowerCase().includes(value) ? item : null
-        const children = item.children.filter(([label]) => label.toLowerCase().includes(value))
-        if (item.label.toLowerCase().includes(value) || children.length) return { ...item, children: children.length ? children : item.children }
+        const children = (Array.isArray(item.children) ? item.children : []).filter(([label]) => label.toLowerCase().includes(value))
+        if (item.label?.toLowerCase().includes(value) || children.length) return { ...item, children: children.length ? children : (item.children || []) }
         return null
       })
       .filter(Boolean)
@@ -154,8 +161,9 @@ export default function DashboardLayout({ navItems = [], title = 'Dashboard', th
 
   const pageTitle = useMemo(() => {
     for (const item of resolvedNavItems) {
+      if (!item) continue
       if (Array.isArray(item) && item[1] === location.pathname) return item[0]
-      if (!Array.isArray(item)) {
+      if (!Array.isArray(item) && Array.isArray(item.children)) {
         const child = item.children.find(([, to]) => to === location.pathname)
         if (child) return child[0]
       }
@@ -165,8 +173,9 @@ export default function DashboardLayout({ navItems = [], title = 'Dashboard', th
 
   const chatRoute = useMemo(() => {
     for (const item of resolvedNavItems) {
+      if (!item) continue
       if (Array.isArray(item) && item[1]?.endsWith('/chat')) return item[1]
-      if (!Array.isArray(item)) {
+      if (!Array.isArray(item) && Array.isArray(item.children)) {
         const preferred = item.children.find(([label, to]) => label === 'Messages' && to?.endsWith('/chat'))
         if (preferred) return preferred[1]
         const child = item.children.find(([, to]) => to?.endsWith('/chat'))
@@ -231,35 +240,56 @@ export default function DashboardLayout({ navItems = [], title = 'Dashboard', th
 
   const notificationCenterRoute = useMemo(() => {
     for (const item of resolvedNavItems) {
+      if (!item) continue
       if (Array.isArray(item)) {
         const [label, to] = item
         if (to?.endsWith('/notifications') || label.toLowerCase().includes('notification')) return to
         continue
       }
-      const child = item.children.find(([label, to]) => to?.endsWith('/notifications') || label.toLowerCase().includes('notification'))
-      if (child) return child[1]
+      if (!Array.isArray(item) && Array.isArray(item.children)) {
+        const child = item.children.find(([label, to]) => to?.endsWith('/notifications') || label.toLowerCase().includes('notification'))
+        if (child) return child[1]
+      }
     }
     return '/notifications'
   }, [resolvedNavItems])
 
   const openNotificationCenter = () => {
     setNotificationOpen(false)
-    navigate(notificationCenterRoute)
+    navigate('/notifications')
+  }
+
+  const handleMarkAllNotificationsRead = async () => {
+    try {
+      await notificationApi.readAll()
+      setNotificationPreview([])
+      setNotificationUnreadCount(0)
+      window.dispatchEvent(new Event('gloaro:notification-unread-refresh'))
+      toast.success('All notifications marked as read')
+    } catch {
+      toast.error('Unable to mark notifications as read')
+    }
   }
 
   const handleNotificationClick = async (item) => {
-    const targetPath = getCommunityNotificationPath(item, user) || notificationCenterRoute
     try {
       if (!item.isRead) {
         await notificationApi.markRead(item._id)
         setNotificationPreview((current) =>
-          current.map((notification) => (notification._id === item._id ? { ...notification, isRead: true } : notification))
+          current.filter((notification) => notification._id !== item._id)
         )
         setNotificationUnreadCount((count) => Math.max(0, count - 1))
         window.dispatchEvent(new Event('gloaro:notification-unread-refresh'))
       }
       setNotificationOpen(false)
-      navigate(targetPath)
+      const target = resolveNotificationNavigation(item, user, { canAccessPath })
+      if (target.action === 'navigate') {
+        if (target.external) window.location.assign(target.path)
+        else navigate(target.path)
+        return
+      }
+      setNotificationUnavailable(target.reason === 'unavailable')
+      setNotificationDetails({ ...item, isRead: true })
     } catch {
       toast.error('Unable to open notification')
     }
@@ -300,11 +330,14 @@ export default function DashboardLayout({ navItems = [], title = 'Dashboard', th
         </div>
       )}
 
+
       <nav className="min-h-0 flex-1 space-y-1 overflow-y-auto p-3">
         {filteredNav.map((item) => {
+          if (!item) return null
           if (!Array.isArray(item)) {
             const Icon = item.icon
-            const isExpanded = collapsed ? false : openGroups[item.label] ?? item.children.some(([, to]) => to === location.pathname)
+            const children = Array.isArray(item.children) ? item.children : []
+            const isExpanded = collapsed ? false : openGroups[item.label] ?? children.some(([, to]) => to === location.pathname)
             return (
               <div key={item.label} className="space-y-1">
                 <button
@@ -318,7 +351,7 @@ export default function DashboardLayout({ navItems = [], title = 'Dashboard', th
                   {!collapsed && <ChevronDown className={`h-4 w-4 transition ${isExpanded ? 'rotate-180' : ''}`} />}
                 </button>
                 {!collapsed && isExpanded && <div className="space-y-1 pl-4">
-                  {item.children.map(([label, to, ChildIcon]) => (
+                  {children.map(([label, to, ChildIcon]) => (
                     <NavLink
                       key={label}
                       to={to}
@@ -411,6 +444,13 @@ export default function DashboardLayout({ navItems = [], title = 'Dashboard', th
                   <div className={isLightShell ? 'flex items-center justify-between border-b border-slate-100 px-4 py-3' : 'flex items-center justify-between border-b border-slate-100 px-4 py-3 dark:border-slate-800'}>
                     <p className={isLightShell ? 'text-sm font-black text-slate-900' : 'text-sm font-black text-slate-900 dark:text-white'}>Notifications</p>
                     <button type="button" onClick={openNotificationCenter} className={isLightShell ? 'text-[11px] font-black text-[#0d4697]' : 'text-[11px] font-black text-[#0d4697] dark:text-blue-300'}>View all</button>
+                <div className="absolute right-0 top-11 z-40 w-[min(22rem,calc(100vw-2rem))] overflow-hidden rounded-xl border border-slate-200 bg-white shadow-2xl dark:border-slate-800 dark:bg-slate-900">
+                  <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3 dark:border-slate-800">
+                    <p className="text-sm font-black text-slate-900 dark:text-white">Notifications</p>
+                    <div className="flex items-center gap-3">
+                      <button type="button" onClick={handleMarkAllNotificationsRead} className="text-[11px] font-black text-slate-600 hover:text-[#0d4697] dark:text-slate-300">Mark all read</button>
+                      <button type="button" onClick={openNotificationCenter} className="text-[11px] font-black text-[#0d4697] dark:text-blue-300">View all</button>
+                    </div>
                   </div>
                   <div className="max-h-96 overflow-y-auto p-2">
                     {notificationLoading ? (
@@ -449,6 +489,15 @@ export default function DashboardLayout({ navItems = [], title = 'Dashboard', th
           <Outlet />
         </div>
       </div>
+      <NotificationDetailsModal
+        open={Boolean(notificationDetails)}
+        notification={notificationDetails}
+        unavailable={notificationUnavailable}
+        onClose={() => {
+          setNotificationDetails(null)
+          setNotificationUnavailable(false)
+        }}
+      />
     </main>
   )
 }

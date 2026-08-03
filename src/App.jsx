@@ -25,7 +25,6 @@ import {
   AuditLogsPage,
   DashboardConfigurationPage,
   FeatureManagementPage,
-  NotificationsConfigPage,
   // PermissionMatrixPage,
   ReferralManagementPage,
 
@@ -120,11 +119,13 @@ import {
 } from './pages/customer/CustomerFoundationPages'
 import NotificationsPage from './pages/shared/NotificationsPage'
 import ProfilePage from './pages/shared/ProfilePage'
+import EnterpriseScorecardPage from './pages/shared/EnterpriseScorecardPage'
 import Home from './pages/Home'
 import MembershipAgreement from './pages/public/MembershipAgreement'
 import MembershipApplication from './pages/public/MembershipApplication'
 import MembershipQualification from './pages/public/MembershipQualification'
 import MembershipApplicationTrack from './pages/public/MembershipApplicationTrack'
+import LegalPage from './pages/public/LegalPage'
 import MembershipDashboard from './pages/membership/MembershipDashboard'
 import MemberDashboard from './pages/membership/MemberDashboard'
 import VendorApplicationForm from './pages/membership/VendorApplicationForm'
@@ -189,6 +190,7 @@ function App() {
 
   const adminRouteDefs = [
     { path: '/dashboard', element: <SuperAdminDashboardPage /> },
+    { path: '/scorecard', element: <EnterpriseScorecardPage /> },
     { path: '/legacy-dashboard', element: <AdminDashboard /> },
     { path: '/admin-management', element: <AdminManagementPage />, roles: [ROLES.SUPERADMIN] },
     { path: '/organization', element: <OrganizationManagementPage />, roles: [ROLES.SUPERADMIN] },
@@ -231,7 +233,7 @@ function App() {
     { path: '/settings', element: <AdminSettingsPage /> },
     { path: '/analytics', element: <EnterpriseAnalyticsPage /> },
     { path: '/legacy-analytics', element: <AdminAnalytics /> },
-    { path: '/notifications', element: <NotificationsConfigPage /> },
+    { path: '/notifications', element: <NotificationsPage /> },
     { path: '/tasks', element: <TaskManagementPage /> },
     { path: '/calendar', element: <EnterpriseCalendarPage /> },
     { path: '/broadcast-notifications', element: <AdminNotifications /> },
@@ -290,10 +292,36 @@ function App() {
           <Route path="/membership-applications" element={<MembershipApplicationsRedirect />} />
           <Route path="/membership-qualification" element={<MembershipQualification />} />
           <Route path="/membership-application/track" element={<MembershipApplicationTrack />} />
+          <Route path="/terms-and-conditions" element={<LegalPage type="terms" />} />
+          <Route path="/privacy-policy" element={<LegalPage type="privacy" />} />
         </Route>
 
         <Route element={<ProtectedRoute roles={[ROLES.ADMIN, ROLES.SUPERADMIN, ROLES.REGION_DIRECTOR, ROLES.STATE_DIRECTOR, ROLES.DISTRICT_DIRECTOR, ROLES.EXECUTIVE_DIRECTOR, ROLES.LAUNCH_DIRECTOR, ROLES.DIRECT_CONSULTANT, ROLES.CHAPTER_PRESIDENT, ROLES.VICE_PRESIDENT, ROLES.SECRETARY, ROLES.CUSTOMER, ROLES.USER, ROLES.VENDOR]} />}>
           <Route element={<DashboardLayout title="Gloaro Portal" />}>
+            <Route path="/notifications" element={<NotificationsPage />} />
+            {[
+              '/scorecard',
+              '/membership/scorecard',
+              '/member/dashboard/scorecard',
+              '/customer/scorecard',
+              '/vendor/scorecard',
+              '/secretary/scorecard',
+              '/vice-president/scorecard',
+              '/president/scorecard',
+              '/chapter-director/scorecard',
+              '/district-director/scorecard',
+              '/state-director/scorecard',
+              '/region-director/scorecard',
+              '/launch-director/scorecard',
+              '/direct-consultant/scorecard',
+            ].map((path) => <Route key={path} path={path} element={<EnterpriseScorecardPage />} />)}
+            
+            {/* Super Admin Console Route Group */}
+            <Route element={<ProtectedRoute roles={[ROLES.SUPERADMIN]} />}>
+              {superAdminRoutes.map((route) => <Route key={route.path} path={route.path} element={route.element} />)}
+              <Route path="/super-admin/*" element={<Navigate to="/super-admin/dashboard" replace />} />
+            </Route>
+
             {/* Admin Console Route Group */}
             <Route element={<ProtectedRoute roles={[ROLES.ADMIN, ROLES.REGION_DIRECTOR, ROLES.STATE_DIRECTOR, ROLES.DISTRICT_DIRECTOR, ROLES.EXECUTIVE_DIRECTOR, ROLES.LAUNCH_DIRECTOR, ROLES.DIRECT_CONSULTANT, ROLES.CHAPTER_PRESIDENT, ROLES.VICE_PRESIDENT, ROLES.SECRETARY]} />}>
               {regularAdminRoutes.map((route) => <Route key={route.path} path={route.path} element={route.element} />)}
@@ -669,7 +697,6 @@ function App() {
           </Route>
         </Route>
 
-        <Route path="/notifications" element={<NotificationsPage />} />
         <Route path="/dashboard" element={<RoleRedirect />} />
       </Routes>
       <Toaster position="top-right" />

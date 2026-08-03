@@ -91,6 +91,7 @@ const SIDEBAR_ALIASES = {
   reports_center: 'reports',
   analytics: 'reports',
   scorecards: 'reports',
+  enterprise_scorecard: 'reports',
   executive_dashboard: 'reports',
   activity_center: 'reports',
   global_search: 'settings',
@@ -157,6 +158,7 @@ const ADMIN_ROUTE_RULES = [
   { path: '/reports-center', module: 'reports', section: 'reports_center' },
   { path: '/analytics', module: 'reports', section: 'analytics' },
   { path: '/legacy-analytics', module: 'reports', section: 'analytics' },
+  { path: '/scorecard', module: 'reports', section: 'enterprise_scorecard' },
   { path: '/scorecards', module: 'reports', section: 'scorecards' },
   { path: '/executive-dashboard', module: 'reports', section: 'executive_dashboard' },
   { path: '/activity', module: 'reports', section: 'activity_center' },
@@ -439,4 +441,3 @@ export function getDashboardRoute(role, user = null) {
 
   return '/member/dashboard'
 }
-
