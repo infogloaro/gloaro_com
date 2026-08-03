@@ -89,7 +89,7 @@ export default function UserPermissionsModal({ userId, userName, onClose }) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 grid place-items-center bg-slate-950/60 p-4">
+    <div className={isSuper ? 'fixed inset-0 z-50 grid place-items-center bg-slate-200/80 p-4 backdrop-blur-sm' : 'fixed inset-0 z-50 grid place-items-center bg-slate-950/60 p-4'}>
       <div className="w-full max-w-4xl rounded-2xl bg-white p-6 shadow-2xl relative flex flex-col max-h-[85vh] animate-in fade-in zoom-in duration-200">
         {/* Header */}
         <header className="border-b border-slate-100 pb-3 flex justify-between items-center shrink-0">

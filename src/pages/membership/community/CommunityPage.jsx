@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { useLocation } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import {
   AtSign,
@@ -8,6 +8,7 @@ import {
   Heart,
   Image,
   MessageSquare,
+  RotateCcw,
   Search,
   Send,
   Sparkles,
@@ -152,7 +153,7 @@ function StructuredContent({ post }) {
   )
 }
 
-function CommunitySearch({ search, onSearch }) {
+function CommunitySearch({ search, onSearch, searching }) {
   return (
     <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
       <Search className="h-5 w-5 shrink-0 text-slate-400" />
@@ -162,11 +163,19 @@ function CommunitySearch({ search, onSearch }) {
         placeholder="Search posts, people, roles, chapters, districts, states, regions..."
         className="w-full bg-transparent text-sm font-semibold text-slate-800 caret-[#0d4697] outline-none placeholder:text-slate-400"
       />
+      {searching && <span aria-label="Searching" className="h-4 w-4 shrink-0 animate-spin rounded-full border-2 border-slate-200 border-t-[#0d4697]" />}
+      {search && !searching && (
+        <button type="button" onClick={() => onSearch('')} aria-label="Clear search" className="grid h-7 w-7 shrink-0 place-items-center rounded-full text-slate-400 transition hover:bg-slate-100 hover:text-slate-700">
+          <X className="h-4 w-4" />
+        </button>
+      )}
     </div>
   )
 }
 
-function CommunityFilters({ scope, type, visibility, dealStatus, filters, locations, loadingLocations, onTypeChange, onVisibilityChange, onDealStatusChange, onFilterChange }) {
+function CommunityFilters({ scope, type, visibility, dealStatus, filters, locations, loadingLocations, onTypeChange, onVisibilityChange, onDealStatusChange, onFilterChange, onClear }) {
+  const hasActiveFilters = Boolean(type || visibility || dealStatus || filters.region || filters.state || filters.district || filters.chapter)
+
   return (
     <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
       <div className="flex flex-wrap items-center gap-3">
@@ -209,6 +218,15 @@ function CommunityFilters({ scope, type, visibility, dealStatus, filters, locati
             </select>
           </>
         )}
+        <button
+          type="button"
+          onClick={onClear}
+          disabled={!hasActiveFilters}
+          className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-extrabold text-slate-600 transition hover:border-[#0d4697] hover:text-[#0d4697] disabled:cursor-not-allowed disabled:opacity-40"
+        >
+          <RotateCcw className="h-3.5 w-3.5" />
+          Clear Filters
+        </button>
       </div>
     </section>
   )
@@ -666,7 +684,7 @@ function CommunityFeed({ posts, user, members, onRefresh, searchActive, highligh
   )
 }
 
-function MemberDiscovery({ members, scope }) {
+function MemberDiscovery({ members, scope, search }) {
   const chatPath = window.location.pathname
     .replace(/\/network$/, '/chat')
     .replace(/\/wall$/, '/chat')
@@ -683,28 +701,30 @@ function MemberDiscovery({ members, scope }) {
   }, [members])
 
   return (
-    <aside className="flex min-h-0 flex-col gap-4">
-      <section className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+    <aside className="flex flex-col gap-4 lg:sticky lg:top-5">
+      <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
         <div className="shrink-0 border-b border-slate-100 px-5 py-4">
           <h3 className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.12em] text-slate-500">
             <UsersRound className="h-4 w-4 text-[#0d4697]" />
             {scope === 'chapter' ? 'Chapter Members' : 'Network Discovery'}
-            <span className="ml-auto text-[10px] font-bold text-slate-400">{uniqueMembers.length}</span>
+            <span className="ml-auto rounded-full bg-blue-50 px-2 py-1 text-[10px] font-black text-[#0d4697]">{uniqueMembers.length}</span>
           </h3>
+          {search && <p className="mt-2 truncate text-[11px] font-semibold text-slate-500">Matches for “{search}”</p>}
         </div>
-        <div className="min-h-0 flex-1 space-y-2 overflow-y-auto p-4">
+        <div className="max-h-[520px] space-y-2 overflow-y-auto p-3 [scrollbar-gutter:stable]">
           {uniqueMembers.map((member) => {
             const hierarchy = [member.chapterName, member.districtName, member.stateName, member.regionName].filter(Boolean).join(' \u2022 ')
             return (
-              <div key={member._id} className="flex items-center justify-between gap-3 rounded-xl bg-slate-50 p-3">
+              <div key={member._id} className="grid grid-cols-[36px_minmax(0,1fr)_auto] items-center gap-3 rounded-xl border border-transparent bg-slate-50 p-3 transition hover:border-blue-100 hover:bg-blue-50/50">
+                <span className="grid h-9 w-9 place-items-center rounded-full bg-white text-xs font-black text-[#0d4697] shadow-sm">{getAuthorInitial(member)}</span>
                 <div className="min-w-0">
-                  <p className="truncate text-xs font-black text-slate-900">{member.name}</p>
-                  <p className="truncate text-[10px] font-bold text-slate-500">{member.businessName || member.role}</p>
+                  <p className="break-words text-sm font-black leading-5 text-slate-900">{member.name}</p>
+                  <p className="mt-0.5 break-words text-[11px] font-bold leading-4 text-slate-500">{member.businessName || member.role || 'Member'}</p>
                   {hierarchy && (
-                    <p className="mt-0.5 truncate text-[10px] font-semibold text-slate-400">{hierarchy}</p>
+                    <p className="mt-1 break-words text-[10px] font-semibold leading-4 text-slate-400">{hierarchy}</p>
                   )}
                 </div>
-                <a href={`${chatPath}?recipient=${member._id}`} className="shrink-0 rounded-lg bg-blue-50 px-3 py-1.5 text-[10px] font-black text-[#0d4697]">Message</a>
+                <Link to={`${chatPath}?recipient=${member._id}`} className="self-center rounded-lg bg-blue-50 px-3 py-2 text-[10px] font-black text-[#0d4697] transition hover:bg-[#0d4697] hover:text-white">Message</Link>
               </div>
             )
           })}
@@ -784,7 +804,7 @@ export default function CommunityPage({ scope = 'chapter' }) {
 
     return Promise.all([
       communityApi.getPosts(query, { signal: controller.signal, silent: true }),
-      communityApi.getDirectory({ scope, search: debouncedSearch, ...filters }),
+      communityApi.getDirectory({ scope, search: debouncedSearch, ...filters }, { signal: controller.signal, silent: true }),
     ]).then(([postRes, directoryRes]) => {
       const newPosts = postRes.data?.data || []
       const pag = postRes.data?.pagination
@@ -906,13 +926,13 @@ export default function CommunityPage({ scope = 'chapter' }) {
   const hasMore = pagination.page < pagination.totalPages
 
   return (
-    <div className="flex h-[calc(100vh-7rem)] flex-col gap-6">
+    <div className="space-y-6 pb-8">
       <section className="rounded-2xl border border-blue-900 bg-gradient-to-br from-[#0d4697] to-[#093574] p-7 text-white shadow-sm">
         <p className="text-[10px] font-extrabold uppercase tracking-[0.25em] text-[#ffbf1a]">Community Communication</p>
         <h1 className="mt-2 text-3xl font-black tracking-tight">{title}</h1>
         <p className="mt-3 max-w-3xl text-sm font-semibold leading-6 text-blue-100">{subtitle}</p>
       </section>
-      <CommunitySearch search={search} onSearch={setSearch} />
+      <CommunitySearch search={search} onSearch={setSearch} searching={searching} />
       <CommunityFilters
         scope={scope}
         type={type}
@@ -925,9 +945,17 @@ export default function CommunityPage({ scope = 'chapter' }) {
         onVisibilityChange={(v) => { setPage(1); setVisibility(v) }}
         onDealStatusChange={(v) => { setPage(1); setDealStatus(v) }}
         onFilterChange={handleFilterChange}
+        onClear={() => {
+          setPage(1)
+          setType('')
+          setVisibility('')
+          setDealStatus('')
+          setFilters({ chapter: '', district: '', state: '', region: '' })
+          setLocations((current) => ({ ...current, states: [], districts: [], chapters: [] }))
+        }}
       />
-      <div className="grid min-h-0 flex-1 gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
-        <main className="space-y-5 overflow-y-auto">
+      <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(410px,450px)]">
+        <main className="min-w-0 space-y-5">
           <PostComposer scope={scope} onCreated={() => { setPage(1); setRefreshKey((k) => k + 1) }} />
           {searching && (
             <div className="flex items-center justify-center gap-2 rounded-2xl border border-slate-100 bg-white py-3 text-xs font-bold text-slate-400">
@@ -945,7 +973,7 @@ export default function CommunityPage({ scope = 'chapter' }) {
             </button>
           )}
         </main>
-        <MemberDiscovery members={members} scope={scope} />
+        <MemberDiscovery members={members} scope={scope} search={debouncedSearch} />
       </div>
     </div>
   )

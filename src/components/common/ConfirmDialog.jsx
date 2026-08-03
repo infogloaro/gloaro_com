@@ -1,7 +1,12 @@
+import { useAuth } from '../../hooks/useAuth'
+import { ROLES } from '../../constants/roleConfig.js'
+
 export default function ConfirmDialog({ open, title = 'Confirm action', description, onCancel, onConfirm }) {
+  const { user } = useAuth()
+  const isSuperAdmin = user?.role === ROLES.SUPERADMIN
   if (!open) return null
   return (
-    <div className="fixed inset-0 z-50 grid place-items-center bg-slate-950/50 p-4">
+    <div className={isSuperAdmin ? 'fixed inset-0 z-50 grid place-items-center bg-slate-200/80 p-4 backdrop-blur-sm' : 'fixed inset-0 z-50 grid place-items-center bg-slate-950/50 p-4'}>
       <div className="w-full max-w-sm rounded-lg bg-white p-5 shadow-xl">
         <h3 className="text-lg font-extrabold text-slate-900">{title}</h3>
         <p className="mt-2 text-sm font-medium leading-6 text-slate-600">{description}</p>

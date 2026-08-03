@@ -31,7 +31,7 @@ export const communityApi = {
   getMemberStats: () => api.get('/community/member-stats'),
 
   // 6. Business Directory Search
-  getDirectory: (params) => api.get('/community/directory', { params }),
+  getDirectory: (params, config) => api.get('/community/directory', { params, ...config }),
   getMentions: (params) => api.get('/community/mentions', { params }),
 
   // 6b. Organization filters
