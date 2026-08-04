@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { Eye, EyeOff } from 'lucide-react'
+import { ArrowRight, BadgeCheck, Eye, EyeOff, ShieldCheck } from 'lucide-react'
+import { motion } from 'framer-motion'
 import toast from 'react-hot-toast'
 import FormField from '../../components/forms/FormField'
 import { useAuth } from '../../hooks/useAuth'
@@ -50,47 +51,98 @@ export default function Login() {
         ? (account.isOnlineVendor ? roleDashboard : vendorRoutes.application)
         : (shouldUseRoleDashboard ? roleDashboard : requestedDest)
       navigate(finalDest, { replace: true })
-    } catch (error) {
+    } catch {
       // Handled gracefully in context
     }
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="w-full rounded-lg bg-white p-6 shadow-[0_22px_70px_rgba(15,23,42,.12)]">
-      <h2 className="font-playfair text-4xl font-bold text-[#0d4697]">Sign In</h2>
-      <p className="mt-1 text-sm font-medium text-slate-500">Access your Gloaro account.</p>
+    <motion.form
+      onSubmit={handleSubmit(onSubmit)}
+      initial={{ opacity: 0, y: 18 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+      className="w-full overflow-hidden rounded-[34px] border border-white/70 bg-[linear-gradient(180deg,rgba(255,255,255,0.98),rgba(247,250,255,0.98))] p-6 shadow-[0_28px_90px_rgba(15,23,42,.12)] sm:p-8"
+    >
+      <div className="inline-flex items-center gap-2 rounded-full border border-[#0d4697]/10 bg-white px-4 py-2 text-[11px] font-black uppercase tracking-[0.24em] text-[#0d4697] shadow-sm">
+        <BadgeCheck className="h-4 w-4 text-[#ffae13]" />
+        Secure sign in
+      </div>
+      <h2 className="mt-5 font-playfair text-4xl font-bold italic leading-[0.92] text-[#0d4697] sm:text-5xl">
+        Welcome back
+      </h2>
+      <p className="mt-4 max-w-md text-sm font-medium leading-7 text-slate-600">
+        Access your Gloaro account and continue your business journey with a premium, secure experience.
+      </p>
+
+      <div className="mt-6 grid gap-3 sm:grid-cols-2">
+        {[
+          ['Fast access', 'Jump back into your dashboard quickly'],
+          ['Protected login', 'Your account stays secure'],
+        ].map(([title, text]) => (
+          <div key={title} className="rounded-2xl border border-slate-200/80 bg-white px-4 py-3 shadow-[0_10px_24px_rgba(15,23,42,.05)]">
+            <p className="text-sm font-extrabold text-[#0d4697]">{title}</p>
+            <p className="mt-1 text-xs font-semibold leading-5 text-slate-500">{text}</p>
+          </div>
+        ))}
+      </div>
+
       {redirectError ? (
-        <div className="mt-4 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-800">
+        <div className="mt-5 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-800">
           {redirectError}
         </div>
       ) : null}
+
       <div className="mt-6 space-y-4">
         <FormField label="Email" error={errors.email?.message}>
-          <input {...register('email', { required: 'Email is required' })} type="email" className="h-11 w-full rounded-md border border-slate-300 px-3 outline-none focus:border-[#0d4697]" />
+          <input {...register('email', { required: 'Email is required' })} type="email" className="h-12 w-full rounded-2xl border border-slate-200 bg-white px-4 outline-none transition placeholder:text-slate-400 focus:border-[#0d4697] focus:ring-4 focus:ring-[#0d4697]/10" />
         </FormField>
         <FormField label="Password" error={errors.password?.message}>
           <div className="relative">
             <input
               {...register('password', { required: 'Password is required' })}
               type={showPassword ? 'text' : 'password'}
-              className="h-11 w-full rounded-md border border-slate-300 px-3 pr-11 outline-none focus:border-[#0d4697]"
+              className="h-12 w-full rounded-2xl border border-slate-200 bg-white px-4 pr-12 outline-none transition placeholder:text-slate-400 focus:border-[#0d4697] focus:ring-4 focus:ring-[#0d4697]/10"
             />
             <button
               type="button"
               onClick={() => setShowPassword((current) => !current)}
               aria-label={showPassword ? 'Hide password' : 'Show password'}
-              className="absolute inset-y-0 right-0 flex items-center px-3 text-slate-500 transition hover:text-slate-700"
+              className="absolute inset-y-0 right-0 flex items-center px-4 text-slate-500 transition hover:text-[#0d4697]"
             >
               {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </button>
           </div>
         </FormField>
       </div>
-      <div className="mt-4 flex items-center text-sm">
-        <label className="flex items-center gap-2 font-semibold text-slate-600"><input type="checkbox" {...register('remember')} className="accent-[#0d4697]" /> Remember me</label>
+
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-sm">
+        <label className="flex items-center gap-2 font-semibold text-slate-600">
+          <input type="checkbox" {...register('remember')} className="h-4 w-4 rounded border-slate-300 accent-[#0d4697]" />
+          Remember me
+        </label>
+        <Link to="/forgot-password" className="font-bold text-[#0d4697] transition hover:text-[#082e70]">
+          Forgot password?
+        </Link>
       </div>
-      <button disabled={isSubmitting} className="mt-5 h-12 w-full rounded-md bg-[#0d4697] font-extrabold text-white disabled:opacity-60">{isSubmitting ? 'Signing in...' : 'Sign In'}</button>
-      <p className="mt-6 text-center text-sm font-medium text-slate-500">No account? <Link to="/register" className="font-extrabold text-[#0d4697]">Create one</Link></p>
-    </form>
+
+      <button
+        disabled={isSubmitting}
+        className="mt-6 inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-[linear-gradient(135deg,#0d4697,#1b6fe0)] px-5 font-extrabold text-white shadow-[0_16px_34px_rgba(13,70,151,0.22)] transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_20px_42px_rgba(13,70,151,0.28)] disabled:translate-y-0 disabled:opacity-60"
+      >
+        {isSubmitting ? 'Signing in...' : 'Sign In'}
+        {!isSubmitting && <ArrowRight className="h-4 w-4" />}
+      </button>
+
+      <div className="mt-6 rounded-2xl border border-[#0d4697]/10 bg-[#f8fbff] p-4">
+        <div className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.2em] text-[#0d4697]">
+          <ShieldCheck className="h-4 w-4 text-[#ffae13]" />
+          Trusted access
+        </div>
+        <p className="mt-2 text-sm font-medium leading-6 text-slate-600">
+          Need an account? <Link to="/register" className="font-extrabold text-[#0d4697] transition hover:text-[#082e70]">Create one</Link> and join the network.
+        </p>
+      </div>
+    </motion.form>
   )
 }

@@ -111,3 +111,23 @@ article .text-slate-800 {
 html.dark, html.dark body {
   background-color: #020617;
 }
+
+@keyframes navbar-pan {
+  0% {
+    background-position: 0% 50%;
+  }
+
+  100% {
+    background-position: 200% 50%;
+  }
+}
+
+@keyframes navbar-shine {
+  0% {
+    background-position: -120% 0;
+  }
+
+  100% {
+    background-position: 220% 0;
+  }
+}
