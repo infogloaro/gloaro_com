@@ -8,6 +8,7 @@ import {
   BriefcaseBusiness,
   CalendarDays,
   CircleHelp,
+  ChevronDown,
   Handshake,
   Network,
   Rocket,
@@ -276,7 +277,19 @@ export default function Navbar() {
                 )}
               </div>
 
-              <button onClick={() => setOpen((value) => !value)} className="ml-auto rounded-full border border-[#0b469e]/10 bg-[linear-gradient(135deg,#0b469e,#1b6fe0)] px-4 py-2 text-lg text-white shadow-[0_12px_26px_rgba(11,70,158,0.2)] transition duration-300 hover:-translate-y-0.5 lg:hidden" aria-label="Toggle menu">=</button>
+              <button
+                onClick={() => setOpen((value) => !value)}
+                className="ml-auto flex h-11 items-center gap-2 rounded-full border border-[#0b469e]/10 bg-[linear-gradient(135deg,#0b469e,#1b6fe0)] px-4 text-white shadow-[0_12px_26px_rgba(11,70,158,0.2)] transition duration-300 hover:-translate-y-0.5 lg:hidden"
+                aria-label="Toggle menu"
+                aria-expanded={open}
+              >
+                <span className="flex flex-col gap-1">
+                  <span className={`h-0.5 w-4 rounded-full bg-white transition duration-300 ${open ? 'translate-y-1.5 rotate-45' : ''}`} />
+                  <span className={`h-0.5 w-4 rounded-full bg-white transition duration-300 ${open ? 'opacity-0' : ''}`} />
+                  <span className={`h-0.5 w-4 rounded-full bg-white transition duration-300 ${open ? '-translate-y-1.5 -rotate-45' : ''}`} />
+                </span>
+                <span className="text-xs font-black uppercase tracking-[0.18em]">{open ? 'Close' : 'Menu'}</span>
+              </button>
             </div>
 
             <form onSubmit={submitSearch} className="relative mt-3 w-full max-w-[640px] lg:mt-4">
@@ -344,37 +357,54 @@ export default function Navbar() {
         {open && (
           <motion.div
             {...dropdownMotion}
-            className="mx-auto max-w-[1440px] px-3 sm:px-5 lg:hidden"
+            className="mx-auto max-w-[1440px] px-3 pt-3 sm:px-5 lg:hidden"
           >
-            <div className="max-h-[calc(100vh-116px)] overflow-y-auto rounded-[24px] border border-white/70 bg-white/90 px-4 py-4 shadow-[0_20px_50px_rgba(15,23,42,0.14)] backdrop-blur-xl">
-              <div className="grid gap-2 sm:grid-cols-2">
-                <button type="button" onClick={() => setMobileNetworkOpen((value) => !value)} className="flex items-center justify-between rounded-2xl bg-[linear-gradient(135deg,#0b469e,#1b6fe0)] px-4 py-3.5 font-semibold text-white shadow-[0_14px_28px_rgba(11,70,158,0.22)] sm:col-span-2">
-                  <span className="flex items-center"><img src={networkIcon} alt="" className="mr-2 h-4 w-4 object-contain" />Gloaro Network</span>
-                  <span className="text-lg leading-none">{mobileNetworkOpen ? '−' : '+'}</span>
+            <div className="max-h-[calc(100vh-116px)] overflow-y-auto rounded-[30px] border border-white/70 bg-white/95 px-4 py-4 shadow-[0_24px_70px_rgba(15,23,42,0.18)] backdrop-blur-xl">
+              <div className="grid gap-3">
+                <button
+                  type="button"
+                  onClick={() => setMobileNetworkOpen((value) => !value)}
+                  className="flex items-center justify-between rounded-[22px] bg-[linear-gradient(135deg,#0b469e,#1b6fe0)] px-4 py-4 font-semibold text-white shadow-[0_14px_28px_rgba(11,70,158,0.22)]"
+                >
+                  <span className="flex items-center gap-3">
+                    <span className="grid h-10 w-10 place-items-center rounded-full bg-white/15 ring-1 ring-white/20">
+                      <img src={networkIcon} alt="" className="h-5 w-5 object-contain" />
+                    </span>
+                    <span className="text-left">
+                      <span className="block text-sm font-black uppercase tracking-[0.18em]">Gloaro Network</span>
+                      <span className="block text-xs font-medium text-white/75">Tap to explore the network</span>
+                    </span>
+                  </span>
+                  <span className="grid h-9 w-9 place-items-center rounded-full bg-white/15 text-xl leading-none">
+                    {mobileNetworkOpen ? '−' : '+'}
+                  </span>
                 </button>
                 <AnimatePresence>{mobileNetworkOpen && <MobileGloaroNetworkMenu key="mobile-network" onNavigate={() => setOpen(false)} />}</AnimatePresence>
-                {isAuthenticated ? (
-                  <a onClick={() => setOpen(false)} href={getDashboardRoute(user?.role, user)} className="flex items-center rounded-2xl border border-[#0b469e]/10 bg-white px-4 py-3 font-semibold text-[#0b469e] shadow-sm sm:col-span-2">
-                    <img src={loginIcon} alt="" className="mr-2 h-4 w-4 object-contain brightness-0 filter" />
-                    {user?.name || 'Account'}
-                  </a>
-                ) : (
-                  <>
-                    <a onClick={() => setOpen(false)} href="/login" className="flex items-center rounded-2xl border border-[#0b469e]/10 bg-white px-4 py-3 font-semibold text-[#0b469e] shadow-sm sm:col-span-2">
+
+                <div className="grid gap-2 sm:grid-cols-2">
+                  {isAuthenticated ? (
+                    <a onClick={() => setOpen(false)} href={getDashboardRoute(user?.role, user)} className="flex items-center rounded-2xl border border-[#0b469e]/10 bg-white px-4 py-3 font-semibold text-[#0b469e] shadow-sm sm:col-span-2">
                       <img src={loginIcon} alt="" className="mr-2 h-4 w-4 object-contain brightness-0 filter" />
-                      Login
+                      {user?.name || 'Account'}
                     </a>
-                    <a onClick={() => setOpen(false)} href="/register" className="flex items-center justify-center rounded-2xl bg-[linear-gradient(135deg,#0b469e,#1b6fe0)] px-4 py-3 font-semibold text-white shadow-[0_14px_28px_rgba(11,70,158,0.2)] sm:col-span-2">
-                      Register
+                  ) : (
+                    <>
+                      <a onClick={() => setOpen(false)} href="/login" className="flex items-center rounded-2xl border border-[#0b469e]/10 bg-white px-4 py-3 font-semibold text-[#0b469e] shadow-sm sm:col-span-2">
+                        <img src={loginIcon} alt="" className="mr-2 h-4 w-4 object-contain brightness-0 filter" />
+                        Login
+                      </a>
+                      <a onClick={() => setOpen(false)} href="/register" className="flex items-center justify-center rounded-2xl bg-[linear-gradient(135deg,#0b469e,#1b6fe0)] px-4 py-3 font-semibold text-white shadow-[0_14px_28px_rgba(11,70,158,0.2)] sm:col-span-2">
+                        Register
+                      </a>
+                    </>
+                  )}
+                  {navItems.map(([icon, label, href, colors, iconClass = '']) => (
+                    <a onClick={() => setOpen(false)} key={label} href={href} className={`flex items-center rounded-2xl px-4 py-3 font-semibold transition duration-300 ${colors}`}>
+                      <img src={icon} alt="" className={`mr-2 h-4 w-4 object-contain ${iconClass}`} />
+                      {label}
                     </a>
-                  </>
-                )}
-                {navItems.map(([icon, label, href, colors, iconClass = '']) => (
-                  <a onClick={() => setOpen(false)} key={label} href={href} className={`flex items-center rounded-2xl px-4 py-3 font-semibold transition duration-300 ${colors}`}>
-                    <img src={icon} alt="" className={`mr-2 h-4 w-4 object-contain ${iconClass}`} />
-                    {label}
-                  </a>
-                ))}
+                  ))}
+                </div>
               </div>
             </div>
           </motion.div>
@@ -391,47 +421,68 @@ function MobileGloaroNetworkMenu({ onNavigate }) {
       animate={{ height: 'auto', opacity: 1, y: 0 }}
       exit={{ height: 0, opacity: 0, y: -6 }}
       transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
-      className="sm:col-span-2 overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-[0_18px_45px_rgba(15,23,42,0.12)]"
+      className="overflow-hidden rounded-[28px] border border-slate-200/80 bg-[linear-gradient(180deg,#ffffff,#fffaf0)] shadow-[0_18px_45px_rgba(15,23,42,0.12)]"
     >
-      <div className="p-5">
-        <h2 className="font-playfair text-2xl font-black italic leading-none text-[#0b469e]">Gloaro Network</h2>
-        <p className="mt-2 text-sm font-extrabold italic text-[#ff8a00]">"Connect. Collaborate. Grow Globally."</p>
-        <p className="mt-3 text-sm font-medium leading-5 text-black">Explore membership, business opportunities, services and global networking in our comprehensive enterprise ecosystem.</p>
+      <div className="p-4">
+        <div className="rounded-[24px] bg-[linear-gradient(135deg,#0b469e,#1b6fe0)] p-5 text-white shadow-[0_16px_34px_rgba(11,70,158,0.18)]">
+          <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-[#ffd36e]">
+            Gloaro Network
+          </div>
+          <h2 className="mt-4 font-playfair text-3xl font-black italic leading-none">Connect. Collaborate. Grow.</h2>
+          <p className="mt-3 text-sm leading-6 text-white/80">Explore membership, business opportunities, services and global networking in one premium ecosystem.</p>
+          <div className="mt-5 grid grid-cols-3 gap-2">
+            {[
+              ['Trusted', 'Members'],
+              ['Global', 'Reach'],
+              ['Premium', 'Support'],
+            ].map(([title, label]) => (
+              <div key={title} className="rounded-2xl border border-white/10 bg-white/10 px-3 py-3 text-center">
+                <p className="text-[11px] font-black uppercase tracking-[0.18em] text-white">{title}</p>
+                <p className="mt-1 text-[10px] font-medium text-white/70">{label}</p>
+              </div>
+            ))}
+          </div>
+        </div>
 
-        <div className="mt-5 grid gap-5">
+        <div className="mt-4 grid gap-3">
           {networkMenu.map(([Icon, title, links]) => (
-            <details key={title} className="rounded-md border border-slate-100 bg-slate-50 px-4 py-3" open={title === 'Membership'}>
-              <summary className="flex cursor-pointer list-none items-center gap-2 font-playfair text-lg font-black italic text-[#0b469e] [&::-webkit-details-marker]:hidden">
-                <Icon className="h-4 w-4" />
-                {title}
+            <details key={title} className="group rounded-[22px] border border-slate-200/80 bg-white px-4 py-3 shadow-[0_10px_24px_rgba(15,23,42,0.05)]" open={title === 'Membership'}>
+              <summary className="flex cursor-pointer list-none items-center justify-between gap-3 [&::-webkit-details-marker]:hidden">
+                <span className="flex items-center gap-3">
+                  <span className="grid h-10 w-10 place-items-center rounded-full bg-[#fff3d0] text-[#0b469e]">
+                    <Icon className="h-4 w-4" />
+                  </span>
+                  <span className="text-left">
+                    <span className="block font-playfair text-lg font-black italic text-[#0b469e]">{title}</span>
+                    <span className="block text-[11px] font-semibold text-slate-500">{links.length} items</span>
+                  </span>
+                </span>
+                <span className="grid h-8 w-8 place-items-center rounded-full border border-slate-200 bg-white text-slate-500 transition group-open:rotate-180">
+                  <ChevronDown className="h-4 w-4" />
+                </span>
               </summary>
-              <ul className="mt-3 space-y-2">
+              <ul className="mt-4 space-y-2 pl-[3.25rem]">
                 {links.map((link) => (
                   <li key={link} className="text-sm font-medium text-black">
-                    <a href={getNetworkHref(link)} onClick={onNavigate} className={`transition hover:text-[#0b469e] hover:underline ${link === 'Join Gloaro Network' ? 'font-semibold text-[#0b469e]' : ''}`}>{link}</a>
+                    <a href={getNetworkHref(link)} onClick={onNavigate} className={`inline-flex items-center gap-2 rounded-full px-3 py-1.5 transition hover:bg-[#f5f8ff] hover:text-[#0b469e] ${link === 'Join Gloaro Network' ? 'font-semibold text-[#0b469e]' : ''}`}>
+                      <span className="grid h-4 w-4 place-items-center rounded-full bg-[#0b469e]/10 text-[10px] text-[#0b469e]">›</span>
+                      {link}
+                    </a>
                   </li>
                 ))}
               </ul>
             </details>
           ))}
         </div>
-      </div>
 
-      <aside className="bg-[#fff8e7] p-5">
-        <h3 className="font-playfair text-base font-black text-[#0b469e]">Become a GLOARO Member</h3>
-        <div className="mt-4 grid gap-4">
-          {networkHighlights.map(([Icon, title, text]) => (
-            <div key={title} className="flex gap-3">
-              <Icon className="mt-0.5 h-4 w-4 shrink-0 text-[#ff9f00]" />
-              <div>
-                <p className="text-xs font-black text-[#0b469e]">{title}</p>
-                <p className="mt-0.5 text-[11px] font-semibold leading-4 text-black">{text}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-        <a href="/register" onClick={onNavigate} className="mt-5 block rounded-lg bg-[#0b469e] px-4 py-3 text-center text-xs font-extrabold text-white shadow-lg shadow-blue-950/20">Explore Membership</a>
-      </aside>
+        <a href="/register" onClick={onNavigate} className="mt-5 flex items-center justify-between rounded-[22px] bg-[linear-gradient(135deg,#0b469e,#1b6fe0)] px-4 py-4 text-white shadow-[0_14px_28px_rgba(11,70,158,0.2)]">
+          <span>
+            <span className="block text-xs font-black uppercase tracking-[0.18em] text-[#ffd36e]">Start here</span>
+            <span className="mt-1 block text-sm font-semibold">Explore Membership</span>
+          </span>
+          <span className="grid h-10 w-10 place-items-center rounded-full bg-white/15 text-lg">→</span>
+        </a>
+      </div>
     </motion.div>
   )
 }

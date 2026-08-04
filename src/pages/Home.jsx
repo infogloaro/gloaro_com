@@ -24,11 +24,6 @@ import api from '../api/axios'
 import leader1 from '../assets/leader1.png'
 import leader2 from '../assets/leader2.png'
 
-import leaderImage1 from '../assets/ceo.jpeg'
-import leaderImage2 from '../assets/Digital_Network.png'
-
-import { ROLES } from '../constants/roleConfig.js'
-
 const awardsHighlightImage = 'https://images.unsplash.com/photo-1764874299025-d8b2251f307d?auto=format&fit=crop&fm=jpg&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&ixlib=rb-4.1.0&q=60&w=3000'
 
 
@@ -43,8 +38,6 @@ const getLeaderCardsPerView = () => {
   if (window.innerWidth >= 640) return 2
   return 1
 }
-
-const loginLink = (type, redirect) => `/login?type=${type}&redirect=${encodeURIComponent(redirect)}`
 
 const whyGloaroPoints = [
   { title: 'Grow Your Network', description: 'GLOARO is not just a business network; it is a growth ecosystem where entrepreneurs find opportunities, investors discover potential, and together they create sustainable success' },
