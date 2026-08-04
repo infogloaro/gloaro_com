@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react'
 import { fetchServicesData } from '../../api/about'
 import SectionWrapper from './SectionWrapper'
 import SectionTitle from './SectionTitle'
-import { motion } from 'framer-motion'
 import { FiUsers, FiCalendar, FiBriefcase } from 'react-icons/fi'
 import { FaHandshake, FaUserCheck, FaBookOpen, FaBullhorn } from 'react-icons/fa'
 
@@ -63,11 +62,7 @@ export default function Services() {
 
 function ServiceCard({ service, index, isMobile, iconMap: icons }) {
   return (
-    <motion.div
-      initial={{ opacity: 0, x: isMobile ? (index % 2 === 0 ? -40 : 40) : 0, y: isMobile ? 0 : 30, scale: isMobile ? 0.96 : 1 }}
-      whileInView={{ opacity: 1, x: 0, y: 0, scale: 1 }}
-      viewport={{ once: true, amount: 0.2 }}
-      transition={{ duration: 0.55, delay: isMobile ? 0 : index * 0.08 }}
+    <div
       className="
                 group
                 relative
@@ -152,6 +147,6 @@ function ServiceCard({ service, index, isMobile, iconMap: icons }) {
 <p className="text-[16px]  text-[!#1e293bb3;] lg:text-[17px]">
   {service.description}
 </p>
-    </motion.div>
+    </div>
   )
 }

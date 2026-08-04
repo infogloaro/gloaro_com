@@ -3,7 +3,7 @@ import { fetchWhyChooseData } from '../../api/about'
 import SectionWrapper from './SectionWrapper'
 import SectionTitle from './SectionTitle'
 import Card from './Card'
-import { FiCheckCircle } from 'react-icons/fi'
+import { CheckCircle2 } from 'lucide-react'
 
 const currencyFormatter = new Intl.NumberFormat('en-IN', {
   style: 'currency',
@@ -51,7 +51,7 @@ const WhyChoose = () => {
           >
             <div className="flex items-start gap-3">
               <div className="shrink-0 text-2xl leading-none text-secondary transition-transform duration-300 group-hover:scale-110 group-hover:rotate-6">
-                <FiCheckCircle />
+                <CheckCircle2 className="h-6 w-6" />
               </div>
               <div>
                 <h4 className="mb-1.5 text-base font-bold text-[#0a1f4d] md:text-lg">
@@ -94,7 +94,7 @@ const WhyChoose = () => {
             <ul className="grid grid-cols-2 gap-x-6 gap-y-3">
               {data.investment.includes.map((inc, idx) => (
                 <li key={idx} className="flex items-center gap-2 text-white/90">
-                  <FiCheckCircle className="shrink-0 text-secondary" />
+                  <CheckCircle2 className="shrink-0 h-4 w-4 text-secondary" />
                   <span className="text-sm leading-tight">{inc}</span>
                 </li>
               ))}

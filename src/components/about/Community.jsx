@@ -1,8 +1,6 @@
-import { useRef } from 'react'
 import SectionWrapper from './SectionWrapper'
 import SectionTitle from './SectionTitle'
 import { FaCheckCircle } from 'react-icons/fa'
-import { motion, useScroll, useTransform } from 'framer-motion'
 
 export default function Community() {
   const chapterBullets = [
@@ -26,35 +24,18 @@ export default function Community() {
     'Sustainable Business Growth',
   ]
 
-  const containerRef = useRef(null)
-  const { scrollYProgress } = useScroll({
-    target: containerRef,
-    offset: ['start center', 'end center'],
-  })
-
-  const lineHeight = useTransform(scrollYProgress, [0, 1], ['0%', '100%'])
-
   return (
     <SectionWrapper id="community" bg="bg-white">
       <div className="mb-8">
         <SectionTitle title="How GLOARO Community Works" subtitle="OUR COMMUNITY" />
-        <motion.p
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="mx-auto max-w-3xl text-center text-lg font-medium leading-relaxed text-text/70 md:text-xl"
-        >
+        <p className="mx-auto max-w-3xl text-center text-lg font-medium leading-relaxed text-text/70 md:text-xl">
           A trusted, referral-based business ecosystem where entrepreneurs connect, collaborate, and grow together.
-        </motion.p>
+        </p>
       </div>
 
       <div className="mx-auto max-w-6xl px-4 md:px-8">
         <div className="space-y-10 md:hidden">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-          >
+          <div>
             <h3 className="mb-4 text-2xl font-extrabold uppercase tracking-tight text-primary">What is a Chapter?</h3>
             <div className="mb-6 space-y-4 text-left text-base leading-relaxed text-text/80">
               <p>
@@ -67,20 +48,13 @@ export default function Community() {
 
             <div className="grid grid-cols-1 gap-y-3">
               {chapterBullets.map((bullet, idx) => (
-                <motion.div
-                  key={idx}
-                  initial={{ opacity: 0, x: -10 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: idx * 0.1 }}
-                  className="flex items-start gap-3"
-                >
+                <div key={idx} className="flex items-start gap-3">
                   <FaCheckCircle className="mt-0.5 shrink-0 text-lg text-secondary" />
                   <span className="text-base font-medium text-text/90">{bullet}</span>
-                </motion.div>
+                </div>
               ))}
             </div>
-          </motion.div>
+          </div>
 
           <div className="flex w-full items-center justify-center">
             <div className="h-[1px] w-full bg-secondary/20" />
@@ -88,11 +62,7 @@ export default function Community() {
             <div className="h-[1px] w-full bg-secondary/20" />
           </div>
 
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-          >
+          <div>
             <h3 className="mb-4 text-2xl font-extrabold uppercase tracking-tight text-primary">Who is a GLOARO Member?</h3>
             <div className="mb-6 space-y-4 text-left text-base leading-relaxed text-text/80">
               <p>
@@ -105,41 +75,21 @@ export default function Community() {
 
             <div className="grid grid-cols-1 gap-y-3">
               {memberBullets.map((bullet, idx) => (
-                <motion.div
-                  key={idx}
-                  initial={{ opacity: 0, x: -10 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: idx * 0.1 }}
-                  className="flex items-start gap-3"
-                >
+                <div key={idx} className="flex items-start gap-3">
                   <FaCheckCircle className="mt-0.5 shrink-0 text-lg text-secondary" />
                   <span className="text-base font-medium text-text/90">{bullet}</span>
-                </motion.div>
+                </div>
               ))}
             </div>
-          </motion.div>
+          </div>
         </div>
 
-        <div ref={containerRef} className="relative hidden pl-[80px] md:block lg:pl-[120px]">
+        <div className="relative hidden pl-[80px] md:block lg:pl-[120px]">
           <div className="absolute left-[39px] top-4 bottom-4 w-[2px] bg-secondary/20 lg:left-[59px]" />
-          <motion.div
-            className="absolute left-[39px] top-4 bottom-4 z-0 w-[2px] origin-top bg-secondary shadow-[0_0_10px_rgba(245,166,35,0.8)] lg:left-[59px]"
-            style={{ scaleY: lineHeight }}
-          />
+          <div className="absolute left-[39px] top-4 bottom-4 z-0 w-[2px] origin-top bg-secondary shadow-[0_0_10px_rgba(245,166,35,0.8)] lg:left-[59px]" />
 
-          <motion.div
-            initial={{ opacity: 0, x: 30 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true, margin: '-10% 0px' }}
-            className="relative mb-6"
-          >
-            <motion.div
-              initial={{ opacity: 0, scale: 0 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true, margin: '-20% 0px' }}
-              className="absolute -left-[50px] top-3 z-10 h-5 w-5 rounded-full border-2 border-white bg-secondary shadow-[0_0_15px_rgba(245,166,35,0.8)] lg:-left-[70px]"
-            />
+          <div className="relative mb-6">
+            <div className="absolute -left-[50px] top-3 z-10 h-5 w-5 rounded-full border-2 border-white bg-secondary shadow-[0_0_15px_rgba(245,166,35,0.8)] lg:-left-[70px]" />
 
             <h3 className="mb-4 text-3xl font-extrabold uppercase tracking-tight text-primary lg:text-4xl">What is a Chapter?</h3>
             <div className="mb-6 space-y-4 text-justify text-lg leading-relaxed text-text/80 md:text-left">
@@ -153,46 +103,24 @@ export default function Community() {
 
             <div className="grid gap-x-10 gap-y-3 md:grid-cols-2">
               {chapterBullets.map((bullet, idx) => (
-                <motion.div
-                  key={idx}
-                  initial={{ opacity: 0, y: 10 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: idx * 0.1 }}
-                  className="flex items-start gap-4"
-                >
+                <div key={idx} className="flex items-start gap-4">
                   <FaCheckCircle className="mt-0.5 shrink-0 text-xl text-secondary" />
                   <span className="text-lg font-medium text-text/90">{bullet}</span>
-                </motion.div>
+                </div>
               ))}
             </div>
-          </motion.div>
+          </div>
 
           <div className="relative mb-6 mt-2 flex w-full items-center justify-center">
-            <motion.div
-              initial={{ opacity: 0, scale: 0 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true, margin: '-20% 0px' }}
-              className="absolute -left-[50px] top-1/2 z-10 h-5 w-5 -translate-y-1/2 rounded-full border-2 border-white bg-secondary shadow-[0_0_15px_rgba(245,166,35,0.8)] lg:-left-[70px]"
-            />
+            <div className="absolute -left-[50px] top-1/2 z-10 h-5 w-5 -translate-y-1/2 rounded-full border-2 border-white bg-secondary shadow-[0_0_15px_rgba(245,166,35,0.8)] lg:-left-[70px]" />
 
             <div className="h-[1px] w-full bg-gradient-to-r from-transparent via-secondary/40 to-transparent" />
             <div className="mx-4 h-2 w-2 shrink-0 rounded-full bg-secondary/50" />
             <div className="h-[1px] w-full bg-gradient-to-r from-secondary/40 via-secondary/40 to-transparent" />
           </div>
 
-          <motion.div
-            initial={{ opacity: 0, x: 30 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true, margin: '-10% 0px' }}
-            className="relative"
-          >
-            <motion.div
-              initial={{ opacity: 0, scale: 0 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true, margin: '-20% 0px' }}
-              className="absolute -bottom-1 -left-[50px] z-10 h-5 w-5 rounded-full border-2 border-white bg-secondary shadow-[0_0_15px_rgba(245,166,35,0.8)] lg:-left-[70px]"
-            />
+          <div className="relative">
+            <div className="absolute -bottom-1 -left-[50px] z-10 h-5 w-5 rounded-full border-2 border-white bg-secondary shadow-[0_0_15px_rgba(245,166,35,0.8)] lg:-left-[70px]" />
 
             <h3 className="mb-4 text-3xl font-extrabold uppercase tracking-tight text-primary lg:text-4xl">Who is a GLOARO Member?</h3>
             <div className="mb-6 space-y-4 text-justify text-lg leading-relaxed text-text/80 md:text-left">
@@ -206,23 +134,15 @@ export default function Community() {
 
             <div className="grid gap-x-10 gap-y-3 md:grid-cols-2">
               {memberBullets.map((bullet, idx) => (
-                <motion.div
-                  key={idx}
-                  initial={{ opacity: 0, y: 10 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: idx * 0.1 }}
-                  className="flex items-start gap-4"
-                >
+                <div key={idx} className="flex items-start gap-4">
                   <FaCheckCircle className="mt-0.5 shrink-0 text-xl text-secondary" />
                   <span className="text-lg font-medium text-text/90">{bullet}</span>
-                </motion.div>
+                </div>
               ))}
             </div>
-          </motion.div>
+          </div>
         </div>
       </div>
     </SectionWrapper>
   )
 }
-

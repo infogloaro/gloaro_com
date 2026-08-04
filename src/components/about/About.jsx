@@ -16,7 +16,6 @@ import {
   FiArrowRight,
 } from 'react-icons/fi'
 import { FaCompass, FaBullseye } from 'react-icons/fa'
-import { motion } from 'framer-motion'
 import { Swiper, SwiperSlide } from 'swiper/react'
 import { Autoplay, Navigation } from 'swiper/modules'
 import 'swiper/css'
@@ -34,7 +33,6 @@ const iconMap = {
 
 export default function About() {
   const [data, setData] = useState(null)
-  const [isMobile, setIsMobile] = useState(false)
 
   useEffect(() => {
     let mounted = true
@@ -44,13 +42,8 @@ export default function About() {
       })
       .catch(console.error)
 
-    const updateIsMobile = () => setIsMobile(window.innerWidth <= 768)
-    updateIsMobile()
-    window.addEventListener('resize', updateIsMobile)
-
     return () => {
       mounted = false
-      window.removeEventListener('resize', updateIsMobile)
     }
   }, [])
 
@@ -61,26 +54,14 @@ export default function About() {
       <SectionTitle title="About GLOARO Digital Network" subtitle="ABOUT GLOARO" />
 
       <div className="mx-auto mb-12 max-w-4xl text-center md:mb-16">
-        <motion.h3
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
-          className="mb-8 text-2xl font-semibold text-[#0b2451]"
-        >
+        <h3 className="mb-8 text-2xl font-semibold text-[#0b2451]">
           Company Overview
-        </motion.h3>
+        </h3>
         <div className="space-y-6 text-left text-lg leading-relaxed text-slate-600 md:text-justify">
           {data.overview.map((para, idx) => (
-            <motion.p
-              key={idx}
-              initial={{ opacity: 0, x: isMobile ? (idx % 2 === 0 ? 50 : -50) : 0, y: isMobile ? 0 : 20 }}
-              whileInView={{ opacity: 1, x: 0, y: 0 }}
-              viewport={{ once: true, amount: 0.5, margin: '0px 0px -50px 0px' }}
-              transition={{ duration: 0.6, delay: isMobile ? 0 : idx * 0.1 }}
-            >
+            <p key={idx}>
               {para}
-            </motion.p>
+            </p>
           ))}
         </div>
       </div>
@@ -88,22 +69,12 @@ export default function About() {
       <div className="mb-14 md:mb-20">
         <SectionTitle title="Vision & Mission" subtitle="OUR PURPOSE" />
 
-          <motion.p
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
-          className="mx-auto mb-8 max-w-3xl text-center text-lg font-medium leading-relaxed text-slate-600 md:mb-12 md:text-xl"
-        >
+          <p className="mx-auto mb-8 max-w-3xl text-center text-lg font-medium leading-relaxed text-slate-600 md:mb-12 md:text-xl">
           Building India's most trusted digital business ecosystem through innovation, collaboration, and sustainable growth.
-        </motion.p>
+        </p>
 
         <div className="mx-auto grid max-w-6xl gap-8 md:grid-cols-2 lg:gap-12">
-          <motion.div
-            initial={{ opacity: 0, y: 30, scale: isMobile ? 0.95 : 1 }}
-            whileInView={{ opacity: 1, y: 0, scale: 1 }}
-            viewport={{ once: true, amount: 0.2 }}
-            transition={{ duration: 0.6 }}
+          <div
             className="group relative flex flex-col rounded-[24px] border border-gray-100 bg-white transition-all duration-300 hover:-translate-y-2"
             style={{ boxShadow: '0 20px 60px rgba(0,0,0,0.08)' }}
           >
@@ -120,13 +91,9 @@ export default function About() {
             <div className="rounded-b-[24px] border-t border-gray-100 bg-[#FAFAFA] px-6 py-4 text-center">
               <p className="italic font-medium text-[#0b2451]/80">"Empowering Every Entrepreneur."</p>
             </div>
-          </motion.div>
+          </div>
 
-          <motion.div
-            initial={{ opacity: 0, y: 30, scale: isMobile ? 0.95 : 1 }}
-            whileInView={{ opacity: 1, y: 0, scale: 1 }}
-            viewport={{ once: true, amount: 0.2 }}
-            transition={{ duration: 0.6, delay: isMobile ? 0 : 0.2 }}
+          <div
             className="group relative flex flex-col rounded-[24px] border border-gray-100 bg-white transition-all duration-300 hover:-translate-y-2"
             style={{ boxShadow: '0 20px 60px rgba(0,0,0,0.08)' }}
           >
@@ -143,7 +110,7 @@ export default function About() {
             <div className="rounded-b-[24px] border-t border-gray-100 bg-[#FAFAFA] px-6 py-4 text-center">
               <p className="italic font-medium text-[#0b2451]/80">"Connecting Businesses Through Trust & Innovation."</p>
             </div>
-          </motion.div>
+          </div>
         </div>
       </div>
 
