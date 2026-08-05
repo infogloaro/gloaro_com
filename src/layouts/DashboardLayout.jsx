@@ -69,7 +69,8 @@ export default function DashboardLayout({ navItems = [], title = 'Dashboard', th
       setNotificationPreview(listRes.data?.data || listRes.data || [])
       setNotificationUnreadCount(Number(countRes.data?.data?.count || countRes.data?.count || 0))
     }).catch(() => {
-      toast.error('Unable to load notifications')
+      // Keep dashboards usable even if the notification service is temporarily unavailable.
+      console.warn('Unable to load notification preview')
     }).finally(() => setNotificationLoading(false))
   }, [user?._id])
 

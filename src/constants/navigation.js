@@ -172,7 +172,6 @@ export const vendorApplicantNav = [
   { label: 'Communication', icon: MessageSquare, children: [['Notifications', '/notifications', Bell]] },
   ['Vendor Application Status', '/vendor/onboarding-status', ClipboardList],
   ['Profile', '/vendor/account', User],
-  ['Settings', '/vendor/settings', Settings],
   ['Logout', '__logout__', LogOut],
 ]
 

@@ -86,6 +86,7 @@ export default function AdminManagementPage({ role: overrideRole }) {
   }), []);
 
   const childRole = overrideRole || CREATOR_CHILD_ROLE[user?.role]
+  const isRoleLocked = Boolean(overrideRole)
 
   useEffect(() => {
     const timer = window.setTimeout(() => setDebouncedSearch(search.trim()), 300)
@@ -93,7 +94,9 @@ export default function AdminManagementPage({ role: overrideRole }) {
   }, [search])
 
   const params = useMemo(() => {
-    const filterRole = user?.role === ROLES.SUPERADMIN ? (role || undefined) : childRole
+    const filterRole = isRoleLocked
+      ? childRole
+      : (user?.role === ROLES.SUPERADMIN ? (role || undefined) : childRole)
     return {
       page,
       limit: 10,
@@ -101,7 +104,7 @@ export default function AdminManagementPage({ role: overrideRole }) {
       role: filterRole,
       status: status || undefined
     }
-  }, [page, role, debouncedSearch, status, user?.role, childRole])
+  }, [page, role, debouncedSearch, status, user?.role, childRole, isRoleLocked])
 
   const load = useCallback(async () => {
     const sequence = ++requestSequence.current
@@ -163,7 +166,7 @@ export default function AdminManagementPage({ role: overrideRole }) {
       phone: admin.phone || '',
       password: '',
       referralCode: '',
-      role: admin.role || ROLES.ADMIN,
+      role: childRole || admin.role || ROLES.ADMIN,
       ...profile,
       organization: profile.organization || emptyForm.organization,
       sessionTimeoutMinutes: profile.security?.sessionTimeoutMinutes || 60,
@@ -358,7 +361,8 @@ const saveAdmin = async () => {
           { key: 'officialId', header: 'Official ID', render: (row) => row.officialId || '-' },
           { key: 'name', header: 'Name' },
           { key: 'email', header: 'Email' },
-          { key: 'location', header: childRole === ROLES.REGION_DIRECTOR ? 'Region' : 'Location', render: (row) => getSubordinateLocation(row) },
+          { key: 'location', header: childRole === ROLES.REGION_DIRECTOR ? 'Assigned Region' : 'Location', render: (row) => getSubordinateLocation(row) },
+          ...(childRole === ROLES.REGION_DIRECTOR ? [{ key: 'regionSource', header: 'Region Source', render: (row) => getRegionSource(row) }] : []),
           { key: 'status', header: 'Status', render: (row) => <StatusBadge value={row.role === ROLES.CUSTOMER ? row.status : (row.isBlocked ? 'locked' : row.isSuspended ? 'suspended' : row.isActive ? 'active' : 'inactive')} /> },
         ]}
         rows={rows}
@@ -413,7 +417,7 @@ const saveAdmin = async () => {
       />
 
       <Modal open={wizardOpen} title={editing ? (childRole ? `Edit ${roleLabel(childRole)}` : 'Edit Admin') : (childRole ? `Create New ${roleLabel(childRole)} Wizard` : 'Create New Admin Wizard')} onClose={() => setWizardOpen(false)} maxWidth="max-w-6xl">
-        <AdminWizard form={form} setForm={setForm} editing={Boolean(editing)} onSave={saveAdmin} user={user} saving={saving} />
+        <AdminWizard form={form} setForm={setForm} editing={Boolean(editing)} onSave={saveAdmin} user={user} saving={saving} isRoleLocked={isRoleLocked} childRole={childRole} />
       </Modal>
 
       <Modal open={Boolean(viewing)} title={childRole ? `${roleLabel(childRole)} Details` : 'Admin Details'} onClose={() => setViewing(null)} maxWidth="max-w-4xl">
@@ -431,7 +435,7 @@ const saveAdmin = async () => {
   )
 }
 
-function AdminWizard({ form, setForm, editing, onSave, user, saving }) {
+function AdminWizard({ form, setForm, editing, onSave, user, saving, isRoleLocked, childRole }) {
   const [showPassword, setShowPassword] = useState(false)
   const [validatingReferral, setValidatingReferral] = useState(false)
   const update = (patch) => setForm((current) => ({ ...current, ...patch }))
@@ -573,7 +577,11 @@ function AdminWizard({ form, setForm, editing, onSave, user, saving }) {
       </WizardSection>
 
       <WizardSection number="2" title="Role Selection">
-        {user?.role === ROLES.SUPERADMIN ? (
+        {isRoleLocked ? (
+          <div className="h-10 w-full rounded-md border border-slate-200 bg-slate-50 px-3 flex items-center text-sm font-extrabold text-slate-800 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-350">
+            {roleLabel(childRole)} (Read Only)
+          </div>
+        ) : user?.role === ROLES.SUPERADMIN ? (
           <select
             value={form.role}
             onChange={(e)=>handleRoleChange(e.target.value)}
@@ -586,7 +594,7 @@ function AdminWizard({ form, setForm, editing, onSave, user, saving }) {
             {roleLabel(form.role)} (Read Only)
           </div>
         )}
-        {form.role === ROLES.CUSTOM_ADMIN && <Input label="Custom Role Name" value={form.customRoleName} onChange={(value) => update({ customRoleName: value })} />}
+        {!isRoleLocked && form.role === ROLES.CUSTOM_ADMIN && <Input label="Custom Role Name" value={form.customRoleName} onChange={(value) => update({ customRoleName: value })} />}
       </WizardSection>
 
       <WizardSection number="3" title="Organization Assignment">
@@ -755,7 +763,7 @@ function OrganizationAssignmentSection({ organization, onChangeOrg, user, target
   const regionsList = useMemo(() => {
     if (creatorRole === ROLES.REGION_DIRECTOR) {
       const regId = creatorOrg.region
-      const regName = creatorOrg.assignedRegion?.name || 'North Region'
+      const regName = creatorOrg.assignedRegion?.name || ''
       if (regId) {
         return [{ _id: regId, name: regName }]
       }
@@ -1032,4 +1040,11 @@ function getSubordinateLocation(row) {
     return org.assignedDistrict?.name || 'Not Assigned'
   }
   return org.assignedChapter?.name || 'Not Assigned'
+}
+
+function getRegionSource(row) {
+  const org = row.meta?.adminProfile?.organization || {}
+  if (org.assignedRegion?.type === 'region') return 'Organization Locations'
+  if (org.region) return 'Legacy / Manual'
+  return '-'
 }

@@ -172,11 +172,11 @@ export default function About() {
         </div>
 
         <div className="mt-4 flex items-center justify-center gap-4">
-          <button
-            type="button"
-            className="swiper-button-prev-custom z-10 flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border border-primary/10 bg-white text-primary shadow-md transition-all duration-300 hover:bg-primary hover:text-white hover:shadow-lg active:scale-95 md:h-12 md:w-12"
-            aria-label="Previous Slide"
-          >
+            <button
+              type="button"
+              className="swiper-button-prev-custom z-10 flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border border-primary/10 bg-white text-primary shadow-md transition-all duration-300 hover:bg-primary hover:text-white hover:shadow-lg active:scale-95 md:h-12 md:w-12"
+              aria-label="Previous Slide"
+            >
             <FiArrowLeft size={18} className="md:h-5 md:w-5" />
           </button>
           <button

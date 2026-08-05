@@ -57,7 +57,7 @@ export default function NotificationsPage({ systemView = false }) {
     return () => clearTimeout(timer)
   }, [searchTerm])
 
-  const loadNotifications = useCallback(async () => {
+  const loadNotifications = useCallback(async (signal) => {
     setIsFetching(true)
     try {
       const [listRes, countRes] = await Promise.all([

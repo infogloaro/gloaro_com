@@ -133,7 +133,23 @@ export default function MemberProfilePage() {
   const displayPhone = application?.personal?.mobileNumber || profile?.phone || emptyValue
   const avatarUrl = profile?.avatar?.url || application?.documents?.profilePhoto?.url || ''
   const initials = (displayName || 'M').trim().slice(0, 2).toUpperCase()
-  const memberStatus = profile?.status || profile?.onboardingStatus || application?.status || emptyValue
+  const isMembershipApplicant = profile?.role === 'customer'
+  let memberStatus = emptyValue
+  if (isMembershipApplicant) {
+    const appStatus = application?.status
+    if (!appStatus) {
+      memberStatus = 'Not Started'
+    } else {
+      if (appStatus === 'draft') memberStatus = 'Draft'
+      else if (['submitted', 'pending_vp_review', 'pending_review'].includes(appStatus)) memberStatus = 'Pending'
+      else if (['under_review', 'documents_verified', 'forwarded', 'changes_requested'].includes(appStatus)) memberStatus = 'Under Review'
+      else if (appStatus === 'rejected') memberStatus = 'Rejected'
+      else if (appStatus === 'approved') memberStatus = 'Approved'
+      else memberStatus = appStatus
+    }
+  } else {
+    memberStatus = profile?.status || profile?.onboardingStatus || emptyValue
+  }
   const memberRole = roleLabel(profile?.role || '')
   const isApprovedVendor = vendorProfile?.status === 'approved'
 

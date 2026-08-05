@@ -21,6 +21,7 @@ import VerifyEmail from './pages/auth/VerifyEmail'
 import AdminDashboard from './pages/admin/AdminDashboard'
 import AdminAnalytics from './pages/admin/AdminAnalytics'
 import AdminManagementPage from './pages/admin/AdminManagementPage'
+import RegionDirectorManagementPage from './pages/admin/RegionDirectorManagementPage'
 import AdminVendorApplicationsPage from './pages/admin/AdminVendorApplicationsPage'
 import AdminVendorCategoryApprovalsPage from './pages/admin/AdminVendorCategoryApprovalsPage'
 import AdminShippingPage from './pages/admin/AdminShippingPage'
@@ -204,6 +205,8 @@ function App() {
     { path: '/legacy-dashboard', element: <AdminDashboard /> },
     { path: '/admin-management', element: <AdminManagementPage />, roles: [ROLES.SUPERADMIN] },
     { path: '/organization', element: <OrganizationManagementPage />, roles: [ROLES.SUPERADMIN] },
+    { path: '/region-directors', element: <RegionDirectorManagementPage />, roles: [ROLES.ADMIN, ROLES.SUPERADMIN] },
+    { path: '/organization/region-directors', element: <RegionDirectorManagementPage />, roles: [ROLES.ADMIN, ROLES.SUPERADMIN] },
     { path: '/assignments', element: <HierarchyAssignmentPage />, roles: [ROLES.SUPERADMIN] },
     { path: '/features', element: <FeatureManagementPage />, roles: [ROLES.SUPERADMIN] },
     { path: '/dashboard-config', element: <DashboardConfigurationPage />, roles: [ROLES.SUPERADMIN] },
@@ -399,6 +402,9 @@ function App() {
             <Route element={<ProtectedRoute roles={[ROLES.SUPERADMIN, ROLES.ADMIN, ROLES.FRANCHISE_ADMIN, ROLES.ECOMMERCE_ADMIN, ROLES.MARKETPLACE_ADMIN, ROLES.DIGITAL_MARKETING_ADMIN, ROLES.TRAINING_ADMIN, ROLES.FINANCE_ADMIN, ROLES.REGION_DIRECTOR, ROLES.STATE_DIRECTOR, ROLES.DISTRICT_DIRECTOR, ROLES.EXECUTIVE_DIRECTOR, ROLES.LAUNCH_DIRECTOR, ROLES.DIRECT_CONSULTANT, ROLES.CHAPTER_PRESIDENT, ROLES.VICE_PRESIDENT, ROLES.SECRETARY, ROLES.CUSTOMER, ROLES.USER, ROLES.VENDOR]} />}>
               <Route path="/member/vendor-application" element={<VendorApplicationForm />} />
               <Route path="/member/vendor-application-status" element={<VendorApplicationStatus />} />
+              <Route path="/member/membership-agreement" element={<MembershipAgreement />} />
+              <Route path="/member/membership-application" element={<MembershipApplication />} />
+              <Route path="/member/membership-qualification" element={<MembershipQualification />} />
               <Route path="/member/profile" element={<MemberProfilePage />} />
               <Route path="/member/dashboard/profile" element={<MemberProfilePage />} />
               
