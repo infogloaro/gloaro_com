@@ -475,19 +475,19 @@ function useInViewOnce(threshold = 0.12) {
   return [ref, inView];
 }
 
-const SHOP_QUICK_CATEGORIES = [
-  { label: "For You", icon: "✨", tone: "from-sky-100 to-indigo-100", iconTone: "text-[#0d4697]" },
-  { label: "Mobiles", icon: "📱", tone: "from-blue-50 to-sky-100", iconTone: "text-[#0d4697]" },
-  { label: "Beauty", icon: "💄", tone: "from-pink-50 to-rose-100", iconTone: "text-[#c2417f]" },
-  { label: "Electronics", icon: "🖥️", tone: "from-slate-50 to-slate-100", iconTone: "text-[#334155]" },
-  { label: "Appliances", icon: "🧊", tone: "from-cyan-50 to-blue-100", iconTone: "text-[#0f766e]" },
-  { label: "Toys", icon: "🧸", tone: "from-amber-50 to-orange-100", iconTone: "text-[#b45309]" },
-  { label: "Food & Home", icon: "🍲", tone: "from-emerald-50 to-teal-100", iconTone: "text-[#0f766e]" },
-  { label: "Auto Accessories", icon: "🚗", tone: "from-stone-50 to-orange-100", iconTone: "text-[#b45309]" },
-  { label: "2 Wheelers", icon: "🛵", tone: "from-violet-50 to-purple-100", iconTone: "text-[#6d28d9]" },
-  { label: "Sports & Fitness", icon: "🏸", tone: "from-lime-50 to-emerald-100", iconTone: "text-[#15803d]" },
-  { label: "Books & More", icon: "📚", tone: "from-amber-50 to-yellow-100", iconTone: "text-[#a16207]" },
-  { label: "Furniture", icon: "🛋️", tone: "from-zinc-50 to-stone-100", iconTone: "text-[#475569]" },
+const SHOP_CATEGORY_PALETTE = [
+  { tone: "from-sky-100 to-indigo-100", iconTone: "text-[#0d4697]" },
+  { tone: "from-blue-50 to-sky-100", iconTone: "text-[#0d4697]" },
+  { tone: "from-pink-50 to-rose-100", iconTone: "text-[#c2417f]" },
+  { tone: "from-slate-50 to-slate-100", iconTone: "text-[#334155]" },
+  { tone: "from-cyan-50 to-blue-100", iconTone: "text-[#0f766e]" },
+  { tone: "from-amber-50 to-orange-100", iconTone: "text-[#b45309]" },
+  { tone: "from-emerald-50 to-teal-100", iconTone: "text-[#0f766e]" },
+  { tone: "from-stone-50 to-orange-100", iconTone: "text-[#b45309]" },
+  { tone: "from-violet-50 to-purple-100", iconTone: "text-[#6d28d9]" },
+  { tone: "from-lime-50 to-emerald-100", iconTone: "text-[#15803d]" },
+  { tone: "from-amber-50 to-yellow-100", iconTone: "text-[#a16207]" },
+  { tone: "from-zinc-50 to-stone-100", iconTone: "text-[#475569]" },
 ];
 
 const SHOP_POPULAR_QUERIES = [
@@ -505,6 +505,35 @@ function normalizeKey(value) {
     .toLowerCase()
     .replace(/&/g, "and")
     .replace(/[^a-z0-9]+/g, "");
+}
+
+function getCategoryPalette(index = 0) {
+  return SHOP_CATEGORY_PALETTE[index % SHOP_CATEGORY_PALETTE.length];
+}
+
+function buildShopHeroCategories(categories = []) {
+  return categories
+    .filter((category) => category?.type === "product")
+    .filter((category) => category?.isActive !== false)
+    .filter((category) => !category?.parent && !category?.parent?._id)
+    .sort(
+      (a, b) =>
+        Number(b?.isFeatured || false) - Number(a?.isFeatured || false) ||
+        Number(a?.order || 0) - Number(b?.order || 0) ||
+        String(a?.name || "").localeCompare(String(b?.name || "")),
+    )
+    .slice(0, 12)
+    .map((category, index) => {
+      const palette = getCategoryPalette(index);
+      const label = String(category?.name || "").trim();
+      return {
+        _id: String(category?._id || `category-${index}`),
+        label,
+        icon: category?.icon || label.charAt(0).toUpperCase() || "•",
+        imageUrl: category?.image?.url || "",
+        ...palette,
+      };
+    });
 }
 
 function resolveQuickCategorySelection(label, categories = []) {
@@ -525,6 +554,17 @@ function resolveQuickCategorySelection(label, categories = []) {
 }
 
 function ShopCategoryPill({ category, active, onClick }) {
+  const iconContent = category.imageUrl ? (
+    <img
+      src={category.imageUrl}
+      alt=""
+      className="h-6 w-6 rounded-full object-cover"
+      loading="lazy"
+    />
+  ) : (
+    <span className={active ? "scale-105" : ""}>{category.icon}</span>
+  );
+
   return (
     <button
       type="button"
@@ -538,7 +578,7 @@ function ShopCategoryPill({ category, active, onClick }) {
             : `border-transparent bg-gradient-to-b ${category.tone} ${category.iconTone} group-hover:-translate-y-0.5 group-hover:shadow-md`
         }`}
       >
-        <span className={active ? "scale-105" : ""}>{category.icon}</span>
+        {iconContent}
       </span>
       <span
         className={`max-w-[72px] truncate text-[11px] font-semibold transition ${
@@ -611,11 +651,7 @@ function normalizeBannerList(banners = []) {
 function ShopBannerCard({ banner, position = "center" }) {
   const imageUrl = getBannerImageUrl(banner);
   const isCenter = position === "center";
-  const badge = banner.badge || banner.subtitle || "Limited Time";
-  const title = banner.title || "Featured Deal";
-  const subtitle = banner.subtitle || "Curated deal from a verified seller";
   const gradient = banner.fallbackTone || "from-[#0c2f7d] via-[#052252] to-[#031736]";
-  const isInternalLink = Boolean(banner.link && banner.link.startsWith("/"));
 
   return (
     <article
@@ -624,45 +660,14 @@ function ShopBannerCard({ banner, position = "center" }) {
       }`}
     >
       {imageUrl ? (
-        <img src={imageUrl} alt={title} className="absolute inset-0 h-full w-full object-cover" />
+        <img
+          src={imageUrl}
+          alt={banner.title || "Promotional banner"}
+          className="absolute inset-0 h-full w-full object-cover"
+        />
       ) : (
         <div className={`absolute inset-0 bg-gradient-to-br ${gradient}`} />
       )}
-      <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(3,10,28,0.08),rgba(3,10,28,0.55))]" />
-      <div className="relative flex h-full flex-col justify-between p-5 text-white">
-        <span className="inline-flex w-fit rounded-full border border-white/25 bg-white/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.24em] backdrop-blur-sm">
-          {badge}
-        </span>
-        <div className={isCenter ? "max-w-[290px]" : "max-w-[160px]"}>
-          <h3 className={`font-black leading-[0.92] ${isCenter ? "text-4xl sm:text-5xl" : "text-2xl sm:text-3xl"}`}>
-            {title}
-          </h3>
-          <p className={`mt-3 font-semibold leading-snug text-white/88 ${isCenter ? "text-base sm:text-lg" : "text-sm"}`}>
-            {subtitle}
-          </p>
-        </div>
-        {banner.link ? (
-          isInternalLink ? (
-            <Link
-              to={banner.link}
-              className="mt-4 inline-flex w-fit items-center gap-2 rounded-xl bg-white px-4 py-2 text-xs font-black uppercase tracking-[0.18em] text-[#0d4697] shadow-lg transition hover:-translate-y-0.5"
-            >
-              Shop now
-              <ArrowRight className="h-3.5 w-3.5" />
-            </Link>
-          ) : (
-            <a
-              href={banner.link}
-              target="_blank"
-              rel="noreferrer"
-              className="mt-4 inline-flex w-fit items-center gap-2 rounded-xl bg-white px-4 py-2 text-xs font-black uppercase tracking-[0.18em] text-[#0d4697] shadow-lg transition hover:-translate-y-0.5"
-            >
-              Shop now
-              <ArrowRight className="h-3.5 w-3.5" />
-            </a>
-          )
-        ) : null}
-      </div>
     </article>
   );
 }
@@ -721,23 +726,10 @@ function ShopHeroShowcase({
   onSearchSubmit,
 }) {
   const [ref, inView] = useInViewOnce(0.08);
-  const categoryById = useMemo(
-    () =>
-      new Map(
-        categories.map((category) => [String(category?._id || ""), category]),
-      ),
+  const visibleCategories = useMemo(
+    () => buildShopHeroCategories(categories),
     [categories],
   );
-  const activeQuickLabel = useMemo(() => {
-    const selectedCategory = categoryById.get(String(activeCategoryId || ""));
-    if (selectedCategory?.name) {
-      const matched = SHOP_QUICK_CATEGORIES.find(
-        (item) => normalizeKey(item.label) === normalizeKey(selectedCategory.name),
-      );
-      return matched?.label || "For You";
-    }
-    return searchValue ? searchValue : "For You";
-  }, [activeCategoryId, categoryById, searchValue]);
 
   return (
     <section
@@ -762,11 +754,11 @@ function ShopHeroShowcase({
       </div>
 
       <div className="mt-4 flex gap-3 overflow-x-auto pb-1 pt-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:gap-4">
-        {SHOP_QUICK_CATEGORIES.map((category) => (
+        {visibleCategories.map((category) => (
           <ShopCategoryPill
-            key={category.label}
+            key={category._id}
             category={category}
-            active={normalizeKey(activeQuickLabel) === normalizeKey(category.label)}
+            active={String(activeCategoryId || "") === String(category._id || "")}
             onClick={() => onCategorySelect(category.label)}
           />
         ))}
