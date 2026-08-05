@@ -63,6 +63,11 @@ export default function ProtectedRoute({
       memberRoutes.qualification,
       memberRoutes.status,
       '/member/profile',
+      '/customer/scorecard',
+      '/member/dashboard/scorecard',
+      '/scorecard',
+      '/notifications',
+      '/customer/notifications',
     ].includes(location.pathname)
 
     if (!isAllowedApplicantPath) {
