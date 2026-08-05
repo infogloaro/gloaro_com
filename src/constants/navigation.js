@@ -105,6 +105,7 @@ export const adminNav = [
     label: 'Marketplace',
     icon: ShoppingBag,
     children: [
+      ['Banner Management', '/banners', Sparkles],
       ['Categories', '/marketplace/categories', ListTree],
       ['Vendors', '/vendors', Building2],
       ['Products', '/products', Package],
@@ -335,6 +336,7 @@ const commonModules = [
     label: 'Marketplace',
     icon: ShoppingBag,
     children: [
+      ['Banner Management', '/banners', Sparkles],
       ['Products', '/products', Package],
       ['Services', '/services', BriefcaseBusiness],
       ['Vendors', '/vendors', Users],

@@ -36,6 +36,7 @@ export const customerApi = {
   product: (id) => api.get(`/products/${id}`),
   services: (params) => api.get('/services', { params }),
   service: (id) => api.get(`/services/${id}`),
+  banners: (params) => api.get('/banners', { params }),
   globalSearch: (params) => api.get('/directory/global-search', { params }),
   submitEnquiry: (data) => api.post('/leads', data),
   wishlist: (params) => api.get('/customers/wishlist', { params }),

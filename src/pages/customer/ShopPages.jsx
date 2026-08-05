@@ -15,6 +15,7 @@ import {
   Check,
   ChevronLeft,
   ChevronRight,
+  ChevronDown,
   CreditCard,
   Heart,
   HeartOff,
@@ -447,6 +448,577 @@ function takeUniqueProducts(products, limit = 4, excludedIds = new Set()) {
   return list;
 }
 
+// Lightweight scroll-reveal primitive (fade + rise) used to animate sections
+// as they enter the viewport, without pulling in an animation library.
+function useInViewOnce(threshold = 0.12) {
+  const ref = useRef(null);
+  const [inView, setInView] = useState(false);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return undefined;
+    if (typeof window === "undefined" || !("IntersectionObserver" in window)) {
+      setInView(true);
+      return undefined;
+    }
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setInView(true);
+          observer.disconnect();
+        }
+      },
+      { threshold },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [threshold]);
+  return [ref, inView];
+}
+
+const SHOP_QUICK_CATEGORIES = [
+  { label: "For You", icon: "✨", tone: "from-sky-100 to-indigo-100", iconTone: "text-[#0d4697]" },
+  { label: "Mobiles", icon: "📱", tone: "from-blue-50 to-sky-100", iconTone: "text-[#0d4697]" },
+  { label: "Beauty", icon: "💄", tone: "from-pink-50 to-rose-100", iconTone: "text-[#c2417f]" },
+  { label: "Electronics", icon: "🖥️", tone: "from-slate-50 to-slate-100", iconTone: "text-[#334155]" },
+  { label: "Appliances", icon: "🧊", tone: "from-cyan-50 to-blue-100", iconTone: "text-[#0f766e]" },
+  { label: "Toys", icon: "🧸", tone: "from-amber-50 to-orange-100", iconTone: "text-[#b45309]" },
+  { label: "Food & Home", icon: "🍲", tone: "from-emerald-50 to-teal-100", iconTone: "text-[#0f766e]" },
+  { label: "Auto Accessories", icon: "🚗", tone: "from-stone-50 to-orange-100", iconTone: "text-[#b45309]" },
+  { label: "2 Wheelers", icon: "🛵", tone: "from-violet-50 to-purple-100", iconTone: "text-[#6d28d9]" },
+  { label: "Sports & Fitness", icon: "🏸", tone: "from-lime-50 to-emerald-100", iconTone: "text-[#15803d]" },
+  { label: "Books & More", icon: "📚", tone: "from-amber-50 to-yellow-100", iconTone: "text-[#a16207]" },
+  { label: "Furniture", icon: "🛋️", tone: "from-zinc-50 to-stone-100", iconTone: "text-[#475569]" },
+];
+
+const SHOP_POPULAR_QUERIES = [
+  "Mobiles",
+  "Electronics",
+  "Washing Machine",
+  "Shoes",
+  "Smart TV",
+  "Laptop",
+  "Refrigerator",
+];
+
+function normalizeKey(value) {
+  return String(value || "")
+    .toLowerCase()
+    .replace(/&/g, "and")
+    .replace(/[^a-z0-9]+/g, "");
+}
+
+function resolveQuickCategorySelection(label, categories = []) {
+  if (label === "For You") {
+    return { category: "", search: "" };
+  }
+
+  const normalizedLabel = normalizeKey(label);
+  const matched = categories.find(
+    (category) => normalizeKey(category?.name) === normalizedLabel,
+  );
+
+  if (matched) {
+    return { category: String(matched._id || ""), search: "" };
+  }
+
+  return { category: "", search: label };
+}
+
+function ShopCategoryPill({ category, active, onClick }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="group flex min-w-[64px] flex-col items-center gap-1.5 text-center"
+    >
+      <span
+        className={`grid h-12 w-12 place-items-center rounded-2xl border text-xl shadow-sm transition duration-300 sm:h-14 sm:w-14 ${
+          active
+            ? "border-[#0d4697]/25 bg-white text-[#0d4697] shadow-[0_12px_24px_rgba(13,70,151,0.12)]"
+            : `border-transparent bg-gradient-to-b ${category.tone} ${category.iconTone} group-hover:-translate-y-0.5 group-hover:shadow-md`
+        }`}
+      >
+        <span className={active ? "scale-105" : ""}>{category.icon}</span>
+      </span>
+      <span
+        className={`max-w-[72px] truncate text-[11px] font-semibold transition ${
+          active ? "text-[#0d4697]" : "text-slate-500 group-hover:text-slate-700"
+        }`}
+      >
+        {category.label}
+      </span>
+      {active ? (
+        <span className="h-0.5 w-7 rounded-full bg-[#0d4697]" />
+      ) : (
+        <span className="h-0.5 w-7 rounded-full bg-transparent" />
+      )}
+    </button>
+  );
+}
+
+const DEFAULT_PROMO_BANNERS = [
+  {
+    _id: "default-left",
+    title: "Exclusive Offers",
+    subtitle: "Weekend deals curated for quick grabs",
+    badge: "Exclusive Offers",
+    fallbackTone: "from-[#2d0f5b] via-[#17082d] to-[#0f061f]",
+  },
+  {
+    _id: "default-center",
+    title: "Mega Electronics Sale",
+    subtitle: "Up to 60% off on top brands",
+    badge: "Limited Time",
+    fallbackTone: "from-[#0c2f7d] via-[#052252] to-[#031736]",
+  },
+  {
+    _id: "default-right",
+    title: "Best Deals",
+    subtitle: "Fresh drops with seasonal pricing and quick dispatch",
+    badge: "Limited Time",
+    fallbackTone: "from-[#ffbb2f] via-[#da6d05] to-[#c84300]",
+  },
+];
+
+function getBannerImageUrl(banner) {
+  return banner?.image?.url || banner?.mobileImage?.url || "";
+}
+
+function chunkBanners(list = [], size = 3) {
+  const result = [];
+  for (let index = 0; index < list.length; index += size) {
+    result.push(list.slice(index, index + size));
+  }
+  return result;
+}
+
+function normalizeBannerList(banners = []) {
+  const source = banners.length ? banners : DEFAULT_PROMO_BANNERS;
+  const list = source.map((banner, index) => ({
+    ...banner,
+    _id: String(banner._id || `banner-${index}`),
+  }));
+  while (list.length % 3 !== 0) {
+    const next = DEFAULT_PROMO_BANNERS[list.length % DEFAULT_PROMO_BANNERS.length];
+    list.push({
+      ...next,
+      _id: `${next._id}-${list.length}`,
+    });
+  }
+  return list;
+}
+
+function ShopBannerCard({ banner, position = "center" }) {
+  const imageUrl = getBannerImageUrl(banner);
+  const isCenter = position === "center";
+  const badge = banner.badge || banner.subtitle || "Limited Time";
+  const title = banner.title || "Featured Deal";
+  const subtitle = banner.subtitle || "Curated deal from a verified seller";
+  const gradient = banner.fallbackTone || "from-[#0c2f7d] via-[#052252] to-[#031736]";
+  const isInternalLink = Boolean(banner.link && banner.link.startsWith("/"));
+
+  return (
+    <article
+      className={`relative min-h-[236px] overflow-hidden rounded-[24px] shadow-[0_18px_50px_rgba(8,25,64,0.28)] ${
+        isCenter ? "lg:min-h-[302px]" : "lg:min-h-[236px]"
+      }`}
+    >
+      {imageUrl ? (
+        <img src={imageUrl} alt={title} className="absolute inset-0 h-full w-full object-cover" />
+      ) : (
+        <div className={`absolute inset-0 bg-gradient-to-br ${gradient}`} />
+      )}
+      <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(3,10,28,0.08),rgba(3,10,28,0.55))]" />
+      <div className="relative flex h-full flex-col justify-between p-5 text-white">
+        <span className="inline-flex w-fit rounded-full border border-white/25 bg-white/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.24em] backdrop-blur-sm">
+          {badge}
+        </span>
+        <div className={isCenter ? "max-w-[290px]" : "max-w-[160px]"}>
+          <h3 className={`font-black leading-[0.92] ${isCenter ? "text-4xl sm:text-5xl" : "text-2xl sm:text-3xl"}`}>
+            {title}
+          </h3>
+          <p className={`mt-3 font-semibold leading-snug text-white/88 ${isCenter ? "text-base sm:text-lg" : "text-sm"}`}>
+            {subtitle}
+          </p>
+        </div>
+        {banner.link ? (
+          isInternalLink ? (
+            <Link
+              to={banner.link}
+              className="mt-4 inline-flex w-fit items-center gap-2 rounded-xl bg-white px-4 py-2 text-xs font-black uppercase tracking-[0.18em] text-[#0d4697] shadow-lg transition hover:-translate-y-0.5"
+            >
+              Shop now
+              <ArrowRight className="h-3.5 w-3.5" />
+            </Link>
+          ) : (
+            <a
+              href={banner.link}
+              target="_blank"
+              rel="noreferrer"
+              className="mt-4 inline-flex w-fit items-center gap-2 rounded-xl bg-white px-4 py-2 text-xs font-black uppercase tracking-[0.18em] text-[#0d4697] shadow-lg transition hover:-translate-y-0.5"
+            >
+              Shop now
+              <ArrowRight className="h-3.5 w-3.5" />
+            </a>
+          )
+        ) : null}
+      </div>
+    </article>
+  );
+}
+
+function ShopBannerCarousel({ banners = [] }) {
+  const [active, setActive] = useState(0);
+  const slideGroups = useMemo(() => chunkBanners(normalizeBannerList(banners), 3), [banners]);
+  const currentSlide = slideGroups[active] || slideGroups[0] || [];
+
+  useEffect(() => {
+    if (slideGroups.length <= 1) return undefined;
+    const timer = window.setInterval(() => {
+      setActive((current) => (current + 1) % slideGroups.length);
+    }, 4500);
+    return () => window.clearInterval(timer);
+  }, [slideGroups.length]);
+
+  useEffect(() => {
+    if (active >= slideGroups.length) setActive(0);
+  }, [active, slideGroups.length]);
+
+  return (
+    <div className="mt-5">
+      <div className="relative transition-all duration-700">
+        <div key={currentSlide.map((item) => item._id).join("-")} className="grid gap-4 lg:grid-cols-[220px_minmax(0,1fr)_220px]">
+          <ShopBannerCard banner={currentSlide[0]} position="left" />
+          <ShopBannerCard banner={currentSlide[1]} position="center" />
+          <ShopBannerCard banner={currentSlide[2]} position="right" />
+        </div>
+
+        <div className="mt-4 flex items-center justify-center gap-2">
+          {slideGroups.map((slide, index) => (
+            <button
+              key={slide.map((item) => item._id).join("-")}
+              type="button"
+              onClick={() => setActive(index)}
+              aria-label={`Show banner slide ${index + 1}`}
+              className={`h-2 rounded-full transition-all duration-300 ${
+                index === active ? "w-8 bg-[#0d4697]" : "w-2 bg-slate-300 hover:bg-slate-400"
+              }`}
+            />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ShopHeroShowcase({
+  categories,
+  banners,
+  searchValue,
+  onSearchChange,
+  onCategorySelect,
+  activeCategoryId,
+  onSearchSubmit,
+}) {
+  const [ref, inView] = useInViewOnce(0.08);
+  const categoryById = useMemo(
+    () =>
+      new Map(
+        categories.map((category) => [String(category?._id || ""), category]),
+      ),
+    [categories],
+  );
+  const activeQuickLabel = useMemo(() => {
+    const selectedCategory = categoryById.get(String(activeCategoryId || ""));
+    if (selectedCategory?.name) {
+      const matched = SHOP_QUICK_CATEGORIES.find(
+        (item) => normalizeKey(item.label) === normalizeKey(selectedCategory.name),
+      );
+      return matched?.label || "For You";
+    }
+    return searchValue ? searchValue : "For You";
+  }, [activeCategoryId, categoryById, searchValue]);
+
+  return (
+    <section
+      ref={ref}
+      className={`rounded-[28px] border border-[#e8dcc4] bg-[#fdfbf7] p-3 shadow-[0_24px_70px_rgba(15,23,42,0.08)] transition-all duration-700 sm:p-4 lg:p-5 ${
+        inView ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"
+      }`}
+    >
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <h2 className="font-playfair text-[34px] italic leading-none tracking-[-0.03em] sm:text-[44px]">
+          <span className="text-[#0d4697]">Explore </span>
+          <span className="text-[#f0a329]">Categories</span>
+        </h2>
+        <button
+          type="button"
+          onClick={onSearchSubmit}
+          className="group inline-flex items-center gap-1.5 self-start text-sm font-semibold text-[#0d4697] transition hover:text-[#0b3c82] sm:self-auto sm:text-[15px]"
+        >
+          View All Categories
+          <ChevronRight className="h-4 w-4 transition group-hover:translate-x-0.5" />
+        </button>
+      </div>
+
+      <div className="mt-4 flex gap-3 overflow-x-auto pb-1 pt-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:gap-4">
+        {SHOP_QUICK_CATEGORIES.map((category) => (
+          <ShopCategoryPill
+            key={category.label}
+            category={category}
+            active={normalizeKey(activeQuickLabel) === normalizeKey(category.label)}
+            onClick={() => onCategorySelect(category.label)}
+          />
+        ))}
+      </div>
+
+      <ShopBannerCarousel banners={banners} />
+
+      <div className="mt-4 rounded-[24px] bg-[#0d4697] p-3 shadow-[0_20px_45px_rgba(13,70,151,0.24)] sm:p-4">
+        <div className="grid gap-3 lg:grid-cols-[170px_minmax(0,1fr)_170px_140px] lg:items-center">
+          <div className="rounded-[18px] border border-white/10 bg-white/10 px-4 py-3 text-white/90 backdrop-blur-sm">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-white/55">
+              Location
+            </p>
+            <div className="mt-1 flex items-center justify-between gap-3">
+              <span className="text-sm font-bold text-white">All Locations</span>
+              <ChevronDown className="h-4 w-4 text-white/65" />
+            </div>
+          </div>
+
+          <label className="flex h-full items-center gap-3 rounded-[18px] border border-white/10 bg-white px-4 py-3 shadow-[0_10px_24px_rgba(0,0,0,0.08)]">
+            <Search className="h-4 w-4 shrink-0 text-slate-400" />
+            <input
+              value={searchValue}
+              onChange={(event) => onSearchChange(event.target.value)}
+              placeholder="Search for products, brands and more..."
+              className="w-full bg-transparent text-sm font-medium text-slate-700 outline-none placeholder:text-slate-400"
+            />
+          </label>
+
+          <div className="rounded-[18px] border border-white/10 bg-white/10 px-4 py-3 text-white/90 backdrop-blur-sm">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-white/55">
+              Category
+            </p>
+            <div className="mt-1 flex items-center justify-between gap-3">
+              <span className="text-sm font-bold text-white">All Categories</span>
+              <ChevronDown className="h-4 w-4 text-white/65" />
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={onSearchSubmit}
+            className="inline-flex h-full items-center justify-center gap-2 rounded-[18px] bg-[#ffbf2b] px-5 py-3 text-sm font-black text-[#0d4697] shadow-[0_10px_24px_rgba(255,191,43,0.26)] transition hover:translate-y-[-1px] hover:bg-[#ffca4f]"
+          >
+            <Search className="h-4 w-4" />
+            Search
+          </button>
+        </div>
+      </div>
+
+      <div className="mt-3 flex flex-wrap items-center gap-2.5 text-sm">
+        <span className="font-semibold text-slate-500">Popular:</span>
+        {SHOP_POPULAR_QUERIES.map((query) => (
+          <button
+            key={query}
+            type="button"
+            onClick={() => onSearchChange(query)}
+            className="rounded-full border border-slate-200 bg-white px-4 py-1.5 text-xs font-medium text-slate-600 transition hover:border-[#0d4697]/20 hover:text-[#0d4697]"
+          >
+            {query}
+          </button>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+const AD_SLIDES = [
+  {
+    id: "mega-sale",
+    eyebrow: "GLOARO SHOPPING FEST",
+    title: "Up to 70% off",
+    subtitle:
+      "Electronics, fashion, home & more — fresh deals dropping every hour.",
+    cta: "Shop the sale",
+    gradient: "from-[#0B2451] via-[#123a7a] to-[#1558B0]",
+    Icon: ShoppingBag,
+  },
+  {
+    id: "fashion",
+    eyebrow: "FASHION FESTIVAL",
+    title: "Min. 40% off",
+    subtitle:
+      "Trending styles from verified Gloaro vendors, delivered fast to you.",
+    cta: "Explore fashion",
+    gradient: "from-[#7a1d3d] via-[#9c2a4d] to-[#D6A744]",
+    Icon: Star,
+  },
+  {
+    id: "delivery",
+    eyebrow: "EXPRESS DELIVERY",
+    title: "Doorstep in 24 hrs",
+    subtitle: "Track every order live, right from dispatch to delivery.",
+    cta: "See delivery areas",
+    gradient: "from-[#0f4d3a] via-[#12684f] to-[#1a8f6c]",
+    Icon: Truck,
+  },
+  {
+    id: "returns",
+    eyebrow: "SHOP WORRY-FREE",
+    title: "7-day easy returns",
+    subtitle: "Changed your mind? Return eligible items in a few taps.",
+    cta: "Learn how it works",
+    gradient: "from-[#3a1d6b] via-[#5b2a94] to-[#D6A744]",
+    Icon: RotateCcw,
+  },
+];
+
+function AdBannerCarousel() {
+  const [active, setActive] = useState(0);
+  const [paused, setPaused] = useState(false);
+
+  useEffect(() => {
+    if (paused) return undefined;
+    const timer = window.setInterval(
+      () => setActive((current) => (current + 1) % AD_SLIDES.length),
+      4500,
+    );
+    return () => window.clearInterval(timer);
+  }, [paused]);
+
+  const go = (direction) =>
+    setActive(
+      (current) => (current + direction + AD_SLIDES.length) % AD_SLIDES.length,
+    );
+
+  return (
+    <div
+      onMouseEnter={() => setPaused(true)}
+      onMouseLeave={() => setPaused(false)}
+      onTouchStart={() => setPaused(true)}
+      onTouchEnd={() => setPaused(false)}
+      className="relative overflow-hidden rounded-[2.5rem] shadow-[0_40px_100px_-20px_rgba(11,36,81,0.5)]"
+    >
+      <div className="relative h-[300px] sm:h-[340px] lg:h-[380px]">
+        {AD_SLIDES.map((slide, index) => {
+          const Icon = slide.Icon;
+          return (
+            <div
+              key={slide.id}
+              aria-hidden={index !== active}
+              className={`absolute inset-0 bg-gradient-to-br ${slide.gradient} text-white transition-opacity duration-700 ${index === active ? "opacity-100" : "pointer-events-none opacity-0"}`}
+            >
+              <div
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4wMyI+PGNpcmNsZSBjeD0iMzAiIGN5PSIzMCIgcj0iMiIvPjwvZz48L2c+PC9zdmc+')] opacity-40"
+              />
+              <div
+                aria-hidden="true"
+                className="pointer-events-none absolute -right-20 -top-20 h-72 w-72 animate-[gl-float-a_9s_ease-in-out_infinite] rounded-full bg-white/10 blur-3xl"
+              />
+              <div
+                aria-hidden="true"
+                className="pointer-events-none absolute -bottom-24 -left-16 h-72 w-72 animate-[gl-float-b_11s_ease-in-out_infinite] rounded-full bg-white/5 blur-3xl"
+              />
+              <Icon
+                aria-hidden="true"
+                className="pointer-events-none absolute -right-6 bottom-0 h-56 w-56 text-white/10 sm:h-64 sm:w-64"
+                strokeWidth={1}
+              />
+              <div className="relative flex h-full flex-col justify-center gap-3 px-6 sm:px-10 lg:px-14">
+                <span className="inline-flex w-fit items-center gap-2 rounded-full border border-white/25 bg-white/10 px-3.5 py-1.5 text-[11px] font-black uppercase tracking-[0.24em] backdrop-blur-sm">
+                  {slide.eyebrow}
+                </span>
+                <h2 className="max-w-xl font-playfair text-3xl font-black leading-tight sm:text-4xl lg:text-5xl">
+                  {slide.title}
+                </h2>
+                <p className="max-w-md text-sm font-medium leading-relaxed text-white/85 sm:text-base">
+                  {slide.subtitle}
+                </p>
+                <button
+                  type="button"
+                  onClick={() =>
+                    window.scrollTo({ top: 520, behavior: "smooth" })
+                  }
+                  className="group mt-2 inline-flex w-fit items-center gap-2 rounded-xl bg-white px-5 py-2.5 text-sm font-black text-navy shadow-lg transition hover:-translate-y-0.5 hover:shadow-xl"
+                >
+                  {slide.cta}
+                  <ArrowRight className="h-4 w-4 transition group-hover:translate-x-0.5" />
+                </button>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      <button
+        type="button"
+        onClick={() => go(-1)}
+        aria-label="Previous banner"
+        className="absolute left-3 top-1/2 z-10 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-full bg-white/90 text-navy shadow-lg backdrop-blur-sm transition hover:scale-110 sm:left-5"
+      >
+        <ChevronLeft className="h-4 w-4" />
+      </button>
+      <button
+        type="button"
+        onClick={() => go(1)}
+        aria-label="Next banner"
+        className="absolute right-3 top-1/2 z-10 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-full bg-white/90 text-navy shadow-lg backdrop-blur-sm transition hover:scale-110 sm:right-5"
+      >
+        <ChevronRight className="h-4 w-4" />
+      </button>
+
+      <div className="absolute bottom-4 left-1/2 z-10 flex -translate-x-1/2 gap-2">
+        {AD_SLIDES.map((slide, index) => (
+          <button
+            key={slide.id}
+            type="button"
+            onClick={() => setActive(index)}
+            aria-label={`Show banner ${index + 1}`}
+            className={`h-1.5 rounded-full transition-all duration-500 ${index === active ? "w-7 bg-white" : "w-1.5 bg-white/50"}`}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function CategoryOrbitStrip({ chips, activeId, onSelect }) {
+  const [ref, inView] = useInViewOnce();
+  if (!chips.length) return null;
+  return (
+    <div
+      ref={ref}
+      className={`mt-4 flex gap-4 overflow-x-auto pb-1 pt-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden transition-all duration-700 ${inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}`}
+    >
+      {chips.map(([name, id], index) => (
+        <button
+          key={name}
+          type="button"
+          onClick={() => onSelect(id)}
+          style={{ transitionDelay: inView ? `${index * 45}ms` : "0ms" }}
+          className={`flex shrink-0 flex-col items-center gap-2 transition-all duration-500 ${inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-3"}`}
+        >
+          <span
+            className={`grid h-14 w-14 place-items-center rounded-full border text-lg font-black shadow-sm transition-all sm:h-16 sm:w-16 ${
+              activeId === id
+                ? "border-[#D6A744] bg-gradient-to-br from-navy to-royal text-white shadow-md scale-105"
+                : "border-slate-200 bg-white text-navy hover:-translate-y-0.5 hover:border-navy/30 hover:shadow-md"
+            }`}
+          >
+            {name.charAt(0).toUpperCase()}
+          </span>
+          <span className="max-w-16 truncate text-[11px] font-bold text-slate-600">
+            {name}
+          </span>
+        </button>
+      ))}
+    </div>
+  );
+}
+
 export function ProductsPage() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -483,6 +1055,11 @@ export function ProductsPage() {
 
   const categories = useApi(() =>
     customerApi.categories({ type: "product", limit: 200 }),
+  );
+  const bannersQuery = useApi(
+    () => customerApi.banners({ placement: "marketplace", isActive: "true", limit: 12 }),
+    [],
+    { immediate: true },
   );
   const productsQuery = useApi(
     () => customerApi.products(catalogParams),
@@ -543,6 +1120,28 @@ export function ProductsPage() {
     filterState.sortBy,
   ]);
 
+  useEffect(() => {
+    const refreshBanners = () => {
+      bannersQuery.execute().catch(() => {});
+    };
+
+    const handleFocus = () => refreshBanners();
+    const handleVisibility = () => {
+      if (!document.hidden) refreshBanners();
+    };
+
+    window.addEventListener("focus", handleFocus);
+    document.addEventListener("visibilitychange", handleVisibility);
+
+    const interval = window.setInterval(refreshBanners, 60_000);
+
+    return () => {
+      window.removeEventListener("focus", handleFocus);
+      document.removeEventListener("visibilitychange", handleVisibility);
+      window.clearInterval(interval);
+    };
+  }, [bannersQuery.execute]);
+
   const products = useMemo(() => {
     const data = productsQuery.data;
     if (!data) return [];
@@ -556,6 +1155,7 @@ export function ProductsPage() {
     }
     return [];
   }, [productsQuery.data]);
+  const promoBanners = useMemo(() => getList(bannersQuery.data), [bannersQuery.data]);
   const filteredProducts = useMemo(
     () =>
       sortProducts(
@@ -690,155 +1290,40 @@ export function ProductsPage() {
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-[#faf8f5] via-white to-[#f5f7fa]">
+      <style>{`
+        @keyframes gl-float-a { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(12px, -16px); } }
+        @keyframes gl-float-b { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(-14px, 14px); } }
+        @keyframes gl-fade-up { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: translateY(0); } }
+        .gl-fade-up { animation: gl-fade-up .7s cubic-bezier(.16,1,.3,1) both; }
+        @media (prefers-reduced-motion: reduce) {
+          .gl-fade-up { animation: none !important; }
+        }
+      `}</style>
       <div className="px-4 py-6 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-7xl">
-          <section className="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-[#0B2451] via-[#0d3a6e] to-[#1558B0] text-white shadow-[0_40px_100px_-20px_rgba(11,36,81,0.5)]">
-            <div
-              aria-hidden="true"
-              className="pointer-events-none absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4wMyI+PGNpcmNsZSBjeD0iMzAiIGN5PSIzMCIgcj0iMiIvPjwvZz48L2c+PC9zdmc+')] opacity-40"
-            />
-            <div
-              aria-hidden="true"
-              className="pointer-events-none absolute -right-32 -top-32 h-96 w-96 rounded-full bg-[#D6A744]/10 blur-3xl"
-            />
-            <div
-              aria-hidden="true"
-              className="pointer-events-none absolute -bottom-32 -left-32 h-96 w-96 rounded-full bg-white/5 blur-3xl"
-            />
-            <div className="relative grid gap-8 px-6 py-10 sm:px-8 lg:grid-cols-[1.3fr_0.7fr] lg:px-12 lg:py-12">
-              <div>
-                <div className="inline-flex items-center gap-2 rounded-full border border-[#D6A744]/30 bg-[#D6A744]/10 px-4 py-1.5">
-                  <ShoppingBag className="h-3.5 w-3.5 text-[#D6A744]" />
-                  <span className="text-xs font-black uppercase tracking-[0.24em] text-[#D6A744]">
-                    Premium Shop
-                  </span>
-                </div>
-                <h1 className="mt-5 max-w-2xl font-playfair text-4xl font-black leading-tight sm:text-5xl lg:text-6xl">
-                  Curated commerce,
-                  <br />
-                  <span className="text-[#D6A744]">elevated experience</span>
-                </h1>
-                <p className="mt-4 max-w-xl text-base font-medium leading-relaxed text-blue-100/80">
-                  Discover handpicked products, checkout seamlessly with
-                  Razorpay, track every order, and enjoy premium support — all
-                  in one place.
-                </p>
-
-                <div className="mt-8 grid grid-cols-2 gap-3 xl:grid-cols-4">
-                  {[
-                    ["Razorpay Secure", ShieldCheck],
-                    ["Live Inventory", Package],
-                    ["Express Delivery", Truck],
-                    ["Easy Returns", RotateCcw],
-                  ].map(([label, Icon]) => (
-                    <div
-                      key={label}
-                      className="group rounded-2xl border border-white/10 bg-white/[0.06] px-4 py-3.5 backdrop-blur-sm transition hover:border-[#D6A744]/30 hover:bg-white/10"
-                    >
-                      <Icon className="h-5 w-5 text-[#D6A744] transition group-hover:scale-110" />
-                      <p className="mt-2 text-sm font-bold">{label}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="relative rounded-[2rem] border border-white/20 bg-white/95 p-6 text-slate-900 shadow-2xl backdrop-blur-sm">
-                <div className="absolute -right-3 -top-3 flex h-10 w-10 items-center justify-center rounded-full bg-[#D6A744] text-navy shadow-lg">
-                  <ShoppingBag className="h-5 w-5" />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  {[
-                    ["Products", filteredProducts.length, ShoppingBag],
-                    ["Categories", categoryChips.length, Package],
-                    ["Collections", 6, Star],
-                    ["Secure", "100%", ShieldCheck],
-                  ].map(([label, value, Icon]) => (
-                    <div
-                      key={label}
-                      className="rounded-xl bg-gradient-to-br from-slate-50 to-slate-100/50 p-4"
-                    >
-                      <Icon className="h-5 w-5 text-navy" />
-                      <p className="mt-2 font-playfair text-2xl font-black text-navy">
-                        {value}
-                      </p>
-                      <p className="text-xs font-medium text-slate-500">
-                        {label}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-                <div className="mt-5 flex flex-wrap gap-3">
-                  <Link
-                    to="/cart"
-                    className="relative z-100 flex min-h-12 w-full items-center justify-center gap-1 rounded-xl border-2 border-navy px-4 py-3 text-sm font-black text-navy transition hover:bg-navy/5 sm:flex-1"
-                  >
-                    <span>Cart ({shop.cart.length})</span>
-                    <ArrowRight className="h-3.5 w-3.5 transition" />
-                  </Link>
-                  <Link
-                    to="/checkout"
-                    className="relative z-100 flex min-h-12 w-full items-center justify-center rounded-xl bg-gradient-to-r from-navy to-royal px-4 py-3 text-sm font-black text-white shadow-lg shadow-navy/20 transition hover:from-navy/90 hover:to-royal/90 sm:flex-1"
-                  >
-                    Checkout
-                  </Link>
-                </div>
-              </div>
-            </div>
-          </section>
-
-          <section className="mt-6 rounded-[2rem] border border-slate-200/80 bg-white/80 p-4 shadow-[0_8px_30px_rgba(11,36,81,0.06)] backdrop-blur-sm">
-            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-              <label className="flex h-12 flex-1 items-center gap-3 rounded-xl border border-slate-200 bg-slate-50/50 px-4 transition focus-within:border-navy/30 focus-within:bg-white">
-                <Search className="h-4 w-4 text-slate-400" />
-                <input
-                  value={filterState.search}
-                  onChange={(event) =>
-                    setFilterState((current) => ({
-                      ...current,
-                      search: event.target.value,
-                    }))
-                  }
-                  placeholder="Search products, brands, categories..."
-                  className="w-full bg-transparent text-sm font-medium outline-none placeholder:text-slate-400"
-                />
-              </label>
-              <div className="flex items-center gap-2">
-                <Link
-                  to="/cart"
-                  className="relative z-100 inline-flex items-center justify-center rounded-lg bg-navy px-4 py-2.5 text-xs font-black text-white transition hover:bg-navy/90"
-                >
-                  Cart {shop.cart.length}
-                </Link>
-                <Link
-                  to="/orders"
-                  className="relative z-100 inline-flex items-center justify-center rounded-lg border border-slate-200 px-4 py-2.5 text-xs font-black text-slate-700 transition hover:border-navy/30 hover:text-navy"
-                >
-                  Orders
-                </Link>
-                <Link
-                  to="/wishlist"
-                  className="relative z-100 inline-flex items-center justify-center rounded-lg border border-slate-200 px-4 py-2.5 text-xs font-black text-slate-700 transition hover:border-navy/30 hover:text-navy"
-                >
-                  Wishlist
-                </Link>
-              </div>
-            </div>
-
-            <div className="mt-4 flex flex-wrap gap-2">
-              {categoryChips.map(([name, id]) => (
-                <button
-                  key={name}
-                  type="button"
-                  onClick={() =>
-                    setFilterState((current) => ({ ...current, category: id }))
-                  }
-                  className={`relative z-10 rounded-lg px-4 py-2 text-xs font-black transition-all ${filterState.category === id ? "bg-navy text-white shadow-md" : "bg-slate-100/70 text-slate-600 hover:bg-slate-200"}`}
-                >
-                  {name}
-                </button>
-              ))}
-            </div>
-          </section>
+          <ShopHeroShowcase
+            categories={allCategories}
+            banners={promoBanners}
+            searchValue={filterState.search || ""}
+            activeCategoryId={filterState.category}
+            onSearchChange={(value) =>
+              setFilterState((current) => ({
+                ...current,
+                search: value,
+              }))
+            }
+            onCategorySelect={(label) => {
+              const selection = resolveQuickCategorySelection(label, allCategories);
+              setFilterState((current) => ({
+                ...current,
+                ...selection,
+              }));
+              setPage(1);
+            }}
+            onSearchSubmit={() =>
+              window.scrollTo({ top: 920, behavior: "smooth" })
+            }
+          />
         </div>
       </div>
 
@@ -922,9 +1407,15 @@ export function ProductsPage() {
               ) : (
                 <>
                   <div className="mt-5 grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
-                    {pagedProducts.map((product) => (
-                      <ProductCard
+                    {pagedProducts.map((product, index) => (
+                      <div
                         key={product._id}
+                        className="gl-fade-up"
+                        style={{
+                          animationDelay: `${(index % pageSize) * 45}ms`,
+                        }}
+                      >
+                      <ProductCard
                         product={product}
                         wishlisted={isWishlisted(localWishlist, product._id)}
                         onQuickView={(nextProduct) => {
@@ -948,6 +1439,7 @@ export function ProductsPage() {
                           })
                         }
                       />
+                      </div>
                     ))}
                   </div>
 
@@ -993,6 +1485,7 @@ export function ProductsPage() {
                   window.scrollTo({ top: 0, behavior: "smooth" });
                 }}
                 accent="text-navy"
+                ribbon="from-navy to-royal"
               />
             )}
             {bestSellers.length > 0 && (
@@ -1012,6 +1505,7 @@ export function ProductsPage() {
                   window.scrollTo({ top: 0, behavior: "smooth" });
                 }}
                 accent="text-amber-700"
+                ribbon="from-amber-500 to-[#D6A744]"
               />
             )}
             {discountProducts.length > 0 && (
@@ -1031,6 +1525,7 @@ export function ProductsPage() {
                   window.scrollTo({ top: 0, behavior: "smooth" });
                 }}
                 accent="text-emerald-700"
+                ribbon="from-emerald-500 to-emerald-700"
               />
             )}
             {newArrivals.length > 0 && (
@@ -1050,6 +1545,7 @@ export function ProductsPage() {
                   window.scrollTo({ top: 0, behavior: "smooth" });
                 }}
                 accent="text-navy"
+                ribbon="from-sky-500 to-navy"
               />
             )}
             {recommendedProducts.length > 0 && (
@@ -1069,6 +1565,7 @@ export function ProductsPage() {
                   window.scrollTo({ top: 0, behavior: "smooth" });
                 }}
                 accent="text-[#D6A744]"
+                ribbon="from-[#7a1d3d] to-[#D6A744]"
               />
             )}
             {recentlyViewed.length > 0 && (
@@ -1097,6 +1594,8 @@ export function ProductsPage() {
                   window.scrollTo({ top: 0, behavior: "smooth" });
                 }}
                 accent="text-slate-700"
+                ribbon="from-slate-400 to-slate-600"
+                tag="Pick up where you left off"
               />
             )}
           </div>
@@ -4348,66 +4847,76 @@ function ProductRailSection({
   items,
   onSeeAll,
   accent = "text-navy",
+  ribbon = "from-navy to-royal",
+  tag = "Curated shelf",
 }) {
   const railRef = useRef(null);
+  const [sectionRef, inView] = useInViewOnce(0.08);
 
   const scrollRail = (direction) => {
     railRef.current?.scrollBy({ left: direction * 360, behavior: "smooth" });
   };
 
   return (
-    <section className="rounded-[2rem] border border-slate-200/80 bg-white/80 p-5 shadow-[0_8px_30px_rgba(11,36,81,0.06)] backdrop-blur-sm">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <p className="font-jakarta text-[10px] font-black uppercase tracking-[0.28em] text-slate-400">
-            Curated shelf
-          </p>
-          <h2 className={`mt-1 font-playfair text-2xl font-black ${accent}`}>
-            {title}
-          </h2>
-          {description && (
-            <p className="mt-1 max-w-2xl text-sm font-medium leading-6 text-slate-500">
-              {description}
+    <section
+      ref={sectionRef}
+      className="overflow-hidden rounded-[2rem] border border-slate-200/80 bg-white/80 shadow-[0_8px_30px_rgba(11,36,81,0.06)] backdrop-blur-sm"
+    >
+      <div className={`h-1.5 w-full bg-gradient-to-r ${ribbon}`} />
+      <div className="p-5">
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <p className="font-jakarta text-[10px] font-black uppercase tracking-[0.28em] text-slate-400">
+              {tag}
             </p>
-          )}
-        </div>
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => scrollRail(-1)}
-            className="grid h-10 w-10 place-items-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:border-navy/30 hover:text-navy"
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </button>
-          <button
-            type="button"
-            onClick={() => scrollRail(1)}
-            className="grid h-10 w-10 place-items-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:border-navy/30 hover:text-navy"
-          >
-            <ChevronRight className="h-4 w-4" />
-          </button>
-          <button
-            type="button"
-            onClick={onSeeAll}
-            className="inline-flex items-center gap-1 rounded-full border border-slate-200 px-4 py-2 text-xs font-black text-slate-600 transition hover:border-navy/30 hover:text-navy"
-          >
-            See all
-            <ArrowRight className="h-3.5 w-3.5" />
-          </button>
-        </div>
-      </div>
-      <div
-        ref={railRef}
-        className="mt-5 flex gap-4 overflow-x-auto scroll-smooth pb-2 pr-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-      >
-        {items.map((product) => (
-          <div
-            key={product._id}
-            className="w-[180px] shrink-0 snap-start sm:w-[205px]"
-          >
-            <MiniProductCard product={product} rail />
+            <h2 className={`mt-1 font-playfair text-2xl font-black ${accent}`}>
+              {title}
+            </h2>
+            {description && (
+              <p className="mt-1 max-w-2xl text-sm font-medium leading-6 text-slate-500">
+                {description}
+              </p>
+            )}
           </div>
-        ))}
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => scrollRail(-1)}
+              className="grid h-10 w-10 place-items-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:border-navy/30 hover:text-navy"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </button>
+            <button
+              type="button"
+              onClick={() => scrollRail(1)}
+              className="grid h-10 w-10 place-items-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:border-navy/30 hover:text-navy"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </button>
+            <button
+              type="button"
+              onClick={onSeeAll}
+              className="inline-flex items-center gap-1 rounded-full border border-slate-200 px-4 py-2 text-xs font-black text-slate-600 transition hover:border-navy/30 hover:text-navy"
+            >
+              See all
+              <ArrowRight className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        </div>
+        <div
+          ref={railRef}
+          className="mt-5 flex gap-4 overflow-x-auto scroll-smooth pb-2 pr-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        >
+          {items.map((product, index) => (
+            <div
+              key={product._id}
+              style={{ transitionDelay: inView ? `${index * 70}ms` : "0ms" }}
+              className={`w-[180px] shrink-0 snap-start transition-all duration-500 sm:w-[205px] ${inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}`}
+            >
+              <MiniProductCard product={product} rail />
+            </div>
+          ))}
+        </div>
       </div>
     </section>
   );

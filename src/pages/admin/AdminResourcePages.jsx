@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import toast from 'react-hot-toast'
+import { useForm } from 'react-hook-form'
 import { CheckCircle2, ExternalLink, Eye, FileText, Loader2, XCircle, Package, BriefcaseBusiness, AlertCircle, MapPinned } from 'lucide-react'
 import api from '../../api/axios'
 import { adminApi } from '../../api/admin'
 import DataTable from '../../components/tables/DataTable'
+import FormField from '../../components/forms/FormField'
 import Modal from '../../components/common/Modal'
 import SearchBar from '../../components/common/SearchBar'
 import StatusBadge from '../../components/common/StatusBadge'
@@ -14,6 +16,98 @@ import SimpleJsonForm from '../shared/SimpleJsonForm'
 import { ROLES } from '../../constants/roleConfig.js'
 
 const statusFilters = [{ key: 'status', label: 'Status', options: ['pending', 'approved', 'rejected', 'active', 'completed', 'failed'].map((value) => ({ value, label: value })) }]
+
+function BannerForm({ initialValues = {}, onSubmit }) {
+  const safeInitialValues = initialValues || {}
+  const defaultValues = useMemo(() => ({
+    title: safeInitialValues.title || '',
+    subtitle: safeInitialValues.subtitle || '',
+    placement: safeInitialValues.placement || 'marketplace',
+    link: safeInitialValues.link || '',
+    order: safeInitialValues.order ?? 0,
+    isActive: safeInitialValues.isActive ?? true,
+  }), [
+    safeInitialValues.title,
+    safeInitialValues.subtitle,
+    safeInitialValues.placement,
+    safeInitialValues.link,
+    safeInitialValues.order,
+    safeInitialValues.isActive,
+  ])
+
+  const { register, handleSubmit, reset, formState: { isSubmitting } } = useForm({
+    defaultValues,
+  })
+
+  useEffect(() => {
+    reset(defaultValues)
+  }, [defaultValues, reset])
+
+  const submit = (values) => {
+    const formData = new FormData()
+    formData.append('title', values.title)
+    formData.append('subtitle', values.subtitle || '')
+    formData.append('placement', values.placement)
+    formData.append('link', values.link || '')
+    formData.append('order', String(values.order ?? 0))
+    formData.append('isActive', String(values.isActive !== 'false'))
+
+    const image = values.image?.[0]
+    const mobileImage = values.mobileImage?.[0]
+    if (image) formData.append('image', image)
+    if (mobileImage) formData.append('mobileImage', mobileImage)
+
+    onSubmit(formData)
+  }
+
+  return (
+    <form onSubmit={handleSubmit(submit)} className="space-y-4">
+      <div className="grid gap-4 sm:grid-cols-2">
+        <FormField label="Title">
+          <input {...register('title', { required: true })} className="h-11 w-full rounded-md border border-slate-300 bg-white px-3 text-black outline-none focus:border-[#0d4697]" />
+        </FormField>
+        <FormField label="Placement">
+          <select {...register('placement')} className="h-11 w-full rounded-md border border-slate-300 bg-white px-3 text-black outline-none focus:border-[#0d4697]">
+            {['home', 'directory', 'marketplace', 'events', 'dashboard'].map((value) => <option key={value} value={value}>{value}</option>)}
+          </select>
+        </FormField>
+      </div>
+
+      <FormField label="Subtitle">
+        <textarea {...register('subtitle')} rows={4} className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-black outline-none focus:border-[#0d4697]" />
+      </FormField>
+
+      <div className="grid gap-4 sm:grid-cols-2">
+        <FormField label="Link">
+          <input {...register('link')} type="url" className="h-11 w-full rounded-md border border-slate-300 bg-white px-3 text-black outline-none focus:border-[#0d4697]" />
+        </FormField>
+        <FormField label="Order">
+          <input {...register('order', { valueAsNumber: true })} type="number" min="0" className="h-11 w-full rounded-md border border-slate-300 bg-white px-3 text-black outline-none focus:border-[#0d4697]" />
+        </FormField>
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-2">
+        <FormField label="Desktop Image">
+          <input {...register('image')} type="file" accept="image/*" className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-500 file:mr-4 file:rounded-md file:border-0 file:bg-blue-50 file:px-3 file:py-2 file:text-xs file:font-extrabold file:text-[#0d4697]" />
+          {safeInitialValues?.image?.url && <img src={safeInitialValues.image.url} alt="" className="mt-2 h-24 w-full rounded-md object-cover" />}
+        </FormField>
+        <FormField label="Mobile Image">
+          <input {...register('mobileImage')} type="file" accept="image/*" className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-500 file:mr-4 file:rounded-md file:border-0 file:bg-blue-50 file:px-3 file:py-2 file:text-xs file:font-extrabold file:text-[#0d4697]" />
+          {safeInitialValues?.mobileImage?.url && <img src={safeInitialValues.mobileImage.url} alt="" className="mt-2 h-24 w-full rounded-md object-cover" />}
+        </FormField>
+      </div>
+
+      <FormField label="Status">
+        <select {...register('isActive')} className="h-11 w-full rounded-md border border-slate-300 bg-white px-3 text-black outline-none focus:border-[#0d4697]">
+          <option value="true">Active</option>
+          <option value="false">Inactive</option>
+        </select>
+      </FormField>
+
+      <button disabled={isSubmitting} className="h-11 rounded-md bg-[#0d4697] px-5 text-sm font-extrabold text-white disabled:opacity-60">Save</button>
+    </form>
+  )
+}
 
 export function AdminUsersPage() {
   return <ResourceListPage module="members" section="users" title="User Management" fetcher={adminApi.users} filters={[{ key: 'role', label: 'Role', options: [ROLES.CUSTOMER, ROLES.VENDOR, ROLES.ADMIN, ROLES.SUPERADMIN].map((value) => ({ value, label: value })) }]} columns={[
@@ -1426,7 +1520,7 @@ export function AdminSupportPage() {
 }
 
 export function AdminBannersPage() {
-  return <ResourceListPage module="settings" section="banners" title="Banner Management" fetcher={adminApi.banners} createAction={adminApi.createBanner} updateAction={adminApi.updateBanner} deleteAction={adminApi.deleteBanner} columns={[{ key: 'title', header: 'Title' }, { key: 'placement', header: 'Placement' }, { key: 'isActive', header: 'Status', render: (row) => <StatusBadge value={row.isActive ? 'active' : 'inactive'} /> }]} renderForm={(props) => <SimpleJsonForm {...props} fields={[{ name: 'title' }, { name: 'subtitle' }, { name: 'placement', type: 'select', options: ['home', 'directory', 'marketplace', 'events', 'dashboard'].map((value) => ({ value, label: value })) }, { name: 'link' }]} />} />
+  return <ResourceListPage module="settings" section="banners" title="Banner Management" fetcher={adminApi.banners} createAction={adminApi.createBanner} updateAction={adminApi.updateBanner} deleteAction={adminApi.deleteBanner} columns={[{ key: 'title', header: 'Title' }, { key: 'placement', header: 'Placement' }, { key: 'isActive', header: 'Status', render: (row) => <StatusBadge value={row.isActive ? 'active' : 'inactive'} /> }]} renderForm={(props) => <BannerForm {...props} />} />
 }
 
 export function AdminFaqsPage() {
