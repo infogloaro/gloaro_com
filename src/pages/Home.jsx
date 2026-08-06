@@ -185,12 +185,12 @@ const leaders = [
     bio: 'Visionary leader with 15+ years of experience in business strategy and growth.',
     image: leader2,
   },
-  {
-    name: 'Kannan',
-    role: 'Co-Founder and CEO',
-    bio: 'Operations expert focused on delivering excellence and scaling impact.',
-    image: leader1,
-  },
+  // {
+  //   name: 'Kannan',
+  //   role: 'Co-Founder and CEO',
+  //   bio: 'Operations expert focused on delivering excellence and scaling impact.',
+  //   image: leader1,
+  // },
 ]
 
 // Shared scroll-reveal styling primitive. Keeps every section's entrance
@@ -702,22 +702,7 @@ export default function Home() {
           </p>
         </Reveal>
 
-        <div className="mt-8 grid gap-4 sm:grid-cols-3">
-          {[
-            ['Trusted access', 'Verified business network and referrals'],
-            ['Professional growth', 'Events, branding, and digital support'],
-            ['Long-term value', 'Resources designed to help you scale'],
-          ].map(([title, text]) => (
-            <Reveal key={title}>
-              <div className="rounded-[26px] border border-white/70 bg-white/90 p-5 shadow-[0_12px_32px_rgba(15,23,42,0.06)] backdrop-blur">
-                <p className="text-sm font-extrabold text-[#0d4697]">{title}</p>
-                <p className="mt-1.5 text-xs font-semibold leading-5 text-slate-500">{text}</p>
-              </div>
-            </Reveal>
-          ))}
-        </div>
-
-        <div className="mt-5 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">{memberBenefits.map(([title, image], index) => <Reveal key={title} delay={(index % 3) * 90}><div className="group relative h-48 overflow-hidden rounded-[26px] bg-slate-700 shadow-[0_12px_28px_rgba(15,23,42,0.08)] transition duration-500 hover:-translate-y-1 hover:shadow-[0_20px_40px_rgba(15,23,42,0.16)] sm:h-52"><img src={image} alt={title} className="h-full w-full object-cover transition duration-500 group-hover:scale-110" /><div className="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-transparent opacity-0 transition duration-500 group-hover:opacity-100" /><div className="absolute inset-x-3 bottom-3 flex items-center justify-between gap-3 rounded-2xl border border-white/35 bg-slate-100/10 px-4 py-2.5 text-white backdrop-blur-sm transition duration-300 group-hover:border-[#ffae13]/70"><span className="max-w-[210px] font-urbanist text-base font-semibold leading-5">{title}</span><span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-white text-xl leading-none text-[#0d4697] transition duration-300 group-hover:bg-[#ffae13] group-hover:text-white">›</span></div></div></Reveal>)}</div>
+        <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">{memberBenefits.map(([title, image], index) => <Reveal key={title} delay={(index % 3) * 90}><div className="group relative h-48 overflow-hidden rounded-[26px] bg-slate-700 shadow-[0_12px_28px_rgba(15,23,42,0.08)] transition duration-500 hover:-translate-y-1 hover:shadow-[0_20px_40px_rgba(15,23,42,0.16)] sm:h-52"><img src={image} alt={title} className="h-full w-full object-cover transition duration-500 group-hover:scale-110" /><div className="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-transparent opacity-0 transition duration-500 group-hover:opacity-100" /><div className="absolute inset-x-3 bottom-3 flex items-center justify-between gap-3 rounded-2xl border border-white/35 bg-slate-100/10 px-4 py-2.5 text-white backdrop-blur-sm transition duration-300 group-hover:border-[#ffae13]/70"><span className="max-w-[210px] font-urbanist text-base font-semibold leading-5">{title}</span><span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-white text-xl leading-none text-[#0d4697] transition duration-300 group-hover:bg-[#ffae13] group-hover:text-white">›</span></div></div></Reveal>)}</div>
       </div>
     </section>
 
@@ -734,7 +719,7 @@ export default function Home() {
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(13,70,151,0.06),transparent_28%),radial-gradient(circle_at_bottom_right,rgba(255,174,19,0.10),transparent_30%)]" />
 
       <div className="relative mx-auto max-w-7xl">
-        <Reveal className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+        <Reveal>
           <div className="max-w-3xl">
             <div className="inline-flex items-center gap-2 rounded-full border border-[#0d4697]/10 bg-white px-4 py-2 text-xs font-black uppercase tracking-[0.24em] text-[#0d4697] shadow-sm">
               <ShieldCheck className="h-4 w-4 text-[#ffae13]" />
@@ -743,42 +728,24 @@ export default function Home() {
             <h2 className="mt-4 font-playfair text-4xl font-semibold italic leading-[0.92] text-[#0d4697] sm:text-5xl lg:text-[58px]">
               Our <span className="gl-gold-text">Leaders</span>
             </h2>
-            <p className="mt-4 max-w-2xl font-urbanist text-base font-semibold leading-7 text-[#26364d] sm:text-lg">
+            <p className="mt-3.5 max-w-2xl font-urbanist text-base font-semibold leading-7 text-[#26364d] sm:text-lg">
               Visionary leaders driving innovation and excellence across the network with a clear focus on trust, momentum, and sustainable growth.
             </p>
           </div>
-          <div className="grid gap-3 sm:grid-cols-3 lg:max-w-[420px]">
-            {[
-              ['Trusted', 'Built on verified community leadership'],
-              ['Strategic', 'Focused on execution and long-term impact'],
-              ['Connected', 'Guiding members across every chapter'],
-            ].map(([title, text]) => (
-              <div key={title} className="rounded-2xl border border-white/70 bg-white/90 p-4 shadow-[0_12px_30px_rgba(15,23,42,0.06)] backdrop-blur">
-                <p className="text-sm font-extrabold text-[#0d4697]">{title}</p>
-                <p className="mt-1 text-xs font-semibold leading-5 text-[#5e6572]">{text}</p>
-              </div>
-            ))}
-          </div>
         </Reveal>
 
-        <div className={`mt-10 grid gap-8 ${leadersContentLayout}`}>
-          <Reveal direction="left" delay={100} className={`relative w-full max-w-[270px] sm:max-w-[560px] ${leadersCarouselWidth}`}>
+        <div className="mt-7 flex flex-col items-center gap-8 lg:flex-row lg:items-stretch lg:justify-between">
+          <Reveal direction="left" delay={100} className="relative shrink-0 w-full max-w-full lg:w-auto">
             {canScrollLeaders && <button type="button" onClick={() => scrollLeaders(-1)} aria-label="Previous leaders" className="absolute -left-4 top-1/2 z-10 grid h-11 w-11 -translate-y-1/2 place-items-center rounded-full border border-white/70 bg-white/95 text-2xl font-bold text-[#1c2433] shadow-[0_12px_30px_rgba(15,23,42,0.16)] backdrop-blur transition duration-300 hover:-translate-y-1 hover:scale-110 lg:-left-7">‹</button>}
             <div ref={leadersRef} className="flex snap-x gap-5 overflow-x-auto scroll-smooth pb-2 [scrollbar-width:none] lg:gap-6 [&::-webkit-scrollbar]:hidden">
               {leaders.map((leader, index) => (
-                <article key={leader.name} data-leader-card className="group relative w-full shrink-0 snap-start overflow-hidden rounded-[30px] border border-white/80 bg-[linear-gradient(180deg,rgba(255,255,255,0.98),rgba(248,251,255,0.98))] shadow-[0_18px_50px_rgba(15,23,42,.10)] transition duration-300 hover:-translate-y-2 hover:shadow-[0_26px_60px_rgba(13,70,151,.16)] sm:w-[270px] lg:w-[270px]">
+                <article key={leader.name} data-leader-card className="group relative w-full shrink-0 snap-start overflow-hidden rounded-[30px] border border-white/80 bg-[linear-gradient(180deg,rgba(255,255,255,0.98),rgba(248,251,255,0.98))] shadow-[0_18px_50px_rgba(15,23,42,.10)] transition duration-300 hover:-translate-y-2 hover:shadow-[0_26px_60px_rgba(13,70,151,.16)] sm:w-[320px] lg:w-[340px]">
                   <div className="absolute inset-x-0 top-0 h-1 bg-[linear-gradient(90deg,#0d4697,#ffae13,#0d4697)] bg-[length:200%_100%] opacity-70" />
-                  <div className="relative h-[240px] overflow-hidden bg-[radial-gradient(circle_at_top,rgba(13,70,151,0.18),transparent_60%),linear-gradient(180deg,#10223d,#1f4f8f)] sm:h-[250px] lg:h-[245px]">
-                    <div className="absolute left-4 top-4 z-10 flex items-center gap-2 rounded-full bg-white/90 px-3 py-1 text-[10px] font-black uppercase tracking-[0.22em] text-[#0d4697] shadow-sm">
-                      <span className="grid h-5 w-5 place-items-center rounded-full bg-[#0d4697] text-[10px] text-white">
-                        {String(index + 1).padStart(2, '0')}
-                      </span>
-                      Team Lead
-                    </div>
+                  <div className="relative h-[250px] overflow-hidden bg-[radial-gradient(circle_at_top,rgba(13,70,151,0.18),transparent_60%),linear-gradient(180deg,#10223d,#1f4f8f)] sm:h-[270px] lg:h-[265px]">
                     <img src={leader.image} alt={leader.name} className="h-full w-full object-cover object-top transition duration-700 group-hover:scale-110 group-hover:contrast-105" />
                     <div className="absolute inset-x-0 bottom-0 h-28 bg-[linear-gradient(180deg,transparent,rgba(5,15,36,0.95))]" />
                     <div className="absolute bottom-4 left-4 right-4 flex items-end justify-between gap-4">
-                      <div className="max-w-[70%]">
+                      <div className="max-w-[75%]">
                         <p className="text-[11px] font-black uppercase tracking-[0.22em] !text-[#ffd36e]">{leader.role}</p>
                         <h3 className="mt-1 font-playfair text-2xl font-semibold italic leading-tight !text-white drop-shadow">{leader.name}</h3>
                       </div>
@@ -787,36 +754,28 @@ export default function Home() {
                       </div>
                     </div>
                   </div>
-                  <div className="p-5">
-                    <p className="min-h-[84px] font-urbanist text-sm font-semibold leading-6 text-[#1f2937]">{leader.bio}</p>
-                    <div className="mt-5 flex items-center justify-between border-t border-slate-100 pt-4">
-                      <span className="inline-flex items-center gap-2 rounded-full bg-[#fff8e7] px-3 py-1.5 text-[11px] font-black uppercase tracking-[0.18em] text-[#0d4697]">
-                        <Sparkles className="h-3.5 w-3.5 text-[#ffae13]" />
-                        Leadership
-                      </span>
-                      <span className="inline-flex items-center gap-1.5 text-xs font-bold text-[#0d4697] transition duration-300 group-hover:translate-x-0.5">
-                        Read profile
-                        <ArrowRight className="h-3.5 w-3.5" />
-                      </span>
-                    </div>
+                  <div className="p-5 sm:p-6">
+                    <p className="font-urbanist text-sm font-semibold leading-6 text-[#1f2937]">{leader.bio}</p>
                   </div>
                 </article>
               ))}
             </div>
             {canScrollLeaders && <button type="button" onClick={() => scrollLeaders(1)} aria-label="Next leaders" className="absolute -right-4 top-1/2 z-10 grid h-11 w-11 -translate-y-1/2 place-items-center rounded-full border border-white/70 bg-white/95 text-2xl font-bold text-[#1c2433] shadow-[0_12px_30px_rgba(15,23,42,0.16)] backdrop-blur transition duration-300 hover:-translate-y-1 hover:scale-110 lg:-right-7">›</button>}
           </Reveal>
-          <Reveal direction="right" delay={200} className="lg:justify-self-end">
-            <div className="max-w-xl rounded-[34px] border border-white/70 bg-[linear-gradient(180deg,rgba(8,26,67,0.98),rgba(11,41,94,0.98))] p-6 text-white shadow-[0_24px_70px_rgba(2,8,23,0.24)]">
-              <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/10 px-4 py-2 text-xs font-black uppercase tracking-[0.24em] text-[#ffd36e]">
-                <ShieldCheck className="h-4 w-4" />
-                Executive Vision
+          <Reveal direction="right" delay={200} className="w-full flex-1 min-w-0">
+            <div className="flex h-full flex-col justify-between rounded-[34px] border border-white/70 bg-[linear-gradient(180deg,rgba(8,26,67,0.98),rgba(11,41,94,0.98))] p-6 text-white shadow-[0_24px_70px_rgba(2,8,23,0.24)] sm:p-8">
+              <div>
+                <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/10 px-4 py-2 text-xs font-black uppercase tracking-[0.24em] text-[#ffd36e]">
+                  <ShieldCheck className="h-4 w-4" />
+                  Executive Vision
+                </div>
+                <h3 className="mt-5 font-playfair text-3xl font-semibold italic leading-tight sm:text-4xl">
+                  Leadership That <span className="text-[#ffae13]">Drives Growth</span>
+                </h3>
+                <p className="mt-4 font-urbanist text-base font-semibold leading-7 text-white/82 sm:text-lg">
+                  Our leadership team brings vision, innovation, and disciplined execution together to help businesses grow with confidence. Their commitment to excellence shapes every connection, opportunity, and partnership across the Gloaro network.
+                </p>
               </div>
-              <h3 className="mt-5 font-playfair text-3xl font-semibold italic leading-tight sm:text-4xl">
-                Leadership That <span className="text-[#ffae13]">Drives Growth</span>
-              </h3>
-              <p className="mt-4 font-urbanist text-base font-semibold leading-7 text-white/82 sm:text-lg">
-                Our leadership team brings vision, innovation, and disciplined execution together to help businesses grow with confidence. Their commitment to excellence shapes every connection, opportunity, and partnership across the Gloaro network.
-              </p>
 
               <div className="mt-6 grid gap-3 sm:grid-cols-3">
                 {[
