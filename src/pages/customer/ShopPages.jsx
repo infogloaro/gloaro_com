@@ -30,6 +30,14 @@ import {
   Truck,
   Upload,
   X,
+  BookOpen,
+  Car,
+  Dumbbell,
+  Home as HomeIcon,
+  Shirt,
+  ShoppingBasket,
+  Smartphone,
+  Sparkles,
 } from "lucide-react";
 import { customerApi } from "../../api/customer";
 import { ordersApi } from "../../api/orders";
@@ -511,6 +519,126 @@ function getCategoryPalette(index = 0) {
   return SHOP_CATEGORY_PALETTE[index % SHOP_CATEGORY_PALETTE.length];
 }
 
+function getCategoryImageUrl(category) {
+  return (
+    category?.image?.url ||
+    category?.imageUrl ||
+    category?.thumbnail?.url ||
+    category?.thumbnail ||
+    category?.coverImage?.url ||
+    category?.coverImage ||
+    (typeof category?.image === "string" ? category.image : "") ||
+    ""
+  );
+}
+
+const SHOP_CATEGORY_IMAGE_FALLBACKS = [
+  [
+    "foodandgroceries",
+    "https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=240&q=80",
+  ],
+  [
+    "grocery",
+    "https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=240&q=80",
+  ],
+  [
+    "clothingandfashion",
+    "https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=240&q=80",
+  ],
+  [
+    "fashion",
+    "https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=240&q=80",
+  ],
+  [
+    "electronics",
+    "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=240&q=80",
+  ],
+  [
+    "mobiles",
+    "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=240&q=80",
+  ],
+  [
+    "homeandgarden",
+    "https://images.unsplash.com/photo-1556911220-bff31c812dba?auto=format&fit=crop&w=240&q=80",
+  ],
+  [
+    "home",
+    "https://images.unsplash.com/photo-1556911220-bff31c812dba?auto=format&fit=crop&w=240&q=80",
+  ],
+  [
+    "beautyandpersonalcare",
+    "https://images.unsplash.com/photo-1596462502278-27bfdc403348?auto=format&fit=crop&w=240&q=80",
+  ],
+  [
+    "beauty",
+    "https://images.unsplash.com/photo-1596462502278-27bfdc403348?auto=format&fit=crop&w=240&q=80",
+  ],
+  [
+    "sportsandfitness",
+    "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=240&q=80",
+  ],
+  [
+    "sports",
+    "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=240&q=80",
+  ],
+  [
+    "booksandstationery",
+    "https://images.unsplash.com/photo-1512820790803-83ca734da794?auto=format&fit=crop&w=240&q=80",
+  ],
+  [
+    "books",
+    "https://images.unsplash.com/photo-1512820790803-83ca734da794?auto=format&fit=crop&w=240&q=80",
+  ],
+  [
+    "automotive",
+    "https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&w=240&q=80",
+  ],
+  [
+    "appliances",
+    "https://images.unsplash.com/photo-1574269909862-7e1d70bb8078?auto=format&fit=crop&w=240&q=80",
+  ],
+  [
+    "smartgadgets",
+    "https://images.unsplash.com/photo-1579586337278-3befd40fd17a?auto=format&fit=crop&w=240&q=80",
+  ],
+];
+
+function getCategoryFallbackImageUrl(label) {
+  const normalizedLabel = normalizeKey(label);
+  const matched = SHOP_CATEGORY_IMAGE_FALLBACKS.find(([key]) =>
+    normalizedLabel.includes(key),
+  );
+  return (
+    matched?.[1] ||
+    "https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=240&q=80"
+  );
+}
+
+const SHOP_CATEGORY_ICONS = {
+  electronics: Smartphone,
+  clothingandfashion: Shirt,
+  fashion: Shirt,
+  homeandgarden: HomeIcon,
+  home: HomeIcon,
+  sportsandfitness: Dumbbell,
+  sports: Dumbbell,
+  booksandstationery: BookOpen,
+  books: BookOpen,
+  automotive: Car,
+  foodandgroceries: ShoppingBasket,
+  grocery: ShoppingBasket,
+  beautyandpersonalcare: Sparkles,
+  beauty: Sparkles,
+};
+
+function getCategoryIconComponent(label) {
+  const normalizedLabel = normalizeKey(label);
+  const key = Object.keys(SHOP_CATEGORY_ICONS).find((k) =>
+    normalizedLabel.includes(k)
+  );
+  return key ? SHOP_CATEGORY_ICONS[key] : null;
+}
+
 function buildShopHeroCategories(categories = []) {
   return categories
     .filter((category) => category?.type === "product")
@@ -529,8 +657,8 @@ function buildShopHeroCategories(categories = []) {
       return {
         _id: String(category?._id || `category-${index}`),
         label,
-        icon: category?.icon || label.charAt(0).toUpperCase() || "•",
-        imageUrl: category?.image?.url || "",
+        iconComponent: getCategoryIconComponent(label),
+        imageUrl: getCategoryImageUrl(category) || getCategoryFallbackImageUrl(label),
         ...palette,
       };
     });
@@ -553,17 +681,10 @@ function resolveQuickCategorySelection(label, categories = []) {
   return { category: "", search: label };
 }
 
+
+
 function ShopCategoryPill({ category, active, onClick }) {
-  const iconContent = category.imageUrl ? (
-    <img
-      src={category.imageUrl}
-      alt=""
-      className="h-6 w-6 rounded-full object-cover"
-      loading="lazy"
-    />
-  ) : (
-    <span className={active ? "scale-105" : ""}>{category.icon}</span>
-  );
+  const IconComponent = category.iconComponent;
 
   return (
     <button
@@ -572,13 +693,25 @@ function ShopCategoryPill({ category, active, onClick }) {
       className="group flex min-w-[64px] flex-col items-center gap-1.5 text-center"
     >
       <span
-        className={`grid h-12 w-12 place-items-center rounded-2xl border text-xl shadow-sm transition duration-300 sm:h-14 sm:w-14 ${
+        className={`grid h-12 w-12 place-items-center overflow-hidden rounded-2xl border p-1 shadow-sm transition duration-300 sm:h-14 sm:w-14 ${
           active
             ? "border-[#0d4697]/25 bg-white text-[#0d4697] shadow-[0_12px_24px_rgba(13,70,151,0.12)]"
             : `border-transparent bg-gradient-to-b ${category.tone} ${category.iconTone} group-hover:-translate-y-0.5 group-hover:shadow-md`
         }`}
       >
-        {iconContent}
+        {IconComponent ? (
+          <IconComponent className="h-5 w-5 sm:h-6 sm:w-6 transition duration-300 group-hover:scale-110" />
+        ) : (
+          <img
+            src={category.imageUrl}
+            alt=""
+            className="h-full w-full rounded-xl object-cover transition duration-300 group-hover:scale-105"
+            loading="lazy"
+            onError={(event) => {
+              event.currentTarget.src = "/logo.png";
+            }}
+          />
+        )}
       </span>
       <span
         className={`max-w-[72px] truncate text-[11px] font-semibold transition ${
@@ -595,7 +728,6 @@ function ShopCategoryPill({ category, active, onClick }) {
     </button>
   );
 }
-
 const DEFAULT_PROMO_BANNERS = [
   {
     _id: "default-left",
@@ -622,6 +754,14 @@ const DEFAULT_PROMO_BANNERS = [
 
 function getBannerImageUrl(banner) {
   return banner?.image?.url || banner?.mobileImage?.url || "";
+}
+
+function getOrganizationHierarchyList(data) {
+  if (Array.isArray(data?.data)) return data.data;
+  if (Array.isArray(data?.data?.data)) return data.data.data;
+  if (Array.isArray(data?.data?.locations)) return data.data.locations;
+  if (Array.isArray(data?.locations)) return data.locations;
+  return getList(data);
 }
 
 function chunkBanners(list = [], size = 3) {
@@ -719,6 +859,11 @@ function ShopBannerCarousel({ banners = [] }) {
 function ShopHeroShowcase({
   categories,
   banners,
+  districts,
+  locationValue,
+  locationLoading,
+  currentLocation,
+  onLocationChange,
   searchValue,
   onSearchChange,
   onCategorySelect,
@@ -726,15 +871,27 @@ function ShopHeroShowcase({
   onSearchSubmit,
 }) {
   const [ref, inView] = useInViewOnce(0.08);
+  const [locationOpen, setLocationOpen] = useState(false);
   const visibleCategories = useMemo(
     () => buildShopHeroCategories(categories),
     [categories],
   );
+  const selectedDistrict = useMemo(
+    () =>
+      districts.find(
+        (district) => String(district._id) === String(locationValue),
+      ),
+    [districts, locationValue],
+  );
+  const locationLabel =
+    locationValue === "__current"
+      ? "Current Location"
+      : selectedDistrict?.name || "All Locations";
 
   return (
     <section
       ref={ref}
-      className={`rounded-[28px] border border-[#e8dcc4] bg-[#fdfbf7] p-3 shadow-[0_24px_70px_rgba(15,23,42,0.08)] transition-all duration-700 sm:p-4 lg:p-5 ${
+      className={`relative z-20 rounded-[28px] border border-[#e8dcc4] bg-[#fdfbf7] p-3 shadow-[0_24px_70px_rgba(15,23,42,0.08)] transition-all duration-700 sm:p-4 lg:p-5 ${
         inView ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"
       }`}
     >
@@ -768,14 +925,82 @@ function ShopHeroShowcase({
 
       <div className="mt-4 rounded-[24px] bg-[#0d4697] p-3 shadow-[0_20px_45px_rgba(13,70,151,0.24)] sm:p-4">
         <div className="grid gap-3 lg:grid-cols-[170px_minmax(0,1fr)_170px_140px] lg:items-center">
-          <div className="rounded-[18px] border border-white/10 bg-white/10 px-4 py-3 text-white/90 backdrop-blur-sm">
+          <div className="relative z-40 rounded-[18px] border border-white/10 bg-white/10 px-4 py-3 text-white/90 backdrop-blur-sm">
             <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-white/55">
               Location
             </p>
-            <div className="mt-1 flex items-center justify-between gap-3">
-              <span className="text-sm font-bold text-white">All Locations</span>
-              <ChevronDown className="h-4 w-4 text-white/65" />
-            </div>
+            <button
+              type="button"
+              onClick={() => setLocationOpen((value) => !value)}
+              className="mt-1 flex w-full items-center justify-between gap-3 text-left text-sm font-bold text-white"
+              aria-expanded={locationOpen}
+              aria-haspopup="listbox"
+            >
+              <span className="truncate">{locationLabel}</span>
+              <ChevronDown
+                className={`h-4 w-4 shrink-0 text-white/65 transition ${
+                  locationOpen ? "rotate-180" : ""
+                }`}
+              />
+            </button>
+            {locationOpen && (
+              <div
+                role="listbox"
+                className="absolute left-0 top-[calc(100%+8px)] z-30 max-h-60 w-64 overflow-y-auto rounded-2xl border border-white/70 bg-white p-1.5 text-slate-700 shadow-[0_18px_45px_rgba(15,23,42,0.18)]"
+              >
+                {[
+                  ["", "All Locations"],
+                  ["__current", "Use Current Location"],
+                ].map(([value, label]) => (
+                  <button
+                    key={value || "all"}
+                    type="button"
+                    role="option"
+                    aria-selected={locationValue === value}
+                    onClick={() => {
+                      onLocationChange(value);
+                      setLocationOpen(false);
+                    }}
+                    className={`flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-sm font-bold transition ${
+                      locationValue === value
+                        ? "bg-[#0d4697] text-white"
+                        : "hover:bg-slate-100"
+                    }`}
+                  >
+                    {label}
+                  </button>
+                ))}
+                {districts.map((district) => (
+                  <button
+                    key={district._id}
+                    type="button"
+                    role="option"
+                    aria-selected={String(locationValue) === String(district._id)}
+                    onClick={() => {
+                      onLocationChange(String(district._id));
+                      setLocationOpen(false);
+                    }}
+                    className={`flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-sm font-bold transition ${
+                      String(locationValue) === String(district._id)
+                        ? "bg-[#0d4697] text-white"
+                        : "hover:bg-slate-100"
+                    }`}
+                  >
+                    {district.name}
+                  </button>
+                ))}
+              </div>
+            )}
+            {locationLoading && (
+              <p className="mt-1 text-[10px] font-semibold text-white/60">
+                Loading districts...
+              </p>
+            )}
+            {locationValue === "__current" && currentLocation && (
+              <p className="mt-1 truncate text-[10px] font-semibold text-white/60">
+                Detected within {Math.round(currentLocation.accuracy)}m
+              </p>
+            )}
           </div>
 
           <label className="flex h-full items-center gap-3 rounded-[18px] border border-white/10 bg-white px-4 py-3 shadow-[0_10px_24px_rgba(0,0,0,0.08)]">
@@ -1020,6 +1245,8 @@ export function ProductsPage() {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [selectedVariant, setSelectedVariant] = useState({});
   const [quickViewOpen, setQuickViewOpen] = useState(false);
+  const [locationValue, setLocationValue] = useState("");
+  const [currentLocation, setCurrentLocation] = useState(null);
   const [page, setPage] = useState(Number(read("page", "1")) || 1);
   const [filterState, setFilterState] = useState({
     search: read("search"),
@@ -1047,6 +1274,11 @@ export function ProductsPage() {
 
   const categories = useApi(() =>
     customerApi.categories({ type: "product", limit: 200 }),
+  );
+  const organizationHierarchy = useApi(
+    () => customerApi.organizationHierarchy({ silent: true }),
+    [],
+    { immediate: true },
   );
   const bannersQuery = useApi(
     () => customerApi.banners({ placement: "marketplace", isActive: "true", limit: 12 }),
@@ -1159,6 +1391,16 @@ export function ProductsPage() {
     [debouncedSearch, filterState, products],
   );
   const allCategories = getList(categories.data);
+  const districtOptions = useMemo(
+    () =>
+      getOrganizationHierarchyList(organizationHierarchy.data)
+        .filter((location) => location?.type === "district")
+        .filter((location) => location?.status !== "inactive")
+        .sort((a, b) =>
+          String(a?.name || "").localeCompare(String(b?.name || "")),
+        ),
+    [organizationHierarchy.data],
+  );
   const categoryChips = useMemo(() => getCategoryChips(products), [products]);
   const featuredProducts = useMemo(
     () =>
@@ -1280,6 +1522,40 @@ export function ProductsPage() {
     if (page > totalPages) setPage(1);
   }, [page, totalPages]);
 
+  const handleLocationChange = useCallback((value) => {
+    if (value !== "__current") {
+      setLocationValue(value);
+      setCurrentLocation(null);
+      return;
+    }
+
+    if (!navigator.geolocation) {
+      toast.error("Current location is not supported in this browser");
+      setLocationValue("");
+      return;
+    }
+
+    setLocationValue("__current");
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setCurrentLocation({
+          lat: position.coords.latitude,
+          lng: position.coords.longitude,
+          accuracy: position.coords.accuracy,
+        });
+        toast.success(
+          `Current location detected within ${Math.round(position.coords.accuracy)}m`,
+        );
+      },
+      () => {
+        setLocationValue("");
+        setCurrentLocation(null);
+        toast.error("Allow location permission to use current location");
+      },
+      { enableHighAccuracy: true, timeout: 12000, maximumAge: 60000 },
+    );
+  }, []);
+
   return (
     <main className="min-h-screen bg-gradient-to-b from-[#faf8f5] via-white to-[#f5f7fa]">
       <style>{`
@@ -1291,36 +1567,39 @@ export function ProductsPage() {
           .gl-fade-up { animation: none !important; }
         }
       `}</style>
-      <div className="px-4 py-6 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-7xl">
-          <ShopHeroShowcase
-            categories={allCategories}
-            banners={promoBanners}
-            searchValue={filterState.search || ""}
-            activeCategoryId={filterState.category}
-            onSearchChange={(value) =>
-              setFilterState((current) => ({
-                ...current,
-                search: value,
-              }))
-            }
-            onCategorySelect={(label) => {
-              const selection = resolveQuickCategorySelection(label, allCategories);
-              setFilterState((current) => ({
-                ...current,
-                ...selection,
-              }));
-              setPage(1);
-            }}
-            onSearchSubmit={() =>
-              window.scrollTo({ top: 920, behavior: "smooth" })
-            }
-          />
-        </div>
+      <div className="mx-auto max-w-[1440px] px-3 py-6 sm:px-5 lg:px-7">
+        <ShopHeroShowcase
+          categories={allCategories}
+          banners={promoBanners}
+          districts={districtOptions}
+          locationValue={locationValue}
+          locationLoading={organizationHierarchy.loading}
+          currentLocation={currentLocation}
+          onLocationChange={handleLocationChange}
+          searchValue={filterState.search || ""}
+          activeCategoryId={filterState.category}
+          onSearchChange={(value) =>
+            setFilterState((current) => ({
+              ...current,
+              search: value,
+            }))
+          }
+          onCategorySelect={(label) => {
+            const selection = resolveQuickCategorySelection(label, allCategories);
+            setFilterState((current) => ({
+              ...current,
+              ...selection,
+            }));
+            setPage(1);
+          }}
+          onSearchSubmit={() =>
+            window.scrollTo({ top: 920, behavior: "smooth" })
+          }
+        />
       </div>
 
-      <div className="flex-1 px-4 pb-8 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-7xl flex flex-col gap-6 lg:flex-row">
+      <div className="mx-auto max-w-[1440px] flex-1 px-3 pb-8 sm:px-5 lg:px-7">
+        <div className="flex flex-col gap-6 lg:flex-row">
           <aside className="w-full lg:w-[280px] lg:flex-shrink-0 lg:sticky lg:top-6 lg:self-start lg:max-h-[calc(100vh-4rem)] lg:overflow-y-auto">
             <div className="space-y-4">
               <FiltersPanel
@@ -1407,30 +1686,49 @@ export function ProductsPage() {
                           animationDelay: `${(index % pageSize) * 45}ms`,
                         }}
                       >
-                      <ProductCard
-                        product={product}
-                        wishlisted={isWishlisted(localWishlist, product._id)}
-                        onQuickView={(nextProduct) => {
-                          setSelectedProduct(nextProduct);
-                          setSelectedVariant({});
-                          setQuickViewOpen(true);
-                        }}
-                        onWishlist={() => shop.toggleWishlist(product)}
-                        onAddToCart={(nextProduct) =>
-                          shop.upsertCartLine(
-                            nextProduct,
-                            selectedVariant[nextProduct._id] || null,
-                            1,
-                          )
-                        }
-                        onOpen={() =>
-                          navigate(`/products/${product._id}`, {
-                            state: {
-                              from: location.pathname + location.search,
-                            },
-                          })
-                        }
-                      />
+                        <ProductCard
+                          product={product}
+                          cartLine={shop.cart.find(
+                            (line) => line.lineKey === `${product._id}:base`,
+                          )}
+                          wishlisted={isWishlisted(localWishlist, product._id)}
+                          onQuickView={(nextProduct) => {
+                            setSelectedProduct(nextProduct);
+                            setSelectedVariant({});
+                            setQuickViewOpen(true);
+                          }}
+                          onWishlist={() => shop.toggleWishlist(product)}
+                          onAddToCart={(nextProduct) =>
+                            shop.upsertCartLine(
+                              nextProduct,
+                              selectedVariant[nextProduct._id] || null,
+                              1,
+                            )
+                          }
+                          onIncrementCart={(line) =>
+                            shop.updateCartQuantity(
+                              line.lineKey,
+                              Math.min(line.stock || 99, Number(line.quantity || 1) + 1),
+                            )
+                          }
+                          onDecrementCart={(line) => {
+                            if (Number(line.quantity || 1) <= 1) {
+                              shop.removeFromCart(line.lineKey);
+                              return;
+                            }
+                            shop.updateCartQuantity(
+                              line.lineKey,
+                              Number(line.quantity || 1) - 1,
+                            );
+                          }}
+                          onOpen={() =>
+                            navigate(`/products/${product._id}`, {
+                              state: {
+                                from: location.pathname + location.search,
+                              },
+                            })
+                          }
+                        />
                       </div>
                     ))}
                   </div>
@@ -4240,10 +4538,13 @@ export function OrderDetailPage() {
 
 function ProductCard({
   product,
+  cartLine,
   wishlisted,
   onQuickView,
   onWishlist,
   onAddToCart,
+  onIncrementCart,
+  onDecrementCart,
   onOpen,
 }) {
   const variant = getVariantOptions(product)[0] || null;
@@ -4340,17 +4641,42 @@ function ProductCard({
           >
             Quick View
           </button>
-          <button
-            type="button"
-            onClick={() => onAddToCart(product)}
-            disabled={stockStatus === "Out of stock"}
-            className="rounded-xl bg-navy px-1.5 py-2.5 text-[10px] font-black text-white transition hover:bg-navy/90 disabled:cursor-not-allowed disabled:opacity-50 sm:px-2 sm:text-xs"
-          >
-            {stockStatus === "Out of stock" ? "Unavailable" : "Cart"}
-          </button>
+          {cartLine ? (
+            <div className="inline-flex min-w-0 items-center justify-between overflow-hidden rounded-xl bg-navy text-white">
+              <button
+                type="button"
+                onClick={() => onDecrementCart(cartLine)}
+                aria-label="Decrease cart quantity"
+                className="grid h-full min-h-9 w-8 place-items-center transition hover:bg-white/10 sm:w-9"
+              >
+                <Minus className="h-3.5 w-3.5" />
+              </button>
+              <span className="min-w-6 text-center text-[11px] font-black sm:min-w-8 sm:text-xs">
+                {cartLine.quantity}
+              </span>
+              <button
+                type="button"
+                onClick={() => onIncrementCart(cartLine)}
+                disabled={Number(cartLine.quantity || 1) >= Number(cartLine.stock || 99)}
+                aria-label="Increase cart quantity"
+                className="grid h-full min-h-9 w-8 place-items-center transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50 sm:w-9"
+              >
+                <Plus className="h-3.5 w-3.5" />
+              </button>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => onAddToCart(product)}
+              disabled={stockStatus === "Out of stock"}
+              className="rounded-xl bg-navy px-1.5 py-2.5 text-[10px] font-black text-white transition hover:bg-navy/90 disabled:cursor-not-allowed disabled:opacity-50 sm:px-2 sm:text-xs"
+            >
+              {stockStatus === "Out of stock" ? "Unavailable" : "Cart"}
+            </button>
+          )}
           <Link
             to={`/products/${product._id}`}
-            className="inline-flex items-center justify-center rounded-xl bg-slate-900 px-1.5 py-2.5 text-center text-[10px] font-black text-white transition hover:bg-slate-800 sm:px-2 sm:text-xs"
+            className="inline-flex items-center justify-center rounded-xl bg-blue-50 px-1.5 py-2.5 text-center text-[10px] font-black text-[#0d4697] transition hover:bg-blue-100/70 sm:px-2 sm:text-xs"
           >
             Details
           </Link>
@@ -4715,65 +5041,6 @@ function FiltersPanel({ filterState, setFilterState, categories, onReset }) {
             <option value="20_plus">20% and above</option>
           </select>
         </FieldGroup>
-        <FieldGroup label="Size">
-          <input
-            value={filterState.size}
-            onChange={(event) =>
-              setFilterState((current) => ({
-                ...current,
-                size: event.target.value,
-              }))
-            }
-            className="h-11 w-full rounded-xl border border-slate-200 px-3 text-sm font-semibold outline-none transition focus:border-navy/40"
-            placeholder="M, L, 42, 1TB"
-          />
-        </FieldGroup>
-        <FieldGroup label="Color">
-          <input
-            value={filterState.color}
-            onChange={(event) =>
-              setFilterState((current) => ({
-                ...current,
-                color: event.target.value,
-              }))
-            }
-            className="h-11 w-full rounded-xl border border-slate-200 px-3 text-sm font-semibold outline-none transition focus:border-navy/40"
-            placeholder="Red, Black, Blue"
-          />
-        </FieldGroup>
-        <FieldGroup label="Material">
-          <input
-            value={filterState.material}
-            onChange={(event) =>
-              setFilterState((current) => ({
-                ...current,
-                material: event.target.value,
-              }))
-            }
-            className="h-11 w-full rounded-xl border border-slate-200 px-3 text-sm font-semibold outline-none transition focus:border-navy/40"
-            placeholder="Cotton, Leather, Steel"
-          />
-        </FieldGroup>
-        <ToggleChip
-          label="Featured products"
-          active={filterState.featured === "true"}
-          onClick={() =>
-            setFilterState((current) => ({
-              ...current,
-              featured: current.featured === "true" ? "" : "true",
-            }))
-          }
-        />
-        <ToggleChip
-          label="New arrivals"
-          active={filterState.newArrivals === "true"}
-          onClick={() =>
-            setFilterState((current) => ({
-              ...current,
-              newArrivals: current.newArrivals === "true" ? "" : "true",
-            }))
-          }
-        />
       </div>
     </div>
   );
