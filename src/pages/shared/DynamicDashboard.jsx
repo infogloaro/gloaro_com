@@ -124,7 +124,7 @@ export default function DynamicDashboard() {
       color: 'text-amber-600 bg-amber-50'
     },
     referrals: {
-      label: 'Referrals Passed',
+      label: 'Connects Passed',
       value: formatVal(stats.roleStats?.referralsCount),
       icon: Handshake,
       color: 'text-purple-600 bg-purple-50'
@@ -160,7 +160,7 @@ export default function DynamicDashboard() {
       color: 'text-amber-600 bg-amber-50'
     },
     presidentsAssigned: {
-      label: 'Presidents Assigned',
+      label: 'Unit Chairmen Assigned',
       value: formatVal(stats.roleStats?.chapterPresidents),
       icon: Users,
       color: 'text-purple-600 bg-purple-50'
@@ -190,7 +190,7 @@ export default function DynamicDashboard() {
       color: 'text-amber-600 bg-amber-50'
     },
     referralsPassed: {
-      label: 'Referrals Passed',
+      label: 'Connects Passed',
       value: formatVal(stats.roleStats?.referralsCount),
       icon: Handshake,
       color: 'text-violet-600 bg-violet-50'
@@ -232,7 +232,7 @@ export default function DynamicDashboard() {
       color: 'text-blue-600 bg-blue-50'
     },
     executiveDirectors: {
-      label: 'Executive Directors',
+      label: 'District Presidents',
       value: formatVal(stats.roleStats?.executiveDirectors),
       icon: Users,
       color: 'text-purple-600 bg-purple-50'

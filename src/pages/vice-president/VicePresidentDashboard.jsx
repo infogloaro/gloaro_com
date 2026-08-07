@@ -66,7 +66,7 @@ export default function VicePresidentDashboard() {
   }, [])
 
   if (scopeLoading) {
-    return <LoadingScreen label="Loading Vice President console..." />
+    return <LoadingScreen label="Loading Unit Vice Chairman console..." />
   }
 
   // Safely extract jurisdiction strings
@@ -109,9 +109,9 @@ export default function VicePresidentDashboard() {
       <div className="overflow-hidden rounded-2xl bg-gradient-to-br from-[#0b1f3d] to-[#0d4697] p-6 text-white shadow-lg relative flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div className="space-y-2">
           <p className="text-xs font-extrabold uppercase tracking-[0.2em] text-[#ffb20c]">
-            Good Morning, {user?.name || 'Vice President'} 👋
+            Good Morning, {user?.name || 'Unit Vice Chairman'} 👋
           </p>
-          <h1 className="text-3xl font-black">Vice President Console</h1>
+          <h1 className="text-3xl font-black">Unit Vice Chairman Console</h1>
           <p className="text-sm font-semibold text-slate-200">
             {hierarchyString}
           </p>
@@ -159,15 +159,15 @@ export default function VicePresidentDashboard() {
             </h3>
             <div className="space-y-2.5 text-xs">
               <div className="flex justify-between border-b border-slate-100 pb-1.5">
-                <span className="font-semibold text-slate-500">Chapter President</span>
+                <span className="font-semibold text-slate-500">Chapter Unit Chairman</span>
                 <span className="font-extrabold text-slate-850">{scopeOverview?.president?.name || 'Not assigned'}</span>
               </div>
               <div className="flex justify-between border-b border-slate-100 pb-1.5">
-                <span className="font-semibold text-slate-500">Vice President</span>
+                <span className="font-semibold text-slate-500">Unit Vice Chairman</span>
                 <span className="font-extrabold text-slate-850">{user?.name || 'Not assigned'}</span>
               </div>
               <div className="flex justify-between border-b border-slate-100 pb-1.5">
-                <span className="font-semibold text-slate-500">Secretary</span>
+                <span className="font-semibold text-slate-500">Coordinator</span>
                 <span className="font-extrabold text-slate-850">{scopeOverview?.secretary?.name || 'Not assigned'}</span>
               </div>
               <div className="flex justify-between pb-1.5">
@@ -234,7 +234,7 @@ export default function VicePresidentDashboard() {
         {/* Row 2 */}
         {showExtendedDashboard && <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Referrals Given</p>
+            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Connects Given</p>
             <h4 className="text-2xl font-black text-slate-900 mt-2">{kpis.referralsGiven}</h4>
             <p className="text-xs text-slate-500 font-semibold mt-1">Passed this quarter</p>
           </div>
@@ -277,7 +277,7 @@ export default function VicePresidentDashboard() {
             onClick={() => navigate('/vice-president/secretaries')}
             className="flex items-center gap-2 p-3 text-xs font-extrabold text-slate-700 rounded-xl border border-slate-100 bg-slate-50 hover:bg-[#eef4ff] transition text-left"
           >
-            <UserCheck className="h-4 w-4 text-[#0d4697]" /> Manage Secretaries
+            <UserCheck className="h-4 w-4 text-[#0d4697]" /> Manage Coordinators
           </button>
           <button
             onClick={() => navigate('/vice-president/members')}
@@ -293,12 +293,12 @@ export default function VicePresidentDashboard() {
           </button>
           <button
             onClick={() => {
-              toast.success('Referral form opened')
+              toast.success('Connect form opened')
               navigate('/member/dashboard')
             }}
             className="flex items-center gap-2 p-3 text-xs font-extrabold text-slate-700 rounded-xl border border-slate-100 bg-slate-50 hover:bg-[#eef4ff] transition text-left"
           >
-            <Handshake className="h-4 w-4 text-[#0d4697]" /> Add Referral
+            <Handshake className="h-4 w-4 text-[#0d4697]" /> Add Connect
           </button>
           <button
             onClick={() => navigate('/member/dashboard')}
@@ -348,7 +348,7 @@ export default function VicePresidentDashboard() {
           <div className="bg-[#eef4ff] rounded-xl p-4 text-xs font-semibold text-slate-700 space-y-2 border border-blue-100">
             <div className="font-extrabold text-slate-900 text-sm">Regular Chapter Session</div>
             <div className="flex items-center gap-1"><Clock className="h-3.5 w-3.5 text-[#0d4697]" /> 07:00 AM • Friday</div>
-            <div>Focus: B2B Power Networking & Referral Rounds</div>
+            <div>Focus: B2B Power Networking & Connect Rounds</div>
           </div>
           
           <div className="space-y-3">
@@ -365,8 +365,8 @@ export default function VicePresidentDashboard() {
           </h3>
           <div className="space-y-3">
             <div className="border-l-4 border-amber-500 pl-3">
-              <div className="text-xs font-black text-slate-800">New Secretary Account Pending</div>
-              <p className="text-[11px] font-semibold text-slate-500 mt-1">Please confirm access overrides for Chapter Secretary.</p>
+              <div className="text-xs font-black text-slate-800">New Coordinator Account Pending</div>
+              <p className="text-[11px] font-semibold text-slate-500 mt-1">Please confirm access overrides for Chapter Coordinator.</p>
             </div>
             <div className="border-l-4 border-[#0d4697] pl-3">
               <div className="text-xs font-black text-slate-800">Regional Leadership Training</div>
@@ -415,7 +415,7 @@ export default function VicePresidentDashboard() {
         </div>
       </section>}
 
-      {/* The Referrals Pipeline, Top Performers, and Activity mock sections have been removed per strict user request. */}
+      {/* The Connects Pipeline, Top Performers, and Activity mock sections have been removed per strict user request. */}
     </div>
   )
 }

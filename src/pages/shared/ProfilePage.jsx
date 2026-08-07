@@ -17,11 +17,11 @@ const REPORTING_STRUCTURE = {
   [ROLES.STATE_DIRECTOR]: 'Region Director',
   [ROLES.DISTRICT_DIRECTOR]: 'State Director',
   [ROLES.EXECUTIVE_DIRECTOR]: 'District Director',
-  [ROLES.LAUNCH_DIRECTOR]: 'Executive Director',
+  [ROLES.LAUNCH_DIRECTOR]: 'District President',
   [ROLES.DIRECT_CONSULTANT]: 'Launch Director',
   [ROLES.CHAPTER_PRESIDENT]: 'Direct Consultant',
-  [ROLES.VICE_PRESIDENT]: 'Chapter President',
-  [ROLES.SECRETARY]: 'Vice President',
+  [ROLES.VICE_PRESIDENT]: 'Chapter Unit Chairman',
+  [ROLES.SECRETARY]: 'Unit Vice Chairman',
 }
 
 const VIEW_ONLY_PROFILE_ROLES = [

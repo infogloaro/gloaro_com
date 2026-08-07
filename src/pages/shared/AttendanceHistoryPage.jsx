@@ -194,7 +194,7 @@ export default function AttendanceHistoryPage() {
           {!isMemberAudience && <input value={filters.role} onChange={(e) => setFilter('role', e.target.value)} placeholder="Member role" className={fieldClass} />}
           <input value={filters.event} onChange={(e) => setFilter('event', e.target.value)} placeholder="Event" className={fieldClass} />
           {visible('member') && <input value={filters.member} onChange={(e) => setFilter('member', e.target.value)} placeholder="Member" className={fieldClass} />}
-          {!isMemberAudience && visible('secretary') && <input value={filters.secretary} onChange={(e) => setFilter('secretary', e.target.value)} placeholder="Secretary" className={fieldClass} />}
+          {!isMemberAudience && visible('secretary') && <input value={filters.secretary} onChange={(e) => setFilter('secretary', e.target.value)} placeholder="Coordinator" className={fieldClass} />}
           <input type="date" value={filters.startDate} onChange={(e) => setFilter('startDate', e.target.value)} className={fieldClass} />
           <input type="date" value={filters.endDate} onChange={(e) => setFilter('endDate', e.target.value)} className={fieldClass} />
           {visible('region') && <input value={filters.region} onChange={(e) => setFilter('region', e.target.value)} placeholder="Region" className={fieldClass} />}
@@ -224,7 +224,7 @@ export default function AttendanceHistoryPage() {
                   {visible('state') && <th className="px-4 py-3">State</th>}
                   {visible('district') && <th className="px-4 py-3">District</th>}
                   {visible('chapter') && <th className="px-4 py-3">Chapter</th>}
-                  {visible('secretary') && <th className="px-4 py-3">Secretary</th>}
+                  {visible('secretary') && <th className="px-4 py-3">Coordinator</th>}
                   {visible('member') && <th className="px-4 py-3">Member</th>}
                   {visible('memberRole') && <th className="px-4 py-3">Role</th>}
                   {visible('attendanceTime') && <th className="px-4 py-3">Attendance Time</th>}

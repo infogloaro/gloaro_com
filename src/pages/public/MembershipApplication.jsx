@@ -112,7 +112,7 @@ export default function MembershipApplication() {
     }
     setOrganization(next)
     updateLocationDraft(next)
-    // Vice Presidents must stay scoped to their assigned chapter hierarchy.
+    // Unit Vice Chairmen must stay scoped to their assigned chapter hierarchy.
   }, [isVicePresident, userOrg.region, userOrg.state, userOrg.district, userOrg.chapter])
 
   const handleSaveDraft = async (e) => {

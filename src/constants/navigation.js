@@ -74,11 +74,11 @@ export const adminNav = [
     ],
   },
   {
-    label: 'Referrals',
+    label: 'Connects',
     icon: Handshake,
     children: [
-      ['My Referrals', '/my-referrals', User],
-      ['Referral Management', '/referral-management', Handshake],
+      ['My Connects', '/my-referrals', User],
+      ['Connect Management', '/referral-management', Handshake],
     ],
   },
   {
@@ -196,7 +196,7 @@ export const customerNav = [
   ['Products', '/products', ShoppingBag],
   ['Services', '/services', BriefcaseBusiness],
   ['Wishlist', '/wishlist', Heart],
-  ['Referral', '/customer/referral', Ticket],
+  ['Connect', '/customer/referral', Ticket],
   ['Events', '/events', CalendarDays],
   ['Profile', '/customer/profile', Users],
   ['Support', '/customer/support', HelpCircle],
@@ -218,13 +218,13 @@ export const membershipNav = [
   ['Benefits', '/membership/benefits', Star],
   ['Events', '/membership/events', CalendarDays],
   ['Assigned Courses', '/membership/training', BookOpen],
-  ['Referral', '/membership/referral', Ticket],
+  ['Connect', '/membership/referral', Ticket],
   ['Profile', '/membership/profile', Users],
   ['Support', '/membership/support', HelpCircle],
 ]
 
 export const memberNav = [['Assigned Courses', '/member/training', BookOpen]];
-export const secretaryNav = [{ label: 'Secretary Dashboard', icon: ClipboardList, children: [['Events', '/events', CalendarDays]] }];
+export const secretaryNav = [{ label: 'Coordinator Dashboard', icon: ClipboardList, children: [['Events', '/events', CalendarDays]] }];
 export const stateDirectorNav = [];
 export const districtDirectorNav = [];
 export const chapterDirectorNav = [];
@@ -371,7 +371,7 @@ const roleModules = {
   ],
   [ROLES.CHAPTER_PRESIDENT]: [
     ['Approved Members', '/members', Users],
-    ['Vice Presidents', '/vice-presidents', Users]
+    ['Vice Unit Chairmen', '/vice-presidents', Users]
   ],
   [ROLES.EXECUTIVE_DIRECTOR]: [
     ['Launch Directors', '/launch-directors', UserCheck],
@@ -384,7 +384,7 @@ const roleModules = {
     ['Membership Applications', '/membership-applications', ClipboardList]
   ],
   [ROLES.DISTRICT_DIRECTOR]: [
-    ['Executive Directors', '/executive-directors', Users],
+    ['District Presidents', '/executive-directors', Users],
     ['Approved Members', '/members', Users]
   ],
   [ROLES.STATE_DIRECTOR]: [
@@ -400,7 +400,7 @@ const roleModules = {
     ['Approved Members', '/members', Users]
   ],
   [ROLES.DIRECT_CONSULTANT]: [
-    ['Chapter Presidents', '/presidents', Users],
+    ['Chapter Unit Chairmen', '/presidents', Users],
     ['Approved Members', '/members', Users]
   ]
 };
@@ -502,10 +502,10 @@ export function getSidebarNav(role, options = {}) {
       if ([ROLES.REGION_DIRECTOR, ROLES.STATE_DIRECTOR, ROLES.DISTRICT_DIRECTOR].includes(normalizedRole)) {
         children = children.filter(([label]) => {
           if (label === 'Chapter Community') return hasChapterAssignment(user)
-          return ['Gloaro Network', 'Messages', 'Referrals'].includes(label)
+          return ['Gloaro Network', 'Messages', 'Connects'].includes(label)
         })
       } else if ([ROLES.CUSTOMER, ROLES.USER, ROLES.VENDOR].includes(normalizedRole)) {
-        children = children.filter(([label]) => ['Chapter Community', 'Gloaro Network', 'Messages', 'Referrals'].includes(label))
+        children = children.filter(([label]) => ['Chapter Community', 'Gloaro Network', 'Messages', 'Connects'].includes(label))
       }
     }
     return {

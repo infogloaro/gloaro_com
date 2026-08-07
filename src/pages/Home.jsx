@@ -41,12 +41,12 @@ const getLeaderCardsPerView = () => {
 
 const whyGloaroPoints = [
   { title: 'Grow Your Network', description: 'GLOARO is not just a business network; it is a growth ecosystem where entrepreneurs find opportunities, investors discover potential, and together they create sustainable success' },
-  { title: 'Generate Referrals', description: 'Structured networking meetings designed to build strong business relationships and create referral partnerships.' },
+  { title: 'Generate Connects', description: 'Structured networking meetings designed to build strong business relationships and create referral partnerships.' },
   { title: 'Scale Your Business', description: 'Access tools, resources and opportunities to automate and scale your growth. Increase your online presence by listing your business in networking directories and business platforms' },
 ]
 
 const serviceItems = [
-  'Membership', 'Referrals', 'Events', 'Meetings', 'Mobile App',
+  'Membership', 'Connects', 'Events', 'Meetings', 'Mobile App',
   'Analytics', 'Franchise', 'B2B solutions', 'Digital Marketing', 'Resources',
 ]
 
@@ -59,8 +59,8 @@ const ecosystemActions = [
 ]
 
 const memberBenefits = [
-  ['One to One Business Referrals', benefitImage1],
-  ['Referral Meetings', benefitImage2],
+  ['One to One Business Connects', benefitImage1],
+  ['Connect Meetings', benefitImage2],
   ['Global business visits with leaders', benefitImage3],
   ['Social Media Marketing', benefitImage4],
   ['Business Directory Listing', benefitImage5],
@@ -107,12 +107,12 @@ const networkDetailGroups = [
     ],
   },
   {
-    title: 'Referral Program',
+    title: 'Connect Program',
     eyebrow: 'Trust-led opportunities',
     items: [
-      ['referral-meeting', 'Referral Meeting', 'Members attend structured weekly and one-to-one business meetings designed to build trusted relationships and qualified opportunities.'],
-      ['referral-join', 'Referral Join', 'A prospective member is referred by an existing verified member, completes offline verification and receives membership approval before joining.'],
-      ['referral-benefits', 'Referral Benefits', 'The referral engine creates genuine introductions, business relationships, qualified leads and ongoing community support.'],
+      ['referral-meeting', 'Connect Meeting', 'Members attend structured weekly and one-to-one business meetings designed to build trusted relationships and qualified opportunities.'],
+      ['referral-join', 'Connect Join', 'A prospective member is referred by an existing verified member, completes offline verification and receives membership approval before joining.'],
+      ['referral-benefits', 'Connect Benefits', 'The referral engine creates genuine introductions, business relationships, qualified leads and ongoing community support.'],
     ],
   },
   {
@@ -164,7 +164,7 @@ const networkDetailGroups = [
       ['network-coordinators', 'Coordinators', 'Community coordinators help organize meetings, member communication and local business activities.'],
       ['business-runner', 'Business Runner', 'A recognition pathway for members who demonstrate consistent participation, collaboration and business momentum.'],
       ['goal-achiever', 'Goal Achiever', 'A milestone-based recognition for members who make measurable progress toward referral, leadership and growth goals.'],
-      ['member-achievements', 'Member Achievements', 'Programs include the Mr. 360° Lead Champion Award, Referral Excellence Awards, leadership recognition and Business Achievement Awards.'],
+      ['member-achievements', 'Member Achievements', 'Programs include the Mr. 360° Lead Champion Award, Connect Excellence Awards, leadership recognition and Business Achievement Awards.'],
     ],
   },
   {
@@ -465,7 +465,7 @@ export default function Home() {
         </div>
       </div>
       <div className="absolute bottom-0 left-1/2 z-10 grid w-[calc(100%-2.5rem)] max-w-5xl -translate-x-1/2 grid-cols-2 overflow-hidden rounded-3xl border border-white/70 bg-[#0d4697] text-center text-white shadow-xl shadow-slate-800/25 lg:grid-cols-4">
-        {[['10,000+', 'Active Members'], ['5,000+', 'Businesses'], ['25+', 'Cities'], ['1,000+', 'Successful Referrals']].map(([value, label], index) => <div key={label} className={`px-3 py-5 transition-colors duration-300 hover:bg-white/10 sm:px-4 sm:py-7 ${index === 1 ? 'border-l border-white/35' : ''} ${index === 2 ? 'border-t border-white/35 lg:border-l lg:border-t-0' : ''} ${index === 3 ? 'border-l border-t border-white/35 lg:border-t-0' : ''}`}><CountUpStat value={value} /><p className="mt-1 font-playfair text-base italic sm:text-2xl">{label}</p></div>)}
+        {[['10,000+', 'Active Members'], ['5,000+', 'Businesses'], ['25+', 'Cities'], ['1,000+', 'Successful Connects']].map(([value, label], index) => <div key={label} className={`px-3 py-5 transition-colors duration-300 hover:bg-white/10 sm:px-4 sm:py-7 ${index === 1 ? 'border-l border-white/35' : ''} ${index === 2 ? 'border-t border-white/35 lg:border-l lg:border-t-0' : ''} ${index === 3 ? 'border-l border-t border-white/35 lg:border-t-0' : ''}`}><CountUpStat value={value} /><p className="mt-1 font-playfair text-base italic sm:text-2xl">{label}</p></div>)}
       </div>
     </section>
 
@@ -609,7 +609,7 @@ export default function Home() {
             <div className="mt-7 grid gap-3 sm:grid-cols-3">
               {[
                 ['Membership', 'Verified access and benefits'],
-                ['Referrals', 'Trusted opportunities that convert'],
+                ['Connects', 'Trusted opportunities that convert'],
                 ['Leadership', 'Structure that drives momentum'],
               ].map(([title, text]) => (
                 <div key={title} className="rounded-2xl border border-white/10 bg-white/8 p-4">

@@ -446,7 +446,7 @@ function App() {
 
             <Route path="/member/membership-application-status" element={<MembershipApplicationStatus />} />
 
-            {/* Secretary Console Route Group */}
+            {/* Coordinator Console Route Group */}
             <Route element={<ProtectedRoute roles={[ROLES.SECRETARY]} />}>
               <Route path="/secretary" element={<Navigate to="/secretary/dashboard" replace />} />
               <Route path="/secretary/dashboard" element={<SecretaryDashboard />} />
@@ -597,7 +597,7 @@ function App() {
               <Route path="/chapter-director/approved-vendors" element={<ApprovedVendorsPage />} />
             </Route>
 
-            {/* President Console */}
+            {/* Unit Chairman Console */}
             <Route element={<ProtectedRoute roles={[ROLES.CHAPTER_PRESIDENT]} />}>
               <Route path="/president" element={<Navigate to="/president/dashboard" replace />} />
               <Route path="/president/dashboard" element={<PresidentDashboard />} />
@@ -623,7 +623,7 @@ function App() {
               <Route path="/president/profile" element={<MembershipProfilePage />} />
             </Route>
 
-            {/* Vice President Console */}
+            {/* Unit Vice Chairman Console */}
             <Route element={<ProtectedRoute roles={[ROLES.VICE_PRESIDENT]} />}>
               <Route path="/vice-president" element={<Navigate to="/vice-president/dashboard" replace />} />
               <Route path="/vice-president/dashboard" element={<VicePresidentDashboard />} />

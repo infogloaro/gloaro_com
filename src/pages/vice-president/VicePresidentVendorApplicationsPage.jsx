@@ -74,7 +74,7 @@ export default function VicePresidentVendorApplicationsPage() {
     <>
       <ResourceListPage
         title="Vendor Applications"
-        description="Pre-screen assigned vendor applications that are waiting for Vice President review."
+        description="Pre-screen assigned vendor applications that are waiting for Unit Vice Chairman review."
         fetcher={(params) => api.get('/vendor-applications', { params })}
         filters={[]}
         columns={[

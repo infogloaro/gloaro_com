@@ -128,7 +128,7 @@ export default function DirectConsultantDashboard() {
   const chapterPresidentsCount = stats.roleStats?.chapterPresidents ?? 0;
 
   const topCards = [
-    ['presidents', 'Chapter Presidents', chapterPresidentsCount, 'Assigned team', Users],
+    ['presidents', 'Chapter Unit Chairmen', chapterPresidentsCount, 'Assigned team', Users],
     ['members', 'Total Members', stats.totalUsers ?? '—', `${stats.newUsersToday ?? 0} today`, Users],
     ['active', 'Active Memberships', scopeOverview?.activeMembers ?? stats.activeUsers ?? '—', 'Verified network', CheckCircle2],
     ['revenue', 'Business Generated', stats.revenue != null ? formatCurrency(stats.revenue) : '—', 'Chapter value', FileBarChart]

@@ -240,7 +240,7 @@ export default function AdminVendorCategoryApprovalsPage() {
         <div>
           <h2 className="text-2xl font-extrabold text-slate-950">Vendor Category Approval Queue</h2>
           <p className="mt-1 text-sm font-semibold text-slate-500">
-            Review vendor category requests with chapter-scoped access for Executive Directors and full scope for Admin and Super Admin.
+            Review vendor category requests with chapter-scoped access for District Presidents and full scope for Admin and Super Admin.
           </p>
         </div>
         <div className="flex flex-wrap gap-2">

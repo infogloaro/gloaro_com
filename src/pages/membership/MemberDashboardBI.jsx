@@ -73,9 +73,9 @@ export default function MemberDashboardBI() {
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <KPICard title="Membership ID" value={kpis.membershipId} icon={ShieldCheck} subtitle="Unique identification" />
         <KPICard title="Attendance" value={`${kpis.attendancePercentage} (${kpis.totalMeetingsAttended} meetings)`} icon={CalendarDays} subtitle="Participation record" />
-        <KPICard title="Referrals Given" value={kpis.referralsGiven} icon={Flame} subtitle="Business passed to peers" />
+        <KPICard title="Connects Given" value={kpis.referralsGiven} icon={Flame} subtitle="Business passed to peers" />
         <KPICard title="Business Generated" value={formatCurrency(kpis.businessGenerated)} icon={FileBarChart} subtitle="Value of closed referrals" />
-        <KPICard title="Referrals Received" value={kpis.referralsReceived} icon={UsersRound} subtitle="Business received" />
+        <KPICard title="Connects Received" value={kpis.referralsReceived} icon={UsersRound} subtitle="Business received" />
         <KPICard title="One-to-Ones" value={kpis.oneToOnesCompleted} icon={TrendingUp} subtitle="Peer networking sessions" />
         <KPICard title="Visitor Invites" value={kpis.visitorInvites} icon={UsersRound} subtitle="Invitations dispatched" />
         <KPICard title="Membership" value={kpis.membershipStatus} icon={CheckCircle2} subtitle="Active context state" />
@@ -83,16 +83,16 @@ export default function MemberDashboardBI() {
 
       {/* Analytics Charts */}
       <div className="grid gap-6 lg:grid-cols-2">
-        {/* Referral Comparison Chart */}
+        {/* Connect Comparison Chart */}
         <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
           <h3 className="text-base font-extrabold text-slate-900 mb-4 flex items-center gap-2">
             <TrendingUp className="h-5 w-5 text-[#0d4697]" />
-            Referrals Pipeline
+            Connects Pipeline
           </h3>
           <div className="space-y-4">
-            <ProgressBar label="Referrals Passed" value={charts.referralsComparison?.given || 0} max={10} color="bg-blue-600" />
-            <ProgressBar label="Referrals Received" value={charts.referralsComparison?.received || 0} max={10} color="bg-indigo-600" />
-            <ProgressBar label="Referrals Converted" value={charts.referralsComparison?.converted || 0} max={10} color="bg-emerald-600" />
+            <ProgressBar label="Connects Passed" value={charts.referralsComparison?.given || 0} max={10} color="bg-blue-600" />
+            <ProgressBar label="Connects Received" value={charts.referralsComparison?.received || 0} max={10} color="bg-indigo-600" />
+            <ProgressBar label="Connects Converted" value={charts.referralsComparison?.converted || 0} max={10} color="bg-emerald-600" />
           </div>
         </section>
 

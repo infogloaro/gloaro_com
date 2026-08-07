@@ -16,7 +16,7 @@ import logo from '../../assets/logo.png'
 
 const ecosystemNodes = [
   { title: 'Membership', icon: <FaUserTie /> },
-  { title: 'Referrals', icon: <FaUsersCog /> },
+  { title: 'Connects', icon: <FaUsersCog /> },
   { title: 'Meetings', icon: <FaCalendarCheck /> },
   { title: 'Community', icon: <FaUsers /> },
   { title: 'Digital Marketing', icon: <FaBullhorn /> },

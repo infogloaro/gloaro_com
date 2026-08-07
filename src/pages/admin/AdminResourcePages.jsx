@@ -1290,7 +1290,7 @@ function MembershipApplicationDetails({ application, adminNotes, onNotesChange, 
           ['Submitted By', application.submittedBy?.email || application.submittedBy?.name],
           ['Forwarded By (VP)', application.forwardedBy?.name || application.forwardedBy?.email || application.reviewedBy?.name || application.reviewedBy?.email || 'Pending'],
           ['Referred By', application.submittedBy?.referredBy?.name || application.submittedBy?.referredBy?.email || 'Direct'],
-          ['Referral Code Used', application.referralCode || 'None'],
+          ['Connect Code Used', application.referralCode || 'None'],
         ]} />
         <DetailSection title="Address Information" items={[
           ['Address Line 1', application.address?.line1],
@@ -1504,7 +1504,7 @@ export function AdminEventsPage() {
 }
 
 export function AdminReferralsPage() {
-  return <ResourceListPage module="referrals" section="referrals" title="Referral Management" fetcher={adminApi.referrals} columns={[{ key: 'referrer', header: 'Referrer', render: (row) => row.referrer?.name || 'User' }, { key: 'status', header: 'Status', render: (row) => <StatusBadge value={row.status} /> }]} />
+  return <ResourceListPage module="referrals" section="referrals" title="Connect Management" fetcher={adminApi.referrals} columns={[{ key: 'referrer', header: 'Referrer', render: (row) => row.referrer?.name || 'User' }, { key: 'status', header: 'Status', render: (row) => <StatusBadge value={row.status} /> }]} />
 }
 
 export function AdminPaymentsPage() {

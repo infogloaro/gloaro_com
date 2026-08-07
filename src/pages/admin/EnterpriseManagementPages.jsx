@@ -123,7 +123,7 @@ const moduleConfig = {
     fields: ['code', 'type', 'assignedTo', 'metadata.version', 'metadata.currentStage', 'metadata.condition', 'metadata.escalationHours'],
   },
   referral_pipeline: {
-    title: 'Referral Pipeline',
+    title: 'Connect Pipeline',
     description: 'CRM style pipeline from new referral to contacted, meeting, application, member joined, closed, or lost.',
     icon: Kanban,
     types: ['new', 'contacted', 'meeting_scheduled', 'meeting_completed', 'interested', 'application_created', 'member_joined', 'closed', 'lost'],

@@ -22,13 +22,13 @@ const roleLabel = (role = '') => {
     return 'Chapter Director'
   }
   if (currentUser?.role === ROLES.EXECUTIVE_DIRECTOR && role === ROLES.CHAPTER_PRESIDENT) {
-    return 'President'
+    return 'Unit Chairman'
   }
   if (currentUser?.role === ROLES.CHAPTER_PRESIDENT && role === ROLES.VICE_PRESIDENT) {
-    return 'Vice President'
+    return 'Unit Vice Chairman'
   }
   if (currentUser?.role === ROLES.VICE_PRESIDENT && role === ROLES.SECRETARY) {
-    return 'Secretary'
+    return 'Coordinator'
   }
   if (currentUser?.role === ROLES.VICE_PRESIDENT && role === ROLES.CUSTOMER) {
     return 'Member'
@@ -301,9 +301,9 @@ const saveAdmin = async () => {
 
   const getDisabledTitle = () => {
     if (!isCreateDisabled) return ""
-    if (user?.role === ROLES.EXECUTIVE_DIRECTOR) return "A Chapter President already exists for this Chapter"
-    if (user?.role === ROLES.CHAPTER_PRESIDENT) return "A Vice President already exists for this Chapter"
-    if (user?.role === ROLES.VICE_PRESIDENT) return "A Secretary already exists for this Chapter"
+    if (user?.role === ROLES.EXECUTIVE_DIRECTOR) return "A Chapter Unit Chairman already exists for this Chapter"
+    if (user?.role === ROLES.CHAPTER_PRESIDENT) return "A Unit Vice Chairman already exists for this Chapter"
+    if (user?.role === ROLES.VICE_PRESIDENT) return "A Coordinator already exists for this Chapter"
     return ""
   }
 
@@ -532,7 +532,7 @@ function AdminWizard({ form, setForm, editing, onSave, user, saving, isRoleLocke
           )}
           {!editing && form.role === ROLES.CUSTOMER && (
             <div className="block md:col-span-2">
-              <span className="text-xs font-extrabold uppercase text-slate-500">Referral Code (Optional)</span>
+              <span className="text-xs font-extrabold uppercase text-slate-500">Connect Code (Optional)</span>
               <div className="mt-1 flex gap-2">
                 <input
                   type="text"
@@ -554,7 +554,7 @@ function AdminWizard({ form, setForm, editing, onSave, user, saving, isRoleLocke
                 <div className="mt-2 rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-bold text-emerald-700">
                   <p>✓ Valid referral code</p>
                   <p>Referred by: {referralValidation.referrer?.name || 'Member'}</p>
-                  <p>Referral Code: {referralValidation.code}</p>
+                  <p>Connect Code: {referralValidation.code}</p>
                 </div>
               )}
               {referralValidation.status === 'invalid' && (
