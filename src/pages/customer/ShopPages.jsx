@@ -4260,7 +4260,7 @@ export function OrderDetailPage() {
                   Vendor Shipments
                 </p>
                 <h2 className="mt-1 font-playfair text-xl font-black text-navy">
-                  Amazon-style shipment breakdown
+                  Shipment breakdown
                 </h2>
               </div>
               <StatusBadge

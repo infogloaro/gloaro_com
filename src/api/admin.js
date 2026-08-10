@@ -73,6 +73,7 @@ export const adminApi = {
   shipmentCancel: (id, data) => api.post(`/admin/shipments/${id}/cancel`, data),
   shipmentReturn: (id, data) => api.post(`/admin/shipments/${id}/return`, data),
   shipmentRetry: (id, data) => api.post(`/admin/shipments/${id}/retry`, data),
+  shipmentApprovePickup: (id) => api.post(`/admin/shipments/${id}/approve-pickup`),
   services: (params) => api.get('/services', { params }),
   approveService: (id, data) => api.patch(`/services/${id}/approve`, data),
   memberships: (params) => api.get('/memberships', { params }),

@@ -77,14 +77,21 @@ export default function VendorDashboard() {
                 <p className="mt-1 text-xs font-medium leading-5 text-slate-200">
                   {pickupAddressText || 'Add pickup address in your business profile'}
                 </p>
+                <Link
+                  to="/vendor/profile"
+                  className="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-[#ffb20c] px-3 py-1.5 text-xs font-extrabold text-[#0b1f3d] transition hover:bg-[#f5a300]"
+                >
+                  {pickupAddressText ? 'Edit pickup address' : 'Set up pickup address'}
+                  <ArrowRight className="h-3.5 w-3.5" />
+                </Link>
               </div>
               <div className="rounded-xl border border-white/10 bg-white/5 p-4">
                 <p className="text-[10px] font-black uppercase tracking-[0.22em] text-slate-300">Shiprocket Pickup Status</p>
                 <p className="mt-2 text-sm font-bold text-white">{pickupStatus}</p>
                 <p className="mt-1 text-xs font-medium leading-5 text-slate-200">
                   {vendor.shipping?.shiprocketPickupApproved
-                    ? 'Approved for Shiprocket shipping.'
-                    : 'Pickup approval is required before shipping can start.'}
+                    ? 'Approved and registered with Shiprocket.'
+                    : 'Auto-registered with Shiprocket on your next order.'}
                 </p>
               </div>
             </div>
