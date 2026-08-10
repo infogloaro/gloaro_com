@@ -376,7 +376,8 @@ const roleModules = {
   [ROLES.EXECUTIVE_DIRECTOR]: [
     ['Direct Consultants', '/launch-directors', UserCheck],
     ['Approved Members', '/members', Users],
-    ['Membership Applications', '/membership-applications', ClipboardList]
+    ['Membership Applications', '/membership-applications', ClipboardList],
+    ['Unit Approvals', '/unit-approvals', ClipboardList]
   ],
   [ROLES.CHAPTER_DIRECTOR]: [
     ['Direct Consultants', '/launch-directors', UserCheck],

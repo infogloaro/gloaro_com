@@ -164,6 +164,7 @@ import SecretaryEventsPage from './pages/secretary/SecretaryEventsPage'
 import StateDirectorDashboard from './pages/state-director/StateDirectorDashboard'
 import DistrictDirectorDashboard from './pages/district-director/DistrictDirectorDashboard'
 import ChapterDirectorDashboard from './pages/chapter-director/ChapterDirectorDashboard'
+import UnitApprovalsPage from './pages/chapter-director/UnitApprovalsPage'
 import { ChapterDirectorProductsPage, ChapterDirectorServicesPage, ChapterDirectorVendorsPage } from './pages/chapter-director/ChapterDirectorPages'
 import LaunchDirectorDashboard from './pages/launch-director/LaunchDirectorDashboard'
 import DirectConsultantDashboard from './pages/direct-consultant/DirectConsultantDashboard'
@@ -571,6 +572,7 @@ function App() {
               <Route path="/chapter-director/launch-directors" element={<AdminManagementPage />} />
               <Route path="/chapter-director/memberships" element={<AdminMembershipsPage />} />
               <Route path="/chapter-director/membership-applications" element={<AdminMembershipApplicationsPage />} />
+              <Route path="/chapter-director/unit-approvals" element={<UnitApprovalsPage />} />
               <Route path="/chapter-director/reports" element={<EnterpriseReportBuilderPage />} />
               <Route path="/chapter-director/settings" element={<AdminSettingsPage />} />
               {/* Inherited Base Member Modules */}

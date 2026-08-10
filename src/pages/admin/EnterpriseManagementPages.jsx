@@ -350,7 +350,7 @@ function ChapterApprovalQueuePage() {
     <section className="space-y-6">
       <EnterpriseHeader
         title="Chapter Approval Queue"
-        description="Review chapter requests submitted by District Directors, then approve, reject, or deactivate them."
+        description="Review chapter requests submitted by Launch Directors, then approve, reject, or deactivate them."
         icon={Building2}
       />
 

@@ -163,7 +163,7 @@ export default function LocationsManagementPage() {
       code: '',
       type,
       parent: parentId,
-      status: type === 'chapter' && user?.role === ROLES.DISTRICT_DIRECTOR ? 'pending_approval' : 'active'
+      status: type === 'chapter' && user?.role === ROLES.DIRECT_CONSULTANT ? 'pending_approval' : 'active'
     })
     setIsCreateOpen(true)
   }
@@ -184,7 +184,7 @@ export default function LocationsManagementPage() {
     if (!form.name.trim()) return toast.error('Name is required')
 
     try {
-      await api.post('/organization/location', form)
+      await api.post('/organization/location', form, { silent: true })
       toast.success('Location node added successfully')
       setIsCreateOpen(false)
 
@@ -341,9 +341,6 @@ export default function LocationsManagementPage() {
     }
     if (role === ROLES.STATE_DIRECTOR) {
       return { label: 'Add District', type: 'district', parentId: org.state || '' }
-    }
-    if (role === ROLES.DISTRICT_DIRECTOR) {
-      return { label: 'Add Chapter', type: 'chapter', parentId: org.district || '' }
     }
     if (role === ROLES.DIRECT_CONSULTANT) {
       return { label: 'Add Unit', type: 'chapter', parentId: org.district || '' }
@@ -540,7 +537,7 @@ export default function LocationsManagementPage() {
                 </div>
               )}
 
-              {selectedNode.type === 'chapter' && selectedNode.status === 'rejected' && [ROLES.DISTRICT_DIRECTOR, ROLES.DIRECT_CONSULTANT].includes(user?.role) && (
+              {selectedNode.type === 'chapter' && selectedNode.status === 'rejected' && user?.role === ROLES.DIRECT_CONSULTANT && (
                 <div className="rounded-xl border border-red-200 bg-red-50 p-4 dark:border-red-900/50 dark:bg-red-900/20">
                   <p className="text-sm font-semibold text-red-800 dark:text-red-300">
                     This {unitLabel} was rejected. You can edit it, then resubmit after correcting the details.
@@ -557,7 +554,7 @@ export default function LocationsManagementPage() {
                   >
                     <Edit2 className="h-4 w-4" /> Edit details
                   </button>
-                  {!((selectedNode.type === 'chapter') && [ROLES.DISTRICT_DIRECTOR, ROLES.DIRECT_CONSULTANT].includes(user?.role)) && (
+                  {!((selectedNode.type === 'chapter') && user?.role === ROLES.DIRECT_CONSULTANT) && (
                     <button
                       onClick={() => toggleStatus(selectedNode)}
                       className="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-slate-200 bg-white px-4 text-xs font-extrabold text-slate-700 hover:bg-slate-50"
@@ -574,7 +571,7 @@ export default function LocationsManagementPage() {
                       <Trash2 className="h-4 w-4" /> Delete Location
                     </button>
                   )}
-                  {selectedNode.type === 'chapter' && selectedNode.status === 'rejected' && [ROLES.DISTRICT_DIRECTOR, ROLES.DIRECT_CONSULTANT].includes(user?.role) && (
+                  {selectedNode.type === 'chapter' && selectedNode.status === 'rejected' && user?.role === ROLES.DIRECT_CONSULTANT && (
                     <button
                       onClick={() => resubmitChapter(selectedNode)}
                       className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-green-600 px-4 py-2.5 text-sm font-extrabold text-white shadow-sm transition-all hover:bg-green-700 hover:shadow-md"
@@ -598,7 +595,7 @@ export default function LocationsManagementPage() {
       </div>
 
       {/* Create Location Modal */}
-      <Modal open={isCreateOpen} onClose={() => setIsCreateOpen(false)} title={`Add New ${form.type?.toUpperCase()}`}>
+      <Modal open={isCreateOpen} onClose={() => setIsCreateOpen(false)} title={`Add New ${form.type === 'chapter' ? UnitLabel.toUpperCase() : form.type?.toUpperCase()}`}>
         <form onSubmit={handleCreateSubmit} className="space-y-4">
           {form.parent && (
             <div className="space-y-4">
@@ -644,7 +641,7 @@ export default function LocationsManagementPage() {
                     <input
                       type="text"
                       disabled
-                      value={user?.role === ROLES.DISTRICT_DIRECTOR ? (user?.meta?.adminProfile?.organization?.assignedRegion?.name || '') : (pathList[pathList.length - 3]?.name || '')}
+                      value={user?.role === ROLES.DIRECT_CONSULTANT ? (user?.meta?.adminProfile?.organization?.assignedRegion?.name || '') : (pathList[pathList.length - 3]?.name || '')}
                       className="mt-1 h-11 w-full rounded-md border border-slate-200 bg-slate-50 px-3 text-sm font-semibold text-slate-500"
                     />
                   </div>
@@ -653,7 +650,7 @@ export default function LocationsManagementPage() {
                     <input
                       type="text"
                       disabled
-                      value={user?.role === ROLES.DISTRICT_DIRECTOR ? (user?.meta?.adminProfile?.organization?.assignedState?.name || '') : (pathList[pathList.length - 2]?.name || '')}
+                      value={user?.role === ROLES.DIRECT_CONSULTANT ? (user?.meta?.adminProfile?.organization?.assignedState?.name || '') : (pathList[pathList.length - 2]?.name || '')}
                       className="mt-1 h-11 w-full rounded-md border border-slate-200 bg-slate-50 px-3 text-sm font-semibold text-slate-500"
                     />
                   </div>
@@ -662,7 +659,7 @@ export default function LocationsManagementPage() {
                     <input
                       type="text"
                       disabled
-                      value={user?.role === ROLES.DISTRICT_DIRECTOR ? (user?.meta?.adminProfile?.organization?.assignedDistrict?.name || '') : (selectedNode?.name || '')}
+                      value={user?.role === ROLES.DIRECT_CONSULTANT ? (user?.meta?.adminProfile?.organization?.assignedDistrict?.name || '') : (selectedNode?.name || '')}
                       className="mt-1 h-11 w-full rounded-md border border-slate-200 bg-slate-50 px-3 text-sm font-semibold text-slate-500"
                     />
                   </div>
@@ -672,13 +669,13 @@ export default function LocationsManagementPage() {
           )}
 
           <div>
-            <label className="block text-xs font-extrabold uppercase text-slate-500">{form.type?.toUpperCase()} Name</label>
+            <label className="block text-xs font-extrabold uppercase text-slate-500">{form.type === 'chapter' ? UnitLabel.toUpperCase() : form.type?.toUpperCase()} Name</label>
             <input
               type="text"
               required
               value={form.name}
               onChange={(e) => setForm(prev => ({ ...prev, name: e.target.value }))}
-              placeholder={`Enter ${form.type} name`}
+              placeholder={`Enter ${form.type === 'chapter' ? unitLabel : form.type} name`}
               className="mt-1 h-11 w-full rounded-md border border-slate-300 px-3 text-sm text-slate-900 focus:outline-none focus:border-[#0d4697]"
             />
           </div>
@@ -737,7 +734,7 @@ export default function LocationsManagementPage() {
           </div>
           <div>
             <label className="block text-xs font-extrabold uppercase text-slate-500">Status</label>
-            {form.type === 'chapter' && [ROLES.DISTRICT_DIRECTOR, ROLES.DIRECT_CONSULTANT].includes(user?.role) ? (
+            {form.type === 'chapter' && user?.role === ROLES.DIRECT_CONSULTANT ? (
               <p className="text-sm font-bold text-slate-500 text-center">
                 {UnitLabel} status is controlled by the approval workflow. Edit details and resubmit when ready.
               </p>
