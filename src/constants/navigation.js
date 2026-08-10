@@ -74,11 +74,11 @@ export const adminNav = [
     ],
   },
   {
-    label: 'Referrals',
+    label: 'Connects',
     icon: Handshake,
     children: [
-      ['My Referrals', '/my-referrals', User],
-      ['Referral Management', '/referral-management', Handshake],
+      ['My Connects', '/my-referrals', User],
+      ['Connect Management', '/referral-management', Handshake],
     ],
   },
   {
@@ -174,7 +174,6 @@ export const vendorApplicantNav = [
   { label: 'Communication', icon: MessageSquare, children: [['Notifications', '/notifications', Bell]] },
   ['Vendor Application Status', '/vendor/onboarding-status', ClipboardList],
   ['Profile', '/vendor/account', User],
-  ['Settings', '/vendor/settings', Settings],
   ['Logout', '__logout__', LogOut],
 ]
 
@@ -199,7 +198,7 @@ export const customerNav = [
   ['Products', '/products', ShoppingBag],
   ['Services', '/services', BriefcaseBusiness],
   ['Wishlist', '/wishlist', Heart],
-  ['Referral', '/customer/referral', Ticket],
+  ['Connect', '/customer/referral', Ticket],
   ['Events', '/events', CalendarDays],
   ['Profile', '/customer/profile', Users],
   ['Support', '/customer/support', HelpCircle],
@@ -221,13 +220,13 @@ export const membershipNav = [
   ['Benefits', '/membership/benefits', Star],
   ['Events', '/membership/events', CalendarDays],
   ['Assigned Courses', '/membership/training', BookOpen],
-  ['Referral', '/membership/referral', Ticket],
+  ['Connect', '/membership/referral', Ticket],
   ['Profile', '/membership/profile', Users],
   ['Support', '/membership/support', HelpCircle],
 ]
 
 export const memberNav = [['Assigned Courses', '/member/training', BookOpen]];
-export const secretaryNav = [{ label: 'Secretary Dashboard', icon: ClipboardList, children: [['Events', '/events', CalendarDays]] }];
+export const secretaryNav = [{ label: 'Coordinator Dashboard', icon: ClipboardList, children: [['Events', '/events', CalendarDays]] }];
 export const stateDirectorNav = [];
 export const districtDirectorNav = [];
 export const chapterDirectorNav = [];
@@ -374,20 +373,21 @@ const roleModules = {
   ],
   [ROLES.CHAPTER_PRESIDENT]: [
     ['Approved Members', '/members', Users],
-    ['Vice Presidents', '/vice-presidents', Users]
+    ['Vice Unit Chairmen', '/vice-presidents', Users]
   ],
   [ROLES.EXECUTIVE_DIRECTOR]: [
-    ['Launch Directors', '/launch-directors', UserCheck],
+    ['Direct Consultants', '/launch-directors', UserCheck],
     ['Approved Members', '/members', Users],
-    ['Membership Applications', '/membership-applications', ClipboardList]
+    ['Membership Applications', '/membership-applications', ClipboardList],
+    ['Unit Approvals', '/unit-approvals', ClipboardList]
   ],
   [ROLES.CHAPTER_DIRECTOR]: [
-    ['Launch Directors', '/launch-directors', UserCheck],
+    ['Direct Consultants', '/launch-directors', UserCheck],
     ['Approved Members', '/members', Users],
     ['Membership Applications', '/membership-applications', ClipboardList]
   ],
   [ROLES.DISTRICT_DIRECTOR]: [
-    ['Executive Directors', '/executive-directors', Users],
+    ['District Presidents', '/executive-directors', Users],
     ['Approved Members', '/members', Users]
   ],
   [ROLES.STATE_DIRECTOR]: [
@@ -399,11 +399,11 @@ const roleModules = {
     ['Approved Members', '/members', Users]
   ],
   [ROLES.LAUNCH_DIRECTOR]: [
-    ['Direct Consultants', '/direct-consultants', Users],
+    ['Launch Directors', '/direct-consultants', Users],
     ['Approved Members', '/members', Users]
   ],
   [ROLES.DIRECT_CONSULTANT]: [
-    ['Chapter Presidents', '/presidents', Users],
+    ['Chapter Unit Chairmen', '/presidents', Users],
     ['Approved Members', '/members', Users]
   ]
 };
@@ -502,13 +502,14 @@ export function getSidebarNav(role, options = {}) {
       if (!SHOW_BUSINESS_DIRECTORY_IN_NAVIGATION) {
         children = children.filter(([label]) => label !== 'Business Directory')
       }
-      if ([ROLES.REGION_DIRECTOR, ROLES.STATE_DIRECTOR, ROLES.DISTRICT_DIRECTOR].includes(normalizedRole)) {
+      if ([ROLES.REGION_DIRECTOR, ROLES.STATE_DIRECTOR, ROLES.DISTRICT_DIRECTOR, ROLES.EXECUTIVE_DIRECTOR, ROLES.LAUNCH_DIRECTOR, ROLES.DIRECT_CONSULTANT].includes(normalizedRole)) {
         children = children.filter(([label]) => {
+          if (label === 'Chapter Community' && [ROLES.EXECUTIVE_DIRECTOR, ROLES.LAUNCH_DIRECTOR, ROLES.DIRECT_CONSULTANT].includes(normalizedRole)) return false
           if (label === 'Chapter Community') return hasChapterAssignment(user)
-          return ['Gloaro Network', 'Messages', 'Referrals'].includes(label)
+          return ['Gloaro Network', 'Messages', 'Connects'].includes(label)
         })
       } else if ([ROLES.CUSTOMER, ROLES.USER, ROLES.VENDOR].includes(normalizedRole)) {
-        children = children.filter(([label]) => ['Chapter Community', 'Gloaro Network', 'Messages', 'Referrals'].includes(label))
+        children = children.filter(([label]) => ['Chapter Community', 'Gloaro Network', 'Messages', 'Connects'].includes(label))
       }
     }
     return {
@@ -523,29 +524,30 @@ let base = commonModules.map(item => {
 });
 
 if (
-  [ROLES.REGION_DIRECTOR, ROLES.STATE_DIRECTOR, ROLES.DISTRICT_DIRECTOR].includes(normalizedRole)
+  [ROLES.REGION_DIRECTOR, ROLES.STATE_DIRECTOR, ROLES.DISTRICT_DIRECTOR, ROLES.DIRECT_CONSULTANT].includes(normalizedRole)
 ) {
+  const isLaunchDirector = normalizedRole === ROLES.DIRECT_CONSULTANT;
   const orgMgmt = {
-    label: 'Organization Management',
+    label: 'Organization / Location',
     icon: Building2,
     children: [
-      ['Locations', '/locations', MapPinned],
+      [isLaunchDirector ? 'Units' : 'Locations', isLaunchDirector ? '/units' : '/locations', MapPinned],
     ].map(prefixItem),
   };
-  if (normalizedRole === ROLES.DISTRICT_DIRECTOR) {
+  
+  if (normalizedRole === ROLES.DIRECT_CONSULTANT) {
     base = [
       base[0], // Dashboard
-      orgMgmt,
       base[1], // Enterprise Scorecard
       base[2], // Communication
+      base[3], // Community
       base[4], // Marketplace
       base[5], // Meetings
-      base[3], // Community
       base[6], // Training
-      base[7], // Chapter
-      base[8], // Collaboration
-      base[9], // Profile
-    ];
+      orgMgmt, // Organization / Location
+      base[7], // My Chapter (not used by direct consultant, but keeping index parity)
+      base[8], // Profile
+    ].filter(Boolean);
   } else {
     base = [
       base[0], // Dashboard
@@ -559,7 +561,7 @@ if (
       base[7], // Chapter
       base[8], // Collaboration
       base[9], // Profile
-    ];
+    ].filter(Boolean);
   }
 }
 

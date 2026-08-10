@@ -19,16 +19,16 @@ import { ROLES } from '../../constants/roleConfig.js'
 const roleLabel = (role = '') => {
   const currentUser = storage.getUser()
   if (currentUser?.role === ROLES.DISTRICT_DIRECTOR && role === ROLES.EXECUTIVE_DIRECTOR) {
-    return 'Chapter Director'
+    return 'District President'
   }
   if (currentUser?.role === ROLES.EXECUTIVE_DIRECTOR && role === ROLES.CHAPTER_PRESIDENT) {
-    return 'President'
+    return 'Unit Chairman'
   }
   if (currentUser?.role === ROLES.CHAPTER_PRESIDENT && role === ROLES.VICE_PRESIDENT) {
-    return 'Vice President'
+    return 'Unit Vice Chairman'
   }
   if (currentUser?.role === ROLES.VICE_PRESIDENT && role === ROLES.SECRETARY) {
-    return 'Secretary'
+    return 'Coordinator'
   }
   if (currentUser?.role === ROLES.VICE_PRESIDENT && role === ROLES.CUSTOMER) {
     return 'Member'
@@ -70,6 +70,7 @@ export default function AdminManagementPage({ role: overrideRole }) {
   const [form, setForm] = useState(emptyForm)
   const [saving, setSaving] = useState(false)
   const [selectedPermUser, setSelectedPermUser] = useState(null)
+  const [unitCount, setUnitCount] = useState(null)
   const requestSequence = useRef(0)
 
   const CREATOR_CHILD_ROLE = useMemo(() => ({
@@ -86,6 +87,7 @@ export default function AdminManagementPage({ role: overrideRole }) {
   }), []);
 
   const childRole = overrideRole || CREATOR_CHILD_ROLE[user?.role]
+  const isRoleLocked = Boolean(overrideRole)
 
   useEffect(() => {
     const timer = window.setTimeout(() => setDebouncedSearch(search.trim()), 300)
@@ -93,7 +95,9 @@ export default function AdminManagementPage({ role: overrideRole }) {
   }, [search])
 
   const params = useMemo(() => {
-    const filterRole = user?.role === ROLES.SUPERADMIN ? (role || undefined) : childRole
+    const filterRole = isRoleLocked
+      ? childRole
+      : (user?.role === ROLES.SUPERADMIN ? (role || undefined) : childRole)
     return {
       page,
       limit: 10,
@@ -101,7 +105,7 @@ export default function AdminManagementPage({ role: overrideRole }) {
       role: filterRole,
       status: status || undefined
     }
-  }, [page, role, debouncedSearch, status, user?.role, childRole])
+  }, [page, role, debouncedSearch, status, user?.role, childRole, isRoleLocked])
 
   const load = useCallback(async () => {
     const sequence = ++requestSequence.current
@@ -133,6 +137,17 @@ export default function AdminManagementPage({ role: overrideRole }) {
   const pagination = getPagination(payload)
   const canCreateAdmin = user?.role === ROLES.SUPERADMIN || Boolean(childRole)
 
+  useEffect(() => {
+    if (user?.role === ROLES.DIRECT_CONSULTANT && childRole === ROLES.CHAPTER_PRESIDENT) {
+      const districtId = user?.meta?.adminProfile?.organization?.district;
+      if (districtId) {
+        api.get('/organization/chapters', { params: { districtId } })
+          .then(res => setUnitCount((res.data?.data?.chapters || []).length))
+          .catch(() => setUnitCount(0))
+      }
+    }
+  }, [user, childRole])
+
   const openCreate = () => {
     if (!canCreateAdmin) {
       toast.error('You are not authorized to create accounts')
@@ -163,7 +178,7 @@ export default function AdminManagementPage({ role: overrideRole }) {
       phone: admin.phone || '',
       password: '',
       referralCode: '',
-      role: admin.role || ROLES.ADMIN,
+      role: childRole || admin.role || ROLES.ADMIN,
       ...profile,
       organization: profile.organization || emptyForm.organization,
       sessionTimeoutMinutes: profile.security?.sessionTimeoutMinutes || 60,
@@ -180,7 +195,7 @@ export default function AdminManagementPage({ role: overrideRole }) {
   //   setWizardOpen(false)
   //   load()
   // }
-const saveAdmin = async () => {
+  const saveAdmin = async () => {
     if (!editing && !canCreateAdmin) {
         toast.error('Only Super Admin can create admin accounts')
         return
@@ -207,12 +222,12 @@ const saveAdmin = async () => {
         toast.error("Please create the State in the Organization Master before creating a State Director account.")
         return
     }
-    if (form.role === ROLES.DISTRICT_DIRECTOR && !form.organization?.district) {
-        toast.error("Please create the District in the Organization Master before creating a District Director account.")
+    if ([ROLES.DISTRICT_DIRECTOR, ROLES.EXECUTIVE_DIRECTOR, ROLES.LAUNCH_DIRECTOR, ROLES.DIRECT_CONSULTANT].includes(form.role) && !form.organization?.district) {
+        toast.error("Please select the District in the Organization Master before creating this account.")
         return
     }
-    if ([ROLES.EXECUTIVE_DIRECTOR, ROLES.LAUNCH_DIRECTOR, ROLES.DIRECT_CONSULTANT, ROLES.CHAPTER_PRESIDENT, ROLES.VICE_PRESIDENT, ROLES.SECRETARY].includes(form.role) && !form.organization?.chapter) {
-        toast.error("Please create the Chapter in the Organization Master before creating this official account.")
+    if ([ROLES.CHAPTER_PRESIDENT, ROLES.VICE_PRESIDENT, ROLES.SECRETARY].includes(form.role) && !form.organization?.chapter) {
+        toast.error("Please create the Unit/Chapter in the Organization Master before creating this official account.")
         return
     }
     setSaving(true)
@@ -287,20 +302,23 @@ const saveAdmin = async () => {
 
   const listData = getList(payload)
   const isCreateDisabled = (
+    (user?.role === ROLES.DISTRICT_DIRECTOR && childRole === ROLES.EXECUTIVE_DIRECTOR && listData.length >= 1) ||
     (user?.role === ROLES.EXECUTIVE_DIRECTOR && listData.length >= 1) ||
     (user?.role === ROLES.CHAPTER_PRESIDENT && listData.length >= 1) ||
     (user?.role === ROLES.VICE_PRESIDENT && childRole === ROLES.SECRETARY && listData.length >= 1) ||
     (user?.role === ROLES.LAUNCH_DIRECTOR && childRole === ROLES.DIRECT_CONSULTANT && listData.length >= 1) ||
-    (user?.role === ROLES.DIRECT_CONSULTANT && childRole === ROLES.CHAPTER_PRESIDENT && listData.length >= 1)
+    (user?.role === ROLES.DIRECT_CONSULTANT && childRole === ROLES.CHAPTER_PRESIDENT && unitCount === 0)
   )
 
   const showCreateButton = canCreateAdmin && !(user?.role === ROLES.EXECUTIVE_DIRECTOR && childRole === ROLES.CUSTOMER) && !(user?.role === ROLES.DISTRICT_DIRECTOR && childRole === ROLES.CUSTOMER) && !(user?.role === ROLES.LAUNCH_DIRECTOR && childRole === ROLES.CUSTOMER) && !(user?.role === ROLES.DIRECT_CONSULTANT && childRole === ROLES.CUSTOMER) && !(user?.role === ROLES.CHAPTER_PRESIDENT && childRole === ROLES.CUSTOMER) && !isCreateDisabled
 
   const getDisabledTitle = () => {
     if (!isCreateDisabled) return ""
-    if (user?.role === ROLES.EXECUTIVE_DIRECTOR) return "A Chapter President already exists for this Chapter"
-    if (user?.role === ROLES.CHAPTER_PRESIDENT) return "A Vice President already exists for this Chapter"
-    if (user?.role === ROLES.VICE_PRESIDENT) return "A Secretary already exists for this Chapter"
+    if (user?.role === ROLES.DISTRICT_DIRECTOR && childRole === ROLES.EXECUTIVE_DIRECTOR) return "A District President already exists for this District"
+    if (user?.role === ROLES.EXECUTIVE_DIRECTOR) return "A Chapter Unit Chairman already exists for this Chapter"
+    if (user?.role === ROLES.CHAPTER_PRESIDENT) return "A Unit Vice Chairman already exists for this Chapter"
+    if (user?.role === ROLES.VICE_PRESIDENT) return "A Coordinator already exists for this Chapter"
+    if (user?.role === ROLES.DIRECT_CONSULTANT && childRole === ROLES.CHAPTER_PRESIDENT && unitCount === 0) return "Create a Unit before assigning a Unit Chairman"
     return ""
   }
 
@@ -338,6 +356,12 @@ const saveAdmin = async () => {
               )}
             </select>
           </div>
+          {user?.role === ROLES.DIRECT_CONSULTANT && childRole === ROLES.CHAPTER_PRESIDENT && unitCount === 0 && (
+            <div className="flex items-center gap-3">
+              <span className="text-sm font-bold text-amber-600 dark:text-amber-500">Create a Unit before assigning a Unit Chairman.</span>
+              <a href="/direct-consultant/units" className="text-sm font-bold text-[#0d4697] hover:underline dark:text-blue-400">Manage Units →</a>
+            </div>
+          )}
           {showCreateButton && (
             <button
               type="button"
@@ -358,7 +382,8 @@ const saveAdmin = async () => {
           { key: 'officialId', header: 'Official ID', render: (row) => row.officialId || '-' },
           { key: 'name', header: 'Name' },
           { key: 'email', header: 'Email' },
-          { key: 'location', header: childRole === ROLES.REGION_DIRECTOR ? 'Region' : 'Location', render: (row) => getSubordinateLocation(row) },
+          { key: 'location', header: childRole === ROLES.REGION_DIRECTOR ? 'Assigned Region' : 'Location', render: (row) => getSubordinateLocation(row) },
+          ...(childRole === ROLES.REGION_DIRECTOR ? [{ key: 'regionSource', header: 'Region Source', render: (row) => getRegionSource(row) }] : []),
           { key: 'status', header: 'Status', render: (row) => <StatusBadge value={row.role === ROLES.CUSTOMER ? row.status : (row.isBlocked ? 'locked' : row.isSuspended ? 'suspended' : row.isActive ? 'active' : 'inactive')} /> },
         ]}
         rows={rows}
@@ -413,7 +438,7 @@ const saveAdmin = async () => {
       />
 
       <Modal open={wizardOpen} title={editing ? (childRole ? `Edit ${roleLabel(childRole)}` : 'Edit Admin') : (childRole ? `Create New ${roleLabel(childRole)} Wizard` : 'Create New Admin Wizard')} onClose={() => setWizardOpen(false)} maxWidth="max-w-6xl">
-        <AdminWizard form={form} setForm={setForm} editing={Boolean(editing)} onSave={saveAdmin} user={user} saving={saving} />
+        <AdminWizard form={form} setForm={setForm} editing={Boolean(editing)} onSave={saveAdmin} user={user} saving={saving} isRoleLocked={isRoleLocked} childRole={childRole} />
       </Modal>
 
       <Modal open={Boolean(viewing)} title={childRole ? `${roleLabel(childRole)} Details` : 'Admin Details'} onClose={() => setViewing(null)} maxWidth="max-w-4xl">
@@ -431,7 +456,7 @@ const saveAdmin = async () => {
   )
 }
 
-function AdminWizard({ form, setForm, editing, onSave, user, saving }) {
+function AdminWizard({ form, setForm, editing, onSave, user, saving, isRoleLocked, childRole }) {
   const [showPassword, setShowPassword] = useState(false)
   const [validatingReferral, setValidatingReferral] = useState(false)
   const update = (patch) => setForm((current) => ({ ...current, ...patch }))
@@ -528,7 +553,7 @@ function AdminWizard({ form, setForm, editing, onSave, user, saving }) {
           )}
           {!editing && form.role === ROLES.CUSTOMER && (
             <div className="block md:col-span-2">
-              <span className="text-xs font-extrabold uppercase text-slate-500">Referral Code (Optional)</span>
+              <span className="text-xs font-extrabold uppercase text-slate-500">Connect Code (Optional)</span>
               <div className="mt-1 flex gap-2">
                 <input
                   type="text"
@@ -550,7 +575,7 @@ function AdminWizard({ form, setForm, editing, onSave, user, saving }) {
                 <div className="mt-2 rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-bold text-emerald-700">
                   <p>✓ Valid referral code</p>
                   <p>Referred by: {referralValidation.referrer?.name || 'Member'}</p>
-                  <p>Referral Code: {referralValidation.code}</p>
+                  <p>Connect Code: {referralValidation.code}</p>
                 </div>
               )}
               {referralValidation.status === 'invalid' && (
@@ -573,7 +598,11 @@ function AdminWizard({ form, setForm, editing, onSave, user, saving }) {
       </WizardSection>
 
       <WizardSection number="2" title="Role Selection">
-        {user?.role === ROLES.SUPERADMIN ? (
+        {isRoleLocked ? (
+          <div className="h-10 w-full rounded-md border border-slate-200 bg-slate-50 px-3 flex items-center text-sm font-extrabold text-slate-800 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-350">
+            {roleLabel(childRole)} (Read Only)
+          </div>
+        ) : user?.role === ROLES.SUPERADMIN ? (
           <select
             value={form.role}
             onChange={(e)=>handleRoleChange(e.target.value)}
@@ -586,7 +615,7 @@ function AdminWizard({ form, setForm, editing, onSave, user, saving }) {
             {roleLabel(form.role)} (Read Only)
           </div>
         )}
-        {form.role === ROLES.CUSTOM_ADMIN && <Input label="Custom Role Name" value={form.customRoleName} onChange={(value) => update({ customRoleName: value })} />}
+        {!isRoleLocked && form.role === ROLES.CUSTOM_ADMIN && <Input label="Custom Role Name" value={form.customRoleName} onChange={(value) => update({ customRoleName: value })} />}
       </WizardSection>
 
       <WizardSection number="3" title="Organization Assignment">
@@ -755,46 +784,37 @@ function OrganizationAssignmentSection({ organization, onChangeOrg, user, target
   const regionsList = useMemo(() => {
     if (creatorRole === ROLES.REGION_DIRECTOR) {
       const regId = creatorOrg.region
-      const regName = creatorOrg.assignedRegion?.name || 'North Region'
+      const regName = creatorOrg.assignedRegion?.name || ''
       if (regId) {
         return [{ _id: regId, name: regName }]
       }
     }
     return regions
-  }, [creatorRole, creatorOrg.region, creatorOrg.assignedRegion, regions])
+  }, [creatorRole, creatorOrg, regions])
 
-  // Determine visibility of location selectors
-  let showRegion = false
-  let showState = false
-  let showDistrict = false
-  let showChapter = false
+  const creatorLevel = (creatorRole === ROLES.CUSTOMER || creatorRole === ROLES.USER) ? "member" : 
+                       (creatorRole === ROLES.CHAPTER_PRESIDENT || creatorRole === ROLES.VICE_PRESIDENT || creatorRole === ROLES.SECRETARY) ? "chapter" :
+                       (creatorRole === ROLES.DISTRICT_DIRECTOR || creatorRole === ROLES.EXECUTIVE_DIRECTOR || creatorRole === ROLES.LAUNCH_DIRECTOR || creatorRole === ROLES.DIRECT_CONSULTANT) ? "district" :
+                       (creatorRole === ROLES.STATE_DIRECTOR) ? "state" :
+                       (creatorRole === ROLES.REGION_DIRECTOR) ? "region" : "global";
 
-  if (targetRole === ROLES.REGION_DIRECTOR) {
-    showRegion = true
-  } else if (targetRole === ROLES.STATE_DIRECTOR) {
-    showRegion = true
-    showState = true
-  } else if (targetRole === ROLES.DISTRICT_DIRECTOR) {
-    showRegion = true
-    showState = true
-    showDistrict = true
-  } else if (targetRole === ROLES.EXECUTIVE_DIRECTOR) {
-    showRegion = true
-    showState = true
-    showDistrict = true
-    showChapter = true
-  } else {
-    showRegion = true
-    showState = true
-    showDistrict = true
-    showChapter = true
-  }
+  // Determine what levels to show based on targetRole
+  const targetLevel = (targetRole === ROLES.CUSTOMER || targetRole === ROLES.USER) ? "member" : 
+                      (targetRole === ROLES.CHAPTER_PRESIDENT || targetRole === ROLES.VICE_PRESIDENT || targetRole === ROLES.SECRETARY) ? "chapter" :
+                      (targetRole === ROLES.DISTRICT_DIRECTOR || targetRole === ROLES.EXECUTIVE_DIRECTOR || targetRole === ROLES.LAUNCH_DIRECTOR || targetRole === ROLES.DIRECT_CONSULTANT) ? "district" :
+                      (targetRole === ROLES.STATE_DIRECTOR) ? "state" :
+                      (targetRole === ROLES.REGION_DIRECTOR) ? "region" : "global";
 
-  // Determine locking states
-  const isRegionLocked = !isGlobal || (targetRole !== ROLES.REGION_DIRECTOR && organization.region)
-  const isStateLocked = (!isGlobal && creatorRole !== ROLES.REGION_DIRECTOR) || (targetRole !== ROLES.STATE_DIRECTOR && organization.state)
-  const isDistrictLocked = (!isGlobal && ![ROLES.REGION_DIRECTOR, ROLES.STATE_DIRECTOR].includes(creatorRole)) || (targetRole !== ROLES.DISTRICT_DIRECTOR && organization.district)
-  const isChapterLocked = (!isGlobal && ![ROLES.REGION_DIRECTOR, ROLES.STATE_DIRECTOR, ROLES.DISTRICT_DIRECTOR].includes(creatorRole)) || (targetRole !== ROLES.EXECUTIVE_DIRECTOR && organization.chapter)
+  const showRegion = ["region", "state", "district", "chapter", "member"].includes(targetLevel);
+  const showState = ["state", "district", "chapter", "member"].includes(targetLevel);
+  const showDistrict = ["district", "chapter", "member"].includes(targetLevel);
+  const showChapter = ["chapter", "member"].includes(targetLevel);
+
+  // Determine locking states (lock if creator is bound to that level, or if editing an existing assigned field)
+  const isRegionLocked = !isGlobal && (Boolean(creatorOrg.region) || (targetRole !== ROLES.REGION_DIRECTOR && Boolean(organization.region)));
+  const isStateLocked = !isGlobal && (Boolean(creatorOrg.state) || (targetRole !== ROLES.STATE_DIRECTOR && Boolean(organization.state)));
+  const isDistrictLocked = !isGlobal && (Boolean(creatorOrg.district) || (targetRole !== ROLES.DISTRICT_DIRECTOR && Boolean(organization.district)));
+  const isChapterLocked = !isGlobal && ((Boolean(creatorOrg.chapter) && ["chapter", "member"].includes(creatorLevel)) || (targetRole !== ROLES.CHAPTER_PRESIDENT && targetRole !== ROLES.VICE_PRESIDENT && targetRole !== ROLES.SECRETARY && targetRole !== ROLES.EXECUTIVE_DIRECTOR && Boolean(organization.chapter)));
 
   // Auto-fill creator credentials once on mount
   useEffect(() => {
@@ -803,9 +823,9 @@ function OrganizationAssignmentSection({ organization, onChangeOrg, user, target
       if (creatorOrg.region) onChangeOrg('region', creatorOrg.region)
       if (creatorOrg.state) onChangeOrg('state', creatorOrg.state)
       if (creatorOrg.district) onChangeOrg('district', creatorOrg.district)
-      if (creatorOrg.chapter) onChangeOrg('chapter', creatorOrg.chapter)
+      if (creatorOrg.chapter && ["chapter", "member"].includes(creatorLevel)) onChangeOrg('chapter', creatorOrg.chapter)
     }
-  }, [user, isGlobal])
+  }, [user, isGlobal, creatorLevel])
 
   // 1. Fetch Regions
   useEffect(() => {
@@ -997,9 +1017,9 @@ function OrganizationAssignmentSection({ organization, onChangeOrg, user, target
         )}
         {showChapter && (
           <SelectField
-            label="Chapter"
+            label={[ROLES.DIRECT_CONSULTANT, ROLES.LAUNCH_DIRECTOR].includes(creatorRole) ? "Unit" : "Chapter"}
             value={organization.chapter || ''}
-            placeholder="Select Chapter"
+            placeholder={[ROLES.DIRECT_CONSULTANT, ROLES.LAUNCH_DIRECTOR].includes(creatorRole) ? "Select Unit" : "Select Chapter"}
             disabled={isChapterLocked || !organization.district}
             loading={loadingChapters}
             error={errChapters}
@@ -1014,10 +1034,10 @@ function OrganizationAssignmentSection({ organization, onChangeOrg, user, target
       <div className="rounded-xl border border-blue-100 bg-blue-50/40 p-4 dark:border-slate-800 dark:bg-slate-900/60 shadow-inner">
         <h4 className="text-xs font-black uppercase tracking-wider text-[#0d4697] dark:text-blue-400 mb-3">Assigned Hierarchy Summary</h4>
         <div className="grid gap-2 text-sm font-semibold text-slate-800 dark:text-slate-200">
-          {showRegion && <div><span className="text-slate-555 dark:text-slate-400 font-bold">Region:</span> {getSelectedLabel(organization.region, regionsList, creatorOrg.region)}</div>}
-          {showState && <div><span className="text-slate-555 dark:text-slate-400 font-bold">State:</span> {getSelectedLabel(organization.state, states, creatorOrg.state)}</div>}
-          {showDistrict && <div><span className="text-slate-555 dark:text-slate-400 font-bold">District:</span> {getSelectedLabel(organization.district, districts, creatorOrg.district)}</div>}
-          {showChapter && <div><span className="text-slate-555 dark:text-slate-400 font-bold">Chapter:</span> {getSelectedLabel(organization.chapter, chapters, creatorOrg.chapter)}</div>}
+          {showRegion && <div><span className="text-slate-555 dark:text-slate-400 font-bold">Region:</span> {getSelectedLabel(organization.region, regionsList, isRegionLocked ? creatorOrg.region : null)}</div>}
+          {showState && <div><span className="text-slate-555 dark:text-slate-400 font-bold">State:</span> {getSelectedLabel(organization.state, states, isStateLocked ? creatorOrg.state : null)}</div>}
+          {showDistrict && <div><span className="text-slate-555 dark:text-slate-400 font-bold">District:</span> {getSelectedLabel(organization.district, districts, isDistrictLocked ? creatorOrg.district : null)}</div>}
+          {showChapter && <div><span className="text-slate-555 dark:text-slate-400 font-bold">{[ROLES.DIRECT_CONSULTANT, ROLES.LAUNCH_DIRECTOR].includes(creatorRole) ? "Unit" : "Chapter"}:</span> {getSelectedLabel(organization.chapter, chapters, isChapterLocked ? creatorOrg.chapter : null)}</div>}
         </div>
       </div>
     </div>
@@ -1032,4 +1052,11 @@ function getSubordinateLocation(row) {
     return org.assignedDistrict?.name || 'Not Assigned'
   }
   return org.assignedChapter?.name || 'Not Assigned'
+}
+
+function getRegionSource(row) {
+  const org = row.meta?.adminProfile?.organization || {}
+  if (org.assignedRegion?.type === 'region') return 'Organization Locations'
+  if (org.region) return 'Legacy / Manual'
+  return '-'
 }

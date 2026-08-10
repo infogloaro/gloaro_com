@@ -19,7 +19,7 @@ import { useAuth } from '../../hooks/useAuth'
 import { formatDate } from '../../utils/format'
 
 const filters = [
-  ['all', 'All Referrals'],
+  ['all', 'All Connects'],
   ['pending', 'Pending'],
   ['approved', 'Approved'],
   ['rejected', 'Rejected'],
@@ -37,7 +37,7 @@ const stageLabels = {
 }
 
 const timelineOrder = [
-  ['referral_code_used', 'Referral Code Used'],
+  ['referral_code_used', 'Connect Code Used'],
   ['registered', 'Registration Completed'],
   ['application_submitted', 'Membership Application Submitted'],
   ['pending_approval', 'Pending Approval'],
@@ -82,9 +82,9 @@ function ReferralDetailModal({ referral, onClose }) {
       <section className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-2xl bg-white p-6 shadow-2xl">
         <div className="flex items-start justify-between gap-4 border-b border-slate-100 pb-4">
           <div>
-            <p className="text-[10px] font-extrabold uppercase tracking-widest text-[#0d4697]">Referral Details</p>
+            <p className="text-[10px] font-extrabold uppercase tracking-widest text-[#0d4697]">Connect Details</p>
             <h3 className="mt-1 text-xl font-black text-slate-950">{referral.member?.name || '-'}</h3>
-            <p className="mt-1 text-xs font-semibold text-slate-500">Referral Code: {referral.referralCode || '-'}</p>
+            <p className="mt-1 text-xs font-semibold text-slate-500">Connect Code: {referral.referralCode || '-'}</p>
           </div>
           <button onClick={onClose} className="grid h-9 w-9 place-items-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200" aria-label="Close referral details">
             <X className="h-4 w-4" />
@@ -100,7 +100,7 @@ function ReferralDetailModal({ referral, onClose }) {
         </div>
 
         <div className="mt-6">
-          <h4 className="text-sm font-black text-slate-950">Referral Timeline</h4>
+          <h4 className="text-sm font-black text-slate-950">Connect Timeline</h4>
           <div className="mt-4 space-y-4">
             {visibleOrder.map(([stage, label]) => {
               const event = eventsByStage.get(stage)
@@ -184,11 +184,11 @@ export default function ReferralsPipeline() {
   const handleCopyCode = () => {
     const code = referralCode || ''
     if (!code) {
-      toast.error('Referral code is not available')
+      toast.error('Connect code is not available')
       return
     }
     navigator.clipboard.writeText(code)
-      .then(() => toast.success('Referral code copied to clipboard!'))
+      .then(() => toast.success('Connect code copied to clipboard!'))
       .catch(() => toast.error('Failed to copy code'))
   }
 
@@ -214,9 +214,9 @@ export default function ReferralsPipeline() {
         <div className="flex flex-1 flex-col justify-between space-y-4">
           <div>
             <span className="rounded-full bg-[#0d4697] px-3 py-1 text-[10px] font-extrabold uppercase tracking-widest text-[#ffbf1a]">
-              Personal Referral
+              Personal Connect
             </span>
-            <h2 className="mt-3 text-2xl font-black text-slate-900">My Gloaro Referral Code: {codeLoading ? 'Loading...' : referralCode || 'Not available'}</h2>
+            <h2 className="mt-3 text-2xl font-black text-slate-900">My Gloaro Connect Code: {codeLoading ? 'Loading...' : referralCode || 'Not available'}</h2>
             <p className="mt-1 text-xs font-semibold text-slate-400">Share this code with invitees to track registrations, membership approval, and joining status.</p>
           </div>
 
@@ -246,7 +246,7 @@ export default function ReferralsPipeline() {
         <div className="flex flex-col gap-4 border-b border-slate-100 pb-4 lg:flex-row lg:items-center lg:justify-between">
           <h3 className="flex items-center gap-2 text-sm font-black text-slate-900">
             <Activity className="h-4.5 w-4.5 text-[#0d4697]" />
-            Referral Tracking
+            Connect Tracking
           </h3>
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
             <div className="flex flex-wrap gap-2">
@@ -269,7 +269,7 @@ export default function ReferralsPipeline() {
               <tr className="border-b border-slate-200 text-[10px] font-black uppercase tracking-wider text-slate-400">
                 <th className="px-4 py-3">Member</th>
                 <th className="px-4 py-3">Mobile</th>
-                <th className="px-4 py-3">Referral Code</th>
+                <th className="px-4 py-3">Connect Code</th>
                 <th className="px-4 py-3">Chapter</th>
                 <th className="px-4 py-3">Registration Date</th>
                 <th className="px-4 py-3">Current Stage</th>

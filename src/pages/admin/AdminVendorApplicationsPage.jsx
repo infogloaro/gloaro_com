@@ -18,11 +18,12 @@ const getIdentifier = (field) => {
 
 const formatRoleLabel = (roleStr = '') => {
   const clean = String(roleStr || '').toLowerCase().replaceAll('_', ' ').replaceAll('-', ' ')
-  if (clean === 'executive director' || clean === 'chapter director') return 'EXECUTIVE DIRECTOR'
+  if (clean === 'executive director' || clean === 'chapter director') return 'DISTRICT PRESIDENT'
   if (clean === ROLES.SUPERADMIN) return 'SUPER ADMIN'
   if (clean === ROLES.ADMIN) return 'ADMIN'
-  if (clean === 'vice president') return 'VICE PRESIDENT'
-  if (clean === 'direct consultant') return 'DIRECT CONSULTANT'
+  if (clean === 'vice president') return 'UNIT VICE CHAIRMAN'
+  if (clean === 'launch director') return 'DIRECT CONSULTANT'
+  if (clean === 'direct consultant') return 'LAUNCH DIRECTOR'
   return clean.toUpperCase() || 'SYSTEM'
 }
 
@@ -124,7 +125,7 @@ export default function AdminVendorApplicationsPage({
           
           // Boundaries check for Chapter Director
           const userOrg = user?.meta?.adminProfile?.organization || {}
-          if (isChapterDirector && getIdentifier(row.chapterId) !== getIdentifier(userOrg.chapter)) {
+          if (isChapterDirector && getIdentifier(row.districtId) !== getIdentifier(userOrg.district)) {
             return null
           }
 
@@ -226,7 +227,7 @@ function VendorApplicationDetails({ application, adminNotes, onNotesChange, onCl
       showReviewBtn = true
     } else if (userRole === ROLES.EXECUTIVE_DIRECTOR) {
       const userOrg = user?.meta?.adminProfile?.organization || {}
-      if (getIdentifier(application.chapterId) === getIdentifier(userOrg.chapter)) {
+      if (getIdentifier(application.districtId) === getIdentifier(userOrg.district)) {
         showApproveBtn = true
         showRejectBtn = true
         showReviewBtn = true

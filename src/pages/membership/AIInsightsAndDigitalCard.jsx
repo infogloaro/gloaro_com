@@ -119,7 +119,7 @@ export default function AIInsightsAndDigitalCard() {
             QR Session Check-In
           </h3>
           <p className="text-xs font-semibold text-slate-500">
-            Secretary will display meeting QR check-in codes. Scan or input token code below to mark present.
+            Coordinator will display meeting QR check-in codes. Scan or input token code below to mark present.
           </p>
 
           <form onSubmit={handleQRCheckIn} className="flex gap-2">

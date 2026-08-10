@@ -76,10 +76,10 @@ export default function Register() {
     api.get(`/auth/validate-referral/${referralCode.trim()}`)
       .then((res) => {
         setReferralInfo(res.data?.data || null)
-        toast.success('Referral code verified!')
+        toast.success('Connect code verified!')
       })
       .catch((err) => {
-        setReferralError(err.response?.data?.message || 'Invalid Referral Code')
+        setReferralError(err.response?.data?.message || 'Invalid Connect Code')
       })
       .finally(() => {
         setValidatingCode(false)
@@ -242,7 +242,7 @@ export default function Register() {
         {errors.termsAccepted && <p className="text-xs font-semibold text-rose-600">{errors.termsAccepted.message}</p>}
 
         {showReferralCode && (
-          <FormField label="Do you have a Referral Code? (Optional)" error={referralError}>
+          <FormField label="Do you have a Connect Code? (Optional)" error={referralError}>
             <div className="flex gap-2">
               <input
                 type="text"

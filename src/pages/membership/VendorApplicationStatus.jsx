@@ -94,7 +94,7 @@ export default function VendorApplicationStatus() {
     under_review: 'Under Review',
     approved: 'Approved',
     rejected: 'Rejected',
-    rejected_by_vp: 'Rejected by Vice President',
+    rejected_by_vp: 'Rejected by Unit Vice Chairman',
   }
   const currentStatusLabel = statusLabels[status] || app.status
   const decisionOfficer = app.vpReviewedBy || app.reviewedBy || app.forwardedBy || null
