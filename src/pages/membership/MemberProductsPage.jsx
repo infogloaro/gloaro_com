@@ -49,31 +49,31 @@ export default function MemberProductsPage() {
       label: 'Pending VP Review',
       Icon: Clock,
       iconColorClass: 'text-indigo-600 bg-indigo-50',
-      description: 'Your vendor application is waiting for Vice President pre-screening before marketplace approval begins.',
+      description: 'Your vendor application is waiting for Unit Vice Chairman pre-screening before marketplace approval begins.',
     },
     submitted: {
       label: 'Waiting for Marketplace Approval',
       Icon: Clock,
       iconColorClass: 'text-blue-600 bg-blue-50',
-      description: 'Your vendor application has been forwarded from Vice President review and is awaiting the existing marketplace approval workflow.',
+      description: 'Your vendor application has been forwarded from Unit Vice Chairman review and is awaiting the existing marketplace approval workflow.',
     },
     forwarded: {
       label: 'Waiting for Marketplace Approval',
       Icon: Clock,
       iconColorClass: 'text-blue-600 bg-blue-50',
-      description: 'Your vendor application has been forwarded from Vice President review and is awaiting the existing marketplace approval workflow.',
+      description: 'Your vendor application has been forwarded from Unit Vice Chairman review and is awaiting the existing marketplace approval workflow.',
     },
     rejected_by_vp: {
       label: 'Rejected by VP',
       Icon: ShieldAlert,
       iconColorClass: 'text-red-600 bg-red-50',
-      description: 'Your vendor application was rejected during Vice President pre-screening. Please review the application status for notes.',
+      description: 'Your vendor application was rejected during Unit Vice Chairman pre-screening. Please review the application status for notes.',
     },
     under_review: {
       label: 'Under Review',
       Icon: Clock,
       iconColorClass: 'text-indigo-600 bg-indigo-50',
-      description: 'Your vendor application is currently in the marketplace approval workflow after Vice President pre-screening.',
+      description: 'Your vendor application is currently in the marketplace approval workflow after Unit Vice Chairman pre-screening.',
     },
     rejected: {
       label: 'Rejected',
@@ -102,7 +102,7 @@ export default function MemberProductsPage() {
         </h2>
         
         <p className="mt-4 text-sm font-semibold leading-relaxed text-slate-500 dark:text-slate-400">
-          To manage product listings in the Gloaro Network marketplace, your vendor account must first be approved through the Vice President pre-screening and marketplace approval workflow.
+          To manage product listings in the Gloaro Network marketplace, your vendor account must first be approved through the Unit Vice Chairman pre-screening and marketplace approval workflow.
         </p>
 
         {app && (

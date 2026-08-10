@@ -4238,7 +4238,7 @@ export function OrderDetailPage() {
   );
 }
 
-function ProductCard({
+export function ProductCard({
   product,
   wishlisted,
   onQuickView,
@@ -4505,7 +4505,7 @@ export function WishlistPage() {
   );
 }
 
-function QuickViewModal({
+export function QuickViewModal({
   product,
   selectedVariant,
   onSelectVariant,

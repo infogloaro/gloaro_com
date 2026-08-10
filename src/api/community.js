@@ -18,7 +18,7 @@ export const communityApi = {
   sharePost: (id) => api.post(`/community/posts/${id}/share`),
   getPostAnalytics: () => api.get('/community/posts/analytics'),
 
-  // 2. Referrals
+  // 2. Connects
   getReferrals: () => api.get('/community/referrals'),
   createReferral: (payload) => api.post('/community/referrals', payload),
   updateReferralStatus: (id, payload) => api.patch(`/community/referrals/${id}`, payload),

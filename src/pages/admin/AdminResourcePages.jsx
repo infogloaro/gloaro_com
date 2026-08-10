@@ -1156,9 +1156,9 @@ export function AdminMembershipApplicationsPage() {
         const isSubmitted = row.status === 'submitted'
         const isFinalDecision = ['approved', 'rejected'].includes(row.status)
         const isExecutiveDirector = userRole === ROLES.EXECUTIVE_DIRECTOR
-        const isChapterScoped = !isExecutiveDirector || String(row.chapterId?._id || row.chapterId) === String(user?.meta?.adminProfile?.organization?.chapter?._id || user?.meta?.adminProfile?.organization?.chapter || '')
+        const isDistrictScoped = !isExecutiveDirector || String(row.districtId?._id || row.districtId) === String(user?.meta?.adminProfile?.organization?.district?._id || user?.meta?.adminProfile?.organization?.district || '')
         const canVpAct = userRole === ROLES.VICE_PRESIDENT && isPendingVpReview
-        const canFinalAct = [ROLES.SUPERADMIN, ROLES.ADMIN, ROLES.EXECUTIVE_DIRECTOR].includes(userRole) && isSubmitted && isChapterScoped
+        const canFinalAct = [ROLES.SUPERADMIN, ROLES.ADMIN, ROLES.EXECUTIVE_DIRECTOR].includes(userRole) && isSubmitted && isDistrictScoped
         const latestStep = row.workflowHistory && row.workflowHistory.length > 0 ? row.workflowHistory[row.workflowHistory.length - 1] : null
         const reviewerRole = latestStep?.role || row.forwardedByRole || row.reviewedByRole || row.approvedRole
         return (
@@ -1233,9 +1233,9 @@ function MembershipApplicationDetails({ application, adminNotes, onNotesChange, 
   const isSubmitted = application.status === 'submitted'
   const isFinalDecision = ['approved', 'rejected'].includes(application.status)
   const isExecutiveDirector = userRole === ROLES.EXECUTIVE_DIRECTOR
-  const isChapterScoped = !isExecutiveDirector || String(application.chapterId?._id || application.chapterId) === String(user?.meta?.adminProfile?.organization?.chapter?._id || user?.meta?.adminProfile?.organization?.chapter || '')
+  const isDistrictScoped = !isExecutiveDirector || String(application.districtId?._id || application.districtId) === String(user?.meta?.adminProfile?.organization?.district?._id || user?.meta?.adminProfile?.organization?.district || '')
   const showForwardBtn = isPendingVpReview && userRole === ROLES.VICE_PRESIDENT
-  const showFinalButtons = isSubmitted && [ROLES.SUPERADMIN, ROLES.ADMIN, ROLES.EXECUTIVE_DIRECTOR].includes(userRole) && isChapterScoped
+  const showFinalButtons = isSubmitted && [ROLES.SUPERADMIN, ROLES.ADMIN, ROLES.EXECUTIVE_DIRECTOR].includes(userRole) && isDistrictScoped
   const latestStep = application.workflowHistory && application.workflowHistory.length > 0 ? application.workflowHistory[application.workflowHistory.length - 1] : null
   const decisionRole = application.forwardedByRole || latestStep?.role || application.reviewedByRole || application.approvedRole
   const decisionOfficer = application.forwardedBy?.name || application.forwardedBy?.email || application.reviewedBy?.name || application.reviewedBy?.email || 'Pending'
@@ -1290,7 +1290,7 @@ function MembershipApplicationDetails({ application, adminNotes, onNotesChange, 
           ['Submitted By', application.submittedBy?.email || application.submittedBy?.name],
           ['Forwarded By (VP)', application.forwardedBy?.name || application.forwardedBy?.email || application.reviewedBy?.name || application.reviewedBy?.email || 'Pending'],
           ['Referred By', application.submittedBy?.referredBy?.name || application.submittedBy?.referredBy?.email || 'Direct'],
-          ['Referral Code Used', application.referralCode || 'None'],
+          ['Connect Code Used', application.referralCode || 'None'],
         ]} />
         <DetailSection title="Address Information" items={[
           ['Address Line 1', application.address?.line1],
@@ -1504,7 +1504,7 @@ export function AdminEventsPage() {
 }
 
 export function AdminReferralsPage() {
-  return <ResourceListPage module="referrals" section="referrals" title="Referral Management" fetcher={adminApi.referrals} columns={[{ key: 'referrer', header: 'Referrer', render: (row) => row.referrer?.name || 'User' }, { key: 'status', header: 'Status', render: (row) => <StatusBadge value={row.status} /> }]} />
+  return <ResourceListPage module="referrals" section="referrals" title="Connect Management" fetcher={adminApi.referrals} columns={[{ key: 'referrer', header: 'Referrer', render: (row) => row.referrer?.name || 'User' }, { key: 'status', header: 'Status', render: (row) => <StatusBadge value={row.status} /> }]} />
 }
 
 export function AdminPaymentsPage() {

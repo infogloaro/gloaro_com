@@ -1,6 +1,6 @@
 const serviceItems = [
   'Membership',
-  'Referrals',
+  'Connects',
   'Events',
   'Meetings',
   'Mobile App',

@@ -38,6 +38,7 @@ export const customerApi = {
   service: (id) => api.get(`/services/${id}`),
   banners: (params) => api.get('/banners', { params }),
   globalSearch: (params) => api.get('/directory/global-search', { params }),
+  organizationHierarchy: () => api.get('/directory/organization-hierarchy'),
   submitEnquiry: (data) => api.post('/leads', data),
   wishlist: (params) => api.get('/customers/wishlist', { params }),
   addWishlist: (data, config = {}) => api.post('/customers/wishlist', data, config),
