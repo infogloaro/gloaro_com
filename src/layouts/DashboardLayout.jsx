@@ -2,7 +2,7 @@ import { Bell, ChevronDown, ChevronLeft, Menu, Search, LogOut } from 'lucide-rea
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
-import logo from '../assets/signup_logo.png'
+import logo from '../assets/logo.png'
 import { communityApi } from '../api/community'
 import { notificationApi } from '../api/notification'
 import { useAuth } from '../hooks/useAuth'
@@ -291,7 +291,7 @@ export default function DashboardLayout({ navItems = [], title = 'Dashboard', th
       <div className={isLightShell ? 'flex h-16 items-center justify-between border-b border-slate-200 px-4' : 'flex h-16 items-center justify-between border-b border-white/10 px-4'}>
         <div className={collapsed ? 'hidden' : 'block'}>
           <div className="flex items-center gap-3">
-            <div className="grid h-10 w-10 place-items-center rounded-lg p-1 shadow-sm">
+            <div className="grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-lg bg-white p-1 shadow-sm border border-slate-200">
               <img src={logo} alt="Gloaro" className="h-full w-full object-contain" />
             </div>
             <div>

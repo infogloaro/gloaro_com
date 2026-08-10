@@ -1775,13 +1775,13 @@ export function AdminMembersPage() {
 
   return (
     <section className="space-y-6">
-      <header className="flex flex-col gap-4 rounded-2xl border border-white/60 bg-white/85 p-6 shadow-sm backdrop-blur dark:border-slate-800 dark:bg-slate-900 sm:flex-row sm:items-center sm:justify-between">
+      <header className="flex flex-col gap-4 rounded-2xl border border-slate-800 bg-[#0c192e] p-6 shadow-sm sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <p className="inline-flex items-center gap-2 text-xs font-extrabold uppercase tracking-[0.18em] text-[#0d4697]">
-            <MapPinned className="h-4 w-4" /> Approved Members
+          <p className="inline-flex items-center gap-2 text-xs font-extrabold uppercase tracking-[0.18em] text-white" style={{ color: '#ffffff' }}>
+            <MapPinned className="h-4 w-4 text-white" /> Approved Members
           </p>
-          <h1 className="mt-3 text-3xl font-black text-slate-950 dark:text-white">Members</h1>
-          <p className="mt-2 text-sm font-semibold text-slate-555">
+          <h1 className="mt-3 text-3xl font-black text-white" style={{ color: '#ffffff' }}>Members</h1>
+          <p className="mt-2 text-sm font-semibold text-slate-300">
             View and filter all approved members across regions, states, districts, and chapters.
           </p>
         </div>
@@ -1797,7 +1797,7 @@ export function AdminMembersPage() {
         </div>
       </header>
 
-      <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950">
+      <div className="rounded-2xl border border-slate-800 bg-[#0c192e] p-4 shadow-sm">
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
           <SelectFilter label="Region" value={filters.region} onChange={(value) => updateFilter('region', value)} options={regionOptions} placeholder={loadingLocations ? 'Loading regions...' : 'All Regions'} />
           <SelectFilter label="State" value={filters.state} onChange={(value) => updateFilter('state', value)} options={stateOptions} placeholder={loadingLocations ? 'Loading states...' : 'All States'} />
@@ -1806,7 +1806,7 @@ export function AdminMembersPage() {
         </div>
       </div>
 
-      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950">
+      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
         <DataTable
           columns={columns}
           rows={rows}
@@ -1824,7 +1824,7 @@ export function AdminMembersPage() {
 function SelectFilter({ label, value, onChange, options = [], placeholder, disabled = false }) {
   return (
     <label className="block">
-      <span className="text-xs font-black uppercase tracking-wider text-slate-500">{label}</span>
+      <span className="text-xs font-black uppercase tracking-wider text-white" style={{ color: '#ffffff' }}>{label}</span>
       <select
         value={value}
         onChange={(event) => onChange(event.target.value)}
