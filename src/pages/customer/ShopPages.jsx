@@ -20,13 +20,20 @@ import {
   Heart,
   HeartOff,
   Minus,
+  BookOpen,
+  Car,
+  Dumbbell,
+  Home as HomeIcon,
   Package,
   Plus,
   RotateCcw,
-  Search,
   ShieldCheck,
+  Shirt,
   ShoppingBag,
+  ShoppingBasket,
+  Smartphone,
   Star,
+  Sparkles,
   Truck,
   Upload,
   X,
@@ -374,13 +381,95 @@ function sortProducts(products, sortBy) {
   return sorter ? list.sort(sorter) : list;
 }
 
-function getCategoryChips(products) {
-  const chips = new Map();
-  products.forEach((product) => {
-    const name = product.category?.name || "All";
-    if (!chips.has(name)) chips.set(name, product.category?._id || "");
-  });
-  return [...chips.entries()].slice(0, 10);
+const SHOP_CATEGORY_PALETTE = [
+  { tone: "from-sky-100 to-indigo-100" },
+  { tone: "from-blue-50 to-sky-100" },
+  { tone: "from-pink-50 to-rose-100" },
+  { tone: "from-slate-50 to-slate-100" },
+  { tone: "from-cyan-50 to-blue-100" },
+  { tone: "from-amber-50 to-orange-100" },
+  { tone: "from-emerald-50 to-teal-100" },
+  { tone: "from-stone-50 to-orange-100" },
+  { tone: "from-violet-50 to-purple-100" },
+  { tone: "from-lime-50 to-emerald-100" },
+];
+
+function getCategoryPalette(index = 0) {
+  return SHOP_CATEGORY_PALETTE[index % SHOP_CATEGORY_PALETTE.length];
+}
+
+function normalizeKey(value) {
+  return String(value || "")
+    .toLowerCase()
+    .replace(/&/g, "and")
+    .replace(/[^a-z0-9]+/g, "");
+}
+
+function getCategoryEmoji(label) {
+  const key = normalizeKey(label);
+  if (key.includes("electronic") || key.includes("mobile")) return "📱";
+  if (key.includes("fashion") || key.includes("cloth")) return "👗";
+  if (key.includes("home")) return "🏠";
+  if (key.includes("sport")) return "🏋️";
+  if (key.includes("book")) return "📚";
+  if (key.includes("grocery") || key.includes("food")) return "🛒";
+  if (key.includes("beauty")) return "✨";
+  if (key.includes("auto")) return "🚗";
+  if (key.includes("appliance")) return "🧺";
+  return "🛍️";
+}
+
+const SHOP_CATEGORY_ICONS = [
+  { match: ["electronic", "mobile"], Icon: Smartphone },
+  { match: ["fashion", "cloth"], Icon: Shirt },
+  { match: ["home"], Icon: HomeIcon },
+  { match: ["sport"], Icon: Dumbbell },
+  { match: ["book"], Icon: BookOpen },
+  { match: ["grocery", "food"], Icon: ShoppingBasket },
+  { match: ["beauty"], Icon: Sparkles },
+  { match: ["auto"], Icon: Car },
+];
+
+function getCategoryIconComponent(label) {
+  const key = normalizeKey(label);
+  const matched = SHOP_CATEGORY_ICONS.find(({ match }) =>
+    match.some((part) => key.includes(part)),
+  );
+  return matched?.Icon || null;
+}
+
+function buildShopHeroCategories(categories = []) {
+  return categories
+    .filter((category) => category?.type === "product")
+    .filter((category) => category?.isActive !== false)
+    .filter((category) => !category?.parent && !category?.parent?._id)
+    .sort(
+      (a, b) =>
+        Number(b?.isFeatured || false) - Number(a?.isFeatured || false) ||
+        Number(a?.order || 0) - Number(b?.order || 0) ||
+        String(a?.name || "").localeCompare(String(b?.name || "")),
+    )
+    .slice(0, 10)
+    .map((category, index) => ({
+      _id: String(category?._id || `category-${index}`),
+      label: String(category?.name || "").trim(),
+      emoji: getCategoryEmoji(category?.name),
+      iconComponent: getCategoryIconComponent(category?.name),
+      ...getCategoryPalette(index),
+    }));
+}
+
+function resolveQuickCategorySelection(label, categories = []) {
+  const normalizedLabel = normalizeKey(label);
+  const matched = categories.find(
+    (category) => normalizeKey(category?.name) === normalizedLabel,
+  );
+
+  if (matched) {
+    return { category: String(matched._id || ""), search: "" };
+  }
+
+  return { category: "", search: label };
 }
 
 function getRecommended(products, sourceProduct) {
@@ -475,127 +564,6 @@ function useInViewOnce(threshold = 0.12) {
   return [ref, inView];
 }
 
-const SHOP_CATEGORY_PALETTE = [
-  { tone: "from-sky-100 to-indigo-100", iconTone: "text-[#0d4697]" },
-  { tone: "from-blue-50 to-sky-100", iconTone: "text-[#0d4697]" },
-  { tone: "from-pink-50 to-rose-100", iconTone: "text-[#c2417f]" },
-  { tone: "from-slate-50 to-slate-100", iconTone: "text-[#334155]" },
-  { tone: "from-cyan-50 to-blue-100", iconTone: "text-[#0f766e]" },
-  { tone: "from-amber-50 to-orange-100", iconTone: "text-[#b45309]" },
-  { tone: "from-emerald-50 to-teal-100", iconTone: "text-[#0f766e]" },
-  { tone: "from-stone-50 to-orange-100", iconTone: "text-[#b45309]" },
-  { tone: "from-violet-50 to-purple-100", iconTone: "text-[#6d28d9]" },
-  { tone: "from-lime-50 to-emerald-100", iconTone: "text-[#15803d]" },
-  { tone: "from-amber-50 to-yellow-100", iconTone: "text-[#a16207]" },
-  { tone: "from-zinc-50 to-stone-100", iconTone: "text-[#475569]" },
-];
-
-const SHOP_POPULAR_QUERIES = [
-  "Mobiles",
-  "Electronics",
-  "Washing Machine",
-  "Shoes",
-  "Smart TV",
-  "Laptop",
-  "Refrigerator",
-];
-
-function normalizeKey(value) {
-  return String(value || "")
-    .toLowerCase()
-    .replace(/&/g, "and")
-    .replace(/[^a-z0-9]+/g, "");
-}
-
-function getCategoryPalette(index = 0) {
-  return SHOP_CATEGORY_PALETTE[index % SHOP_CATEGORY_PALETTE.length];
-}
-
-function buildShopHeroCategories(categories = []) {
-  return categories
-    .filter((category) => category?.type === "product")
-    .filter((category) => category?.isActive !== false)
-    .filter((category) => !category?.parent && !category?.parent?._id)
-    .sort(
-      (a, b) =>
-        Number(b?.isFeatured || false) - Number(a?.isFeatured || false) ||
-        Number(a?.order || 0) - Number(b?.order || 0) ||
-        String(a?.name || "").localeCompare(String(b?.name || "")),
-    )
-    .slice(0, 12)
-    .map((category, index) => {
-      const palette = getCategoryPalette(index);
-      const label = String(category?.name || "").trim();
-      return {
-        _id: String(category?._id || `category-${index}`),
-        label,
-        icon: category?.icon || label.charAt(0).toUpperCase() || "•",
-        imageUrl: category?.image?.url || "",
-        ...palette,
-      };
-    });
-}
-
-function resolveQuickCategorySelection(label, categories = []) {
-  if (label === "For You") {
-    return { category: "", search: "" };
-  }
-
-  const normalizedLabel = normalizeKey(label);
-  const matched = categories.find(
-    (category) => normalizeKey(category?.name) === normalizedLabel,
-  );
-
-  if (matched) {
-    return { category: String(matched._id || ""), search: "" };
-  }
-
-  return { category: "", search: label };
-}
-
-function ShopCategoryPill({ category, active, onClick }) {
-  const iconContent = category.imageUrl ? (
-    <img
-      src={category.imageUrl}
-      alt=""
-      className="h-6 w-6 rounded-full object-cover"
-      loading="lazy"
-    />
-  ) : (
-    <span className={active ? "scale-105" : ""}>{category.icon}</span>
-  );
-
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="group flex min-w-[64px] flex-col items-center gap-1.5 text-center"
-    >
-      <span
-        className={`grid h-12 w-12 place-items-center rounded-2xl border text-xl shadow-sm transition duration-300 sm:h-14 sm:w-14 ${
-          active
-            ? "border-[#0d4697]/25 bg-white text-[#0d4697] shadow-[0_12px_24px_rgba(13,70,151,0.12)]"
-            : `border-transparent bg-gradient-to-b ${category.tone} ${category.iconTone} group-hover:-translate-y-0.5 group-hover:shadow-md`
-        }`}
-      >
-        {iconContent}
-      </span>
-      <span
-        className={`max-w-[72px] truncate text-[11px] font-semibold transition ${
-          active ? "text-[#0d4697]" : "text-slate-500 group-hover:text-slate-700"
-        }`}
-      >
-        {category.label}
-      </span>
-      {active ? (
-        <span className="h-0.5 w-7 rounded-full bg-[#0d4697]" />
-      ) : (
-        <span className="h-0.5 w-7 rounded-full bg-transparent" />
-      )}
-    </button>
-  );
-}
-
 const DEFAULT_PROMO_BANNERS = [
   {
     _id: "default-left",
@@ -632,13 +600,13 @@ function chunkBanners(list = [], size = 3) {
   return result;
 }
 
-function normalizeBannerList(banners = []) {
+function normalizeBannerList(banners = [], size = 3) {
   const source = banners.length ? banners : DEFAULT_PROMO_BANNERS;
   const list = source.map((banner, index) => ({
     ...banner,
     _id: String(banner._id || `banner-${index}`),
   }));
-  while (list.length % 3 !== 0) {
+  while (size > 1 && list.length % size !== 0) {
     const next = DEFAULT_PROMO_BANNERS[list.length % DEFAULT_PROMO_BANNERS.length];
     list.push({
       ...next,
@@ -646,6 +614,11 @@ function normalizeBannerList(banners = []) {
     });
   }
   return list;
+}
+
+function getPromoCardsPerSlide() {
+  if (typeof window === "undefined") return 1;
+  return window.innerWidth >= 1024 ? 3 : 1;
 }
 
 function ShopBannerCard({ banner, position = "center" }) {
@@ -674,8 +647,20 @@ function ShopBannerCard({ banner, position = "center" }) {
 
 function ShopBannerCarousel({ banners = [] }) {
   const [active, setActive] = useState(0);
-  const slideGroups = useMemo(() => chunkBanners(normalizeBannerList(banners), 3), [banners]);
+  const [cardsPerSlide, setCardsPerSlide] = useState(getPromoCardsPerSlide);
+  const slideGroups = useMemo(
+    () => chunkBanners(normalizeBannerList(banners, cardsPerSlide), cardsPerSlide),
+    [banners, cardsPerSlide],
+  );
   const currentSlide = slideGroups[active] || slideGroups[0] || [];
+
+  useEffect(() => {
+    const updateCardsPerSlide = () => setCardsPerSlide(getPromoCardsPerSlide());
+
+    updateCardsPerSlide();
+    window.addEventListener("resize", updateCardsPerSlide);
+    return () => window.removeEventListener("resize", updateCardsPerSlide);
+  }, []);
 
   useEffect(() => {
     if (slideGroups.length <= 1) return undefined;
@@ -692,10 +677,17 @@ function ShopBannerCarousel({ banners = [] }) {
   return (
     <div className="mt-5">
       <div className="relative transition-all duration-700">
-        <div key={currentSlide.map((item) => item._id).join("-")} className="grid gap-4 lg:grid-cols-[220px_minmax(0,1fr)_220px]">
-          <ShopBannerCard banner={currentSlide[0]} position="left" />
-          <ShopBannerCard banner={currentSlide[1]} position="center" />
-          <ShopBannerCard banner={currentSlide[2]} position="right" />
+        <div
+          key={currentSlide.map((item) => item._id).join("-")}
+          className={`grid gap-4 ${cardsPerSlide === 3 ? "lg:grid-cols-[220px_minmax(0,1fr)_220px]" : "grid-cols-1"}`}
+        >
+          {currentSlide.map((banner, index) => (
+            <ShopBannerCard
+              key={banner._id}
+              banner={banner}
+              position={cardsPerSlide === 3 ? (index === 1 ? "center" : index === 0 ? "left" : "right") : "center"}
+            />
+          ))}
         </div>
 
         <div className="mt-4 flex items-center justify-center gap-2">
@@ -719,10 +711,8 @@ function ShopBannerCarousel({ banners = [] }) {
 function ShopHeroShowcase({
   categories,
   banners,
-  searchValue,
-  onSearchChange,
-  onCategorySelect,
   activeCategoryId,
+  onCategorySelect,
   onSearchSubmit,
 }) {
   const [ref, inView] = useInViewOnce(0.08);
@@ -734,7 +724,7 @@ function ShopHeroShowcase({
   return (
     <section
       ref={ref}
-      className={`rounded-[28px] border border-[#e8dcc4] bg-[#fdfbf7] p-3 shadow-[0_24px_70px_rgba(15,23,42,0.08)] transition-all duration-700 sm:p-4 lg:p-5 ${
+      className={`relative z-20 rounded-[28px] border border-[#e8dcc4] bg-[#fdfbf7] p-3 shadow-[0_24px_70px_rgba(15,23,42,0.08)] transition-all duration-700 sm:p-4 lg:p-5 ${
         inView ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"
       }`}
     >
@@ -754,74 +744,44 @@ function ShopHeroShowcase({
       </div>
 
       <div className="mt-4 flex gap-3 overflow-x-auto pb-1 pt-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:gap-4">
-        {visibleCategories.map((category) => (
-          <ShopCategoryPill
-            key={category._id}
-            category={category}
-            active={String(activeCategoryId || "") === String(category._id || "")}
-            onClick={() => onCategorySelect(category.label)}
-          />
-        ))}
+        {visibleCategories.map((category) => {
+          const active = String(activeCategoryId || "") === String(category._id || "");
+
+          return (
+            <button
+              key={category._id}
+              type="button"
+              onClick={() => onCategorySelect(category.label)}
+              className="group flex min-w-[74px] flex-col items-center gap-1.5 text-center"
+            >
+              <span
+                className={`grid h-12 w-12 place-items-center rounded-[1.1rem] border p-1.5 text-xl shadow-sm transition duration-300 sm:h-14 sm:w-14 sm:text-2xl ${
+                  active
+                    ? "border-[#0d4697]/25 bg-white shadow-[0_12px_24px_rgba(13,70,151,0.12)]"
+                    : `border-transparent bg-gradient-to-b ${category.tone} group-hover:-translate-y-0.5 group-hover:shadow-md`
+                }`}
+              >
+                {category.iconComponent ? (
+                  <category.iconComponent className={`h-5 w-5 sm:h-6 sm:w-6 ${active ? "text-[#0d4697]" : "text-[#0d4697]"}`} />
+                ) : (
+                  <span className="leading-none">{category.emoji}</span>
+                )}
+              </span>
+              <span
+                className={`max-w-[76px] truncate text-[11px] font-semibold transition ${
+                  active
+                    ? "text-[#0d4697]"
+                    : "text-slate-500 group-hover:text-slate-700"
+                }`}
+              >
+                {category.label}
+              </span>
+            </button>
+          );
+        })}
       </div>
 
       <ShopBannerCarousel banners={banners} />
-
-      <div className="mt-4 rounded-[24px] bg-[#0d4697] p-3 shadow-[0_20px_45px_rgba(13,70,151,0.24)] sm:p-4">
-        <div className="grid gap-3 lg:grid-cols-[170px_minmax(0,1fr)_170px_140px] lg:items-center">
-          <div className="rounded-[18px] border border-white/10 bg-white/10 px-4 py-3 text-white/90 backdrop-blur-sm">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-white/55">
-              Location
-            </p>
-            <div className="mt-1 flex items-center justify-between gap-3">
-              <span className="text-sm font-bold text-white">All Locations</span>
-              <ChevronDown className="h-4 w-4 text-white/65" />
-            </div>
-          </div>
-
-          <label className="flex h-full items-center gap-3 rounded-[18px] border border-white/10 bg-white px-4 py-3 shadow-[0_10px_24px_rgba(0,0,0,0.08)]">
-            <Search className="h-4 w-4 shrink-0 text-slate-400" />
-            <input
-              value={searchValue}
-              onChange={(event) => onSearchChange(event.target.value)}
-              placeholder="Search for products, brands and more..."
-              className="w-full bg-transparent text-sm font-medium text-slate-700 outline-none placeholder:text-slate-400"
-            />
-          </label>
-
-          <div className="rounded-[18px] border border-white/10 bg-white/10 px-4 py-3 text-white/90 backdrop-blur-sm">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-white/55">
-              Category
-            </p>
-            <div className="mt-1 flex items-center justify-between gap-3">
-              <span className="text-sm font-bold text-white">All Categories</span>
-              <ChevronDown className="h-4 w-4 text-white/65" />
-            </div>
-          </div>
-
-          <button
-            type="button"
-            onClick={onSearchSubmit}
-            className="inline-flex h-full items-center justify-center gap-2 rounded-[18px] bg-[#ffbf2b] px-5 py-3 text-sm font-black text-[#0d4697] shadow-[0_10px_24px_rgba(255,191,43,0.26)] transition hover:translate-y-[-1px] hover:bg-[#ffca4f]"
-          >
-            <Search className="h-4 w-4" />
-            Search
-          </button>
-        </div>
-      </div>
-
-      <div className="mt-3 flex flex-wrap items-center gap-2.5 text-sm">
-        <span className="font-semibold text-slate-500">Popular:</span>
-        {SHOP_POPULAR_QUERIES.map((query) => (
-          <button
-            key={query}
-            type="button"
-            onClick={() => onSearchChange(query)}
-            className="rounded-full border border-slate-200 bg-white px-4 py-1.5 text-xs font-medium text-slate-600 transition hover:border-[#0d4697]/20 hover:text-[#0d4697]"
-          >
-            {query}
-          </button>
-        ))}
-      </div>
     </section>
   );
 }
@@ -1021,6 +981,7 @@ export function ProductsPage() {
   const [selectedVariant, setSelectedVariant] = useState({});
   const [quickViewOpen, setQuickViewOpen] = useState(false);
   const [page, setPage] = useState(Number(read("page", "1")) || 1);
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const [filterState, setFilterState] = useState({
     search: read("search"),
     category: read("category"),
@@ -1159,7 +1120,6 @@ export function ProductsPage() {
     [debouncedSearch, filterState, products],
   );
   const allCategories = getList(categories.data);
-  const categoryChips = useMemo(() => getCategoryChips(products), [products]);
   const featuredProducts = useMemo(
     () =>
       filteredProducts
@@ -1275,6 +1235,21 @@ export function ProductsPage() {
     page * pageSize,
   );
   const totals = shop.totals;
+  const activeFilterCount = [
+    filterState.search,
+    filterState.category,
+    filterState.brand,
+    filterState.minPrice,
+    filterState.maxPrice,
+    filterState.rating,
+    filterState.availability,
+    filterState.discount,
+    filterState.featured,
+    filterState.newArrivals,
+    filterState.size,
+    filterState.color,
+    filterState.material,
+  ].filter(Boolean).length;
 
   useEffect(() => {
     if (page > totalPages) setPage(1);
@@ -1291,37 +1266,40 @@ export function ProductsPage() {
           .gl-fade-up { animation: none !important; }
         }
       `}</style>
-      <div className="px-4 py-6 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-7xl">
-          <ShopHeroShowcase
-            categories={allCategories}
-            banners={promoBanners}
-            searchValue={filterState.search || ""}
-            activeCategoryId={filterState.category}
-            onSearchChange={(value) =>
-              setFilterState((current) => ({
-                ...current,
-                search: value,
-              }))
-            }
-            onCategorySelect={(label) => {
-              const selection = resolveQuickCategorySelection(label, allCategories);
-              setFilterState((current) => ({
-                ...current,
-                ...selection,
-              }));
-              setPage(1);
-            }}
-            onSearchSubmit={() =>
-              window.scrollTo({ top: 920, behavior: "smooth" })
-            }
-          />
-        </div>
+      <div className="mx-auto max-w-[1440px] px-3 py-6 sm:px-5 lg:px-7">
+        <ShopHeroShowcase
+          categories={allCategories}
+          banners={promoBanners}
+          activeCategoryId={filterState.category}
+          onCategorySelect={(label) => {
+            const selection = resolveQuickCategorySelection(label, allCategories);
+            setFilterState((current) => ({
+              ...current,
+              ...selection,
+            }));
+            setPage(1);
+          }}
+          onSearchSubmit={() => window.scrollTo({ top: 920, behavior: "smooth" })}
+        />
       </div>
 
-      <div className="flex-1 px-4 pb-8 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-7xl flex flex-col gap-6 lg:flex-row">
-          <aside className="w-full lg:w-[280px] lg:flex-shrink-0 lg:sticky lg:top-6 lg:self-start lg:max-h-[calc(100vh-4rem)] lg:overflow-y-auto">
+      <div className="mx-auto max-w-[1440px] flex-1 px-3 pb-8 sm:px-5 lg:px-7">
+        <div className="flex flex-col gap-6 lg:flex-row">
+          <button
+            type="button"
+            onClick={() => setFiltersOpen((value) => !value)}
+            aria-expanded={filtersOpen}
+            className="inline-flex w-full items-center justify-between rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-black text-navy shadow-[0_8px_30px_rgba(11,36,81,0.06)] lg:hidden"
+          >
+            <span>Filters</span>
+            <ChevronDown
+              className={`h-4 w-4 transition ${filtersOpen ? "rotate-180" : ""}`}
+            />
+          </button>
+
+          <aside
+            className={`w-full lg:w-[280px] lg:flex-shrink-0 lg:sticky lg:top-6 lg:self-start lg:max-h-[calc(100vh-4rem)] lg:overflow-y-auto ${filtersOpen ? "block" : "hidden lg:block"}`}
+          >
             <div className="space-y-4">
               <FiltersPanel
                 filterState={filterState}
@@ -1345,6 +1323,7 @@ export function ProductsPage() {
                     material: "",
                   });
                   setPage(1);
+                  setFiltersOpen(false);
                 }}
               />
               <SummaryPanel featured={featuredProducts} totals={totals} />
@@ -1352,20 +1331,40 @@ export function ProductsPage() {
           </aside>
 
           <div className="flex-1 min-w-0 space-y-6">
-            <section className="rounded-[2rem] border border-slate-200/80 bg-white/80 p-4 shadow-[0_8px_30px_rgba(11,36,81,0.06)] backdrop-blur-sm">
-              <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-                <div>
-                  <p className="font-jakarta text-[10px] font-black uppercase tracking-[0.28em] text-slate-400">
-                    Collection
-                  </p>
-                  <h2 className="mt-1 font-playfair text-2xl font-black text-navy">
-                    {filteredProducts.length}
-                    <span className="ml-1.5 text-base font-medium text-slate-500">
-                      products
-                    </span>
-                  </h2>
+            <section className="relative overflow-hidden rounded-[2.5rem] border border-slate-200/80 bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(247,250,252,0.96))] p-4 shadow-[0_24px_80px_rgba(11,36,81,0.10)] backdrop-blur-xl sm:p-5">
+              <div className="pointer-events-none absolute -right-24 -top-24 h-56 w-56 rounded-full bg-[#0d4697]/10 blur-3xl" />
+              <div className="pointer-events-none absolute -bottom-28 -left-20 h-64 w-64 rounded-full bg-[#D6A744]/10 blur-3xl" />
+              <div className="relative z-10 flex flex-col gap-4">
+                <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+                  <div className="max-w-2xl">
+                    <p className="font-jakarta text-[10px] font-black uppercase tracking-[0.32em] text-slate-400">
+                      Curated catalog
+                    </p>
+                    <h2 className="mt-2 font-playfair text-3xl font-black tracking-[-0.03em] text-navy sm:text-4xl">
+                      {filteredProducts.length} products,
+                      <span className="text-royal"> Gloaro Products</span>
+                    </h2>
+                    <p className="mt-2 max-w-xl text-sm leading-6 text-slate-500 sm:text-[15px]">
+                      Browse a polished marketplace surface with tighter curation,
+                      richer motion, and a cleaner shopping rhythm.
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <div className="rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-black uppercase tracking-[0.22em] text-slate-500 shadow-sm">
+                      {filteredProducts.length} live items
+                    </div>
+                    <div className="rounded-full border border-navy/10 bg-navy/5 px-4 py-2 text-xs font-black uppercase tracking-[0.22em] text-navy shadow-sm">
+                      {activeFilterCount} active filters
+                    </div>
+                  </div>
                 </div>
-                <div className="flex flex-wrap gap-1.5">
+
+                <div className="flex flex-wrap items-center justify-between gap-3 rounded-[1.5rem] border border-slate-200/80 bg-white/90 px-4 py-3 shadow-[0_8px_30px_rgba(11,36,81,0.05)]">
+                  <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.24em] text-slate-400">
+                    <span className="inline-flex h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_0_4px_rgba(16,185,129,0.12)]" />
+                    Sorting
+                  </div>
+                  <div className="flex flex-wrap gap-2">
                   {SORT_OPTIONS.map(([value, label]) => (
                     <button
                       key={value}
@@ -1381,6 +1380,7 @@ export function ProductsPage() {
                       {label}
                     </button>
                   ))}
+                  </div>
                 </div>
               </div>
 
@@ -1407,30 +1407,49 @@ export function ProductsPage() {
                           animationDelay: `${(index % pageSize) * 45}ms`,
                         }}
                       >
-                      <ProductCard
-                        product={product}
-                        wishlisted={isWishlisted(localWishlist, product._id)}
-                        onQuickView={(nextProduct) => {
-                          setSelectedProduct(nextProduct);
-                          setSelectedVariant({});
-                          setQuickViewOpen(true);
-                        }}
-                        onWishlist={() => shop.toggleWishlist(product)}
-                        onAddToCart={(nextProduct) =>
-                          shop.upsertCartLine(
-                            nextProduct,
-                            selectedVariant[nextProduct._id] || null,
-                            1,
-                          )
-                        }
-                        onOpen={() =>
-                          navigate(`/products/${product._id}`, {
-                            state: {
-                              from: location.pathname + location.search,
-                            },
-                          })
-                        }
-                      />
+                        <ProductCard
+                          product={product}
+                          cartLine={shop.cart.find(
+                            (line) => line.lineKey === `${product._id}:base`,
+                          )}
+                          wishlisted={isWishlisted(localWishlist, product._id)}
+                          onQuickView={(nextProduct) => {
+                            setSelectedProduct(nextProduct);
+                            setSelectedVariant({});
+                            setQuickViewOpen(true);
+                          }}
+                          onWishlist={() => shop.toggleWishlist(product)}
+                          onAddToCart={(nextProduct) =>
+                            shop.upsertCartLine(
+                              nextProduct,
+                              selectedVariant[nextProduct._id] || null,
+                              1,
+                            )
+                          }
+                          onIncrementCart={(line) =>
+                            shop.updateCartQuantity(
+                              line.lineKey,
+                              Math.min(line.stock || 99, Number(line.quantity || 1) + 1),
+                            )
+                          }
+                          onDecrementCart={(line) => {
+                            if (Number(line.quantity || 1) <= 1) {
+                              shop.removeFromCart(line.lineKey);
+                              return;
+                            }
+                            shop.updateCartQuantity(
+                              line.lineKey,
+                              Number(line.quantity || 1) - 1,
+                            );
+                          }}
+                          onOpen={() =>
+                            navigate(`/products/${product._id}`, {
+                              state: {
+                                from: location.pathname + location.search,
+                              },
+                            })
+                          }
+                        />
                       </div>
                     ))}
                   </div>
@@ -2108,7 +2127,7 @@ export function DetailPage({ type }) {
               <img
                 src={mainImage}
                 alt={item.title}
-                className="h-full w-full object-contain transition duration-500"
+                className="h-full w-full object-cover transition duration-500"
               />
               <div className="absolute right-4 top-4 rounded-full bg-white/90 px-3 py-1.5 text-xs font-black uppercase tracking-[0.2em] text-slate-700 shadow-lg backdrop-blur-sm">
                 {getBadge(item)}
@@ -2187,7 +2206,7 @@ export function DetailPage({ type }) {
               <InfoBlock
                 icon={ShieldCheck}
                 title="Tax"
-                text={`${Number(item.pricing?.taxPercent || 0)}% GST included at checkout`}
+                text={`${Number(item.pricing?.taxPercent || 0)}% GST set by seller`}
               />
               <InfoBlock
                 icon={Truck}
@@ -2744,22 +2763,8 @@ export function CheckoutPage() {
   }, []);
 
   const totalsWithDelivery = useMemo(() => {
-    const selectedDelivery =
-      DELIVERY_OPTIONS.find((option) => option.value === deliveryMethod) ||
-      DELIVERY_OPTIONS[0];
-    return {
-      ...totals,
-      shipping: selectedDelivery.fee,
-      total: Math.max(
-        0,
-        totals.subtotal -
-          totals.productDiscount -
-          totals.couponDiscount +
-          totals.tax +
-          (totals.subtotal >= 1499 ? 0 : selectedDelivery.fee),
-      ),
-    };
-  }, [deliveryMethod, totals]);
+    return totals;
+  }, [totals]);
 
   if (!cart.length) {
     return (
@@ -4240,10 +4245,13 @@ export function OrderDetailPage() {
 
 function ProductCard({
   product,
+  cartLine,
   wishlisted,
   onQuickView,
   onWishlist,
   onAddToCart,
+  onIncrementCart,
+  onDecrementCart,
   onOpen,
 }) {
   const variant = getVariantOptions(product)[0] || null;
@@ -4254,19 +4262,21 @@ function ProductCard({
   const stockStatus = getStockStatus(product, variant);
 
   return (
-    <article className="group overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_20px_50px_rgba(11,36,81,0.12)]">
-      <div className="relative overflow-hidden">
+    <article className="group relative isolate overflow-hidden rounded-[1.85rem] border border-white/70 bg-[linear-gradient(180deg,rgba(255,255,255,0.98),rgba(248,250,252,0.98))] shadow-[0_18px_45px_rgba(11,36,81,0.08)] transition-all duration-500 hover:-translate-y-1.5 hover:shadow-[0_30px_70px_rgba(11,36,81,0.14)]">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(13,70,151,0.08),transparent_40%),radial-gradient(circle_at_bottom_right,rgba(214,167,68,0.08),transparent_38%)] opacity-0 transition duration-500 group-hover:opacity-100" />
+      <div className="relative overflow-hidden rounded-t-[1.85rem]">
         <img
           src={getProductImage(product, variant)}
           alt={product.title}
-          className="h-44 w-full object-cover transition duration-500 group-hover:scale-105 sm:h-48 lg:h-56"
+          className="h-52 w-full object-cover transition duration-700 group-hover:scale-110 sm:h-56 lg:h-64"
         />
-        <div className="absolute left-3 top-3 flex flex-wrap gap-2">
-          <span className="rounded-lg bg-navy/90 px-3 py-1 text-[10px] font-black uppercase tracking-[0.22em] text-white backdrop-blur-sm">
+        <div className="absolute inset-0 bg-gradient-to-t from-[#07152d]/45 via-transparent to-transparent opacity-80" />
+        <div className="absolute left-3 top-3 flex max-w-[70%] flex-wrap gap-2">
+          <span className="rounded-full border border-white/20 bg-navy/90 px-3 py-1 text-[10px] font-black uppercase tracking-[0.22em] text-white backdrop-blur-sm">
             {badge}
           </span>
           {discount > 0 && (
-            <span className="rounded-lg bg-emerald-500 px-3 py-1 text-[10px] font-black uppercase tracking-[0.22em] text-white">
+            <span className="rounded-full border border-white/20 bg-emerald-500/95 px-3 py-1 text-[10px] font-black uppercase tracking-[0.22em] text-white shadow-[0_12px_24px_rgba(16,185,129,0.24)]">
               {discount}% off
             </span>
           )}
@@ -4275,10 +4285,10 @@ function ProductCard({
           type="button"
           aria-pressed={wishlisted}
           onClick={() => onWishlist(product)}
-          className={`absolute right-3 top-3 z-20 grid h-9 w-9 place-items-center rounded-full shadow-lg backdrop-blur-sm transition hover:scale-110 ${
+          className={`absolute right-3 top-3 z-20 grid h-10 w-10 place-items-center rounded-full border border-white/40 shadow-lg backdrop-blur-sm transition duration-300 hover:scale-110 ${
             wishlisted
               ? "bg-pink-100 text-pink-600"
-              : "bg-white/90 text-rose-500"
+              : "bg-white/92 text-rose-500"
           }`}
         >
           <Heart
@@ -4288,70 +4298,98 @@ function ProductCard({
         {stockStatus === "Out of stock" && (
           <div
             aria-hidden="true"
-            className="pointer-events-none absolute inset-0 flex items-center justify-center bg-white/60 backdrop-blur-[2px]"
+            className="pointer-events-none absolute inset-0 flex items-center justify-center bg-slate-950/25 backdrop-blur-[2px]"
           >
-            <span className="rounded-lg bg-slate-900/90 px-4 py-2 text-xs font-black uppercase tracking-[0.2em] text-white">
+            <span className="rounded-full border border-white/15 bg-slate-900/90 px-4 py-2 text-[10px] font-black uppercase tracking-[0.22em] text-white shadow-[0_10px_24px_rgba(2,6,23,0.28)]">
               Out of Stock
             </span>
           </div>
         )}
       </div>
-      <div className="relative z-10 p-5">
-        <p className="font-jakarta text-[10px] font-black uppercase tracking-[0.24em] text-navy">
+      <div className="relative z-10 flex h-full flex-col p-5">
+        <p className="font-jakarta text-[10px] font-black uppercase tracking-[0.28em] text-slate-400">
           {product.category?.name || "Product"}
         </p>
         <button
           type="button"
           onClick={onOpen}
-          className="mt-1.5 block w-full text-left font-playfair text-lg font-bold text-navy transition group-hover:text-royal"
+          className="mt-1.5 line-clamp-2 block w-full text-left font-playfair text-[1.15rem] font-bold leading-tight text-navy transition duration-300 group-hover:text-royal"
         >
           {product.title}
         </button>
-        <p className="mt-1 text-xs font-medium text-slate-500">
+        <p className="mt-1 text-sm font-medium text-slate-500">
           {getBrand(product)}
         </p>
-        <div className="mt-4 flex items-center gap-3">
-          <p className="font-playfair text-xl font-black text-navy">
+        <div className="mt-4 flex items-end gap-3">
+          <p className="font-playfair text-[1.45rem] font-black leading-none text-navy">
             {formatCurrency(price)}
           </p>
           {originalPrice > price && (
-            <p className="text-xs font-semibold text-slate-400 line-through">
+            <p className="pb-0.5 text-xs font-semibold text-slate-400 line-through">
               {formatCurrency(originalPrice)}
             </p>
           )}
         </div>
-        <div className="mt-3 flex items-center justify-between text-xs font-medium text-slate-500">
-          <span className="inline-flex items-center gap-1">
-            <Star className="h-3.5 w-3.5 fill-current text-amber-400" />{" "}
+        <div className="mt-3 flex flex-wrap items-center gap-2">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-3 py-1 text-xs font-bold text-amber-700">
+            <Star className="h-3.5 w-3.5 fill-current text-amber-400" />
             {getRating(product).toFixed(1)}
-            <span className="text-slate-400">({getReviewCount(product)})</span>
+            <span className="text-amber-400/70">({getReviewCount(product)})</span>
           </span>
           <span
-            className={`font-semibold ${stockStatus === "In stock" ? "text-emerald-600" : stockStatus === "Limited stock" ? "text-amber-600" : "text-rose-500"}`}
+            className={`inline-flex rounded-full px-3 py-1 text-xs font-bold ${stockStatus === "In stock" ? "bg-emerald-50 text-emerald-700" : stockStatus === "Limited stock" ? "bg-amber-50 text-amber-700" : "bg-rose-50 text-rose-600"}`}
           >
             {stockStatus}
           </span>
         </div>
-        <div className="mt-5 grid grid-cols-3 gap-1.5 sm:gap-2">
+        <div className="mt-5 grid grid-cols-3 gap-2">
           <button
             type="button"
             onClick={() => onQuickView(product)}
-            className="rounded-xl border border-slate-200 px-1.5 py-2.5 text-[10px] font-black text-slate-600 transition hover:border-navy/30 hover:text-navy sm:px-2 sm:text-xs"
+            className="inline-flex items-center justify-center gap-1 rounded-2xl border border-slate-200/80 bg-white px-2 py-3 text-[10px] font-black uppercase tracking-[0.08em] text-slate-600 transition duration-300 hover:-translate-y-0.5 hover:border-navy/25 hover:text-navy hover:shadow-md sm:text-xs"
           >
+            <ShieldCheck className="h-3.5 w-3.5" />
             Quick View
           </button>
-          <button
-            type="button"
-            onClick={() => onAddToCart(product)}
-            disabled={stockStatus === "Out of stock"}
-            className="rounded-xl bg-navy px-1.5 py-2.5 text-[10px] font-black text-white transition hover:bg-navy/90 disabled:cursor-not-allowed disabled:opacity-50 sm:px-2 sm:text-xs"
-          >
-            {stockStatus === "Out of stock" ? "Unavailable" : "Cart"}
-          </button>
+          {cartLine ? (
+            <div className="inline-flex min-w-0 items-center justify-between overflow-hidden rounded-2xl bg-navy text-white shadow-[0_12px_28px_rgba(13,70,151,0.18)]">
+              <button
+                type="button"
+                onClick={() => onDecrementCart(cartLine)}
+                aria-label="Decrease cart quantity"
+                className="grid h-full min-h-11 w-9 place-items-center transition hover:bg-white/10 sm:w-10"
+              >
+                <Minus className="h-3.5 w-3.5" />
+              </button>
+              <span className="min-w-7 text-center text-[11px] font-black sm:min-w-8 sm:text-xs">
+                {cartLine.quantity}
+              </span>
+              <button
+                type="button"
+                onClick={() => onIncrementCart(cartLine)}
+                disabled={Number(cartLine.quantity || 1) >= Number(cartLine.stock || 99)}
+                aria-label="Increase cart quantity"
+                className="grid h-full min-h-11 w-9 place-items-center transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50 sm:w-10"
+              >
+                <Plus className="h-3.5 w-3.5" />
+              </button>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => onAddToCart(product)}
+              disabled={stockStatus === "Out of stock"}
+              className="inline-flex items-center justify-center gap-1 rounded-2xl bg-gradient-to-r from-navy to-royal px-2 py-3 text-[10px] font-black uppercase tracking-[0.08em] text-white shadow-[0_14px_30px_rgba(13,70,151,0.22)] transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_18px_36px_rgba(13,70,151,0.28)] disabled:cursor-not-allowed disabled:opacity-50 sm:text-xs"
+            >
+              <ShoppingBag className="h-3.5 w-3.5" />
+              {stockStatus === "Out of stock" ? "Unavailable" : "Cart"}
+            </button>
+          )}
           <Link
             to={`/products/${product._id}`}
-            className="inline-flex items-center justify-center rounded-xl bg-slate-900 px-1.5 py-2.5 text-center text-[10px] font-black text-white transition hover:bg-slate-800 sm:px-2 sm:text-xs"
+            className="inline-flex items-center justify-center gap-1 rounded-2xl border border-blue-100 bg-blue-50 px-2 py-3 text-center text-[10px] font-black uppercase tracking-[0.08em] text-[#0d4697] transition duration-300 hover:-translate-y-0.5 hover:border-blue-200 hover:bg-blue-100/80 hover:shadow-md sm:text-xs"
           >
+            <ArrowRight className="h-3.5 w-3.5" />
             Details
           </Link>
         </div>
@@ -4553,9 +4591,14 @@ function QuickViewModal({
                 </p>
               )}
             </div>
-            <p className="mt-3 text-sm font-medium leading-7 text-slate-600">
-              {product.shortDescription || product.description}
-            </p>
+            <div className="mt-4 rounded-2xl border border-slate-100 bg-slate-50/80 p-4">
+              <p className="text-[10px] font-black uppercase tracking-[0.24em] text-slate-400">
+                Description
+              </p>
+              <p className="mt-2 text-sm leading-7 text-slate-600">
+                {product.shortDescription || product.description || "No description available for this product."}
+              </p>
+            </div>
             <div className="mt-4 flex flex-wrap gap-2">
               {getVariantOptions(product).map((variant) => (
                 <button
@@ -4715,65 +4758,6 @@ function FiltersPanel({ filterState, setFilterState, categories, onReset }) {
             <option value="20_plus">20% and above</option>
           </select>
         </FieldGroup>
-        <FieldGroup label="Size">
-          <input
-            value={filterState.size}
-            onChange={(event) =>
-              setFilterState((current) => ({
-                ...current,
-                size: event.target.value,
-              }))
-            }
-            className="h-11 w-full rounded-xl border border-slate-200 px-3 text-sm font-semibold outline-none transition focus:border-navy/40"
-            placeholder="M, L, 42, 1TB"
-          />
-        </FieldGroup>
-        <FieldGroup label="Color">
-          <input
-            value={filterState.color}
-            onChange={(event) =>
-              setFilterState((current) => ({
-                ...current,
-                color: event.target.value,
-              }))
-            }
-            className="h-11 w-full rounded-xl border border-slate-200 px-3 text-sm font-semibold outline-none transition focus:border-navy/40"
-            placeholder="Red, Black, Blue"
-          />
-        </FieldGroup>
-        <FieldGroup label="Material">
-          <input
-            value={filterState.material}
-            onChange={(event) =>
-              setFilterState((current) => ({
-                ...current,
-                material: event.target.value,
-              }))
-            }
-            className="h-11 w-full rounded-xl border border-slate-200 px-3 text-sm font-semibold outline-none transition focus:border-navy/40"
-            placeholder="Cotton, Leather, Steel"
-          />
-        </FieldGroup>
-        <ToggleChip
-          label="Featured products"
-          active={filterState.featured === "true"}
-          onClick={() =>
-            setFilterState((current) => ({
-              ...current,
-              featured: current.featured === "true" ? "" : "true",
-            }))
-          }
-        />
-        <ToggleChip
-          label="New arrivals"
-          active={filterState.newArrivals === "true"}
-          onClick={() =>
-            setFilterState((current) => ({
-              ...current,
-              newArrivals: current.newArrivals === "true" ? "" : "true",
-            }))
-          }
-        />
       </div>
     </div>
   );
@@ -4980,7 +4964,7 @@ function SpecsSection({ item }) {
   const specs = [
     ["Brand", getBrand(item)],
     ["SKU", item.sku || item.productId || "N/A"],
-    ["Tax", `${Number(item.pricing?.taxPercent || 0)}%`],
+    ["Vendor GST", `${Number(item.pricing?.taxPercent || 0)}%`],
     [
       "Shipping",
       item.shippingInfo?.isFreeShipping
@@ -5091,14 +5075,20 @@ function ReviewsSection({
                   {Number(review.rating || 0).toFixed(1)} / 5
                 </p>
               </div>
-              <p className="mt-2 text-sm font-medium leading-6 text-slate-600">
-                {review.comment}
-              </p>
-              <p className="mt-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
-                {formatDate(review.createdAt)}
-              </p>
+          <p className="mt-2 text-sm font-medium leading-6 text-slate-600">
+            {review.comment}
+          </p>
+          {review.images?.length ? (
+            <div className="mt-3 inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1.5 text-[11px] font-black uppercase tracking-[0.18em] text-emerald-700 ring-1 ring-emerald-200">
+              <Upload className="h-3.5 w-3.5" />
+              Proof attached
             </div>
-          ))
+          ) : null}
+          <p className="mt-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
+            {formatDate(review.createdAt)}
+          </p>
+        </div>
+      ))
         ) : (
           <EmptyState
             title="No reviews yet"
@@ -5116,7 +5106,13 @@ function ReviewsSection({
 }
 
 function ReviewBox({ vendor, productId = null, onSubmitted = null }) {
-  const [form, setForm] = useState({ rating: "5", title: "", comment: "" });
+  const proofInputRef = useRef(null);
+  const [form, setForm] = useState({
+    rating: "5",
+    title: "",
+    comment: "",
+    proof: null,
+  });
   const [submitting, setSubmitting] = useState(false);
   const submit = async (event) => {
     event.preventDefault();
@@ -5129,6 +5125,10 @@ function ReviewBox({ vendor, productId = null, onSubmitted = null }) {
       toast.error("Comment must be at least 10 characters");
       return;
     }
+    if (!form.proof) {
+      toast.error("Please upload the bill or product image");
+      return;
+    }
     setSubmitting(true);
     try {
       const response = await customerApi.createReview({
@@ -5137,11 +5137,13 @@ function ReviewBox({ vendor, productId = null, onSubmitted = null }) {
         rating: Number(form.rating),
         title: form.title,
         comment: form.comment,
+        images: form.proof,
       });
       const createdReview = response?.data?.data || response?.data || null;
       if (createdReview && onSubmitted) onSubmitted(createdReview);
       toast.success("Review submitted");
-      setForm({ rating: "5", title: "", comment: "" });
+      setForm({ rating: "5", title: "", comment: "", proof: null });
+      if (proofInputRef.current) proofInputRef.current.value = "";
     } catch (error) {
       toast.error(error.response?.data?.message || "Unable to submit review");
     } finally {
@@ -5203,6 +5205,43 @@ function ReviewBox({ vendor, productId = null, onSubmitted = null }) {
           className="h-11 rounded-xl border border-slate-200 px-3 text-sm font-semibold outline-none transition focus:border-navy/40 md:col-span-1"
         />
       </div>
+      <div className="mt-3 rounded-2xl border border-dashed border-slate-200 bg-slate-50/80 p-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <p className="text-sm font-bold text-slate-800">
+              Upload bill or product image
+            </p>
+            <p className="mt-1 text-xs font-medium text-slate-500">
+              Required to submit your review. Image proof helps verify your purchase.
+            </p>
+          </div>
+          <label
+            htmlFor="review-proof-upload"
+            className="inline-flex cursor-pointer items-center gap-2 rounded-full bg-navy px-4 py-2 text-xs font-black uppercase tracking-[0.18em] !text-white shadow-sm transition hover:bg-navy/90"
+          >
+            <Upload className="h-3.5 text-white w-3.5" />
+            Choose file
+          </label>
+        </div>
+        <input
+          ref={proofInputRef}
+          id="review-proof-upload"
+          type="file"
+          accept="image/*"
+          required
+          onChange={(event) =>
+            setForm((current) => ({
+              ...current,
+              proof: event.target.files?.[0] || null,
+            }))
+          }
+          className="sr-only"
+        />
+        <div className="mt-3 flex items-center gap-2 text-sm font-semibold text-slate-600">
+          <Check className={`h-4 w-4 ${form.proof ? "text-emerald-500" : "text-slate-300"}`} />
+          <span>{form.proof ? form.proof.name : "No file selected"}</span>
+        </div>
+      </div>
       <button
         type="submit"
         disabled={submitting}
@@ -5251,7 +5290,7 @@ function ShippingCard({ item }) {
         <p>
           {item.shippingInfo?.isFreeShipping
             ? "Free shipping available"
-            : `Shipping charge ${formatCurrency(item.shippingInfo?.shippingCharge || 0)}`}
+            : `Seller shipping charge ${formatCurrency(item.shippingInfo?.shippingCharge || 0)}`}
         </p>
         <p>
           {item.returnPolicy ||

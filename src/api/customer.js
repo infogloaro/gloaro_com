@@ -15,6 +15,35 @@ function normalizeReviewPayload(data = {}) {
   }
 }
 
+function appendReviewImages(formData, images) {
+  if (!images) return
+  if (typeof FileList !== 'undefined' && images instanceof FileList) {
+    Array.from(images).forEach((file) => formData.append('images', file))
+    return
+  }
+  if (Array.isArray(images)) {
+    images.filter(Boolean).forEach((file) => formData.append('images', file))
+    return
+  }
+  formData.append('images', images)
+}
+
+function buildReviewFormData(data = {}) {
+  const normalized = normalizeReviewPayload(data)
+  const formData = new FormData()
+
+  Object.entries(normalized).forEach(([key, value]) => {
+    if (value === undefined || value === null || value === '') return
+    if (key === 'images') {
+      appendReviewImages(formData, value)
+      return
+    }
+    formData.append(key, value instanceof Blob ? value : String(value))
+  })
+
+  return formData
+}
+
 export const customerApi = {
   dashboard: () => api.get('/customers/dashboard'),
   profile: () => api.get('/customers/profile'),
@@ -37,6 +66,7 @@ export const customerApi = {
   services: (params) => api.get('/services', { params }),
   service: (id) => api.get(`/services/${id}`),
   banners: (params) => api.get('/banners', { params }),
+  organizationHierarchy: (config = {}) => api.get('/directory/organization-hierarchy', config),
   globalSearch: (params) => api.get('/directory/global-search', { params }),
   submitEnquiry: (data) => api.post('/leads', data),
   wishlist: (params) => api.get('/customers/wishlist', { params }),
@@ -52,7 +82,7 @@ export const customerApi = {
   training: () => api.get('/customers/training', { silent: true }),
   completeTrainingAssignment: (courseId, assignmentIndex) => api.patch(`/customers/training/${courseId}/assignments/${assignmentIndex}/complete`),
   reviews: (vendorId, params) => api.get(`/reviews/vendor/${vendorId}`, { params }),
-  createReview: (data) => api.post('/reviews', normalizeReviewPayload(data)),
+  createReview: (data) => api.post('/reviews', buildReviewFormData(data)),
   support: (params) => api.get('/support/my', { params }),
   createTicket: (data) => api.post('/support', data),
 }

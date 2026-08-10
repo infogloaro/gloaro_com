@@ -234,15 +234,59 @@ const mergeOrdersById = (currentOrders = [], incomingOrders = []) => {
 
 const buildOrderNumber = () => `GLO-${Date.now().toString(36).toUpperCase()}`
 
+const toNumber = (value, fallback = 0) => {
+  const parsed = Number(value)
+  return Number.isFinite(parsed) ? parsed : fallback
+}
+
+const getLineVendorKey = (line) => String(
+  line?.productSnapshot?.vendor?._id ||
+  line?.productSnapshot?.vendor?.id ||
+  line?.productSnapshot?.vendor ||
+  line?.vendorId ||
+  line?.vendor ||
+  ''
+)
+
+const getLineTaxRate = (line) => {
+  const rate = toNumber(line?.productSnapshot?.pricing?.taxPercent ?? line?.taxPercent ?? 0, 0)
+  return rate > 0 ? rate : 12
+}
+
+const getLineShippingCharge = (line) => {
+  const shippingInfo = line?.productSnapshot?.shippingInfo || line?.shippingInfo || {}
+  if (shippingInfo.isFreeShipping) return { amount: 0, explicitFreeShipping: true }
+  const charge = toNumber(shippingInfo.shippingCharge ?? line?.shippingCharge ?? 0, 0)
+  if (charge > 0) return { amount: charge, explicitFreeShipping: false }
+  return { amount: 0, explicitFreeShipping: false }
+}
+
 const computeTotals = (cart, activeCoupon, deliveryMethod) => {
-  const subtotal = cart.reduce((sum, line) => sum + Number(line.unitPrice || 0) * Number(line.quantity || 0), 0)
-  const mrpTotal = cart.reduce((sum, line) => sum + Number(line.originalPrice || line.unitPrice || 0) * Number(line.quantity || 0), 0)
+  const subtotal = cart.reduce((sum, line) => sum + toNumber(line.unitPrice || 0) * toNumber(line.quantity || 0), 0)
+  const mrpTotal = cart.reduce((sum, line) => sum + toNumber(line.originalPrice || line.unitPrice || 0) * toNumber(line.quantity || 0), 0)
   const productDiscount = Math.max(0, mrpTotal - subtotal)
-  const taxRate = 0.12
-  const taxableAmount = subtotal - productDiscount
-  const tax = Math.max(0, taxableAmount * taxRate)
   const shippingBase = deliveryMethod === 'express' ? 149 : deliveryMethod === 'scheduled' ? 79 : 59
-  const shipping = subtotal >= 1499 ? 0 : shippingBase
+  const vendorGroups = new Map()
+
+  cart.forEach((line, index) => {
+    const qty = Math.max(1, toNumber(line.quantity || 1, 1))
+    const lineTotal = toNumber(line.unitPrice || 0) * qty
+    const vendorKey = getLineVendorKey(line) || String(line.productId || line.lineKey || `line-${index}`)
+    const current = vendorGroups.get(vendorKey) || { shipping: 0, explicitFreeShipping: false, tax: 0 }
+    const { amount, explicitFreeShipping } = getLineShippingCharge(line)
+    if (amount > current.shipping) current.shipping = amount
+    current.explicitFreeShipping = current.explicitFreeShipping || explicitFreeShipping
+    current.tax += lineTotal * (getLineTaxRate(line) / 100)
+    vendorGroups.set(vendorKey, current)
+  })
+
+  const shipping = cart.length
+    ? [...vendorGroups.values()].reduce(
+        (sum, group) => sum + (group.explicitFreeShipping ? 0 : (group.shipping > 0 ? group.shipping : shippingBase)),
+        0,
+      )
+    : 0
+  const tax = [...vendorGroups.values()].reduce((sum, group) => sum + group.tax, 0)
   const coupon = activeCoupon || null
   let couponDiscount = 0
   if (coupon?.code) {
@@ -306,9 +350,7 @@ const PDF_PAGE_HEIGHT = 841.89
 const PDF_MARGIN_X = 36
 const PDF_TOP = 40
 const PDF_BOTTOM = 42
-const PDF_LINE_HEIGHT = 14
 const PDF_BODY_FONT = 10
-const PDF_SMALL_FONT = 8
 
 const normalizePdfText = (value) => String(value ?? '')
   .replace(/\r?\n+/g, ' ')
