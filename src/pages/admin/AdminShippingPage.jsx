@@ -95,11 +95,15 @@ export default function AdminShippingPage() {
         page: 1,
         limit: 50,
       })
-      const payload = response.data?.data || response.data || {}
-      setShipments(payload.data || payload.shipments || [])
-      setTotal(payload.total || 0)
-      if (!selectedShipmentId && (payload.data || payload.shipments || [])[0]?._id) {
-        setSelectedShipmentId((payload.data || payload.shipments || [])[0]._id)
+      const body = response.data || {}
+      const list = Array.isArray(body.data) ? body.data : (body.data?.data || body.data?.shipments || [])
+      setShipments(list)
+      setTotal(body.pagination?.totalItems || list.length || 0)
+      if (list.length) {
+        setSelectedShipmentId((current) => current || list[0]._id)
+      } else if (body.pagination?.totalItems === 0) {
+        setSelectedShipmentId(null)
+        setSelectedShipment(null)
       }
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to load shipments')
@@ -153,29 +157,18 @@ export default function AdminShippingPage() {
 
   const updateVendorApproval = async () => {
     const shipment = currentShipment
-    const vendor = shipment?.vendorId
-    if (!vendor?._id) {
-      toast.error('Vendor information is unavailable')
+    if (!shipment?._id) {
+      toast.error('Shipment information is unavailable')
       return
     }
 
     try {
-      await adminApi.updateVendor(vendor._id, {
-        shipping: {
-          pickupAddress: shipment.pickupAddress || {},
-          shiprocketPickupLocation: vendor.shipping?.shiprocketPickupLocation || shipment.pickupAddress?.city || vendor.businessName,
-          shiprocketPickupLocationId: vendor.shipping?.shiprocketPickupLocationId || vendor.shipping?.shiprocketPickupLocation || shipment.pickupAddress?.city || vendor.businessName,
-          shiprocketPickupApproved: true,
-          shiprocketPickupStatus: 'ACTIVE',
-          shiprocketPickupCreatedAt: vendor.shipping?.shiprocketPickupCreatedAt || new Date().toISOString(),
-          shiprocketPickupError: '',
-        },
-      })
-      toast.success('Pickup location approved')
+      await adminApi.shipmentApprovePickup(shipment._id)
+      toast.success('Pickup location registered and approved')
       await refreshSelectedShipment()
       loadShipments({ silent: true })
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to approve pickup location')
+      toast.error(error.response?.data?.message || 'Failed to register and approve pickup location')
     }
   }
 
@@ -218,11 +211,11 @@ export default function AdminShippingPage() {
 
   return (
     <div className="space-y-6">
-      <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+      <section className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
         <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
           <div>
             <p className="text-[10px] font-black uppercase tracking-[0.28em] text-slate-400">Admin Shipping</p>
-            <h2 className="mt-1 text-3xl font-black text-slate-900">Shiprocket Shipments</h2>
+            <h2 className="mt-1 text-2xl font-black text-slate-900 sm:text-3xl">Shiprocket Shipments</h2>
             <p className="mt-2 max-w-2xl text-sm font-semibold text-slate-500">
               Monitor pickup locations, vendor-wise shipments, tracking, invoices, cancellation, returns, and retry-safe syncing from one console.
             </p>
@@ -230,14 +223,14 @@ export default function AdminShippingPage() {
           <button
             type="button"
             onClick={() => loadShipments({ silent: false })}
-            className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-black text-slate-700 hover:border-[#0d4697] hover:text-[#0d4697]"
+            className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-black text-slate-700 hover:border-[#0d4697] hover:text-[#0d4697] sm:w-auto"
           >
             <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
             Refresh
           </button>
         </div>
 
-        <div className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+        <div className="mt-6 grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-5">
           <Metric label="Total" value={stats.total} icon={Package} />
           <Metric label="Pending" value={stats.pending} icon={Clock3} accent="amber" />
           <Metric label="Ready" value={stats.ready} icon={CheckCircle2} accent="emerald" />
@@ -246,7 +239,7 @@ export default function AdminShippingPage() {
         </div>
       </section>
 
-      <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+      <section className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
         <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
           <div>
             <h3 className="text-xl font-black text-slate-900">Filters</h3>
@@ -258,8 +251,8 @@ export default function AdminShippingPage() {
             setFilters(emptyFilters)
             loadShipments({ silent: false, overrideFilters: emptyFilters })
           }}
-          className="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-2 text-xs font-black text-slate-700 hover:bg-slate-50"
-        >
+          className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 px-4 py-2 text-xs font-black text-slate-700 hover:bg-slate-50 sm:w-auto"
+          >
             <Filter className="h-4 w-4" />
             Clear
           </button>
@@ -292,7 +285,7 @@ export default function AdminShippingPage() {
       </section>
 
       <section className="grid gap-6 xl:grid-cols-[1.3fr_0.9fr]">
-        <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+        <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
           <div className="flex items-center justify-between gap-3">
             <div>
               <h3 className="text-xl font-black text-slate-900">Shipments Table</h3>
@@ -304,6 +297,11 @@ export default function AdminShippingPage() {
           <DataTable
             columns={filteredColumns}
             rows={shipments}
+            selectedId={selectedShipmentId}
+            onRowClick={(row) => {
+              setSelectedShipmentId(row._id)
+              document.getElementById('shipment-detail-panel')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+            }}
             actions={(row) => (
               <button
                 type="button"
@@ -318,9 +316,9 @@ export default function AdminShippingPage() {
           </div>
         </div>
 
-        <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+        <div id="shipment-detail-panel" className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
           {!currentShipment ? (
-            <div className="grid min-h-[420px] place-items-center text-center">
+            <div className="grid min-h-[320px] place-items-center text-center sm:min-h-[420px]">
               <div>
                 <Eye className="mx-auto h-10 w-10 text-slate-300" />
                 <h4 className="mt-3 text-lg font-black text-slate-900">Select a shipment</h4>
@@ -329,7 +327,7 @@ export default function AdminShippingPage() {
             </div>
           ) : (
             <div className="space-y-5">
-              <div className="flex items-start justify-between gap-3">
+              <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
                   <p className="text-[10px] font-black uppercase tracking-[0.24em] text-slate-400">Shipment Details</p>
                   <h4 className="mt-1 text-2xl font-black text-slate-900">{currentShipment.vendorOrderNumber}</h4>
@@ -393,7 +391,7 @@ export default function AdminShippingPage() {
               </div>
 
               <div className="rounded-2xl border border-blue-100 bg-blue-50 p-4">
-                <div className="flex items-center justify-between gap-3">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <div>
                     <p className="text-[10px] font-black uppercase tracking-[0.24em] text-[#0d4697]">Vendor Pickup Approval</p>
                     <p className="mt-1 text-sm font-semibold text-slate-700">
@@ -403,7 +401,7 @@ export default function AdminShippingPage() {
                   <button
                     type="button"
                     onClick={updateVendorApproval}
-                    className="rounded-xl bg-[#0d4697] px-4 py-2 text-xs font-black text-white hover:bg-blue-800"
+                    className="rounded-xl bg-[#0d4697] px-4 py-2 text-xs font-black text-white hover:bg-blue-800 sm:w-auto"
                   >
                     Approve Pickup
                   </button>
