@@ -40,6 +40,7 @@ export const customerApi = {
   organizationHierarchy: (config = {}) => api.get('/directory/organization-hierarchy', config),
   globalSearch: (params) => api.get('/directory/global-search', { params }),
   organizationHierarchy: () => api.get('/directory/organization-hierarchy'),
+  leaders: () => api.get('/leaders'),
   submitEnquiry: (data) => api.post('/leads', data),
   wishlist: (params) => api.get('/customers/wishlist', { params }),
   addWishlist: (data, config = {}) => api.post('/customers/wishlist', data, config),

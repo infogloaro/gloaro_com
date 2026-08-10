@@ -45,7 +45,7 @@ import { ROLES } from './roleConfig.js'
 
 export const adminNav = [
   ['Dashboard', '/dashboard', LayoutDashboard],
-  ['Enterprise Scorecard', '/scorecard', BarChart3],
+  ['Mr. 360', '/scorecard', BarChart3],
   {
     label: 'Communication',
     icon: MessageSquare,
@@ -131,7 +131,7 @@ export const adminNav = [
 
 export const vendorNav = [
   ['Dashboard', '/vendor', LayoutDashboard],
-  ['Enterprise Scorecard', '/vendor/scorecard', BarChart3],
+  ['Mr. 360', '/vendor/scorecard', BarChart3],
   { label: 'Communication', icon: MessageSquare, children: [['Notifications', '/notifications', Bell]] },
   ['Business Profile', '/vendor/profile', Building2],
   ['Business Categories', '/vendor/business-categories', PlusCircle],
@@ -148,7 +148,7 @@ export const vendorNav = [
 
 export const memberVendorNav = [
   ['Dashboard', '/member/dashboard', LayoutDashboard],
-  ['Enterprise Scorecard', '/member/dashboard/scorecard', BarChart3],
+  ['Mr. 360', '/member/dashboard/scorecard', BarChart3],
   { label: 'Communication', icon: MessageSquare, children: [['Notifications', '/notifications', Bell]] },
   ['Business Profile', '/member/dashboard/my-business', Building2],
   ['Business Categories', '/member/dashboard/business-categories', PlusCircle],
@@ -162,7 +162,7 @@ export const memberVendorNav = [
 ]
 
 export const applicantNav = [
-  ['Enterprise Scorecard', '/member/dashboard/scorecard', BarChart3],
+  ['Mr. 360', '/member/dashboard/scorecard', BarChart3],
   { label: 'Communication', icon: MessageSquare, children: [['Notifications', '/notifications', Bell]] },
   ['Profile', '/member/profile', User],
   ['Membership Application Status', '/member/membership-application-status', ClipboardCheck],
@@ -170,7 +170,7 @@ export const applicantNav = [
 
 export const vendorApplicantNav = [
   ['Dashboard', '/vendor/onboarding-status', LayoutDashboard],
-  ['Enterprise Scorecard', '/vendor/scorecard', BarChart3],
+  ['Mr. 360', '/vendor/scorecard', BarChart3],
   { label: 'Communication', icon: MessageSquare, children: [['Notifications', '/notifications', Bell]] },
   ['Vendor Application Status', '/vendor/onboarding-status', ClipboardList],
   ['Profile', '/vendor/account', User],
@@ -178,7 +178,7 @@ export const vendorApplicantNav = [
 ]
 
 export const vendorOnboardingNav = [
-  ['Enterprise Scorecard', '/vendor/scorecard', BarChart3],
+  ['Mr. 360', '/vendor/scorecard', BarChart3],
   { label: 'Communication', icon: MessageSquare, children: [['Notifications', '/notifications', Bell]] },
   ['Vendor Onboarding', '/vendor/onboarding', FileText],
   ['Application Status', '/vendor/onboarding-status', ClipboardList],
@@ -206,7 +206,7 @@ export const customerNav = [
 
 export const customerFoundationNav = [
   ['Dashboard', '/customer/dashboard', LayoutDashboard],
-  ['Enterprise Scorecard', '/customer/scorecard', BarChart3],
+  ['Mr. 360', '/customer/scorecard', BarChart3],
   { label: 'Communication', icon: MessageSquare, children: [['Notifications', '/notifications', Bell]] },
   ['Profile', '/customer/profile', User],
   ['Addresses', '/customer/addresses', MapPinned],
@@ -215,7 +215,7 @@ export const customerFoundationNav = [
 
 export const membershipNav = [
   ['Dashboard', '/membership/dashboard', LayoutDashboard],
-  ['Enterprise Scorecard', '/membership/scorecard', BarChart3],
+  ['Mr. 360', '/membership/scorecard', BarChart3],
   { label: 'Communication', icon: MessageSquare, children: [['Notifications', '/notifications', Bell]] },
   ['Benefits', '/membership/benefits', Star],
   ['Events', '/membership/events', CalendarDays],
@@ -314,7 +314,7 @@ export const rolePrefixes = {
 
 const commonModules = [
   ['Dashboard', '', LayoutDashboard],
-  ['Enterprise Scorecard', '/scorecard', BarChart3],
+  ['Mr. 360', '/scorecard', BarChart3],
   {
     label: 'Communication',
     icon: MessageSquare,
@@ -337,7 +337,6 @@ const commonModules = [
     label: 'Marketplace',
     icon: ShoppingBag,
     children: [
-      ['Banner Management', '/banners', Sparkles],
       ['Products', '/products', Package],
       ['Services', '/services', BriefcaseBusiness],
       ['Vendors', '/vendors', Users],
@@ -538,7 +537,7 @@ if (
   if (normalizedRole === ROLES.DIRECT_CONSULTANT) {
     base = [
       base[0], // Dashboard
-      base[1], // Enterprise Scorecard
+      base[1], // Mr. 360
       base[2], // Communication
       base[3], // Community
       base[4], // Marketplace
@@ -552,7 +551,7 @@ if (
     base = [
       base[0], // Dashboard
       orgMgmt,
-      base[1], // Enterprise Scorecard
+      base[1], // Mr. 360
       base[2], // Communication
       base[4], // Marketplace
       base[5], // Meetings
