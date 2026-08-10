@@ -275,14 +275,14 @@ export default function LocationsManagementPage() {
     return (
       <div key={node._id} style={{ marginLeft: depth > 0 ? 16 : 0 }} className="relative mt-1">
         {depth > 0 && (
-          <span className="absolute -left-3 top-5 h-full w-px bg-slate-200 dark:bg-slate-800" />
+          <span className="absolute -left-3 top-5 h-full w-px bg-slate-200 " />
         )}
         <div
           onClick={() => setSelectedNode(node)}
           className={`flex items-center justify-between gap-3 py-1.5 group rounded-lg px-2 cursor-pointer transition ${
             isSelected
-              ? 'bg-blue-50/80 border-l-4 border-[#0d4697] dark:bg-slate-900/60'
-              : 'hover:bg-slate-55/40 dark:hover:bg-slate-900/40'
+              ? 'bg-blue-50 border-l-4 border-[#0d4697]'
+              : 'hover:bg-slate-100'
           }`}
         >
           <div className="flex items-center gap-1.5 min-w-0">
@@ -293,22 +293,22 @@ export default function LocationsManagementPage() {
                   e.stopPropagation()
                   toggleExpand(node._id)
                 }}
-                className="grid h-6 w-6 place-items-center rounded text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-800"
+                className="grid h-6 w-6 place-items-center rounded text-slate-700 hover:bg-slate-200"
               >
                 {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
               </button>
             ) : (
               <span className="w-6 h-6 shrink-0" />
             )}
-            <div className={`flex flex-wrap items-center gap-1.5 rounded-md px-2 py-1 text-sm font-semibold truncate ${
+            <div className={`flex flex-wrap items-center gap-1.5 rounded-md px-2 py-1 text-sm font-bold truncate ${
               isMatched
-                ? 'bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-100'
+                ? 'bg-amber-100 text-amber-950 font-black'
                 : isSelected
-                ? 'text-[#0d4697] dark:text-blue-400 font-extrabold'
-                : 'text-slate-700 dark:text-slate-355'
+                ? 'text-[#0d4697] font-black'
+                : 'text-slate-950'
             }`}>
               <span>{node.name}</span>
-              <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
+              <span className="text-[10px] font-black uppercase tracking-wider text-slate-500">
                 ({node.type})
               </span>
             </div>
@@ -392,13 +392,13 @@ export default function LocationsManagementPage() {
 
   return (
     <div className="space-y-6">
-      <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between rounded-2xl border border-white/60 bg-white/85 p-6 shadow-sm backdrop-blur dark:border-slate-800 dark:bg-slate-900">
+      <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <div>
           <p className="inline-flex items-center gap-2 text-xs font-extrabold uppercase tracking-[0.18em] text-[#0d4697]">
             <MapPinned className="h-4 w-4" /> Master Configuration
           </p>
-          <h1 className="mt-3 text-3xl font-black text-slate-950 dark:text-white">{pageTitle}</h1>
-          <p className="mt-2 text-sm font-semibold text-slate-555">
+          <h1 className="mt-3 text-3xl font-black text-slate-950">{pageTitle}</h1>
+          <p className="mt-2 text-sm font-semibold text-slate-700">
             {pageDesc}
           </p>
         </div>
@@ -424,9 +424,9 @@ export default function LocationsManagementPage() {
 
       <div className="grid gap-6 lg:grid-cols-12">
         {/* Left Column: Tree */}
-        <div className="lg:col-span-5 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-slate-100 dark:border-slate-800 pb-4">
-            <h2 className="flex items-center gap-2 text-lg font-black text-slate-950 dark:text-white">
+        <div className="lg:col-span-5 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm  ">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-slate-100  pb-4">
+            <h2 className="flex items-center gap-2 text-lg font-black text-slate-950 ">
               <GitBranch className="h-5 w-5 text-[#0d4697]" />
               Hierarchy Tree
             </h2>
@@ -437,7 +437,7 @@ export default function LocationsManagementPage() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search nodes..."
-                className="h-10 w-full rounded-md border border-slate-250 bg-white pl-9 pr-4 text-sm font-semibold outline-none focus:border-[#0d4697] dark:border-slate-800 dark:bg-slate-900 dark:text-slate-350"
+                className="h-10 w-full rounded-md border border-slate-250 bg-white pl-9 pr-4 text-sm font-semibold outline-none focus:border-[#0d4697]   "
               />
             </div>
           </div>
@@ -457,38 +457,38 @@ export default function LocationsManagementPage() {
         {/* Right Column: Node Details Panel */}
         <div className="lg:col-span-7 space-y-6">
           {selectedNode ? (
-            <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-955 space-y-6">
+            <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm   space-y-6">
               {/* Path Breadcrumbs */}
               <div className="flex flex-wrap items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-wider">
                 <Map className="h-3.5 w-3.5" />
                 {pathList.map((item, idx) => (
                   <span key={item._id} className="flex items-center gap-1.5">
                     {idx > 0 && <ChevronRight className="h-3 w-3" />}
-                    <span className={idx === pathList.length - 1 ? 'text-[#0d4697] dark:text-blue-400 font-black' : ''}>{item.name}</span>
+                    <span className={idx === pathList.length - 1 ? 'text-[#0d4697]  font-black' : ''}>{item.name}</span>
                   </span>
                 ))}
               </div>
 
               {/* Header Info */}
-              <div className="flex items-start justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-4">
+              <div className="flex items-start justify-between gap-4 border-b border-slate-100  pb-4">
                 <div>
-                  <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 bg-slate-100 dark:bg-slate-900 px-2 py-0.5 rounded">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 bg-slate-100  px-2 py-0.5 rounded">
                     {selectedNode.type} Level
                   </span>
-                  <h2 className="text-2xl font-black text-slate-900 dark:text-white mt-1">{selectedNode.name}</h2>
+                  <h2 className="text-2xl font-black text-slate-900  mt-1">{selectedNode.name}</h2>
                 </div>
                 <StatusBadge value={selectedNode.status} />
               </div>
 
               {/* Specifications Grid */}
               <div className="grid gap-4 sm:grid-cols-2">
-                <div className="p-4 rounded-xl border border-slate-100 dark:border-slate-850 bg-slate-50/40">
+                <div className="p-4 rounded-xl border border-slate-100  bg-slate-50/40">
                   <span className="text-xs font-extrabold text-slate-400 uppercase">Code</span>
-                  <p className="mt-1 font-mono text-sm font-bold text-slate-800 dark:text-slate-200">{selectedNode.code || '-'}</p>
+                  <p className="mt-1 font-mono text-sm font-bold text-slate-800 ">{selectedNode.code || '-'}</p>
                 </div>
-                <div className="p-4 rounded-xl border border-slate-100 dark:border-slate-855 bg-slate-50/40">
+                <div className="p-4 rounded-xl border border-slate-100  bg-slate-50/40">
                   <span className="text-xs font-extrabold text-slate-400 uppercase">Created Date</span>
-                  <p className="mt-1 text-sm font-bold text-slate-800 dark:text-slate-200">{formatDate(selectedNode.createdAt)}</p>
+                  <p className="mt-1 text-sm font-bold text-slate-800 ">{formatDate(selectedNode.createdAt)}</p>
                 </div>
               </div>
 
@@ -501,19 +501,19 @@ export default function LocationsManagementPage() {
                   <div className="grid gap-4 grid-cols-3">
                     {selectedNode.type === 'region' && (
                       <div className="p-4 rounded-xl border border-blue-50 bg-blue-50/30 text-center">
-                        <span className="text-2xl font-black text-blue-900 dark:text-blue-300">{stats.statesCount}</span>
+                        <span className="text-2xl font-black text-blue-900 ">{stats.statesCount}</span>
                         <p className="text-[10px] font-extrabold uppercase tracking-wider text-blue-500 mt-1">States</p>
                       </div>
                     )}
                     {['region', 'state'].includes(selectedNode.type) && (
                       <div className="p-4 rounded-xl border border-blue-50 bg-blue-50/30 text-center">
-                        <span className="text-2xl font-black text-blue-900 dark:text-blue-300">{stats.districtsCount}</span>
+                        <span className="text-2xl font-black text-blue-900 ">{stats.districtsCount}</span>
                         <p className="text-[10px] font-extrabold uppercase tracking-wider text-blue-500 mt-1">Districts</p>
                       </div>
                     )}
                     {['region', 'state', 'district'].includes(selectedNode.type) && (
                       <div className="p-4 rounded-xl border border-blue-50 bg-blue-50/30 text-center col-span-1">
-                        <span className="text-2xl font-black text-blue-900 dark:text-blue-300">{stats.chaptersCount}</span>
+                        <span className="text-2xl font-black text-blue-900 ">{stats.chaptersCount}</span>
                         <p className="text-[10px] font-extrabold uppercase tracking-wider text-blue-500 mt-1">Chapters</p>
                       </div>
                     )}
@@ -535,7 +535,7 @@ export default function LocationsManagementPage() {
 
               {/* Actions Panel */}
               {canModifySelectedNode && (
-                <div className="flex gap-2 justify-end border-t border-slate-100 dark:border-slate-800 pt-4">
+                <div className="flex gap-2 justify-end border-t border-slate-100  pt-4">
                   <button
                     onClick={() => openEdit(selectedNode)}
                     className="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-slate-200 bg-white px-4 text-xs font-extrabold text-slate-700 hover:bg-slate-50"
@@ -571,9 +571,9 @@ export default function LocationsManagementPage() {
               )}
             </div>
           ) : (
-            <div className="rounded-2xl border-2 border-dashed border-slate-200 p-12 text-center dark:border-slate-800 min-h-[300px] flex flex-col justify-center items-center">
+            <div className="rounded-2xl border-2 border-dashed border-slate-200 p-12 text-center  min-h-[300px] flex flex-col justify-center items-center">
               <Info className="h-10 w-10 text-slate-350 mb-3" />
-              <h3 className="text-base font-black text-slate-800 dark:text-slate-200">No Location Selected</h3>
+              <h3 className="text-base font-black text-slate-800 ">No Location Selected</h3>
               <p className="text-sm font-semibold text-slate-400 mt-1 max-w-sm">
                 Select a node from the left tree hierarchy to view statistics, specifications, and manage child nodes.
               </p>
