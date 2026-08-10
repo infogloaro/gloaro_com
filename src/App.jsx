@@ -70,6 +70,8 @@ import {
 } from './pages/admin/EnterpriseManagementPages'
 import {
   AdminBannersPage,
+  AdminLeadersPage,
+  AdminGalleryPage,
   AdminCategoriesPage,
   AdminEventsPage,
   AdminFaqsPage,
@@ -208,6 +210,8 @@ function App() {
     { path: '/features', element: <FeatureManagementPage />, roles: [ROLES.SUPERADMIN] },
     { path: '/dashboard-config', element: <DashboardConfigurationPage />, roles: [ROLES.SUPERADMIN] },
     { path: '/banners', element: <AdminBannersPage />, roles: [ROLES.SUPERADMIN] },
+    { path: '/leaders', element: <AdminLeadersPage />, roles: [ROLES.SUPERADMIN] },
+    { path: '/gallery', element: <AdminGalleryPage />, roles: [ROLES.SUPERADMIN] },
     { path: '/membership-workflow', element: <WorkflowEnginePage />, roles: [ROLES.SUPERADMIN] },
     { path: '/users', element: <AdminManagementPage /> },
     { path: '/vendors', element: <ApprovedVendorsPage /> },
