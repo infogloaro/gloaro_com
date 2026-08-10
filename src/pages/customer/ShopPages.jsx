@@ -47,7 +47,6 @@ import {
   Shirt,
   ShoppingBasket,
   Smartphone,
-  Sparkles,
 } from "lucide-react";
 import { customerApi } from "../../api/customer";
 import { ordersApi } from "../../api/orders";
