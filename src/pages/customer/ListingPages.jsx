@@ -949,8 +949,8 @@ export function ServicesPage() {
                       </div>
                       <div className="absolute bottom-4 left-4 right-4 flex items-end justify-between gap-3">
                         <div>
-                          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/65">Starting from</p>
-                          <p className="mt-1 text-2xl font-black text-white">{getServicePriceText(service)}</p>
+                          <p className="text-[10px] font-black uppercase tracking-[0.2em] !text-white/65">Starting from</p>
+                          <p className="mt-1 text-2xl font-black !text-white">{getServicePriceText(service)}</p>
                         </div>
                         <div className="rounded-2xl bg-white/90 px-3 py-2 text-right shadow-lg backdrop-blur">
                           <div className="flex items-center gap-1 text-sm font-black text-amber-500">

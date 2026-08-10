@@ -472,58 +472,6 @@ function resolveQuickCategorySelection(label, categories = []) {
   return { category: "", search: label };
 }
 
-function getRecommended(products, sourceProduct) {
-  if (!sourceProduct) return products.slice(0, 4);
-  const sourceCategory = String(
-    sourceProduct.category?._id || sourceProduct.category || "",
-  );
-  const sourceSubcategory = String(
-    sourceProduct.subcategory?._id ||
-      sourceProduct.subcategory ||
-      sourceProduct.category?.parent?._id ||
-      sourceProduct.category?.parent ||
-      "",
-  );
-  const sourceBrand = getBrand(sourceProduct);
-  const sourceVendor = String(
-    sourceProduct.vendor?._id || sourceProduct.vendor || "",
-  );
-  return products
-    .filter((product) => product._id !== sourceProduct._id)
-    .sort((a, b) => {
-      const scoreA =
-        (String(a.category?._id || a.category) === sourceCategory ? 5 : 0) +
-        (String(
-          a.subcategory?._id ||
-            a.subcategory ||
-            a.category?.parent?._id ||
-            a.category?.parent ||
-            "",
-        ) === sourceSubcategory
-          ? 3
-          : 0) +
-        (getBrand(a) === sourceBrand ? 2 : 0) +
-        (String(a.vendor?._id || a.vendor || "") === sourceVendor ? 1 : 0) +
-        getPopularityScore(a) / 1000;
-      const scoreB =
-        (String(b.category?._id || b.category) === sourceCategory ? 5 : 0) +
-        (String(
-          b.subcategory?._id ||
-            b.subcategory ||
-            b.category?.parent?._id ||
-            b.category?.parent ||
-            "",
-        ) === sourceSubcategory
-          ? 3
-          : 0) +
-        (getBrand(b) === sourceBrand ? 2 : 0) +
-        (String(b.vendor?._id || b.vendor || "") === sourceVendor ? 1 : 0) +
-        getPopularityScore(b) / 1000;
-      return scoreB - scoreA;
-    })
-    .slice(0, 6);
-}
-
 function takeUniqueProducts(products, limit = 4, excludedIds = new Set()) {
   const seen = new Set(excludedIds);
   const list = [];
@@ -752,20 +700,19 @@ function ShopHeroShowcase({
               key={category._id}
               type="button"
               onClick={() => onCategorySelect(category.label)}
-              className="group flex min-w-[74px] flex-col items-center gap-1.5 text-center"
+              className="group flex min-w-[72px] flex-col items-center gap-1.5 text-center"
             >
               <span
-                className={`grid h-12 w-12 place-items-center rounded-[1.1rem] border p-1.5 text-xl shadow-sm transition duration-300 sm:h-14 sm:w-14 sm:text-2xl ${
+                className={`grid h-11 w-11 place-items-center rounded-[1rem] border p-1 shadow-sm transition duration-300 sm:h-12 sm:w-12 ${
                   active
                     ? "border-[#0d4697]/25 bg-white shadow-[0_12px_24px_rgba(13,70,151,0.12)]"
                     : `border-transparent bg-gradient-to-b ${category.tone} group-hover:-translate-y-0.5 group-hover:shadow-md`
                 }`}
+                aria-hidden="true"
               >
-                {category.iconComponent ? (
-                  <category.iconComponent className={`h-5 w-5 sm:h-6 sm:w-6 ${active ? "text-[#0d4697]" : "text-[#0d4697]"}`} />
-                ) : (
-                  <span className="leading-none">{category.emoji}</span>
-                )}
+                <span className="text-[1.35rem] leading-none sm:text-[1.5rem]">
+                  {category.emoji || "•"}
+                </span>
               </span>
               <span
                 className={`max-w-[76px] truncate text-[11px] font-semibold transition ${
@@ -982,6 +929,7 @@ export function ProductsPage() {
   const [quickViewOpen, setQuickViewOpen] = useState(false);
   const [page, setPage] = useState(Number(read("page", "1")) || 1);
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const productsSectionRef = useRef(null);
   const [filterState, setFilterState] = useState({
     search: read("search"),
     category: read("category"),
@@ -1127,13 +1075,6 @@ export function ProductsPage() {
         .sort((a, b) => getPopularityScore(b) - getPopularityScore(a)),
     [filteredProducts],
   );
-  const bestSellerPool = useMemo(
-    () =>
-      [...filteredProducts]
-        .sort((a, b) => getPopularityScore(b) - getPopularityScore(a))
-        .filter((product) => !product.isFeatured),
-    [filteredProducts],
-  );
   const newArrivalPool = useMemo(
     () =>
       filteredProducts
@@ -1149,35 +1090,7 @@ export function ProductsPage() {
         ),
     [filteredProducts],
   );
-  const discountPool = useMemo(
-    () =>
-      [...filteredProducts]
-        .filter((product) => getDiscount(product) > 0)
-        .sort((a, b) => getDiscount(b) - getDiscount(a)),
-    [filteredProducts],
-  );
-  const recentlyViewedPool = useMemo(
-    () => shop.recentlyViewed || [],
-    [shop.recentlyViewed],
-  );
-  const recommendationSeed =
-    selectedProduct ||
-    recentlyViewedPool[0]?.productSnapshot ||
-    filteredProducts[0] ||
-    null;
-  const recommendedPool = useMemo(
-    () => getRecommended(products, recommendationSeed),
-    [products, recommendationSeed],
-  );
-
-  const {
-    curatedFeatured,
-    bestSellers,
-    discountProducts,
-    newArrivals,
-    recommendedProducts,
-    recentlyViewed,
-  } = useMemo(() => {
+  const { newArrivals } = useMemo(() => {
     const used = new Set();
     const pick = (pool, limit = 4, extraExclusions = []) => {
       const items = takeUniqueProducts(
@@ -1189,44 +1102,11 @@ export function ProductsPage() {
       return items;
     };
 
-    const curatedFeatured = pick(featuredProducts, 4);
-    const bestSellers = pick(bestSellerPool, 4);
-    const discountProducts = pick(discountPool, 4);
     const newArrivals = pick(newArrivalPool, 4);
-    const recommendedProducts = pick(recommendedPool, 4);
-    const recentlyViewed = takeUniqueProducts(
-      recentlyViewedPool
-        .filter((entry) => entry?.productSnapshot?._id || entry?.productId)
-        .map((entry) => ({
-          productId: entry.productId || entry.productSnapshot?._id,
-          productSnapshot: entry.productSnapshot,
-          _id: entry.productId || entry.productSnapshot?._id,
-          createdAt: entry.createdAt,
-        }))
-        .reverse(),
-      4,
-      used,
-    ).map((entry) => ({
-      ...entry.productSnapshot,
-      _id: entry.productId,
-      productId: entry.productId,
-    }));
 
-    return {
-      curatedFeatured,
-      bestSellers,
-      discountProducts,
-      newArrivals,
-      recommendedProducts,
-      recentlyViewed,
-    };
+    return { newArrivals };
   }, [
-    bestSellerPool,
-    discountPool,
-    featuredProducts,
     newArrivalPool,
-    recentlyViewedPool,
-    recommendedPool,
   ]);
   const pageSize = 12;
   const totalPages = Math.max(1, Math.ceil(filteredProducts.length / pageSize));
@@ -1250,10 +1130,24 @@ export function ProductsPage() {
     filterState.color,
     filterState.material,
   ].filter(Boolean).length;
+  const activeSortLabel =
+    SORT_OPTIONS.find(([value]) => value === filterState.sortBy)?.[1] ||
+    "Relevance";
 
   useEffect(() => {
     if (page > totalPages) setPage(1);
   }, [page, totalPages]);
+
+  const handlePageChange = useCallback(
+    (updater) => {
+      setPage(updater);
+      productsSectionRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    },
+    [setPage],
+  );
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-[#faf8f5] via-white to-[#f5f7fa]">
@@ -1331,55 +1225,71 @@ export function ProductsPage() {
           </aside>
 
           <div className="flex-1 min-w-0 space-y-6">
-            <section className="relative overflow-hidden rounded-[2.5rem] border border-slate-200/80 bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(247,250,252,0.96))] p-4 shadow-[0_24px_80px_rgba(11,36,81,0.10)] backdrop-blur-xl sm:p-5">
+            <section
+              ref={productsSectionRef}
+              className="relative overflow-hidden rounded-[2.5rem] border border-slate-200/80 bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(247,250,252,0.96))] p-4 shadow-[0_24px_80px_rgba(11,36,81,0.10)] backdrop-blur-xl sm:p-5"
+            >
               <div className="pointer-events-none absolute -right-24 -top-24 h-56 w-56 rounded-full bg-[#0d4697]/10 blur-3xl" />
               <div className="pointer-events-none absolute -bottom-28 -left-20 h-64 w-64 rounded-full bg-[#D6A744]/10 blur-3xl" />
-              <div className="relative z-10 flex flex-col gap-4">
-                <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-                  <div className="max-w-2xl">
-                    <p className="font-jakarta text-[10px] font-black uppercase tracking-[0.32em] text-slate-400">
-                      Curated catalog
-                    </p>
-                    <h2 className="mt-2 font-playfair text-3xl font-black tracking-[-0.03em] text-navy sm:text-4xl">
-                      {filteredProducts.length} products,
-                      <span className="text-royal"> Gloaro Products</span>
-                    </h2>
-                    <p className="mt-2 max-w-xl text-sm leading-6 text-slate-500 sm:text-[15px]">
-                      Browse a polished marketplace surface with tighter curation,
-                      richer motion, and a cleaner shopping rhythm.
-                    </p>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    <div className="rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-black uppercase tracking-[0.22em] text-slate-500 shadow-sm">
+              <div className="relative z-10 grid gap-4 lg:grid-cols-[1.15fr_0.85fr] lg:items-end">
+                <div className="max-w-2xl">
+                  <p className="font-jakarta text-[10px] font-black uppercase tracking-[0.34em] text-slate-400">
+                    Curated catalog
+                  </p>
+                  <h2 className="mt-2 font-playfair text-3xl font-black tracking-[-0.03em] text-navy sm:text-4xl lg:text-[2.75rem]">
+                    Explore {filteredProducts.length} premium products
+                  </h2>
+                  <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-500 sm:text-[15px]">
+                    Discover a more refined shopping experience with elegant
+                    collections, smoother browsing, and a cleaner path to
+                    purchase.
+                  </p>
+                  <div className="mt-5 flex flex-wrap gap-2">
+                    <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-black uppercase tracking-[0.22em] text-slate-500 shadow-sm">
+                      <span className="h-2 w-2 rounded-full bg-emerald-500" />
                       {filteredProducts.length} live items
                     </div>
-                    <div className="rounded-full border border-navy/10 bg-navy/5 px-4 py-2 text-xs font-black uppercase tracking-[0.22em] text-navy shadow-sm">
+                    <div className="inline-flex items-center gap-2 rounded-full border border-navy/10 bg-navy/5 px-4 py-2 text-xs font-black uppercase tracking-[0.22em] text-navy shadow-sm">
+                      <span className="h-2 w-2 rounded-full bg-navy" />
                       {activeFilterCount} active filters
+                    </div>
+                    <div className="inline-flex items-center gap-2 rounded-full border border-amber-200 bg-amber-50 px-4 py-2 text-xs font-black uppercase tracking-[0.22em] text-amber-700 shadow-sm">
+                      <span className="h-2 w-2 rounded-full bg-amber-500" />
+                      Sorted by {activeSortLabel}
                     </div>
                   </div>
                 </div>
 
-                <div className="flex flex-wrap items-center justify-between gap-3 rounded-[1.5rem] border border-slate-200/80 bg-white/90 px-4 py-3 shadow-[0_8px_30px_rgba(11,36,81,0.05)]">
-                  <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.24em] text-slate-400">
-                    <span className="inline-flex h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_0_4px_rgba(16,185,129,0.12)]" />
-                    Sorting
+                <div className="rounded-[1.75rem] border border-slate-200/80 bg-white/90 p-4 shadow-[0_14px_45px_rgba(11,36,81,0.08)]">
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <p className="font-jakarta text-[10px] font-black uppercase tracking-[0.28em] text-slate-400">
+                        Quick sort
+                      </p>
+                      <p className="mt-1 text-sm font-semibold text-slate-600">
+                        Fine-tune the product grid in one tap.
+                      </p>
+                    </div>
+                    <span className="rounded-full bg-slate-100 px-3 py-1 text-[10px] font-black uppercase tracking-[0.22em] text-slate-500">
+                      Live
+                    </span>
                   </div>
-                  <div className="flex flex-wrap gap-2">
-                  {SORT_OPTIONS.map(([value, label]) => (
-                    <button
-                      key={value}
-                      type="button"
-                      onClick={() =>
-                        setFilterState((current) => ({
-                          ...current,
-                          sortBy: value,
-                        }))
-                      }
-                      className={`rounded-lg px-3.5 py-2 text-[11px] font-black transition-all ${filterState.sortBy === value ? "bg-navy text-white shadow-md" : "bg-slate-100/70 text-slate-600 hover:bg-slate-200"}`}
-                    >
-                      {label}
-                    </button>
-                  ))}
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    {SORT_OPTIONS.map(([value, label]) => (
+                      <button
+                        key={value}
+                        type="button"
+                        onClick={() =>
+                          setFilterState((current) => ({
+                            ...current,
+                            sortBy: value,
+                          }))
+                        }
+                        className={`rounded-full px-3.5 py-2 text-[11px] font-black transition-all ${filterState.sortBy === value ? "bg-navy text-white shadow-md" : "border border-slate-200 bg-slate-50 text-slate-600 hover:border-navy/20 hover:bg-white hover:text-navy"}`}
+                      >
+                        {label}
+                      </button>
+                    ))}
                   </div>
                 </div>
               </div>
@@ -1472,73 +1382,13 @@ export function ProductsPage() {
                     <PaginationBar
                       page={page}
                       totalPages={totalPages}
-                      onChange={setPage}
+                      onChange={handlePageChange}
                     />
                   </div>
                 </>
               )}
             </section>
 
-            {curatedFeatured.length > 0 && (
-              <ProductRailSection
-                title="Featured Products"
-                description="Handpicked products with standout quality and trust."
-                items={curatedFeatured}
-                onSeeAll={() => {
-                  setFilterState((current) => ({
-                    ...current,
-                    featured: "true",
-                    discount: "",
-                    newArrivals: "",
-                    sortBy: "relevance",
-                  }));
-                  setPage(1);
-                  window.scrollTo({ top: 0, behavior: "smooth" });
-                }}
-                accent="text-navy"
-                ribbon="from-navy to-royal"
-              />
-            )}
-            {bestSellers.length > 0 && (
-              <ProductRailSection
-                title="Best Sellers"
-                description="Top-performing products based on popularity and demand."
-                items={bestSellers}
-                onSeeAll={() => {
-                  setFilterState((current) => ({
-                    ...current,
-                    featured: "",
-                    discount: "",
-                    newArrivals: "",
-                    sortBy: "popular",
-                  }));
-                  setPage(1);
-                  window.scrollTo({ top: 0, behavior: "smooth" });
-                }}
-                accent="text-amber-700"
-                ribbon="from-amber-500 to-[#D6A744]"
-              />
-            )}
-            {discountProducts.length > 0 && (
-              <ProductRailSection
-                title="Discounted Deals"
-                description="Best value picks with strong markdowns."
-                items={discountProducts}
-                onSeeAll={() => {
-                  setFilterState((current) => ({
-                    ...current,
-                    featured: "",
-                    discount: "discounted",
-                    newArrivals: "",
-                    sortBy: "discount_desc",
-                  }));
-                  setPage(1);
-                  window.scrollTo({ top: 0, behavior: "smooth" });
-                }}
-                accent="text-emerald-700"
-                ribbon="from-emerald-500 to-emerald-700"
-              />
-            )}
             {newArrivals.length > 0 && (
               <ProductRailSection
                 title="New Arrivals"
@@ -1557,56 +1407,6 @@ export function ProductsPage() {
                 }}
                 accent="text-navy"
                 ribbon="from-sky-500 to-navy"
-              />
-            )}
-            {recommendedProducts.length > 0 && (
-              <ProductRailSection
-                title="Recommended for You"
-                description="Based on your browsing and product similarity."
-                items={recommendedProducts}
-                onSeeAll={() => {
-                  setFilterState((current) => ({
-                    ...current,
-                    featured: "",
-                    discount: "",
-                    newArrivals: "",
-                    sortBy: "relevance",
-                  }));
-                  setPage(1);
-                  window.scrollTo({ top: 0, behavior: "smooth" });
-                }}
-                accent="text-[#D6A744]"
-                ribbon="from-[#7a1d3d] to-[#D6A744]"
-              />
-            )}
-            {recentlyViewed.length > 0 && (
-              <ProductRailSection
-                title="Recently Viewed"
-                description="Pick up where you left off."
-                items={recentlyViewed}
-                onSeeAll={() => {
-                  setFilterState({
-                    search: "",
-                    category: "",
-                    brand: "",
-                    sortBy: "relevance",
-                    minPrice: "",
-                    maxPrice: "",
-                    rating: "",
-                    availability: "",
-                    discount: "",
-                    featured: "",
-                    newArrivals: "",
-                    size: "",
-                    color: "",
-                    material: "",
-                  });
-                  setPage(1);
-                  window.scrollTo({ top: 0, behavior: "smooth" });
-                }}
-                accent="text-slate-700"
-                ribbon="from-slate-400 to-slate-600"
-                tag="Pick up where you left off"
               />
             )}
           </div>
