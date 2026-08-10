@@ -679,24 +679,29 @@ export function ServicesPage() {
   const pagination = getPagination(payload)
 
   return (
-    <div className="mx-auto max-w-7xl px-5 py-8">
-      <div className="mb-8 flex flex-col justify-between gap-4 lg:flex-row lg:items-center">
-        <div>
-          <h1 className="font-playfair text-4xl font-bold text-[#0d4697]">Services</h1>
-          <p className="mt-1 text-sm font-semibold text-slate-500">Discover premium services offered by certified professionals.</p>
+    <div className="min-h-screen bg-[#f5f8fc] pb-14">
+      <section className="border-b border-[#0d4697]/10 bg-[radial-gradient(circle_at_15%_20%,rgba(255,174,19,.20),transparent_26%),linear-gradient(120deg,#082d66,#0d4697_58%,#1660b7)]">
+        <div className="mx-auto max-w-7xl px-5 py-12 sm:py-14 lg:px-8">
+          <p className="text-xs font-black uppercase tracking-[0.24em] text-[#ffd36e]">Gloaro business network</p>
+          <h1 className="mt-3 font-playfair text-4xl font-bold italic text-white sm:text-5xl">B2B Services</h1>
+          <p className="mt-3 max-w-2xl text-base font-medium leading-7 text-blue-50/90 sm:text-lg">Find trusted specialists, compare business solutions, and connect with verified providers built for growth.</p>
         </div>
-        <div className="flex flex-col gap-3 sm:flex-row">
+      </section>
+      <div className="mx-auto max-w-7xl px-5 py-8 lg:px-8">
+      <div className="mb-8 rounded-[26px] border border-slate-200 bg-white p-4 shadow-[0_14px_40px_rgba(15,23,42,.07)] sm:p-5">
+        <div className="mb-3 flex items-center justify-between"><p className="text-sm font-extrabold text-slate-800">Browse available services</p><p className="text-xs font-semibold text-slate-400">Refine your search</p></div>
+        <div className="flex flex-col gap-3 lg:flex-row">
           <input
             type="text"
             value={search}
             onChange={(e) => { setSearch(e.target.value); setPage(1) }}
-            placeholder="Search services..."
-            className="h-10 w-full rounded-md border border-slate-200 bg-white px-4 text-sm font-bold text-slate-855 outline-none focus:border-[#0d4697] sm:w-64"
+            placeholder="Search services, providers, or business needs..."
+            className="h-12 w-full flex-1 rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm font-bold text-slate-800 outline-none transition focus:border-[#0d4697] focus:bg-white focus:ring-4 focus:ring-[#0d4697]/10"
           />
           <select
             value={category}
             onChange={(e) => { setCategory(e.target.value); setPage(1) }}
-            className="h-10 rounded-md border border-slate-200 bg-white px-3 text-sm font-bold text-slate-855 outline-none focus:border-[#0d4697]"
+            className="h-12 rounded-xl border border-slate-200 bg-white px-4 text-sm font-bold text-slate-700 outline-none transition focus:border-[#0d4697] focus:ring-4 focus:ring-[#0d4697]/10"
           >
             <option value="">All Categories</option>
             {categories.map((cat) => (
@@ -706,7 +711,7 @@ export function ServicesPage() {
           <select
             value={sortBy}
             onChange={(e) => { setSortBy(e.target.value); setPage(1) }}
-            className="h-10 rounded-md border border-slate-200 bg-white px-3 text-sm font-bold text-slate-855 outline-none focus:border-[#0d4697]"
+            className="h-12 rounded-xl border border-slate-200 bg-white px-4 text-sm font-bold text-slate-700 outline-none transition focus:border-[#0d4697] focus:ring-4 focus:ring-[#0d4697]/10"
           >
             <option value="">Sort By</option>
             <option value="newest">Newest</option>
@@ -725,8 +730,59 @@ export function ServicesPage() {
         <EmptyState title="No services found" description="Try searching for another service or selecting a different category." />
       ) : (
         <>
-          <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-            {servicesList.map((service) => <ServiceCard key={service._id} service={service} />)}
+          <div className="mb-5 flex items-center justify-between"><p className="text-sm font-bold text-slate-500"><span className="font-black text-[#0d4697]">{pagination.total || servicesList.length}</span> services available</p><div className="ml-4 h-px flex-1 bg-slate-200" /></div>
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {servicesList.map((service) => {
+              const vendor = service.vendor || {}
+              const providerName = vendor.user?.name || vendor.ownerName || 'Gloaro vendor'
+              const businessName = vendor.businessName || 'Gloaro business'
+              const address = vendor.address || {}
+              const location = [address.city, address.state].filter(Boolean).join(', ') || 'Location not listed'
+
+              return (
+                <article key={service._id} className="group flex min-h-full flex-col overflow-hidden rounded-[24px] border border-slate-200/80 bg-white shadow-[0_10px_28px_rgba(15,23,42,.07)] transition duration-300 hover:-translate-y-1.5 hover:border-[#0d4697]/30 hover:shadow-[0_20px_42px_rgba(13,70,151,.16)]">
+                  <div>
+                    <div className="relative aspect-[16/10] overflow-hidden bg-slate-100">
+                      <img 
+                        src={service.gallery?.[0]?.url || '/logo.png'} 
+                        alt={service.title} 
+                        className="h-full w-full object-cover transition duration-700 group-hover:scale-110" 
+                      />
+                    </div>
+                    <div className="p-5">
+                      <span className="text-[10px] font-black uppercase tracking-[0.1em] text-[#0d4697]">
+                        {service.category?.name || 'Service'}
+                      </span>
+                      <h3 className="mt-1 text-lg font-extrabold leading-tight text-slate-900 line-clamp-1 group-hover:text-[#0d4697] transition">
+                        {service.title}
+                      </h3>
+                      <p className="mt-2 min-h-10 text-sm font-medium leading-5 text-slate-500 line-clamp-2">
+                        {service.shortDescription || service.description}
+                      </p>
+                      <div className="mt-2 space-y-1 border-t border-slate-100 pt-2 text-[11px] font-semibold text-slate-500">
+                        <p>Provider: {providerName}</p>
+                        <p>Business: {businessName}</p>
+                        <p className="text-slate-400">📍 {location}</p>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="mt-auto flex items-center justify-between border-t border-slate-100 bg-slate-50/70 p-5">
+                    <div className="flex flex-col">
+                      <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">Starting at</span>
+                      <span className="mt-0.5 text-lg font-black text-[#0d4697]">
+                        {getServicePriceText(service)}
+                      </span>
+                    </div>
+                    <Link 
+                      to={`/services/${service._id}`} 
+                      className="rounded-xl bg-[#0d4697] px-4 py-2.5 text-xs font-extrabold text-white shadow-[0_8px_16px_rgba(13,70,151,.18)] transition hover:bg-[#08387a]"
+                    >
+                      View Details
+                    </Link>
+                  </div>
+                </article>
+              )
+            })}
           </div>
 
           {pagination.totalPages > 1 && (
@@ -752,6 +808,7 @@ export function ServicesPage() {
           )}
         </>
       )}
+      </div>
     </div>
   )
 }
@@ -875,39 +932,41 @@ export function DetailPage({ type }) {
 
   if (type === 'services') {
     return (
-      <main className="mx-auto min-h-screen max-w-7xl px-4 py-8 sm:px-6 lg:px-8 bg-slate-50">
-        <div className="grid gap-8 lg:grid-cols-3">
-          <div className="lg:col-span-2 space-y-6">
-            <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white p-2 shadow-sm">
-              <div className="grid gap-2 sm:grid-cols-2">
+      <main className="min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(13,70,151,.10),transparent_28%),#f5f8fc] py-8 sm:py-12">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="mb-7 rounded-[28px] border border-[#0d4697]/10 bg-[linear-gradient(115deg,#082d66,#0d4697_64%,#1f6dc3)] px-6 py-7 text-white shadow-[0_20px_48px_rgba(13,70,151,.18)] sm:px-8"><p className="text-[11px] font-black uppercase tracking-[.24em] text-[#ffd36e]">Gloaro B2B Services</p><p className="mt-2 text-lg font-semibold text-white/90">Connect with verified business service providers.</p></div>
+        <div className="grid gap-7 lg:grid-cols-[minmax(0,1.65fr)_minmax(310px,.75fr)]">
+          <div className="space-y-6">
+            <div className="overflow-hidden rounded-[28px] border border-slate-200/80 bg-white p-3 shadow-[0_14px_40px_rgba(15,23,42,.08)]">
+              <div className="grid gap-3 sm:grid-cols-2">
                 {galleryImages.length ? (
                   galleryImages.map((img, idx) => (
-                    <img key={idx} src={img.url} alt="" className="h-60 w-full rounded-lg object-cover" />
+                    <img key={idx} src={img.url} alt="" className="h-[240px] w-full rounded-[20px] bg-slate-50 object-contain p-4 sm:h-[300px]" />
                   ))
                 ) : (
-                  <img src="/logo.png" alt="" className="h-60 w-full rounded-lg object-cover sm:col-span-2" />
+                  <img src="/logo.png" alt="" className="h-[240px] w-full rounded-[20px] bg-slate-50 object-contain p-6 sm:col-span-2 sm:h-[300px]" />
                 )}
               </div>
             </div>
 
-            <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+            <div className="rounded-[28px] border border-slate-200/80 bg-white p-6 shadow-[0_14px_40px_rgba(15,23,42,.07)] sm:p-8">
               <div className="flex flex-wrap items-center justify-between gap-3">
-                <span className="rounded-full bg-[#0d4697]/10 px-3 py-1 text-xs font-black uppercase tracking-wider text-[#0d4697]">
+                <span className="rounded-full bg-[#0d4697]/10 px-3 py-1.5 text-[10px] font-black uppercase tracking-[.16em] text-[#0d4697]">
                   {item.category?.name || 'Service'}
                 </span>
-                <span className="text-sm font-bold text-slate-400">Service ID: {item.serviceId || item._id}</span>
+                <span className="rounded-full bg-slate-100 px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-500">Service ID: {item.serviceId || item._id}</span>
               </div>
-              <h1 className="mt-3 font-playfair text-3xl font-black text-slate-900">{item.title}</h1>
-              <p className="mt-4 text-slate-700 leading-relaxed whitespace-pre-line">{item.description}</p>
+              <h1 className="mt-5 font-playfair text-4xl font-black leading-tight text-[#082d66] sm:text-5xl">{item.title}</h1>
+              <div className="mt-5 border-l-4 border-[#ffae13] pl-4"><p className="text-base leading-8 text-slate-600 whitespace-pre-line">{item.description}</p></div>
             </div>
 
             {relatedItems.length > 0 && (
               <div>
-                <h2 className="mb-4 text-xl font-extrabold text-slate-900">Related Services</h2>
+                <h2 className="mb-4 text-xl font-extrabold text-[#082d66]">Related Services</h2>
                 <div className="grid gap-4 sm:grid-cols-2">
                   {relatedItems.map((rel) => (
-                    <Link key={rel._id} to={`/services/${rel._id}`} className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white p-3 hover:shadow transition">
-                      <img src={rel.gallery?.[0]?.url || '/logo.png'} alt="" className="h-16 w-16 rounded-lg object-cover" />
+                    <Link key={rel._id} to={`/services/${rel._id}`} className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm transition hover:-translate-y-0.5 hover:border-[#0d4697]/30 hover:shadow-md">
+                      <img src={rel.gallery?.[0]?.url || '/logo.png'} alt="" className="h-16 w-16 rounded-xl bg-slate-50 object-contain p-1" />
                       <div>
                         <p className="line-clamp-1 text-sm font-bold text-slate-800">{rel.title}</p>
                         <p className="mt-0.5 text-xs font-semibold text-slate-500">{getServicePriceText(rel)}</p>
@@ -919,22 +978,27 @@ export function DetailPage({ type }) {
             )}
           </div>
 
-          <div className="space-y-6">
-            <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-              <p className="text-xs font-black uppercase tracking-wider text-slate-400">Starting Price</p>
-              <p className="mt-2 text-4xl font-black text-slate-900">{getServicePriceText(item)}</p>
-              <p className="mt-2 text-sm font-semibold text-slate-500">Send a detailed enquiry and the vendor will receive it directly in their dashboard.</p>
+          <div className="flex flex-col gap-6">
+            <div className="order-2 rounded-[28px] border border-[#0d4697]/10 bg-[linear-gradient(145deg,#fff,#f2f7ff)] p-6 shadow-[0_14px_40px_rgba(15,23,42,.08)]">
+              <p className="text-[10px] font-black uppercase tracking-[.2em] text-[#0d4697]">Starting Price</p>
+              <p className="mt-2 font-playfair text-5xl font-black text-[#082d66]">{getServicePriceText(item)}</p>
+              <p className="mt-3 border-t border-[#0d4697]/10 pt-3 text-sm font-medium leading-6 text-slate-600">Send a detailed enquiry directly to the vendor.</p>
             </div>
 
-            <form onSubmit={handleSubmit(submitServiceEnquiry)} className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-              <h2 className="text-xl font-extrabold text-slate-900">Request this service</h2>
-              <p className="mt-1 text-sm font-semibold text-slate-500">The enquiry goes to {businessName} and appears inside the vendor lead inbox.</p>
+            <form onSubmit={handleSubmit(submitServiceEnquiry)} className="order-1 overflow-hidden rounded-[28px] border border-[#0d4697]/15 bg-white shadow-[0_18px_45px_rgba(13,70,151,.14)]">
+              <div className="bg-[linear-gradient(120deg,#082d66,#0d4697)] px-6 py-5 text-white"><p className="text-[10px] font-black uppercase tracking-[.2em] text-[#ffd36e]">Quick enquiry</p><h2 className="mt-1 text-2xl font-extrabold text-white">Request this service</h2><p className="mt-1 text-sm font-medium text-blue-100">Your enquiry goes directly to {businessName}.</p></div>
 
-              <div className="mt-5 grid gap-4">
+              <div className="p-6 sm:p-7">
+                <div className="mb-6 grid grid-cols-3 overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 text-center text-[10px] font-black uppercase tracking-[.12em] text-slate-400">
+                  <div className="border-r border-slate-200 px-2 py-3 text-[#0d4697]"><span className="mr-1 inline-grid h-5 w-5 place-items-center rounded-full bg-[#0d4697] text-white">1</span> Your details</div>
+                  <div className="border-r border-slate-200 px-2 py-3"><span className="mr-1 inline-grid h-5 w-5 place-items-center rounded-full bg-white ring-1 ring-slate-200">2</span> Requirements</div>
+                  <div className="px-2 py-3"><span className="mr-1 inline-grid h-5 w-5 place-items-center rounded-full bg-white ring-1 ring-slate-200">3</span> Send</div>
+                </div>
+              <div className="grid gap-4">
                 <FormField label="Full Name" error={errors.name?.message}>
                   <input
                     {...register('name', { required: 'Name is required' })}
-                    className="h-11 w-full rounded-md border border-slate-200 px-3 text-sm font-semibold text-slate-900 outline-none focus:border-[#0d4697]"
+                    className="h-12 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm font-semibold text-slate-900 outline-none transition focus:border-[#0d4697] focus:bg-white focus:ring-4 focus:ring-[#0d4697]/10"
                     placeholder="Your name"
                   />
                 </FormField>
@@ -946,7 +1010,7 @@ export function DetailPage({ type }) {
                       pattern: { value: /^\S+@\S+\.\S+$/, message: 'Enter a valid email address' },
                     })}
                     type="email"
-                    className="h-11 w-full rounded-md border border-slate-200 px-3 text-sm font-semibold text-slate-900 outline-none focus:border-[#0d4697]"
+                    className="h-12 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm font-semibold text-slate-900 outline-none transition focus:border-[#0d4697] focus:bg-white focus:ring-4 focus:ring-[#0d4697]/10"
                     placeholder="you@example.com"
                   />
                 </FormField>
@@ -955,7 +1019,7 @@ export function DetailPage({ type }) {
                   <input
                     {...register('phone', { required: 'Phone number is required' })}
                     type="tel"
-                    className="h-11 w-full rounded-md border border-slate-200 px-3 text-sm font-semibold text-slate-900 outline-none focus:border-[#0d4697]"
+                    className="h-12 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm font-semibold text-slate-900 outline-none transition focus:border-[#0d4697] focus:bg-white focus:ring-4 focus:ring-[#0d4697]/10"
                     placeholder="Phone number"
                   />
                 </FormField>
@@ -963,7 +1027,7 @@ export function DetailPage({ type }) {
                 <FormField label="Subject" error={errors.subject?.message}>
                   <input
                     {...register('subject', { required: 'Subject is required' })}
-                    className="h-11 w-full rounded-md border border-slate-200 px-3 text-sm font-semibold text-slate-900 outline-none focus:border-[#0d4697]"
+                    className="h-12 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm font-semibold text-slate-900 outline-none transition focus:border-[#0d4697] focus:bg-white focus:ring-4 focus:ring-[#0d4697]/10"
                     placeholder="What do you need?"
                   />
                 </FormField>
@@ -974,7 +1038,7 @@ export function DetailPage({ type }) {
                       {...register('budgetMin')}
                       type="number"
                       min="0"
-                      className="h-11 w-full rounded-md border border-slate-200 px-3 text-sm font-semibold text-slate-900 outline-none focus:border-[#0d4697]"
+                      className="h-12 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm font-semibold text-slate-900 outline-none transition focus:border-[#0d4697] focus:bg-white focus:ring-4 focus:ring-[#0d4697]/10"
                       placeholder="Optional"
                     />
                   </FormField>
@@ -983,7 +1047,7 @@ export function DetailPage({ type }) {
                       {...register('budgetMax')}
                       type="number"
                       min="0"
-                      className="h-11 w-full rounded-md border border-slate-200 px-3 text-sm font-semibold text-slate-900 outline-none focus:border-[#0d4697]"
+                      className="h-12 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm font-semibold text-slate-900 outline-none transition focus:border-[#0d4697] focus:bg-white focus:ring-4 focus:ring-[#0d4697]/10"
                       placeholder="Optional"
                     />
                   </FormField>
@@ -996,7 +1060,7 @@ export function DetailPage({ type }) {
                       minLength: { value: 10, message: 'Message should be at least 10 characters' },
                     })}
                     rows={6}
-                    className="w-full rounded-md border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-900 outline-none focus:border-[#0d4697]"
+                    className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-[#0d4697] focus:bg-white focus:ring-4 focus:ring-[#0d4697]/10"
                     placeholder="Tell the vendor what you need..."
                   />
                 </FormField>
@@ -1004,16 +1068,18 @@ export function DetailPage({ type }) {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="h-12 rounded-xl bg-[#0d4697] px-4 text-sm font-extrabold text-white transition hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="h-12 rounded-xl bg-[linear-gradient(135deg,#ffae13,#ffcb55)] px-4 text-sm font-extrabold text-[#082d66] shadow-[0_10px_20px_rgba(255,174,19,.22)] transition hover:-translate-y-0.5 hover:shadow-[0_14px_26px_rgba(255,174,19,.30)] disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {isSubmitting ? 'Sending Enquiry...' : 'Submit Enquiry'}
                 </button>
+                <p className="text-center text-xs font-medium leading-5 text-slate-400">Your enquiry is shared securely with the selected provider only.</p>
+              </div>
               </div>
             </form>
 
-            <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-4">
+            <div className="order-3 rounded-[28px] border border-slate-200/80 bg-white p-6 shadow-[0_14px_40px_rgba(15,23,42,.08)] space-y-4">
               <div className="flex items-center gap-3">
-                <img src={vendor.logo?.url || '/logo.png'} alt="" className="h-12 w-12 rounded-full border object-cover" />
+                <img src={vendor.logo?.url || '/logo.png'} alt="" className="h-14 w-14 rounded-2xl border border-slate-200 bg-slate-50 object-contain p-1" />
                 <div>
                   <h3 className="text-base font-extrabold text-slate-900">{businessName}</h3>
                   <Link to={`/vendors/${vendor._id}`} className="text-xs font-extrabold text-[#0d4697] hover:underline">
@@ -1030,6 +1096,7 @@ export function DetailPage({ type }) {
               </div>
             </div>
           </div>
+        </div>
         </div>
       </main>
     )

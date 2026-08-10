@@ -106,6 +106,8 @@ export const adminNav = [
     icon: ShoppingBag,
     children: [
       ['Banner Management', '/banners', Sparkles],
+      ['Leadership Management', '/leaders', Users],
+      ['Gloaro Gallery', '/gallery', Sparkles],
       ['Categories', '/marketplace/categories', ListTree],
       ['Vendors', '/vendors', Building2],
       ['Products', '/products', Package],

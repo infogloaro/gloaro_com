@@ -109,6 +109,64 @@ function BannerForm({ initialValues = {}, onSubmit }) {
   )
 }
 
+function LeaderForm({ initialValues = {}, onSubmit }) {
+  const safeInitialValues = initialValues || {}
+  const defaultValues = useMemo(() => ({
+    name: safeInitialValues.name || '',
+    role: safeInitialValues.role || '',
+    bio: safeInitialValues.bio || '',
+    order: safeInitialValues.order ?? 0,
+    isActive: safeInitialValues.isActive ?? true,
+  }), [safeInitialValues.name, safeInitialValues.role, safeInitialValues.bio, safeInitialValues.order, safeInitialValues.isActive])
+  const { register, handleSubmit, reset, formState: { isSubmitting } } = useForm({ defaultValues })
+  useEffect(() => { reset(defaultValues) }, [defaultValues, reset])
+
+  const submit = (values) => {
+    const formData = new FormData()
+    formData.append('name', values.name)
+    formData.append('role', values.role)
+    formData.append('bio', values.bio || '')
+    formData.append('order', String(values.order ?? 0))
+    formData.append('isActive', String(values.isActive !== 'false'))
+    if (values.image?.[0]) formData.append('image', values.image[0])
+    onSubmit(formData)
+  }
+
+  return <form onSubmit={handleSubmit(submit)} className="space-y-4">
+    <div className="grid gap-4 sm:grid-cols-2">
+      <FormField label="Leader Name"><input {...register('name', { required: true })} className="h-11 w-full rounded-md border border-slate-300 bg-white px-3 text-black outline-none focus:border-[#0d4697]" /></FormField>
+      <FormField label="Designation"><input {...register('role', { required: true })} className="h-11 w-full rounded-md border border-slate-300 bg-white px-3 text-black outline-none focus:border-[#0d4697]" /></FormField>
+    </div>
+    <FormField label="Description"><textarea {...register('bio')} rows={4} className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-black outline-none focus:border-[#0d4697]" /></FormField>
+    <div className="grid gap-4 sm:grid-cols-2">
+      <FormField label="Leader Image"><input {...register('image')} type="file" accept="image/*" className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-500 file:mr-4 file:rounded-md file:border-0 file:bg-blue-50 file:px-3 file:py-2 file:text-xs file:font-extrabold file:text-[#0d4697]" />{safeInitialValues.image?.url && <img src={safeInitialValues.image.url} alt="" className="mt-2 h-24 w-24 rounded-md object-cover" />}</FormField>
+      <div className="grid gap-4 sm:grid-cols-2"><FormField label="Display Order"><input {...register('order', { valueAsNumber: true })} type="number" min="0" className="h-11 w-full rounded-md border border-slate-300 bg-white px-3 text-black outline-none focus:border-[#0d4697]" /></FormField><FormField label="Status"><select {...register('isActive')} className="h-11 w-full rounded-md border border-slate-300 bg-white px-3 text-black outline-none focus:border-[#0d4697]"><option value="true">Active</option><option value="false">Inactive</option></select></FormField></div>
+    </div>
+    <button disabled={isSubmitting} className="h-11 rounded-md bg-[#0d4697] px-5 text-sm font-extrabold text-white disabled:opacity-60">Save</button>
+  </form>
+}
+
+function GalleryForm({ initialValues = {}, onSubmit }) {
+  const safeInitialValues = initialValues || {}
+  const defaultValues = useMemo(() => ({ title: safeInitialValues.title || '', order: safeInitialValues.order ?? 0, isActive: safeInitialValues.isActive ?? true }), [safeInitialValues.title, safeInitialValues.order, safeInitialValues.isActive])
+  const { register, handleSubmit, reset, formState: { isSubmitting } } = useForm({ defaultValues })
+  useEffect(() => { reset(defaultValues) }, [defaultValues, reset])
+  const submit = (values) => {
+    const formData = new FormData()
+    formData.append('title', values.title || '')
+    formData.append('order', String(values.order ?? 0))
+    formData.append('isActive', String(values.isActive !== 'false'))
+    if (values.image?.[0]) formData.append('image', values.image[0])
+    onSubmit(formData)
+  }
+  return <form onSubmit={handleSubmit(submit)} className="space-y-4">
+    <FormField label="Image title (optional)"><input {...register('title')} className="h-11 w-full rounded-md border border-slate-300 bg-white px-3 text-black outline-none focus:border-[#0d4697]" /></FormField>
+    <FormField label="Gallery Image"><input {...register('image', { required: !safeInitialValues._id })} type="file" accept="image/*" className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-500 file:mr-4 file:rounded-md file:border-0 file:bg-blue-50 file:px-3 file:py-2 file:text-xs file:font-extrabold file:text-[#0d4697]" />{safeInitialValues.image?.url && <img src={safeInitialValues.image.url} alt="" className="mt-2 h-28 w-40 rounded-md object-cover" />}</FormField>
+    <div className="grid gap-4 sm:grid-cols-2"><FormField label="Display Order"><input {...register('order', { valueAsNumber: true })} type="number" min="0" className="h-11 w-full rounded-md border border-slate-300 bg-white px-3 text-black outline-none focus:border-[#0d4697]" /></FormField><FormField label="Status"><select {...register('isActive')} className="h-11 w-full rounded-md border border-slate-300 bg-white px-3 text-black outline-none focus:border-[#0d4697]"><option value="true">Active</option><option value="false">Inactive</option></select></FormField></div>
+    <button disabled={isSubmitting} className="h-11 rounded-md bg-[#0d4697] px-5 text-sm font-extrabold text-white disabled:opacity-60">Save</button>
+  </form>
+}
+
 export function AdminUsersPage() {
   return <ResourceListPage module="members" section="users" title="User Management" fetcher={adminApi.users} filters={[{ key: 'role', label: 'Role', options: [ROLES.CUSTOMER, ROLES.VENDOR, ROLES.ADMIN, ROLES.SUPERADMIN].map((value) => ({ value, label: value })) }]} columns={[
     { key: 'name', header: 'Name' }, { key: 'email', header: 'Email' }, { key: 'role', header: 'Role' }, { key: 'isActive', header: 'Status', render: (row) => <StatusBadge value={row.isActive ? 'active' : 'blocked'} /> },
@@ -1521,6 +1579,14 @@ export function AdminSupportPage() {
 
 export function AdminBannersPage() {
   return <ResourceListPage module="settings" section="banners" title="Banner Management" fetcher={adminApi.banners} createAction={adminApi.createBanner} updateAction={adminApi.updateBanner} deleteAction={adminApi.deleteBanner} columns={[{ key: 'title', header: 'Title' }, { key: 'placement', header: 'Placement' }, { key: 'isActive', header: 'Status', render: (row) => <StatusBadge value={row.isActive ? 'active' : 'inactive'} /> }]} renderForm={(props) => <BannerForm {...props} />} />
+}
+
+export function AdminLeadersPage() {
+  return <ResourceListPage module="settings" section="leaders" title="Leadership Management" description="Upload the leaders and images shown on the public home page." fetcher={adminApi.leaders} createAction={adminApi.createLeader} updateAction={adminApi.updateLeader} deleteAction={adminApi.deleteLeader} columns={[{ key: 'image', header: 'Image', render: (row) => row.image?.url ? <img src={row.image.url} alt="" className="h-10 w-10 rounded-full object-cover" /> : '—' }, { key: 'name', header: 'Name' }, { key: 'role', header: 'Designation' }, { key: 'isActive', header: 'Status', render: (row) => <StatusBadge value={row.isActive ? 'active' : 'inactive'} /> }]} renderForm={(props) => <LeaderForm {...props} />} />
+}
+
+export function AdminGalleryPage() {
+  return <ResourceListPage module="settings" section="gallery" title="Gallery Management" description="Images added here appear in the public Gloaro Gallery." fetcher={adminApi.gallery} createAction={adminApi.createGalleryItem} updateAction={adminApi.updateGalleryItem} deleteAction={adminApi.deleteGalleryItem} columns={[{ key: 'image', header: 'Image', render: (row) => row.image?.url ? <img src={row.image.url} alt="" className="h-10 w-16 rounded-md object-cover" /> : '—' }, { key: 'title', header: 'Title', render: (row) => row.title || '—' }, { key: 'order', header: 'Order' }, { key: 'isActive', header: 'Status', render: (row) => <StatusBadge value={row.isActive ? 'active' : 'inactive'} /> }]} renderForm={(props) => <GalleryForm {...props} />} />
 }
 
 export function AdminFaqsPage() {
