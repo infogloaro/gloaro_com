@@ -47,7 +47,7 @@ const moduleConfig = {
   },
   assignment: {
     title: 'Hierarchy Assignment',
-    description: 'Assign and transfer state directors, executive directors, launch directors, direct consultants, and chapters.',
+    description: 'Assign and transfer state directors, district presidents, direct consultants, launch directors, and chapters.',
     icon: Network,
     types: [ROLES.STATE_DIRECTOR, ROLES.EXECUTIVE_DIRECTOR, ROLES.LAUNCH_DIRECTOR, ROLES.DIRECT_CONSULTANT, 'chapter_assignment'],
     fields: ['code', 'type', 'assignedTo', 'reportsTo', 'chapter'],
@@ -123,7 +123,7 @@ const moduleConfig = {
     fields: ['code', 'type', 'assignedTo', 'metadata.version', 'metadata.currentStage', 'metadata.condition', 'metadata.escalationHours'],
   },
   referral_pipeline: {
-    title: 'Referral Pipeline',
+    title: 'Connect Pipeline',
     description: 'CRM style pipeline from new referral to contacted, meeting, application, member joined, closed, or lost.',
     icon: Kanban,
     types: ['new', 'contacted', 'meeting_scheduled', 'meeting_completed', 'interested', 'application_created', 'member_joined', 'closed', 'lost'],
@@ -350,7 +350,7 @@ function ChapterApprovalQueuePage() {
     <section className="space-y-6">
       <EnterpriseHeader
         title="Chapter Approval Queue"
-        description="Review chapter requests submitted by District Directors, then approve, reject, or deactivate them."
+        description="Review chapter requests submitted by Launch Directors, then approve, reject, or deactivate them."
         icon={Building2}
       />
 
@@ -1123,7 +1123,7 @@ export function ExecutiveDashboardPage() {
 }
 
 export function ChapterDashboardPage() {
-  return <EnterpriseRecordsPage module="chapter_dashboard" config={{ title: 'Chapter Dashboard', description: 'Chapter performance, visitors, attendance, meetings, business, referrals, members, top performers, and charts.', icon: Network, types: ['chapter'], fields: ['code', 'chapter', 'meetingsCount', 'attendanceCount', 'visitorsCount', 'membersCount', 'businessValue', 'referralValue'] }} />
+  return <EnterpriseRecordsPage module="chapter_dashboard" config={{ title: 'District President Dashboard', description: 'District performance, visitors, attendance, meetings, business, connects, members, top performers, and charts.', icon: Network, types: ['chapter'], fields: ['code', 'chapter', 'meetingsCount', 'attendanceCount', 'visitorsCount', 'membersCount', 'businessValue', 'referralValue'] }} />
 }
 
 export function MemberJourneyPage() {

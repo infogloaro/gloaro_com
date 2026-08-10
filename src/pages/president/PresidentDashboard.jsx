@@ -131,7 +131,7 @@ export default function PresidentDashboard() {
     ['members', 'Total Members', stats.totalUsers ?? '—', `${stats.newUsersToday ?? 0} today`, Users],
     ['active', 'Active Memberships', scopeOverview?.activeMembers ?? stats.activeUsers ?? '—', 'Verified network', CheckCircle2],
     ['approvals', 'Pending Membership Requests', stats.pendingMembershipApplications ?? '—', 'Needs review', ClipboardList],
-    [ROLES.VICE_PRESIDENT, 'Vice President', vpCount ?? '—', 'Assigned official', Users],
+    [ROLES.VICE_PRESIDENT, 'Vice Unit Chairman', vpCount ?? '—', 'Assigned official', Users],
     ['meetings', 'Meetings', stats.totalMeetings ?? '—', 'Scheduled sessions', CalendarDays],
     ['revenue', 'Business Generated', stats.revenue != null ? formatCurrency(stats.revenue) : '—', 'Chapter value', FileBarChart],
   ]
@@ -146,9 +146,9 @@ export default function PresidentDashboard() {
       <header className="rounded-2xl border border-white/60 bg-white/85 p-6 shadow-sm backdrop-blur">
         <p className="inline-flex items-center gap-2 text-xs font-extrabold uppercase tracking-[0.18em] text-[#0d4697]">
           <Building2 className="h-4 w-4" />
-          President Command Center
+          Unit Chairman Command Center
         </p>
-        <h1 className="mt-3 text-3xl font-black text-slate-950">Gloaro President Dashboard</h1>
+        <h1 className="mt-3 text-3xl font-black text-slate-950">Gloaro Unit Chairman Dashboard</h1>
         <p className="mt-2 max-w-4xl text-sm font-semibold leading-6 text-slate-555">
           Manage chapter officials, chapter vice presidents, and membership details under your assigned chapter.
         </p>

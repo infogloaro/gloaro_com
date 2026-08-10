@@ -5,7 +5,7 @@ import { FaCheckCircle } from 'react-icons/fa'
 export default function Community() {
   const chapterBullets = [
     'Weekly Networking Meetings',
-    'Trusted Business Referrals',
+    'Trusted Business Connects',
     'Local Business Community',
     'Leadership Development',
     'Accountability & Collaboration',
@@ -14,7 +14,7 @@ export default function Community() {
 
   const memberBullets = [
     'Verified Business Professional',
-    'Trusted Referral Network',
+    'Trusted Connect Network',
     'Qualified Business Opportunities',
     'Digital Marketing Support',
     'Technology Solutions',

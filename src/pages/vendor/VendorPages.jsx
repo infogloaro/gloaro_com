@@ -208,10 +208,10 @@ export function VendorProfilePage() {
             <span className="font-black text-slate-900">Status:</span> {pickupStatus}
           </p>
           <p className="mt-1 text-sm font-semibold text-slate-700">
-            <span className="font-black text-slate-900">Approval:</span> {pickupApproved ? 'Approved' : 'Pending review'}
+            <span className="font-black text-slate-900">Shiprocket sync:</span> {pickupApproved ? 'Approved & registered' : 'Auto-registered on next order'}
           </p>
           <p className="mt-3 text-xs font-semibold text-slate-500">
-            Updating the pickup address will mark the pickup location for revalidation.
+            Your pickup location is registered with Shiprocket automatically when your next order ships. Updating the pickup address will re-register it on the following order.
           </p>
         </div>
 

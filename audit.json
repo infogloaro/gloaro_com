@@ -1,0 +1,26 @@
+[
+  {
+    "file": "\\src\\constants\\navigation.js",
+    "line": 387,
+    "term": "Presidents",
+    "content": "['District Presidents', '/executive-directors', Users],"
+  },
+  {
+    "file": "\\src\\pages\\admin\\AdminVendorCategoryApprovalsPage.jsx",
+    "line": 243,
+    "term": "Presidents",
+    "content": "Review vendor category requests with chapter-scoped access for District Presidents and full scope for Admin and Super Admin."
+  },
+  {
+    "file": "\\src\\pages\\shared\\DynamicDashboard.jsx",
+    "line": 235,
+    "term": "Presidents",
+    "content": "label: 'District Presidents',"
+  },
+  {
+    "file": "\\src\\pages\\shared\\ProfilePage.jsx",
+    "line": 20,
+    "term": "President",
+    "content": "[ROLES.LAUNCH_DIRECTOR]: 'District President',"
+  }
+]

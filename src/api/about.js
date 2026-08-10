@@ -74,7 +74,7 @@ const servicesData = {
   services: [
     {
       icon: 'handshake',
-      title: 'Business Referrals',
+      title: 'Business Connects',
       description: 'Verified, trust-based referral engine that helps members generate quality business opportunities through structured networking and long-term professional relationships.',
     },
     {
@@ -143,7 +143,7 @@ const whyChooseData = {
     fee: 30000,
     gst: 5400,
     includes: [
-      'Referral Network',
+      'Connect Network',
       'Business Meetings',
       'Training',
       'Community',

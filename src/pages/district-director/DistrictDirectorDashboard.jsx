@@ -130,7 +130,7 @@ export default function DistrictDirectorDashboard() {
 
   const topCards = [
     ['chapters', 'Total Chapters', chaptersCount, 'Jurisdiction chapters', MapPinned],
-    ['directors', 'Chapter Directors', chapterDirectorsCount, 'Assigned team', Users],
+    ['directors', 'District Presidents', chapterDirectorsCount, 'Assigned team', Users],
     ['members', 'Total Members', stats.totalUsers ?? '—', `${stats.newUsersToday ?? 0} today`, Users],
     ['active', 'Active Memberships', scopeOverview?.activeMembers ?? stats.activeUsers ?? '—', 'Verified network', CheckCircle2],
     ['approvals', 'Pending Approvals', stats.pendingMembershipApplications || 0, 'Needs review', ClipboardList],
@@ -151,7 +151,7 @@ export default function DistrictDirectorDashboard() {
         </p>
         <h1 className="mt-3 text-3xl font-black text-slate-950">Gloaro District Dashboard</h1>
         <p className="mt-2 max-w-4xl text-sm font-semibold leading-6 text-slate-555">
-          Manage geographical chapters, chapter directors, and membership details under your assigned district.
+          Manage geographical chapters, district presidents, and membership details under your assigned district.
         </p>
       </header>
 

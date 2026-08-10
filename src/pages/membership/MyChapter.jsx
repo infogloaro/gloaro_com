@@ -214,15 +214,15 @@ export default function MyChapter() {
           <h3 className="text-base font-extrabold text-slate-900">Chapter Leadership & Directory</h3>
           <div className="grid gap-4 sm:grid-cols-3">
             <LeadershipCard
-              title="Chapter President"
+              title="Chapter Unit Chairman"
               name={overview?.leadership?.president?.name}
             />
             <LeadershipCard
-              title="Vice President"
+              title="Unit Vice Chairman"
               name={overview?.leadership?.vicePresident?.name}
             />
             <LeadershipCard
-              title="Secretary"
+              title="Coordinator"
               name={overview?.leadership?.secretary?.name}
             />
           </div>

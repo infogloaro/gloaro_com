@@ -242,7 +242,7 @@ const computeTotals = (cart, activeCoupon, deliveryMethod) => {
   const taxableAmount = subtotal - productDiscount
   const tax = Math.max(0, taxableAmount * taxRate)
   const shippingBase = deliveryMethod === 'express' ? 149 : deliveryMethod === 'scheduled' ? 79 : 59
-  const shipping = subtotal >= 1499 ? 0 : shippingBase
+  const shipping = subtotal === 0 ? 0 : (subtotal >= 1499 ? 0 : shippingBase)
   const coupon = activeCoupon || null
   let couponDiscount = 0
   if (coupon?.code) {

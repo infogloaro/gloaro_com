@@ -10,13 +10,13 @@ import JurisdictionCard from '../../components/common/JurisdictionCard'
 export default function SecretaryDashboard() {
   const { data, loading, error } = useApi(secretaryApi.dashboard)
 
-  if (loading) return <LoadingScreen label="Loading Secretary Dashboard..." />
+  if (loading) return <LoadingScreen label="Loading Coordinator Dashboard..." />
 
   if (error || !data) {
     return (
       <EmptyState 
         title="Dashboard Offline" 
-        description="Could not load Secretary dashboard information from the API server." 
+        description="Could not load Coordinator dashboard information from the API server." 
       />
     )
   }
@@ -31,9 +31,9 @@ export default function SecretaryDashboard() {
           Welcome Back
         </p>
         <h2 className="mt-1 text-xl font-bold sm:text-2xl text-slate-100">
-          {data.user?.name || 'Secretary'}
+          {data.user?.name || 'Coordinator'}
         </h2>
-        <h1 className="mt-2 text-2xl font-black sm:text-3xl">Secretary Dashboard</h1>
+        <h1 className="mt-2 text-2xl font-black sm:text-3xl">Coordinator Dashboard</h1>
         <p className="mt-2 max-w-2xl text-sm font-semibold text-slate-200">
           Monitor your chapter metrics, view upcoming meetings, track member lists, and organize documents.
         </p>

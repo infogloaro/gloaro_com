@@ -202,7 +202,7 @@ export default function BusinessDirectory() {
                 </p>
               </div>
               <div>
-                <p className="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider">Referral</p>
+                <p className="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider">Connect</p>
                 <p className="text-xs font-black text-emerald-600 mt-0.5">{item.referralScore}%</p>
               </div>
               <div>

@@ -128,7 +128,7 @@ export default function ChapterDirectorDashboard() {
   const launchDirectorsCount = stats.roleStats?.launchDirectors ?? 0;
 
   const topCards = [
-    ['directors', 'Launch Directors', launchDirectorsCount, 'Assigned team', Users],
+    ['directors', 'Direct Consultants', launchDirectorsCount, 'Assigned team', Users],
     ['members', 'Total Members', stats.totalUsers ?? '—', `${stats.newUsersToday ?? 0} today`, Users],
     ['active', 'Active Memberships', scopeOverview?.activeMembers ?? stats.activeUsers ?? '—', 'Verified network', CheckCircle2],
     ['approvals', 'Pending Approvals', stats.pendingMembershipApplications ?? '—', 'Needs review', ClipboardList],
@@ -145,11 +145,11 @@ export default function ChapterDirectorDashboard() {
       <header className="rounded-2xl border border-white/60 bg-white/85 p-6 shadow-sm backdrop-blur">
         <p className="inline-flex items-center gap-2 text-xs font-extrabold uppercase tracking-[0.18em] text-[#0d4697]">
           <Building2 className="h-4 w-4" />
-          Chapter Director Command Center
+          District President Command Center
         </p>
-        <h1 className="mt-3 text-3xl font-black text-slate-950">Gloaro Chapter Dashboard</h1>
+        <h1 className="mt-3 text-3xl font-black text-slate-950">District President Dashboard</h1>
         <p className="mt-2 max-w-4xl text-sm font-semibold leading-6 text-slate-555">
-          Manage chapter officials, chapter presidents, and membership details under your assigned chapter.
+          Manage district leadership, direct consultants, and membership activities within your assigned district.
         </p>
       </header>
 
