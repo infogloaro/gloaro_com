@@ -575,8 +575,8 @@ function App() {
               <Route path="/chapter-director/settings" element={<AdminSettingsPage />} />
               {/* Inherited Base Member Modules */}
               <Route path="/chapter-director/chapter" element={<MyChapter />} />
-              <Route path="/chapter-director/wall" element={<BusinessWall />} />
-              <Route path="/chapter-director/business-wall" element={<BusinessWall />} />
+              <Route path="/chapter-director/wall" element={<Navigate to="/chapter-director/dashboard" replace />} />
+              <Route path="/chapter-director/business-wall" element={<Navigate to="/chapter-director/dashboard" replace />} />
               <Route path="/chapter-director/network" element={<CommunityPage scope="network" />} />
               <Route path="/chapter-director/chat" element={<ChatSystem />} />
               <Route path="/chapter-director/referrals" element={<ReferralsPipeline />} />
@@ -654,14 +654,14 @@ function App() {
               <Route path="/vice-president/profile" element={<MembershipProfilePage />} />
             </Route>
 
-            {/* Launch Director Console */}
+            {/* Direct Consultant Console (Backend: Launch Director) */}
             <Route element={<ProtectedRoute roles={[ROLES.LAUNCH_DIRECTOR]} />}>
               <Route path="/launch-director" element={<Navigate to="/launch-director/dashboard" replace />} />
               <Route path="/launch-director/dashboard" element={<LaunchDirectorDashboard />} />
               
               {/* Inherited Base Member Modules */}
               <Route path="/launch-director/chapter" element={<MyChapter />} />
-              <Route path="/launch-director/wall" element={<BusinessWall />} />
+              <Route path="/launch-director/wall" element={<Navigate to="/launch-director/dashboard" replace />} />
               <Route path="/launch-director/network" element={<CommunityPage scope="network" />} />
               <Route path="/launch-director/chat" element={<ChatSystem />} />
               <Route path="/launch-director/referrals" element={<ReferralsPipeline />} />
@@ -675,21 +675,21 @@ function App() {
               <Route path="/launch-director/vendors" element={<LaunchDirectorVendorsPage />} />
               <Route path="/launch-director/profile" element={<MembershipProfilePage />} />
 
-              {/* Launch Director Specific Modules */}
+              {/* Direct Consultant Specific Modules */}
               <Route path="/launch-director/members" element={<AdminManagementPage role={ROLES.CUSTOMER} />} />
               <Route path="/launch-director/direct-consultants" element={<AdminManagementPage role={ROLES.DIRECT_CONSULTANT} />} />
               <Route path="/launch-director/launch-reports" element={<EnterpriseReportBuilderPage />} />
               <Route path="/launch-director/membership-reports" element={<EnterpriseReportBuilderPage />} />
             </Route>
 
-            {/* Direct Consultant Console */}
+            {/* Launch Director Console (Backend: Direct Consultant) */}
             <Route element={<ProtectedRoute roles={[ROLES.DIRECT_CONSULTANT]} />}>
               <Route path="/direct-consultant" element={<Navigate to="/direct-consultant/dashboard" replace />} />
               <Route path="/direct-consultant/dashboard" element={<DirectConsultantDashboard />} />
               
               {/* Inherited Base Member Modules */}
               <Route path="/direct-consultant/chapter" element={<MyChapter />} />
-              <Route path="/direct-consultant/wall" element={<BusinessWall />} />
+              <Route path="/direct-consultant/wall" element={<Navigate to="/direct-consultant/dashboard" replace />} />
               <Route path="/direct-consultant/network" element={<CommunityPage scope="network" />} />
               <Route path="/direct-consultant/chat" element={<ChatSystem />} />
               <Route path="/direct-consultant/referrals" element={<ReferralsPipeline />} />
@@ -703,8 +703,9 @@ function App() {
               <Route path="/direct-consultant/vendors" element={<DirectConsultantVendorsPage />} />
               <Route path="/direct-consultant/profile" element={<MembershipProfilePage />} />
 
-              {/* Direct Consultant Specific Modules */}
+              {/* Launch Director Specific Modules */}
               <Route path="/direct-consultant/members" element={<AdminManagementPage role={ROLES.CUSTOMER} />} />
+              <Route path="/direct-consultant/units" element={<LocationsManagementPage />} />
               <Route path="/direct-consultant/presidents" element={<AdminManagementPage role={ROLES.CHAPTER_PRESIDENT} />} />
             </Route>
 

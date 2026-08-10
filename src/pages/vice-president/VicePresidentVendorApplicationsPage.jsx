@@ -11,10 +11,12 @@ import { ROLES } from '../../constants/roleConfig.js'
 
 const formatRoleLabel = (roleStr = '') => {
   const clean = String(roleStr || '').toLowerCase().replaceAll('_', ' ').replaceAll('-', ' ')
-  if (clean === 'executive director' || clean === 'chapter director') return 'EXECUTIVE DIRECTOR'
+  if (clean === 'executive director' || clean === 'chapter director') return 'DISTRICT PRESIDENT'
   if (clean === ROLES.SUPERADMIN) return 'SUPER ADMIN'
   if (clean === ROLES.ADMIN) return 'ADMIN'
-  if (clean === 'vice president') return 'VICE PRESIDENT'
+  if (clean === 'vice president') return 'UNIT VICE CHAIRMAN'
+  if (clean === 'launch director') return 'DIRECT CONSULTANT'
+  if (clean === 'direct consultant') return 'LAUNCH DIRECTOR'
   return clean.toUpperCase() || 'SYSTEM'
 }
 

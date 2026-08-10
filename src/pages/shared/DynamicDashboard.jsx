@@ -226,7 +226,7 @@ export default function DynamicDashboard() {
       color: 'text-indigo-600 bg-indigo-50'
     },
     chapterDirectors: {
-      label: 'Chapter Directors',
+      label: 'District Presidents',
       value: formatVal(stats.roleStats?.chapterDirectors ?? stats.roleStats?.launchDirectors),
       icon: Users,
       color: 'text-blue-600 bg-blue-50'

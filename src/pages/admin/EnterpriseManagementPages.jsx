@@ -47,7 +47,7 @@ const moduleConfig = {
   },
   assignment: {
     title: 'Hierarchy Assignment',
-    description: 'Assign and transfer state directors, executive directors, launch directors, direct consultants, and chapters.',
+    description: 'Assign and transfer state directors, district presidents, direct consultants, launch directors, and chapters.',
     icon: Network,
     types: [ROLES.STATE_DIRECTOR, ROLES.EXECUTIVE_DIRECTOR, ROLES.LAUNCH_DIRECTOR, ROLES.DIRECT_CONSULTANT, 'chapter_assignment'],
     fields: ['code', 'type', 'assignedTo', 'reportsTo', 'chapter'],
@@ -1123,7 +1123,7 @@ export function ExecutiveDashboardPage() {
 }
 
 export function ChapterDashboardPage() {
-  return <EnterpriseRecordsPage module="chapter_dashboard" config={{ title: 'Chapter Dashboard', description: 'Chapter performance, visitors, attendance, meetings, business, referrals, members, top performers, and charts.', icon: Network, types: ['chapter'], fields: ['code', 'chapter', 'meetingsCount', 'attendanceCount', 'visitorsCount', 'membersCount', 'businessValue', 'referralValue'] }} />
+  return <EnterpriseRecordsPage module="chapter_dashboard" config={{ title: 'District President Dashboard', description: 'District performance, visitors, attendance, meetings, business, connects, members, top performers, and charts.', icon: Network, types: ['chapter'], fields: ['code', 'chapter', 'meetingsCount', 'attendanceCount', 'visitorsCount', 'membersCount', 'businessValue', 'referralValue'] }} />
 }
 
 export function MemberJourneyPage() {

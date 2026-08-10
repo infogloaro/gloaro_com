@@ -129,7 +129,7 @@ export default function LaunchDirectorDashboard() {
   const activeChaptersCount = stats.roleStats?.activeChapters ?? 0;
 
   const topCards = [
-    ['consultants', 'Direct Consultants', directConsultantsCount, 'Assigned team', Users],
+    ['consultants', 'Launch Directors', directConsultantsCount, 'Assigned team', Users],
     ['chapters', 'Active Chapters', activeChaptersCount, 'Chapter status', Building2],
     ['members', 'Total Members', stats.totalUsers ?? '—', `${stats.newUsersToday ?? 0} today`, Users],
     ['active', 'Active Memberships', scopeOverview?.activeMembers ?? stats.activeUsers ?? '—', 'Verified network', CheckCircle2],
@@ -146,11 +146,11 @@ export default function LaunchDirectorDashboard() {
       <header className="rounded-2xl border border-white/60 bg-white/85 p-6 shadow-sm backdrop-blur">
         <p className="inline-flex items-center gap-2 text-xs font-extrabold uppercase tracking-[0.18em] text-[#0d4697]">
           <Building2 className="h-4 w-4" />
-          Launch Director Command Center
+          Direct Consultant Command Center
         </p>
-        <h1 className="mt-3 text-3xl font-black text-slate-950">Gloaro Launch Dashboard</h1>
+        <h1 className="mt-3 text-3xl font-black text-slate-950">Direct Consultant Dashboard</h1>
         <p className="mt-2 max-w-4xl text-sm font-semibold leading-6 text-slate-555">
-          Manage chapter launches, direct consultants, and membership details under your assigned chapter.
+          Manage chapter launches, launch directors, and membership details under your assigned chapter.
         </p>
       </header>
 

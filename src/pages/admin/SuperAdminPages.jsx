@@ -342,7 +342,7 @@ export function MembershipWorkflowPage() {
         <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
           <h2 className="text-lg font-extrabold text-slate-950">Who can create membership?</h2>
           <div className="mt-4 space-y-3">
-            {['District Unit Chairman', 'Launch Director', 'Direct Consultant', 'Unit Chairman', 'Coordinator'].map((role, index) => (
+            {['District Unit Chairman', 'Direct Consultant', 'Launch Director', 'Unit Chairman', 'Coordinator'].map((role, index) => (
               <label key={role} className="flex items-center justify-between rounded-xl bg-slate-50 px-4 py-3 text-sm font-extrabold text-slate-700">
                 {role}
                 <input type="checkbox" defaultChecked={index < 3} className="h-4 w-4 accent-[#0d4697]" />

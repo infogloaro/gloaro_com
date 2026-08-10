@@ -49,6 +49,10 @@ export default function LocationsManagementPage() {
     status: 'active'
   })
   const isGlobalAdmin = [ROLES.SUPERADMIN, ROLES.ADMIN].includes(user?.role)
+  
+  const unitLabel = user?.role === ROLES.DIRECT_CONSULTANT ? 'unit' : 'chapter'
+  const UnitLabel = user?.role === ROLES.DIRECT_CONSULTANT ? 'Unit' : 'Chapter'
+  const UnitsLabel = user?.role === ROLES.DIRECT_CONSULTANT ? 'Units' : 'Chapters'
 
   const loadLocations = async () => {
     setLoading(true)
@@ -341,6 +345,9 @@ export default function LocationsManagementPage() {
     if (role === ROLES.DISTRICT_DIRECTOR) {
       return { label: 'Add Chapter', type: 'chapter', parentId: org.district || '' }
     }
+    if (role === ROLES.DIRECT_CONSULTANT) {
+      return { label: 'Add Unit', type: 'chapter', parentId: org.district || '' }
+    }
 
     if (!selectedNode) {
       return { label: 'Add Region', type: 'region', parentId: '' }
@@ -366,6 +373,7 @@ export default function LocationsManagementPage() {
     if (role === ROLES.REGION_DIRECTOR && selectedNode.type === 'region') return false
     if (role === ROLES.STATE_DIRECTOR && selectedNode.type === 'state') return false
     if (role === ROLES.DISTRICT_DIRECTOR && selectedNode.type === 'district') return false
+    if (role === ROLES.DIRECT_CONSULTANT && selectedNode.type === 'district') return false
 
     return true
   }, [selectedNode, user])
@@ -388,6 +396,9 @@ export default function LocationsManagementPage() {
   } else if (user?.role === ROLES.DISTRICT_DIRECTOR) {
     pageTitle = "Organization Chapters Master"
     pageDesc = "Manage geographical Chapters under your assigned District."
+  } else if (user?.role === ROLES.DIRECT_CONSULTANT) {
+    pageTitle = "Organization Units Master"
+    pageDesc = "Manage geographical Units under your assigned District."
   }
 
   return (
@@ -514,7 +525,7 @@ export default function LocationsManagementPage() {
                     {['region', 'state', 'district'].includes(selectedNode.type) && (
                       <div className="p-4 rounded-xl border border-blue-50 bg-blue-50/30 text-center col-span-1">
                         <span className="text-2xl font-black text-blue-900 dark:text-blue-300">{stats.chaptersCount}</span>
-                        <p className="text-[10px] font-extrabold uppercase tracking-wider text-blue-500 mt-1">Chapters</p>
+                        <p className="text-[10px] font-extrabold uppercase tracking-wider text-blue-500 mt-1">{UnitLabel}s</p>
                       </div>
                     )}
                   </div>
@@ -522,14 +533,18 @@ export default function LocationsManagementPage() {
               )}
 
               {selectedNode.type === 'chapter' && selectedNode.status === 'pending_approval' && (
-                <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm font-semibold text-amber-900">
-                  This chapter is pending approval. Chapter status updates are handled through the approval workflow.
+                <div className="rounded-xl border border-blue-200 bg-blue-50 p-4 dark:border-blue-900/50 dark:bg-blue-900/20">
+                  <p className="text-sm font-semibold text-blue-800 dark:text-blue-300">
+                    This {unitLabel} is pending approval. {UnitLabel} status updates are handled through the approval workflow.
+                  </p>
                 </div>
               )}
 
-              {selectedNode.type === 'chapter' && selectedNode.status === 'rejected' && user?.role === ROLES.DISTRICT_DIRECTOR && (
-                <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm font-semibold text-red-800">
-                  This chapter was rejected. You can edit it, then resubmit after correcting the details.
+              {selectedNode.type === 'chapter' && selectedNode.status === 'rejected' && [ROLES.DISTRICT_DIRECTOR, ROLES.DIRECT_CONSULTANT].includes(user?.role) && (
+                <div className="rounded-xl border border-red-200 bg-red-50 p-4 dark:border-red-900/50 dark:bg-red-900/20">
+                  <p className="text-sm font-semibold text-red-800 dark:text-red-300">
+                    This {unitLabel} was rejected. You can edit it, then resubmit after correcting the details.
+                  </p>
                 </div>
               )}
 
@@ -542,7 +557,7 @@ export default function LocationsManagementPage() {
                   >
                     <Edit2 className="h-4 w-4" /> Edit details
                   </button>
-                  {!((selectedNode.type === 'chapter') && user?.role === ROLES.DISTRICT_DIRECTOR) && (
+                  {!((selectedNode.type === 'chapter') && [ROLES.DISTRICT_DIRECTOR, ROLES.DIRECT_CONSULTANT].includes(user?.role)) && (
                     <button
                       onClick={() => toggleStatus(selectedNode)}
                       className="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-slate-200 bg-white px-4 text-xs font-extrabold text-slate-700 hover:bg-slate-50"
@@ -559,12 +574,12 @@ export default function LocationsManagementPage() {
                       <Trash2 className="h-4 w-4" /> Delete Location
                     </button>
                   )}
-                  {selectedNode.type === 'chapter' && selectedNode.status === 'rejected' && user?.role === ROLES.DISTRICT_DIRECTOR && (
+                  {selectedNode.type === 'chapter' && selectedNode.status === 'rejected' && [ROLES.DISTRICT_DIRECTOR, ROLES.DIRECT_CONSULTANT].includes(user?.role) && (
                     <button
                       onClick={() => resubmitChapter(selectedNode)}
-                      className="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-emerald-600 px-4 text-xs font-extrabold text-white hover:bg-emerald-700"
+                      className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-green-600 px-4 py-2.5 text-sm font-extrabold text-white shadow-sm transition-all hover:bg-green-700 hover:shadow-md"
                     >
-                      <CheckCircle2 className="h-4 w-4" /> Resubmit Chapter
+                      <CheckCircle2 className="h-4 w-4" /> Resubmit {UnitLabel}
                     </button>
                   )}
                 </div>
@@ -722,10 +737,10 @@ export default function LocationsManagementPage() {
           </div>
           <div>
             <label className="block text-xs font-extrabold uppercase text-slate-500">Status</label>
-            {form.type === 'chapter' && user?.role === ROLES.DISTRICT_DIRECTOR ? (
-              <div className="mt-1 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-bold text-amber-800">
-                Chapter status is controlled by the approval workflow. Edit details and resubmit when ready.
-              </div>
+            {form.type === 'chapter' && [ROLES.DISTRICT_DIRECTOR, ROLES.DIRECT_CONSULTANT].includes(user?.role) ? (
+              <p className="text-sm font-bold text-slate-500 text-center">
+                {UnitLabel} status is controlled by the approval workflow. Edit details and resubmit when ready.
+              </p>
             ) : (
               <select
                 value={form.status}

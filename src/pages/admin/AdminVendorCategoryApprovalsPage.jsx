@@ -81,9 +81,9 @@ export default function AdminVendorCategoryApprovalsPage() {
     if ([ROLES.ADMIN, ROLES.SUPERADMIN].includes(role)) return true
     if (role !== ROLES.EXECUTIVE_DIRECTOR) return false
 
-    const userChapter = getId(user?.meta?.adminProfile?.organization?.chapter)
-    const requestChapter = getId(request?.vendorId?.chapterId)
-    return Boolean(userChapter && requestChapter && userChapter === requestChapter)
+    const userDistrict = getId(user?.meta?.adminProfile?.organization?.district)
+    const requestDistrict = getId(request?.vendorId?.districtId)
+    return Boolean(userDistrict && requestDistrict && userDistrict === requestDistrict)
   }
 
   const load = async () => {
