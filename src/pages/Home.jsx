@@ -457,7 +457,7 @@ export default function Home() {
       @keyframes gl-pulse-ring { 0% { box-shadow: 0 0 0 0 rgba(255,174,19,.45); } 70% { box-shadow: 0 0 0 14px rgba(255,174,19,0); } 100% { box-shadow: 0 0 0 0 rgba(255,174,19,0); } }
       .gl-pulse-ring { animation: gl-pulse-ring 2.6s ease-out infinite; }
       @media (prefers-reduced-motion: reduce) {
-        .gl-marquee, .gl-float-a, .gl-float-b, .gl-shimmer::after, .gl-gold-text, .gl-fade-up, .gl-pulse-ring { animation: none !important; }
+        .gl-float-a, .gl-float-b, .gl-shimmer::after, .gl-gold-text, .gl-fade-up, .gl-pulse-ring { animation: none !important; }
       }
     `}</style>
 
@@ -496,20 +496,13 @@ export default function Home() {
 
     {/* Services marquee ticker — puts the full breadth of the network to work as a signature strip */}
     <div className="border-y border-[#0d4697]/10 bg-white">
-      <div className="flex flex-wrap justify-center gap-x-6 gap-y-2 px-4 py-3 xl:hidden">
-        {serviceItems.map((item) => (
-          <span key={item} className="flex items-center gap-2 font-urbanist text-[11px] font-extrabold uppercase tracking-[0.18em] text-[#0d4697]/70 sm:text-xs">
-            {item}<span className="text-[#ffae13]">✦</span>
-          </span>
-        ))}
-      </div>
-      <div className="relative hidden h-14 overflow-hidden xl:block">
-        <div className="gl-marquee absolute left-0 top-1/2 flex w-max -translate-y-1/2 gap-12 whitespace-nowrap px-6">
-        {[...serviceItems, ...serviceItems].map((item, index) => (
-          <span key={`${item}-${index}`} className="flex items-center gap-3 font-urbanist text-sm font-extrabold uppercase tracking-[0.24em] text-[#0d4697]/70">
-            {item}<span className="text-[#ffae13]">✦</span>
-          </span>
-        ))}
+      <div className="relative h-12 overflow-hidden sm:h-14">
+        <div className="gl-marquee absolute left-0 top-1/2 flex w-max -translate-y-1/2 gap-8 whitespace-nowrap px-4 sm:gap-10 sm:px-6 lg:gap-12">
+          {[...serviceItems, ...serviceItems].map((item, index) => (
+            <span key={`${item}-${index}`} className="flex items-center gap-2 font-urbanist text-[11px] font-extrabold uppercase tracking-[0.18em] text-[#0d4697]/70 sm:gap-3 sm:text-xs sm:tracking-[0.22em] lg:text-sm lg:tracking-[0.24em]">
+              {item}<span className="text-[#ffae13]">✦</span>
+            </span>
+          ))}
         </div>
       </div>
     </div>
