@@ -94,6 +94,17 @@ function getServiceReviewCount(service = {}) {
   return Number(service.stats?.totalReviews || 0)
 }
 
+function dedupeById(items = []) {
+  const seen = new Set()
+  return items.filter((item) => {
+    const key = String(item?._id || item?.id || '')
+    if (!key) return true
+    if (seen.has(key)) return false
+    seen.add(key)
+    return true
+  })
+}
+
 export function CustomerHomePage() {
   const vendors = useApi(() => customerApi.vendors({ limit: 6, status: 'approved' }))
   const products = useApi(() => customerApi.products({ limit: 6 }))
@@ -125,13 +136,18 @@ export function NearbyPage() {
   const [activeTab, setActiveTab] = useState('services')
   const [filters, setFilters] = useState({ category: '', rating: '', openNow: false, search: '', minPrice: '', maxPrice: '', sort: 'nearest' })
   const [scope, setScope] = useState(null)
+  const [resultScopes, setResultScopes] = useState({ products: null, services: null })
+  const [displayProducts, setDisplayProducts] = useState([])
+  const [displayServices, setDisplayServices] = useState([])
+  const [isUnitFallback, setIsUnitFallback] = useState(false)
+  const [nearbyLoading, setNearbyLoading] = useState(false)
   const [selectedChapter, setSelectedChapter] = useState(null)
   const [hierarchy, setHierarchy] = useState([])
   const [loadingChapters, setLoadingChapters] = useState(true)
   const [quickViewProduct, setQuickViewProduct] = useState(null)
   const [quickViewVariant, setQuickViewVariant] = useState(null)
-  const { data: productsData, loading: productsLoading, execute: executeProducts } = useApi((params) => customerApi.nearbyProducts(params), [], { immediate: false, initialData: [] })
-  const { data: servicesData, loading: servicesLoading, execute: executeServices } = useApi((params) => customerApi.nearbyServices(params), [], { immediate: false, initialData: [] })
+  const { loading: productsLoading, execute: executeProducts } = useApi((params) => customerApi.nearbyProducts(params), [], { immediate: false, initialData: [] })
+  const { loading: servicesLoading, execute: executeServices } = useApi((params) => customerApi.nearbyServices(params), [], { immediate: false, initialData: [] })
   const categories = useApi(() => customerApi.categories({ limit: 100, type: 'business' }))
 
   const requestLocation = useCallback(() => {
@@ -183,6 +199,10 @@ export function NearbyPage() {
   }, [])
 
   const chapterOptions = useMemo(() => buildChapterOptions(hierarchy), [hierarchy])
+  const selectedUnit = selectedChapter
+  const selectedDistrict = selectedUnit?.districtId
+    ? { _id: selectedUnit.districtId, name: selectedUnit.districtName }
+    : null
 
   const searchParams = useMemo(() => {
     const base = {
@@ -210,13 +230,80 @@ export function NearbyPage() {
 
   useEffect(() => {
     if (!searchParams) return
-    const updateScope = (payload) => {
-      const nextScope = payload?.data?.scope || null
-      if (nextScope) setScope(nextScope)
+    let cancelled = false
+    setNearbyLoading(true)
+    setDisplayProducts([])
+    setDisplayServices([])
+    setIsUnitFallback(false)
+    setScope(null)
+    setResultScopes({ products: null, services: null })
+
+    const normalizePayload = (payload) => payload?.data || payload || {}
+    const readItems = (payload) => getList(normalizePayload(payload))
+    const readScope = (payload) => normalizePayload(payload)?.scope || null
+    const exactParams = (params) => ({ ...params, fallback: 'false' })
+    const applyResults = ({ productsPayload, servicesPayload, fallback }) => {
+      if (cancelled) return
+      const productsScope = readScope(productsPayload)
+      const servicesScope = readScope(servicesPayload)
+      setDisplayProducts(dedupeById(readItems(productsPayload)))
+      setDisplayServices(dedupeById(readItems(servicesPayload)))
+      setIsUnitFallback(Boolean(fallback))
+      setResultScopes({ products: productsScope, services: servicesScope })
+      setScope(servicesScope || productsScope || null)
     }
-    executeProducts(searchParams).then(updateScope).catch(() => {})
-    executeServices(searchParams).then(updateScope).catch(() => {})
-  }, [searchParams, executeProducts, executeServices])
+
+    const runSearch = async () => {
+      const primaryParams = selectedUnit ? exactParams(searchParams) : searchParams
+      const [unitProductsPayload, unitServicesPayload] = await Promise.all([
+        executeProducts(primaryParams),
+        executeServices(primaryParams),
+      ])
+      if (cancelled) return
+
+      const unitProducts = readItems(unitProductsPayload)
+      const unitServices = readItems(unitServicesPayload)
+      const shouldFallbackToDistrict =
+        selectedDistrict?._id &&
+        unitProducts.length === 0 &&
+        unitServices.length === 0
+
+      if (!shouldFallbackToDistrict) {
+        applyResults({
+          productsPayload: unitProductsPayload,
+          servicesPayload: unitServicesPayload,
+          fallback: false,
+        })
+        return
+      }
+
+      const districtParams = exactParams({
+        ...searchParams,
+        chapterId: undefined,
+        districtId: selectedDistrict._id,
+        limit: 500,
+      })
+      const [districtProductsPayload, districtServicesPayload] = await Promise.all([
+        executeProducts(districtParams),
+        executeServices(districtParams),
+      ])
+      applyResults({
+        productsPayload: districtProductsPayload,
+        servicesPayload: districtServicesPayload,
+        fallback: true,
+      })
+    }
+
+    runSearch()
+      .catch(() => {})
+      .finally(() => {
+        if (!cancelled) setNearbyLoading(false)
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [searchParams, selectedDistrict?._id, selectedUnit, executeProducts, executeServices])
 
   const handleLocationChange = useCallback((chapterId) => {
     if (!chapterId) {
@@ -233,9 +320,11 @@ export function NearbyPage() {
     setPermissionStatus('idle')
   }, [chapterOptions, requestLocation])
 
-  const productItems = useMemo(() => getList(productsData), [productsData])
-  const serviceItems = useMemo(() => getList(servicesData), [servicesData])
-  const activeLoading = activeTab === 'services' ? servicesLoading : productsLoading
+  const productItems = displayProducts
+  const serviceItems = displayServices
+  const activeLoading = nearbyLoading || (activeTab === 'services' ? servicesLoading : productsLoading)
+  const activeScope = activeTab === 'services' ? resultScopes.services : resultScopes.products
+  const fallbackScope = resultScopes.services || resultScopes.products || activeScope
 
   const categoryOptions = getList(categories.data)
 
@@ -260,7 +349,14 @@ export function NearbyPage() {
           </div>
           <div className="flex flex-wrap items-center gap-2">
             {selectedChapter ? (
-              <p className="inline-flex rounded-full bg-[#0d4697]/10 px-3 py-1 text-xs font-bold text-[#0d4697]">Viewing {selectedChapter.label}</p>
+              <div className="flex flex-wrap items-center gap-2">
+                <p className="inline-flex rounded-full bg-[#0d4697]/10 px-3 py-1 text-xs font-bold text-[#0d4697]">Viewing {selectedChapter.label}</p>
+                {isUnitFallback && (
+                  <p className="inline-flex rounded-full bg-[#ffb20c] px-3 py-1 text-xs font-bold text-[#0d4697]">
+                    Showing {scopeLabel(fallbackScope)}
+                  </p>
+                )}
+              </div>
             ) : (
               <>
                 {location && <p className="inline-flex rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-600">Location detected with {Math.round(location.accuracy)}m accuracy</p>}
@@ -293,6 +389,11 @@ export function NearbyPage() {
               </div>
 
               <div className="p-4 sm:p-5">
+                {isUnitFallback && !activeLoading && (
+                  <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-bold text-[#0d4697]">
+                    No products or services found in this unit. Showing district-wide products and services from {scopeLabel(fallbackScope)}.
+                  </div>
+                )}
                 {activeLoading ? (
                   <LoadingSpinner />
                 ) : activeTab === 'services' ? (
@@ -474,7 +575,11 @@ function ServiceCard({ service }) {
 function scopeLabel(scope) {
   if (!scope) return ''
   const parts = []
-  if (scope.chapterName) parts.push(`${scope.chapterName} Unit`)
+  if (scope.level === 'chapter' && scope.chapterName) parts.push(`${scope.chapterName} Unit`)
+  else if (scope.level === 'district' && scope.districtName) parts.push(`${scope.districtName} District`)
+  else if (scope.level === 'state' && scope.stateName) parts.push(`${scope.stateName} State`)
+  else if (scope.level === 'region' && scope.regionName) parts.push(`${scope.regionName} Region`)
+  else if (scope.chapterName) parts.push(`${scope.chapterName} Unit`)
   else if (scope.districtName) parts.push(`${scope.districtName} District`)
   else if (scope.stateName) parts.push(`${scope.stateName} State`)
   else if (scope.regionName) parts.push(`${scope.regionName} Region`)
@@ -495,7 +600,15 @@ function buildChapterOptions(records) {
       const stateName = state?.name || ''
       const parts = [districtName, stateName].filter(Boolean)
       const label = parts.length ? `${chapter.name} (${parts.join(', ')})` : chapter.name
-      return { _id: String(chapter._id), name: chapter.name, districtName, stateName, label }
+      return {
+        _id: String(chapter._id),
+        name: chapter.name,
+        districtId: district?._id ? String(district._id) : '',
+        stateId: state?._id ? String(state._id) : '',
+        districtName,
+        stateName,
+        label,
+      }
     })
     .sort((a, b) => (a.name || '').localeCompare(b.name || ''))
 }

@@ -924,8 +924,12 @@ function ShopBannerCarousel({ banners = [] }) {
 function ShopHeroShowcase({
   categories,
   banners,
+  districts = [],
+  locationValue = "",
   activeCategoryId,
   onCategorySelect,
+  onLocationChange,
+  onUseCurrentLocation,
   onSearchSubmit,
 }) {
   const [ref, inView] = useInViewOnce(0.08);
@@ -946,6 +950,12 @@ function ShopHeroShowcase({
       ? "Current Location"
       : selectedDistrict?.name || "All Locations";
 
+  const handleLocationSelect = (value) => {
+    if (value === "__current") onUseCurrentLocation?.();
+    else onLocationChange?.(value);
+    setLocationOpen(false);
+  };
+
   return (
     <section
       ref={ref}
@@ -953,19 +963,81 @@ function ShopHeroShowcase({
         inView ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"
       }`}
     >
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
         <h2 className="font-playfair text-[34px] italic leading-none tracking-[-0.03em] sm:text-[44px]">
           <span className="text-[#0d4697]">Explore </span>
           <span className="text-[#f0a329]">Categories</span>
         </h2>
-        <button
-          type="button"
-          onClick={onSearchSubmit}
-          className="group inline-flex items-center gap-1.5 self-start text-sm font-semibold text-[#0d4697] transition hover:text-[#0b3c82] sm:self-auto sm:text-[15px]"
-        >
-          View All Categories
-          <ChevronRight className="h-4 w-4 transition group-hover:translate-x-0.5" />
-        </button>
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setLocationOpen((open) => !open)}
+              className="inline-flex max-w-full items-center gap-2 rounded-full border border-[#0d4697]/10 bg-white px-3 py-2 text-xs font-black text-[#0d4697] shadow-sm transition hover:border-[#0d4697]/25 sm:text-sm"
+              aria-expanded={locationOpen}
+            >
+              <MapPin className="h-4 w-4 shrink-0 text-[#f0a329]" />
+              <span className="max-w-[190px] truncate">{locationLabel}</span>
+              <ChevronDown
+                className={`h-4 w-4 shrink-0 transition ${locationOpen ? "rotate-180" : ""}`}
+              />
+            </button>
+
+            {locationOpen && (
+              <div className="absolute right-auto top-[calc(100%+0.5rem)] z-30 w-72 max-w-[calc(100vw-2rem)] overflow-hidden rounded-2xl border border-slate-200 bg-white p-2 shadow-xl sm:right-0">
+                <button
+                  type="button"
+                  onClick={() => handleLocationSelect("")}
+                  className="flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-sm font-bold text-slate-700 transition hover:bg-slate-50"
+                >
+                  All Locations
+                  {!locationValue && <Check className="h-4 w-4 text-[#0d4697]" />}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleLocationSelect("__current")}
+                  className="flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-sm font-bold text-slate-700 transition hover:bg-slate-50"
+                >
+                  Current Location
+                  {locationValue === "__current" && (
+                    <Check className="h-4 w-4 text-[#0d4697]" />
+                  )}
+                </button>
+                <div className="my-2 border-t border-slate-100" />
+                <div className="max-h-56 overflow-y-auto pr-1">
+                  {districts.length ? (
+                    districts.map((district) => (
+                      <button
+                        key={district._id}
+                        type="button"
+                        onClick={() => handleLocationSelect(district._id)}
+                        className="flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2 text-left text-sm font-bold text-slate-700 transition hover:bg-slate-50"
+                      >
+                        <span className="min-w-0 truncate">{district.name}</span>
+                        {String(locationValue) === String(district._id) && (
+                          <Check className="h-4 w-4 shrink-0 text-[#0d4697]" />
+                        )}
+                      </button>
+                    ))
+                  ) : (
+                    <p className="px-3 py-2 text-sm font-semibold text-slate-400">
+                      No districts available
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+
+          <button
+            type="button"
+            onClick={onSearchSubmit}
+            className="group inline-flex items-center gap-1.5 self-start text-sm font-semibold text-[#0d4697] transition hover:text-[#0b3c82] sm:self-auto sm:text-[15px]"
+          >
+            View All Categories
+            <ChevronRight className="h-4 w-4 transition group-hover:translate-x-0.5" />
+          </button>
+        </div>
       </div>
 
       <div className="mt-4 flex gap-3 overflow-x-auto pb-1 pt-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:gap-4">
@@ -1341,6 +1413,13 @@ export function ProductsPage() {
     return [];
   }, [productsQuery.data]);
   const promoBanners = useMemo(() => getList(bannersQuery.data), [bannersQuery.data]);
+  const districtOptions = useMemo(
+    () =>
+      getList(organizationHierarchy.data).filter(
+        (entry) => entry?.type === "district",
+      ),
+    [organizationHierarchy.data],
+  );
   const filteredProducts = useMemo(
     () =>
       sortProducts(
@@ -1432,6 +1511,29 @@ export function ProductsPage() {
     },
     [setPage],
   );
+  const handleUseCurrentLocation = useCallback(() => {
+    setLocationValue("__current");
+    if (!navigator.geolocation) {
+      toast.error("Location is not supported by this browser.");
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setCurrentLocation({
+          lat: position.coords.latitude,
+          lng: position.coords.longitude,
+          accuracy: position.coords.accuracy,
+        });
+        toast.success("Current location selected.");
+      },
+      () => {
+        setCurrentLocation(null);
+        toast.error("Unable to access your current location.");
+      },
+      { enableHighAccuracy: true, timeout: 12000, maximumAge: 60000 },
+    );
+  }, []);
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-[#faf8f5] via-white to-[#f5f7fa]">
@@ -1448,6 +1550,8 @@ export function ProductsPage() {
         <ShopHeroShowcase
           categories={allCategories}
           banners={promoBanners}
+          districts={districtOptions}
+          locationValue={locationValue}
           activeCategoryId={filterState.category}
           onCategorySelect={(label) => {
             const selection = resolveQuickCategorySelection(label, allCategories);
@@ -1457,6 +1561,11 @@ export function ProductsPage() {
             }));
             setPage(1);
           }}
+          onLocationChange={(value) => {
+            setLocationValue(value);
+            if (value !== "__current") setCurrentLocation(null);
+          }}
+          onUseCurrentLocation={handleUseCurrentLocation}
           onSearchSubmit={() => window.scrollTo({ top: 920, behavior: "smooth" })}
         />
       </div>
