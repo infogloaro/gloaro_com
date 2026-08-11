@@ -132,7 +132,7 @@ export default function ChapterDirectorDashboard() {
     ['members', 'Total Members', stats.totalUsers ?? '—', `${stats.newUsersToday ?? 0} today`, Users],
     ['active', 'Active Memberships', scopeOverview?.activeMembers ?? stats.activeUsers ?? '—', 'Verified network', CheckCircle2],
     ['approvals', 'Pending Approvals', stats.pendingMembershipApplications ?? '—', 'Needs review', ClipboardList],
-    ['revenue', 'Business Generated', stats.revenue != null ? formatCurrency(stats.revenue) : '—', 'Chapter value', FileBarChart]
+    ['revenue', 'Business Generated', stats.revenue != null ? formatCurrency(stats.revenue) : '—', 'Unit value', FileBarChart]
   ]
 
   if (dashboard.loading || analytics.loading) {

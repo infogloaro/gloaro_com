@@ -160,7 +160,7 @@ export default function BusinessDirectory() {
             onChange={(e) => handleFilterChange(selectedCategory, e.target.value, selectedStatus)}
             className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 outline-none focus:border-[#0d4697]"
           >
-            <option value="">All Chapters</option>
+            <option value="">All Units</option>
             {chapters.map(c => <option key={c} value={c}>{c}</option>)}
           </select>
 
@@ -215,7 +215,7 @@ export default function BusinessDirectory() {
             <div className="space-y-2 text-xs font-semibold text-slate-600">
               <div className="flex items-center gap-2">
                 <Building2 className="h-4 w-4 text-slate-400 shrink-0" />
-                <span>Chapter: {item.chapterName}</span>
+                <span>Unit: {item.chapterName}</span>
               </div>
               <div className="flex items-center gap-2">
                 <Mail className="h-4 w-4 text-slate-400 shrink-0" />

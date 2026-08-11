@@ -39,7 +39,7 @@ export default function UnifiedCalendar() {
     <div className="space-y-6">
       {/* Calendar header */}
       <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-        <h2 className="text-xl font-extrabold text-slate-900">Unified Chapter Calendar</h2>
+        <h2 className="text-xl font-extrabold text-slate-900">Unified Unit Calendar</h2>
         <p className="text-sm font-semibold text-slate-500 mt-1">Track upcoming chapter meetings, training courses, peer birthdays, and renewal reminders.</p>
       </section>
 

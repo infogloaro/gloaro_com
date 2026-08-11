@@ -302,12 +302,12 @@ export default function MembershipApplicationStatus() {
 
           {/* Hierarchy Details */}
           <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm space-y-4">
-            <h3 className="text-sm font-extrabold text-slate-900 border-b border-slate-100 pb-2">Assigned Chapter Hierarchy</h3>
+            <h3 className="text-sm font-extrabold text-slate-900 border-b border-slate-100 pb-2">Assigned Unit Hierarchy</h3>
             <div className="space-y-3">
               <HierarchyItem label="Region" value={app.regionId?.name} />
               <HierarchyItem label="State" value={app.stateId?.name} />
               <HierarchyItem label="District" value={app.districtId?.name} />
-              <HierarchyItem label="Chapter" value={app.chapterId?.name} />
+              <HierarchyItem label="Unit" value={app.chapterId?.name} />
             </div>
           </section>
         </div>

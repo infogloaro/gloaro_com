@@ -74,7 +74,7 @@ const moduleConfig = {
     fields: ['code', 'type', 'chapter', 'assignedTo', 'businessValue', 'referralValue', 'metadata.company', 'metadata.contact'],
   },
   chapter: {
-    title: 'Chapter Management',
+    title: 'Unit Management',
     description: 'Manage chapter leaders, members, meetings, visitors, attendance, performance, business, and referrals.',
     icon: Network,
     types: ['chapter'],
@@ -290,7 +290,7 @@ function ChapterApprovalQueuePage() {
     setSaving(true)
     try {
       await adminApi.approveChapter(row._id, {})
-      toast.success('Chapter approved successfully')
+      toast.success('Unit approved successfully')
       await load()
       await refreshSelected(row._id)
     } catch (error) {
@@ -310,7 +310,7 @@ function ChapterApprovalQueuePage() {
     setSaving(true)
     try {
       await adminApi.rejectChapter(row._id, { reason })
-      toast.success('Chapter rejected successfully')
+      toast.success('Unit rejected successfully')
       await load()
       await refreshSelected(row._id)
     } catch (error) {
@@ -325,7 +325,7 @@ function ChapterApprovalQueuePage() {
     setSaving(true)
     try {
       await adminApi.updateEnterpriseStatus(row._id, nextStatus)
-      toast.success(`Chapter ${nextStatus}`)
+      toast.success(`Unit ${nextStatus}`)
       await load()
       await refreshSelected(row._id)
     } catch (error) {
@@ -338,7 +338,7 @@ function ChapterApprovalQueuePage() {
   const chapterStats = useMemo(() => {
     const counts = Object.fromEntries((stats?.byStatus || []).map((item) => [item._id, item.count]))
     return [
-      { label: 'Total Chapter Approvals', value: stats?.total || 0 },
+      { label: 'Total Unit Approvals', value: stats?.total || 0 },
       { label: 'Pending Approval', value: counts.pending_approval || 0 },
       { label: 'Active', value: counts.active || 0 },
       { label: 'Rejected', value: counts.rejected || 0 },
@@ -349,7 +349,7 @@ function ChapterApprovalQueuePage() {
   return (
     <section className="space-y-6">
       <EnterpriseHeader
-        title="Chapter Approval Queue"
+        title="Unit Approval Queue"
         description="Review chapter requests submitted by Launch Directors, then approve, reject, or deactivate them."
         icon={Building2}
       />
@@ -377,7 +377,7 @@ function ChapterApprovalQueuePage() {
 
       <DataTable
         columns={[
-          { key: 'name', header: 'Chapter Name' },
+          { key: 'name', header: 'Unit Name' },
           { key: 'region', header: 'Region', render: (row) => row.parent?.parent?.parent?.name || '-' },
           { key: 'state', header: 'State', render: (row) => row.parent?.parent?.name || '-' },
           { key: 'district', header: 'District', render: (row) => row.parent?.name || '-' },
@@ -432,7 +432,7 @@ function ChapterApprovalQueuePage() {
         )}
       />
 
-      <Modal open={Boolean(selected)} title="Chapter Details" onClose={() => setSelected(null)} maxWidth="max-w-5xl">
+      <Modal open={Boolean(selected)} title="Unit Details" onClose={() => setSelected(null)} maxWidth="max-w-5xl">
         {loadingDetails ? (
           <div className="grid min-h-40 place-items-center">
             <Loader2 className="h-8 w-8 animate-spin text-[#0d4697]" />
@@ -441,7 +441,7 @@ function ChapterApprovalQueuePage() {
           <div className="space-y-5">
             <div className="flex flex-col justify-between gap-3 rounded-lg border border-slate-200 bg-slate-50 p-4 sm:flex-row sm:items-center">
               <div>
-                <p className="text-xs font-extrabold uppercase tracking-wide text-slate-500">Chapter</p>
+                <p className="text-xs font-extrabold uppercase tracking-wide text-slate-500">Unit</p>
                 <h3 className="mt-1 text-xl font-black text-slate-950">{selected.name}</h3>
                 <p className="mt-1 text-sm font-semibold text-slate-600">
                   {selected.parent?.parent?.parent?.name || 'Region'} / {selected.parent?.parent?.name || 'State'} / {selected.parent?.name || 'District'}
@@ -672,7 +672,7 @@ export function EnterpriseReportBuilderPage() {
             onClick={() => loadReport('district')}
             className={`px-4 py-2 text-sm font-bold border-b-2 transition ${reportType === 'district' ? 'border-[#0d4697] text-[#0d4697]' : 'border-transparent text-slate-500 hover:text-slate-850'}`}
           >
-            District Chapters
+            District Units
           </button>
         )}
         <button

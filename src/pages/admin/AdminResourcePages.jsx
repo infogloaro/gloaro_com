@@ -1233,7 +1233,7 @@ export function AdminMembershipApplicationsPage() {
         { key: 'region', header: 'Region', render: (row) => row.regionId?.name || 'Not assigned' },
         { key: 'state', header: 'State', render: (row) => row.stateId?.name || 'Not assigned' },
         { key: 'district', header: 'District', render: (row) => row.districtId?.name || 'Not assigned' },
-        { key: 'chapter', header: 'Chapter', render: (row) => row.chapterId?.name || 'Not assigned' },
+        { key: 'chapter', header: 'Unit', render: (row) => row.chapterId?.name || 'Not assigned' },
         { key: 'referredBy', header: 'Referred By', render: (row) => row.submittedBy?.referredBy?.name || row.submittedBy?.referredBy?.email || 'Direct' },
         { key: 'forwardedBy', header: 'Forwarded By (VP)', render: (row) => row.forwardedBy?.name || row.forwardedBy?.email || row.reviewedBy?.name || row.reviewedBy?.email || 'Pending' },
         { key: 'forwardedRole', header: 'Forwarded By Role', render: (row) => row.forwardedByRole?.replaceAll('_', ' ') || row.reviewedByRole?.replaceAll('_', ' ') || 'Pending' },
@@ -1396,7 +1396,7 @@ function MembershipApplicationDetails({ application, adminNotes, onNotesChange, 
           ['Region', application.regionId?.name || 'Not Assigned'],
           ['State', application.stateId?.name || 'Not Assigned'],
           ['District', application.districtId?.name || 'Not Assigned'],
-          ['Chapter', application.chapterId?.name || 'Not Assigned'],
+          ['Unit', application.chapterId?.name || 'Not Assigned'],
         ]} />
         <DetailSection title="Professional Details" items={[
         ['Company Name', application.professional?.companyName],
@@ -1799,7 +1799,7 @@ export function AdminMembersPage() {
     { key: 'region', header: 'Region', render: (row) => row.region || 'N/A' },
     { key: 'state', header: 'State', render: (row) => row.state || 'N/A' },
     { key: 'district', header: 'District', render: (row) => row.district || 'N/A' },
-    { key: 'chapter', header: 'Chapter', render: (row) => row.chapter || 'N/A' },
+    { key: 'chapter', header: 'Unit', render: (row) => row.chapter || 'N/A' },
     { key: 'approvedBy', header: 'Approved By', render: (row) => row.approvedBy || 'N/A' },
     { key: 'approvedRole', header: 'Approver Role', render: (row) => <span className="capitalize font-semibold text-xs text-slate-500">{row.approvedRole?.replaceAll('_', ' ')}</span> },
     { key: 'approvedAt', header: 'Approved Date', render: (row) => formatDate(row.approvedAt) },
@@ -1834,7 +1834,7 @@ export function AdminMembersPage() {
           <SelectFilter label="Region" value={filters.region} onChange={(value) => updateFilter('region', value)} options={regionOptions} placeholder={loadingLocations ? 'Loading regions...' : 'All Regions'} />
           <SelectFilter label="State" value={filters.state} onChange={(value) => updateFilter('state', value)} options={stateOptions} placeholder={loadingLocations ? 'Loading states...' : 'All States'} />
           <SelectFilter label="District" value={filters.district} onChange={(value) => updateFilter('district', value)} options={districtOptions} placeholder={loadingLocations ? 'Loading districts...' : 'All Districts'} />
-          <SelectFilter label="Chapter" value={filters.chapter} onChange={(value) => updateFilter('chapter', value)} options={chapterOptions} placeholder={loadingLocations ? 'Loading chapters...' : 'All Chapters'} />
+          <SelectFilter label="Unit" value={filters.chapter} onChange={(value) => updateFilter('chapter', value)} options={chapterOptions} placeholder={loadingLocations ? 'Loading chapters...' : 'All Units'} />
         </div>
       </div>
 

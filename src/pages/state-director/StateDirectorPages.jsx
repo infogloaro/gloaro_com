@@ -309,7 +309,7 @@ export function StateDirectorVendorsPage() {
           { key: 'email', header: 'Email', render: (row) => row.email || '-' },
           { key: 'state', header: 'State', render: (row) => row.stateId?.name || '-' },
           { key: 'district', header: 'District', render: (row) => row.districtId?.name || '-' },
-          { key: 'chapter', header: 'Chapter', render: (row) => row.chapterId?.name || '-' },
+          { key: 'chapter', header: 'Unit', render: (row) => row.chapterId?.name || '-' },
           { key: 'approvedAt', header: 'Approval Date', render: (row) => formatDate(row.approvedAt || row.createdAt) },
           { key: 'status', header: 'Vendor Status', render: (row) => <StatusBadge value={row.status} /> },
         ]}

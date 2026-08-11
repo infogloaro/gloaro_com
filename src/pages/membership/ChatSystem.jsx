@@ -28,7 +28,7 @@ const withSuffix = (value, suffix = '') => {
 
 const getMemberMetaLine = (member) => [
   roleLabel(member?.role),
-  withSuffix(member?.chapterName, 'Chapter'),
+  withSuffix(member?.chapterName, 'Unit'),
   withSuffix(member?.districtName, 'District'),
   member?.stateName,
   withSuffix(member?.regionName, 'Region'),
@@ -69,7 +69,7 @@ export default function ChatSystem() {
 
   const messageScope = recipient ? 'direct' : 'chapter'
   const conversationTitle = useMemo(() => {
-    if (!recipient) return 'Chapter Lobby'
+    if (!recipient) return 'Unit Lobby'
     const member = members.find((item) => item._id === recipient)
     const conversation = conversations.find((item) => String(item.partner?._id || item.partner) === String(recipient))
     return member || conversation?.partner ? `Direct Message: ${member?.name || conversation.partner?.name}` : 'Direct Message'
@@ -223,7 +223,7 @@ export default function ChatSystem() {
             <UsersRound className="h-4 w-4" />
           </span>
           <div className="min-w-0">
-            <p className="truncate text-xs font-extrabold text-slate-800">Chapter Lobby</p>
+            <p className="truncate text-xs font-extrabold text-slate-800">Unit Lobby</p>
             <p className="mt-0.5 text-[10px] font-semibold text-slate-400">Same chapter members only</p>
           </div>
         </a>

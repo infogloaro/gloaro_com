@@ -58,7 +58,7 @@ export default function AdminNotifications() {
           <FormField label="Region ID"><input {...register('region')} className="h-11 w-full rounded-md border border-slate-200 px-3" /></FormField>
           <FormField label="State ID"><input {...register('state')} className="h-11 w-full rounded-md border border-slate-200 px-3" /></FormField>
           <FormField label="District ID"><input {...register('district')} className="h-11 w-full rounded-md border border-slate-200 px-3" /></FormField>
-          <FormField label="Chapter ID"><input {...register('chapter')} className="h-11 w-full rounded-md border border-slate-200 px-3" /></FormField>
+          <FormField label="Unit ID"><input {...register('chapter')} className="h-11 w-full rounded-md border border-slate-200 px-3" /></FormField>
           <FormField label="Action URL"><input {...register('actionUrl')} className="h-11 w-full rounded-md border border-slate-200 px-3" /></FormField>
         </div>
         <button disabled={isSubmitting} className="mt-4 h-10 rounded-md bg-[#0d4697] px-5 font-bold text-white">Send</button>

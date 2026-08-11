@@ -72,7 +72,7 @@ export default function JurisdictionCard() {
             )}
             {chapter && (
               <span className="text-xs font-extrabold text-slate-700 bg-slate-100 px-3 py-1.5 rounded-lg flex items-center gap-1">
-                Chapter: {chapter}
+                Unit: {chapter}
               </span>
             )}
             {bizLocation && (

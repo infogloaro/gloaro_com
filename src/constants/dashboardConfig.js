@@ -91,7 +91,7 @@ export const dashboardConfig = {
       { label: "Vendor Applications", path: "/direct-consultant/vendor-applications" },
       { label: "Approved Vendors", path: "/direct-consultant/approved-vendors" },
       { label: "Business Wall", path: "/direct-consultant/wall" },
-      { label: "Referrals", path: "/direct-consultant/referrals" },
+      { label: "Connect", path: "/direct-consultant/referrals" },
       { label: "Visitors", path: "/direct-consultant/visitors" },
       { label: "Meetings", path: "/direct-consultant/meetings" },
       { label: "Reports", path: "/direct-consultant/reports" }
@@ -115,11 +115,11 @@ export const dashboardConfig = {
     quickActions: [
       { label: "Approve Membership", path: "/chapter-director/memberships" },
       { label: "Marketplace Vendors", path: "/chapter-director/vendors" },
-      { label: "Chapter Management", path: "/chapter-director/chapter-management" },
+      { label: "Unit Management", path: "/chapter-director/chapter-management" },
       { label: "Unit Chairmen List", path: "/chapter-director/president" },
       { label: "Members List", path: "/chapter-director/members" },
       { label: "Business Wall", path: "/chapter-director/wall" },
-      { label: "Referrals Log", path: "/chapter-director/referrals" },
+      { label: "Connect Log", path: "/chapter-director/referrals" },
       { label: "Meetings Log", path: "/chapter-director/meetings" },
       { label: "Reports Builder", path: "/chapter-director/reports" }
     ],
@@ -142,11 +142,11 @@ export const dashboardConfig = {
     quickActions: [
       { label: "Approve Membership", path: "/chapter-director/memberships" },
       { label: "Marketplace Vendors", path: "/chapter-director/vendors" },
-      { label: "Chapter Management", path: "/chapter-director/chapter-management" },
+      { label: "Unit Management", path: "/chapter-director/chapter-management" },
       { label: "Unit Chairmen List", path: "/chapter-director/president" },
       { label: "Members List", path: "/chapter-director/members" },
       { label: "Business Wall", path: "/chapter-director/wall" },
-      { label: "Referrals Log", path: "/chapter-director/referrals" },
+      { label: "Connect Log", path: "/chapter-director/referrals" },
       { label: "Meetings Log", path: "/chapter-director/meetings" },
       { label: "Reports Builder", path: "/chapter-director/reports" }
     ],
@@ -178,7 +178,7 @@ export const dashboardConfig = {
       { label: "Vendor Applications", path: "/district-director/vendor-applications" },
       { label: "Approved Vendors", path: "/district-director/approved-vendors" },
       { label: "Business Wall", path: "/district-director/wall" },
-      { label: "Referrals Log", path: "/district-director/referrals" },
+      { label: "Connect Log", path: "/district-director/referrals" },
       { label: "Visitors Log", path: "/district-director/visitors" },
       { label: "Meetings Log", path: "/district-director/meetings" },
       { label: "Reports Builder", path: "/district-director/reports" }

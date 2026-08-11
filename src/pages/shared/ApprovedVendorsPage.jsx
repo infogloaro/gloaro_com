@@ -19,7 +19,7 @@ export default function ApprovedVendorsPage() {
           { key: 'businessName', header: 'Business Name' },
           { key: 'ownerName', header: 'Vendor Name' },
           { key: 'category', header: 'Category', render: (row) => row.businessCategory?.name || '-' },
-          { key: 'chapter', header: 'Chapter', render: (row) => row.chapterId?.name || '-' },
+          { key: 'chapter', header: 'Unit', render: (row) => row.chapterId?.name || '-' },
           { key: 'district', header: 'District', render: (row) => row.districtId?.name || '-' },
           { key: 'state', header: 'State', render: (row) => row.stateId?.name || '-' },
           { key: 'region', header: 'Region', render: (row) => row.regionId?.name || '-' },

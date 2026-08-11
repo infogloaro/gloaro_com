@@ -83,7 +83,7 @@ export default function VicePresidentDashboard() {
   }
 
   const hierarchyParts = []
-  if (chapter) hierarchyParts.push(formatName(chapter, 'Chapter'))
+  if (chapter) hierarchyParts.push(formatName(chapter, 'Unit'))
   if (district) hierarchyParts.push(formatName(district, 'District'))
   if (state) hierarchyParts.push(state)
   if (region) hierarchyParts.push(formatName(region, 'Region'))
@@ -124,12 +124,12 @@ export default function VicePresidentDashboard() {
         </div>
       </div>
 
-      {/* 2. Chapter Information Card */}
+      {/* 2. Unit Information Card */}
       <section className="grid gap-6">
         <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm flex flex-col justify-between">
           <div>
             <h3 className="text-sm font-black uppercase text-slate-800 tracking-wider flex items-center gap-2 mb-4">
-              <MapPin className="h-4 w-4 text-[#0d4697]" /> My Chapter Listing
+              <MapPin className="h-4 w-4 text-[#0d4697]" /> My Unit Listing
             </h3>
             <div className="space-y-2.5 text-xs">
               <div className="flex justify-between border-b border-slate-100 pb-1.5">
@@ -145,7 +145,7 @@ export default function VicePresidentDashboard() {
                 <span className="font-extrabold text-slate-850">{district}</span>
               </div>
               <div className="flex justify-between pb-1.5">
-                <span className="font-semibold text-slate-500">Chapter</span>
+                <span className="font-semibold text-slate-500">Unit</span>
                 <span className="font-extrabold text-slate-850">{chapter}</span>
               </div>
             </div>
@@ -159,7 +159,7 @@ export default function VicePresidentDashboard() {
             </h3>
             <div className="space-y-2.5 text-xs">
               <div className="flex justify-between border-b border-slate-100 pb-1.5">
-                <span className="font-semibold text-slate-500">Chapter Unit Chairman</span>
+                <span className="font-semibold text-slate-500">Unit Unit Chairman</span>
                 <span className="font-extrabold text-slate-850">{scopeOverview?.president?.name || 'Not assigned'}</span>
               </div>
               <div className="flex justify-between border-b border-slate-100 pb-1.5">
@@ -241,7 +241,7 @@ export default function VicePresidentDashboard() {
           <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
             <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Business Generated</p>
             <h4 className="text-2xl font-black text-[#0d4697] mt-2">{kpis.businessGen}</h4>
-            <p className="text-xs text-slate-500 font-semibold mt-1">Chapter closed business value</p>
+            <p className="text-xs text-slate-500 font-semibold mt-1">Unit closed business value</p>
           </div>
           <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
             <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Visitors This Month</p>
@@ -251,7 +251,7 @@ export default function VicePresidentDashboard() {
           <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
             <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Upcoming Meetings</p>
             <h4 className="text-2xl font-black text-slate-900 mt-2">{kpis.upcomingMeetings}</h4>
-            <p className="text-xs text-slate-500 font-semibold mt-1">Chapter calendar events</p>
+            <p className="text-xs text-slate-500 font-semibold mt-1">Unit calendar events</p>
           </div>
         </div>}
       </section>
@@ -321,7 +321,7 @@ export default function VicePresidentDashboard() {
         </div>
       </section>}
 
-      {/* 5. Chapter Performance Charts */}
+      {/* 5. Unit Performance Charts */}
       <section className="grid gap-5">
         {scopeOverview?.membershipGrowth?.length ? (
           <ChartCard title="Membership Growth" data={scopeOverview.membershipGrowth.map((item) => ({ label: monthLabel({ _id: { year: item.year, month: item.month } }), members: item.members }))} dataKey="members" />
@@ -346,7 +346,7 @@ export default function VicePresidentDashboard() {
             <Calendar className="h-4 w-4 text-[#0d4697]" /> Today's Meeting & Activities
           </h3>
           <div className="bg-[#eef4ff] rounded-xl p-4 text-xs font-semibold text-slate-700 space-y-2 border border-blue-100">
-            <div className="font-extrabold text-slate-900 text-sm">Regular Chapter Session</div>
+            <div className="font-extrabold text-slate-900 text-sm">Regular Unit Session</div>
             <div className="flex items-center gap-1"><Clock className="h-3.5 w-3.5 text-[#0d4697]" /> 07:00 AM • Friday</div>
             <div>Focus: B2B Power Networking & Connect Rounds</div>
           </div>
@@ -366,7 +366,7 @@ export default function VicePresidentDashboard() {
           <div className="space-y-3">
             <div className="border-l-4 border-amber-500 pl-3">
               <div className="text-xs font-black text-slate-800">New Coordinator Account Pending</div>
-              <p className="text-[11px] font-semibold text-slate-500 mt-1">Please confirm access overrides for Chapter Coordinator.</p>
+              <p className="text-[11px] font-semibold text-slate-500 mt-1">Please confirm access overrides for Unit Coordinator.</p>
             </div>
             <div className="border-l-4 border-[#0d4697] pl-3">
               <div className="text-xs font-black text-slate-800">Regional Leadership Training</div>
@@ -395,10 +395,10 @@ export default function VicePresidentDashboard() {
         </div>
       </section>}
 
-      {/* 7. Business Wall - Latest Chapter Posts */}
+      {/* 7. Business Wall - Latest Unit Posts */}
       {showExtendedDashboard && <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <h3 className="text-sm font-black uppercase text-slate-800 tracking-wider mb-4 flex items-center gap-2">
-          <Volume2 className="h-4 w-4 text-[#0d4697]" /> Latest Chapter Posts (Business Wall)
+          <Volume2 className="h-4 w-4 text-[#0d4697]" /> Latest Unit Posts (Business Wall)
         </h3>
         <div className="grid gap-4 md:grid-cols-3">
           {posts.length > 0 ? (

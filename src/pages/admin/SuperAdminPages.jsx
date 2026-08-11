@@ -73,7 +73,7 @@ export function SuperAdminDashboardPage() {
     ['members', 'Total Members', (stats.totalUsers ?? stats.roleStats?.totalMembers ?? 0).toLocaleString(), `${stats.newUsersToday || 0} today`, Users],
     ['members', 'Active Members', (stats.activeUsers ?? stats.roleStats?.approvedMemberships ?? stats.totalUsers ?? 0).toLocaleString(), 'Verified network', CheckCircle2],
     ['approvals', 'Pending Memberships', (stats.pendingMembershipApplications ?? stats.roleStats?.pendingMemberships ?? 0).toLocaleString(), 'Needs review', ClipboardList],
-    ['members', 'Total Chapters', (stats.totalChapters ?? stats.roleStats?.totalChapters ?? 0).toLocaleString(), 'Organization', MapPinned],
+    ['members', 'Total Units', (stats.totalChapters ?? stats.roleStats?.totalChapters ?? 0).toLocaleString(), 'Organization', MapPinned],
     ['members', 'Total Regions', (stats.totalRegions ?? stats.roleStats?.totalRegions ?? 0).toLocaleString(), 'Regional zones', Globe],
     ['members', 'Total States', (stats.totalStates ?? stats.roleStats?.totalStates ?? 0).toLocaleString(), 'State coverage', Landmark],
     ['vendors', 'Total Vendors', (stats.totalVendors ?? 0).toLocaleString(), `${stats.pendingVendors || 0} pending`, Building2],
@@ -342,7 +342,7 @@ export function MembershipWorkflowPage() {
         <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
           <h2 className="text-lg font-extrabold text-slate-950">Who can create membership?</h2>
           <div className="mt-4 space-y-3">
-            {['District Unit Chairman', 'Direct Consultant', 'Launch Director', 'Unit Chairman', 'Coordinator'].map((role, index) => (
+            {['District Unit Chairman', 'Launch Director', 'Direct Consultant', 'Unit Chairman', 'Coordinator'].map((role, index) => (
               <label key={role} className="flex items-center justify-between rounded-xl bg-slate-50 px-4 py-3 text-sm font-extrabold text-slate-700">
                 {role}
                 <input type="checkbox" defaultChecked={index < 3} className="h-4 w-4 accent-[#0d4697]" />
@@ -803,7 +803,7 @@ export function ReferralManagementPage() {
       const res = await adminApi.referralAll(params)
       const data = res.data.data || []
       if (!data.length) { toast.error('No data to export'); setExporting(false); return }
-      const headers = ['Code', 'Owner', 'Owner Email', 'Referred Member', 'Referred Email', 'Chapter', 'Stage', 'Registration Date']
+      const headers = ['Code', 'Owner', 'Owner Email', 'Referred Member', 'Referred Email', 'Unit', 'Stage', 'Registration Date']
       const rows = data.map((r) => [
         r.usedReferralCode || r.code || '',
         r.referrer?.name || '',
@@ -834,7 +834,7 @@ export function ReferralManagementPage() {
     { key: 'usedReferralCode', label: 'Code', render: (r) => <span className="font-mono text-xs text-[#0d4697]">{r.usedReferralCode || r.code}</span> },
     { key: 'referrer', label: 'Owner', render: (r) => <span className="text-sm font-bold text-slate-900">{r.referrer?.name || 'N/A'}</span> },
     { key: 'referred', label: 'Referred Member', render: (r) => <span className="text-sm text-slate-700">{r.referred?.name || r.name || 'N/A'}</span> },
-    { key: 'chapterName', label: 'Chapter', render: (r) => <span className="text-xs text-slate-500">{r.chapterName || r.districtName || '-'}</span> },
+    { key: 'chapterName', label: 'Unit', render: (r) => <span className="text-xs text-slate-500">{r.chapterName || r.districtName || '-'}</span> },
     { key: 'createdAt', label: 'Date', render: (r) => <span className="text-xs text-slate-500">{formatDate(r.createdAt)}</span> },
     { key: 'currentStage', label: 'Stage', render: (r) => <StatusBadge status={r.currentStage} /> },
     { key: 'status', label: 'Status', render: (r) => {

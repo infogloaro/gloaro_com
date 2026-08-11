@@ -36,10 +36,10 @@ export default function Community() {
       <div className="mx-auto max-w-6xl px-4 md:px-8">
         <div className="space-y-10 md:hidden">
           <div>
-            <h3 className="mb-4 text-2xl font-extrabold uppercase tracking-tight text-primary">What is a Chapter?</h3>
+            <h3 className="mb-4 text-2xl font-extrabold uppercase tracking-tight text-primary">What is a Unit?</h3>
             <div className="mb-6 space-y-4 text-left text-base leading-relaxed text-text/80">
               <p>
-                A GLOARO Chapter is a local business networking community where verified entrepreneurs and professionals meet regularly to build trusted relationships, exchange qualified business referrals, collaborate on opportunities, and support one another's business growth.
+                A GLOARO Unit is a local business networking community where verified entrepreneurs and professionals meet regularly to build trusted relationships, exchange qualified business referrals, collaborate on opportunities, and support one another's business growth.
               </p>
               <p>
                 Each chapter is designed to create a strong local ecosystem that encourages meaningful networking, accountability, and long-term professional success.
@@ -91,10 +91,10 @@ export default function Community() {
           <div className="relative mb-6">
             <div className="absolute -left-[50px] top-3 z-10 h-5 w-5 rounded-full border-2 border-white bg-secondary shadow-[0_0_15px_rgba(245,166,35,0.8)] lg:-left-[70px]" />
 
-            <h3 className="mb-4 text-3xl font-extrabold uppercase tracking-tight text-primary lg:text-4xl">What is a Chapter?</h3>
+            <h3 className="mb-4 text-3xl font-extrabold uppercase tracking-tight text-primary lg:text-4xl">What is a Unit?</h3>
             <div className="mb-6 space-y-4 text-justify text-lg leading-relaxed text-text/80 md:text-left">
               <p>
-                A GLOARO Chapter is a local business networking community where verified entrepreneurs and professionals meet regularly to build trusted relationships, exchange qualified business referrals, collaborate on opportunities, and support one another's business growth.
+                A GLOARO Unit is a local business networking community where verified entrepreneurs and professionals meet regularly to build trusted relationships, exchange qualified business referrals, collaborate on opportunities, and support one another's business growth.
               </p>
               <p>
                 Each chapter is designed to create a strong local ecosystem that encourages meaningful networking, accountability, and long-term professional success.

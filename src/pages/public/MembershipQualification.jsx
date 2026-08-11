@@ -172,7 +172,7 @@ export default function MembershipQualification() {
   const submitApplication = async () => {
     const draftData = getMembershipDraft()
     if (!draftData.chapterId) {
-      toast.error('Chapter selection is required')
+      toast.error('Unit selection is required')
       return
     }
     setSubmitting(true)
@@ -266,7 +266,7 @@ export default function MembershipQualification() {
                   <p className="font-extrabold flex items-center gap-1">
                     <span className="text-emerald-600">✓</span> Verified Connect: <span className="font-black text-slate-800">{referralInfo.referredBy}</span>
                   </p>
-                  <p className="font-semibold text-slate-600">Chapter: <span className="font-bold text-slate-800">{referralInfo.chapter}</span></p>
+                  <p className="font-semibold text-slate-600">Unit: <span className="font-bold text-slate-800">{referralInfo.chapter}</span></p>
                 </div>
               )}
             </div>

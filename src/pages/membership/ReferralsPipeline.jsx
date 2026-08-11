@@ -95,7 +95,7 @@ function ReferralDetailModal({ referral, onClose }) {
           <p><span className="font-black text-slate-900">Member:</span> <span className="font-semibold text-slate-600">{referral.member?.name || '-'}</span></p>
           <p><span className="font-black text-slate-900">Mobile:</span> <span className="font-semibold text-slate-600">{referral.member?.phone || '-'}</span></p>
           <p><span className="font-black text-slate-900">Referred By:</span> <span className="font-semibold text-slate-600">{referral.referrer?.name || '-'}</span></p>
-          <p><span className="font-black text-slate-900">Chapter:</span> <span className="font-semibold text-slate-600">{referral.chapter || '-'}</span></p>
+          <p><span className="font-black text-slate-900">Unit:</span> <span className="font-semibold text-slate-600">{referral.chapter || '-'}</span></p>
           <p><span className="font-black text-slate-900">Application:</span> <span className="font-semibold text-slate-600">{referral.application?.applicationNumber || '-'}</span></p>
         </div>
 
@@ -270,7 +270,7 @@ export default function ReferralsPipeline() {
                 <th className="px-4 py-3">Member</th>
                 <th className="px-4 py-3">Mobile</th>
                 <th className="px-4 py-3">Connect Code</th>
-                <th className="px-4 py-3">Chapter</th>
+                <th className="px-4 py-3">Unit</th>
                 <th className="px-4 py-3">Registration Date</th>
                 <th className="px-4 py-3">Current Stage</th>
                 <th className="px-4 py-3">Status</th>

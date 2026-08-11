@@ -308,7 +308,7 @@ export function DistrictDirectorVendorsPage() {
           { key: 'phone', header: 'Mobile', render: (row) => row.phone || '-' },
           { key: 'email', header: 'Email', render: (row) => row.email || '-' },
           { key: 'district', header: 'District', render: (row) => row.districtId?.name || '-' },
-          { key: 'chapter', header: 'Chapter', render: (row) => row.chapterId?.name || '-' },
+          { key: 'chapter', header: 'Unit', render: (row) => row.chapterId?.name || '-' },
           { key: 'approvedAt', header: 'Approval Date', render: (row) => formatDate(row.approvedAt || row.createdAt) },
           { key: 'status', header: 'Vendor Status', render: (row) => <StatusBadge value={row.status} /> },
         ]}

@@ -154,7 +154,7 @@ export default function VisitorsPage() {
                   <th className="p-4">Visitor</th>
                   <th className="p-4">Contact</th>
                   <th className="p-4">Invited By</th>
-                  <th className="p-4">Chapter</th>
+                  <th className="p-4">Unit</th>
                   <th className="p-4">Visit Date</th>
                   <th className="p-4">Converted</th>
                   <th className="p-4">Invite Code</th>
