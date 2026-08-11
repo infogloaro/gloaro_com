@@ -108,6 +108,14 @@ const searchMotion = {
   transition: { duration: 0.18, ease: 'easeOut' },
 }
 
+const getSearchItems = (response) => Array.isArray(response?.data?.data) ? response.data.data : []
+
+const getSearchResultTitle = (item) => item?.title || item?.businessName || item?.name || 'Untitled'
+
+const getSearchResultImage = (item) => item?.images?.[0]?.url || item?.gallery?.[0]?.url || item?.logo?.url || item?.logo || '/logo.png'
+
+const getSearchResultPrice = (item) => item?.pricing?.sellingPrice ?? item?.pricing?.minPrice ?? item?.pricing?.basePrice ?? 0
+
 export default function Navbar() {
   const { isAuthenticated, user } = useAuth()
   const navigate = useNavigate()
@@ -139,14 +147,14 @@ export default function Navbar() {
     let active = true
     const timer = window.setTimeout(() => {
       if (active) setSearchLoading(true)
-      Promise.all([
-        api.get('/products', { params: { search: query, limit: 4 } }),
-        api.get('/services', { params: { search: query, limit: 4 } }),
+      Promise.allSettled([
+        api.get('/products', { params: { search: query, limit: 4 }, silent: true }),
+        api.get('/services', { params: { search: query, limit: 4 }, silent: true }),
       ])
-        .then(([productsResponse, servicesResponse]) => {
+        .then(([productsResult, servicesResult]) => {
           if (!active) return
-          const products = (productsResponse.data?.data || []).map((item) => ({ ...item, searchType: 'product' }))
-          const services = (servicesResponse.data?.data || []).map((item) => ({ ...item, searchType: 'service' }))
+          const products = productsResult.status === 'fulfilled' ? getSearchItems(productsResult.value).map((item) => ({ ...item, searchType: 'product' })) : []
+          const services = servicesResult.status === 'fulfilled' ? getSearchItems(servicesResult.value).map((item) => ({ ...item, searchType: 'service' })) : []
           setSearchResults([...products, ...services].slice(0, 6))
         })
         .catch(() => {
@@ -182,15 +190,18 @@ export default function Navbar() {
 
     setSearchLoading(true)
     try {
-      const [productsResponse, servicesResponse] = await Promise.all([
-        api.get('/products', { params: { search: query, limit: 1 } }),
-        api.get('/services', { params: { search: query, limit: 1 } }),
+      const [productsResult, servicesResult] = await Promise.allSettled([
+        api.get('/products', { params: { search: query, limit: 1 }, silent: true }),
+        api.get('/services', { params: { search: query, limit: 1 }, silent: true }),
       ])
-      const firstProduct = productsResponse.data?.data?.[0]
-      const firstService = servicesResponse.data?.data?.[0]
+      const firstProduct = productsResult.status === 'fulfilled' ? getSearchItems(productsResult.value)[0] : null
+      const firstService = servicesResult.status === 'fulfilled' ? getSearchItems(servicesResult.value)[0] : null
       if (firstProduct) openSearchResult({ ...firstProduct, searchType: 'product' })
       else if (firstService) openSearchResult({ ...firstService, searchType: 'service' })
-      else setSearchOpen(true)
+      else {
+        setSearchOpen(false)
+        navigate(`/products?search=${encodeURIComponent(query)}`)
+      }
     } catch {
       setSearchOpen(true)
     } finally {
@@ -202,7 +213,7 @@ export default function Navbar() {
     [nearMeIcon, 'Near Me', '/nearby', 'border border-slate-200/80 bg-white/70 text-slate-700 hover:border-slate-300 hover:bg-white', 'group-hover:-translate-y-0.5'],
     [shopIcon, 'Shop', '/products', 'border border-amber-200/80 bg-gradient-to-r from-amber-300 to-amber-200 text-[#073b7a] shadow-[0_12px_24px_rgba(255,174,19,0.16)] hover:shadow-[0_16px_30px_rgba(255,174,19,0.22)]', 'brightness-0 contrast-125'],
     [brandIcon, 'B2B Services', '/services', 'border border-emerald-200/80 bg-gradient-to-r from-emerald-500 to-emerald-400 text-white shadow-[0_12px_24px_rgba(16,185,129,0.18)] hover:shadow-[0_16px_30px_rgba(16,185,129,0.24)]', 'brightness-0 invert'],
-    [aboutIcon, 'About', '/about', 'border border-amber-200/80 bg-white/80 text-[#073b7a] hover:border-amber-300 hover:bg-amber-50/90', ''],
+    // [aboutIcon, 'About', '/about', 'border border-amber-200/80 bg-white/80 text-[#073b7a] hover:border-amber-300 hover:bg-amber-50/90', ''],
   ]
 
   return (
@@ -218,30 +229,27 @@ export default function Navbar() {
         >
           <div className="rounded-[28px] border border-white/70 bg-white/80 px-3 py-3 shadow-[0_16px_60px_rgba(11,70,158,0.12)] backdrop-blur-xl sm:px-4">
             <div className="pointer-events-none absolute inset-0 rounded-[28px] bg-[radial-gradient(circle_at_top_left,rgba(11,70,158,0.14),transparent_28%),radial-gradient(circle_at_top_right,rgba(255,178,12,0.16),transparent_24%)]" />
-            <div className="relative flex items-center gap-2 xl:gap-3">
-              <a href="/" aria-label="Go to home page" className="group flex w-24 shrink-0 items-center sm:w-28">
+            <div className="relative flex min-w-0 items-center gap-2 xl:gap-3">
+              <a href="/" aria-label="Go to home page" className="group flex w-24 shrink-0 items-center lg:w-20 xl:w-28">
                 <img src={logo} alt="Gloaro Business Network" className="h-auto w-full origin-left object-contain transition duration-300 group-hover:scale-[1.03] group-hover:drop-shadow-[0_8px_20px_rgba(11,70,158,0.12)]" />
               </a>
 
-              <div className="hidden flex-1 items-center gap-3 lg:flex">
-                <div className="relative">
-                  <button type="button" onClick={() => setNetworkOpen(true)} className="group relative flex h-11 items-center gap-2 overflow-hidden whitespace-nowrap rounded-full border border-blue-900/10 bg-[linear-gradient(135deg,#0b469e_0%,#1b6fe0_48%,#0b469e_100%)] px-5 text-sm font-semibold text-white shadow-[0_16px_30px_rgba(11,70,158,0.22)] transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_20px_40px_rgba(11,70,158,0.28)]" aria-expanded={networkOpen} aria-haspopup="true">
+              <div className="hidden min-w-0 flex-1 items-center gap-1.5 lg:flex xl:gap-3">
+                <div className="relative shrink-0">
+                  <button type="button" onClick={() => setNetworkOpen(true)} className="group relative flex h-11 items-center gap-1.5 overflow-hidden whitespace-nowrap rounded-full border border-blue-900/10 bg-[linear-gradient(135deg,#0b469e_0%,#1b6fe0_48%,#0b469e_100%)] px-3 text-xs font-semibold text-white shadow-[0_16px_30px_rgba(11,70,158,0.22)] transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_20px_40px_rgba(11,70,158,0.28)] xl:gap-2 xl:px-5 xl:text-sm" aria-expanded={networkOpen} aria-haspopup="true">
                     <span className="absolute inset-0 bg-[linear-gradient(110deg,transparent,rgba(255,255,255,0.3),transparent)] bg-[length:200%_100%] opacity-0 transition duration-500 group-hover:animate-[navbar-shine_1.8s_linear_infinite] group-hover:opacity-100" />
-                    <span className="relative flex items-center gap-2">
+                    <span className="relative flex items-center gap-1.5 xl:gap-2">
                       <span className="grid h-7 w-7 place-items-center rounded-full bg-white/15 ring-1 ring-white/25">
                         <img src={networkIcon} alt="" className="h-4 w-4 object-contain" />
                       </span>
                       <span>Gloaro Network</span>
-                      <span className="rounded-full bg-white/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.22em] text-white/90">Explore</span>
+                      <span className="hidden rounded-full bg-white/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.22em] text-white/90 xl:inline">Explore</span>
                     </span>
                   </button>
-                  <AnimatePresence>
-                    {networkOpen && <GloaroNetworkMenu key="network-menu" onClose={() => setNetworkOpen(false)} />}
-                  </AnimatePresence>
                 </div>
                 {navItems.map(([icon, label, href, colors, iconClass = '']) => (
-                  <a key={label} href={href} className={`group flex h-11 items-center gap-2 whitespace-nowrap rounded-full px-3 text-xs font-semibold transition duration-300 hover:-translate-y-0.5 xl:px-4 xl:text-sm ${colors}`}>
-                    <span className="grid h-7 w-7 place-items-center rounded-full bg-white/70 ring-1 ring-black/5">
+                  <a key={label} href={href} className={`group flex h-11 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full px-2 text-[11px] font-semibold transition duration-300 hover:-translate-y-0.5 xl:gap-2 xl:px-4 xl:text-sm ${colors}`}>
+                    <span className="grid h-6 w-6 place-items-center rounded-full bg-white/70 ring-1 ring-black/5 xl:h-7 xl:w-7">
                       <img src={icon} alt="" className={`h-3.5 w-3.5 object-contain transition duration-300 group-hover:scale-110 ${iconClass}`} />
                     </span>
                     <span className="relative">
@@ -252,7 +260,7 @@ export default function Navbar() {
                 ))}
               </div>
 
-              <div className="ml-auto hidden items-center gap-4 text-[#0b469e] lg:flex">
+              <div className="ml-auto hidden shrink-0 items-center gap-2 text-[#0b469e] lg:flex xl:gap-4">
                 {isAuthenticated ? (
                   <a href={getDashboardRoute(user?.role, user)} aria-label="Open account dashboard" className="group flex h-11 items-center gap-2.5 rounded-full border border-[#0b469e]/15 bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(239,246,255,0.95))] px-2.5 pr-4 text-[#0b469e] shadow-[0_10px_24px_rgba(11,70,158,0.12)] transition duration-300 hover:-translate-y-0.5 hover:border-[#0b469e]/30 hover:shadow-[0_16px_30px_rgba(11,70,158,0.18)]">
                     <span className="grid h-7 w-7 place-items-center rounded-full bg-[linear-gradient(135deg,#0b469e,#1b6fe0)] ring-2 ring-blue-100">
@@ -263,14 +271,14 @@ export default function Navbar() {
                   </a>
                 ) : (
                   <>
-                    <a href="/login" className="group flex items-center gap-1.5 text-sm font-semibold transition duration-300 hover:-translate-y-0.5 hover:text-[#0b469e]">
-                      <img src={loginIcon} alt="" className="h-5 w-5 object-contain" />
+                    <a href="/login" className="group flex items-center gap-1 text-xs font-semibold transition duration-300 hover:-translate-y-0.5 hover:text-[#0b469e] xl:gap-1.5 xl:text-sm">
+                      <img src={loginIcon} alt="" className="h-4 w-4 object-contain xl:h-5 xl:w-5" />
                       <span className="relative">
                         Login
                         <span className="absolute -bottom-1 left-0 h-0.5 w-0 rounded-full bg-[#0b469e] transition-all duration-300 group-hover:w-full" />
                       </span>
                     </a>
-                    <a href="/register" className="rounded-full border border-[#0b469e]/15 bg-[linear-gradient(135deg,#0b469e,#1b6fe0)] px-4 py-2 text-sm font-semibold text-white shadow-[0_12px_26px_rgba(11,70,158,0.2)] transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_16px_32px_rgba(11,70,158,0.26)]">
+                    <a href="/register" className="rounded-full border border-[#0b469e]/15 bg-[linear-gradient(135deg,#0b469e,#1b6fe0)] px-3 py-2 text-xs font-semibold text-white shadow-[0_12px_26px_rgba(11,70,158,0.2)] transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_16px_32px_rgba(11,70,158,0.26)] xl:px-4 xl:text-sm">
                       Register
                     </a>
                   </>
@@ -333,11 +341,11 @@ export default function Navbar() {
                           onClick={() => openSearchResult(product)}
                           className="flex w-full items-center gap-3 border-b border-slate-100/80 px-4 py-3 text-left transition hover:bg-slate-50 last:border-0"
                         >
-                          <img src={product.images?.[0]?.url || product.gallery?.[0]?.url || '/logo.png'} alt="" className="h-11 w-11 rounded-xl bg-slate-100 object-cover ring-1 ring-slate-200" />
+                          <img src={getSearchResultImage(product)} alt="" className="h-11 w-11 rounded-xl bg-slate-100 object-cover ring-1 ring-slate-200" />
                           <span className="min-w-0">
-                            <span className="block truncate text-sm font-bold text-slate-900">{product.title}</span>
+                            <span className="block truncate text-sm font-bold text-slate-900">{getSearchResultTitle(product)}</span>
                             <span className="block text-xs font-semibold text-[#0b469e]">
-                              {product.searchType === 'service' ? 'Service' : 'Product'} · ₹{product.pricing?.sellingPrice ?? product.pricing?.minPrice ?? 0}
+                              {product.searchType === 'service' ? 'Service' : 'Product'} · ₹{getSearchResultPrice(product)}
                             </span>
                           </span>
                         </button>
@@ -352,6 +360,10 @@ export default function Navbar() {
           </div>
         </motion.div>
       </div>
+
+      <AnimatePresence>
+        {networkOpen && <GloaroNetworkMenu key="network-menu" onClose={() => setNetworkOpen(false)} />}
+      </AnimatePresence>
 
       <AnimatePresence>
         {open && (
@@ -491,27 +503,29 @@ function GloaroNetworkMenu({ onClose }) {
   return (
     <motion.div
       {...dropdownMotion}
-      className="fixed inset-x-0 top-[92px] z-[100] hidden h-[calc(100vh-92px)] bg-slate-950/45 px-4 py-6 backdrop-blur-[6px] lg:flex lg:items-start lg:justify-center"
+      className="fixed inset-0 z-[100] flex items-start justify-center bg-black/20 px-2 py-4 pt-24 sm:px-4 sm:py-6 sm:pt-24"
       role="dialog"
       aria-modal="true"
       aria-label="Gloaro Network information"
     >
       <motion.div
         {...dropdownMotion}
-        className="relative grid max-h-[calc(100vh-6rem)] w-full max-w-[1120px] overflow-y-auto rounded-[28px] border border-white/70 bg-white/95 shadow-[0_30px_90px_rgba(15,23,42,0.22)] ring-1 ring-slate-200/60 lg:grid-cols-[1fr_220px]"
+        className="relative mx-auto grid max-h-[90vh] w-[calc(100%-1rem)] max-w-none grid-cols-1 overflow-y-auto rounded-xl bg-white shadow-lg sm:w-[calc(100%-2rem)] sm:rounded-2xl md:max-w-4xl lg:max-w-6xl lg:grid-cols-[minmax(0,1fr)_240px]"
       >
-        <button type="button" onClick={onClose} className="absolute right-3 top-3 z-10 grid h-9 w-9 place-items-center rounded-full bg-white text-slate-500 shadow-sm ring-1 ring-slate-200 transition hover:-translate-y-0.5 hover:bg-slate-50 hover:text-[#0b469e]" aria-label="Close Gloaro Network menu">
+        <button type="button" onClick={onClose} className="absolute right-4 top-4 z-10 grid h-9 w-9 place-items-center rounded-full bg-white text-slate-500 shadow-sm ring-1 ring-slate-200 transition hover:-translate-y-0.5 hover:bg-slate-50 hover:text-[#0b469e]" aria-label="Close Gloaro Network menu">
           <X className="h-4 w-4" />
         </button>
-        <div className="p-8 pb-9">
-          <h2 className="font-playfair text-3xl font-black italic leading-none text-[#0b469e]">Gloaro Network</h2>
-          <p className="mt-2 text-sm font-extrabold italic text-[#ff8a00]">"Connect. Collaborate. Grow Globally."</p>
-          <p className="mt-3 max-w-3xl text-sm font-medium leading-5 text-black">Explore membership, business opportunities, services and global networking in our comprehensive enterprise ecosystem.</p>
+        <div className="min-w-0 p-5 pb-6 md:p-6 lg:p-8 lg:pb-9">
+          <div className="pr-12">
+            <h2 className="font-playfair text-2xl font-black italic leading-tight text-[#0b469e] sm:text-3xl lg:text-4xl">Gloaro Network</h2>
+            <p className="mt-2 text-sm font-extrabold italic text-[#ff8a00] sm:text-base">"Connect. Collaborate. Grow Globally."</p>
+            <p className="mt-3 max-w-3xl text-sm font-medium leading-5 text-black sm:text-base sm:leading-6">Explore membership, business opportunities, services and global networking in our comprehensive enterprise ecosystem.</p>
+          </div>
 
-          <div className="mt-6 grid gap-x-8 gap-y-8 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="mt-6 grid grid-cols-1 gap-5 md:grid-cols-2 md:gap-6 lg:grid-cols-4 lg:gap-x-8 lg:gap-y-8">
             {networkMenu.map(([Icon, title, links]) => (
-              <div key={title}>
-                <h3 className="flex items-center gap-2 font-playfair text-lg font-black italic text-[#0b469e]"><Icon className="h-4 w-4" />{title}</h3>
+              <div key={title} className="min-w-0 w-full">
+                <h3 className="flex min-w-0 items-center gap-2 font-playfair text-lg font-black italic leading-tight text-[#0b469e]"><Icon className="h-4 w-4 shrink-0" /><span className="min-w-0 break-words">{title}</span></h3>
                 <ul className="mt-3 space-y-3">
                   {links.map((link) => (
                     <li key={link} className="text-sm font-medium text-black">
@@ -524,20 +538,20 @@ function GloaroNetworkMenu({ onClose }) {
           </div>
         </div>
 
-        <aside className="flex flex-col bg-[linear-gradient(180deg,#fff8e7,#fff2d4)] p-8">
+        <aside className="flex min-w-0 flex-col bg-[linear-gradient(180deg,#fff8e7,#fff2d4)] p-5 md:p-6 lg:min-h-full lg:p-8">
           <h3 className="font-playfair text-base font-black text-[#0b469e]">Become a GLOARO Member</h3>
-          <div className="mt-7 space-y-7">
+          <div className="mt-6 space-y-5 lg:mt-7 lg:space-y-7">
             {networkHighlights.map(([Icon, title, text]) => (
               <div key={title} className="flex gap-3">
                 <Icon className="mt-0.5 h-4 w-4 shrink-0 text-[#ff9f00]" />
-                <div>
+                <div className="min-w-0">
                   <p className="text-xs font-black text-[#0b469e]">{title}</p>
                   <p className="mt-0.5 text-[10px] font-semibold leading-3 text-black">{text}</p>
                 </div>
               </div>
             ))}
           </div>
-          <a href="/register" onClick={onClose} className="mt-auto block rounded-lg bg-[#0b469e] px-4 py-3 text-center text-xs font-extrabold text-white shadow-lg shadow-blue-950/20">Explore Membership</a>
+          <a href="/register" onClick={onClose} className="mt-6 block w-full rounded-lg bg-[#0b469e] px-4 py-3 text-center text-xs font-extrabold text-white shadow-lg shadow-blue-950/20 lg:mt-auto">Explore Membership</a>
         </aside>
       </motion.div>
     </motion.div>

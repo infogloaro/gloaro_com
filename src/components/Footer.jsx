@@ -170,9 +170,9 @@ export default function Footer() {
                     <MapPin className="h-3 w-3 text-[#ffae13]" />
                   </div>
                   <span>
-                    151 Kamadhenu Nagar 2nd street
+                    SF No,101/2B, Esai Towers, Salem Main Road Near ByPass,
                     <br />
-                    Neelamagalam Road Kallakurichy - 606202
+                    Emapper, Kallakurichy -606202, TamilNadu, India
                   </span>
                 </div>
               </div>

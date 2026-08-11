@@ -1980,6 +1980,11 @@ export function DetailPage({ type }) {
     () => productReviews.length || getReviewCount(item),
     [item, productReviews.length],
   );
+  const vendor = item?.vendor || {};
+  const galleryImages = useMemo(
+    () => (item?.images?.length ? item.images : selectedVariant?.images || []),
+    [item, selectedVariant],
+  );
 
   useEffect(() => {
     if (!item) return;
@@ -2531,10 +2536,6 @@ export function DetailPage({ type }) {
     );
   }
 
-  const galleryImages = useMemo(
-    () => (item?.images?.length ? item.images : selectedVariant?.images || []),
-    [item, selectedVariant],
-  );
   const mainImage =
     galleryImages[selectedImageIndex]?.url ||
     getProductImage(item, selectedVariant);

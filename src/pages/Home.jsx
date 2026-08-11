@@ -215,11 +215,10 @@ function useInViewOnce(threshold = 0.15) {
 
 function Reveal({ children, className = '', delay = 0, direction = 'up' }) {
   const [ref, inView] = useInViewOnce()
-  const hiddenTransform = direction === 'left' ? '-translate-x-10' : direction === 'right' ? 'translate-x-10' : 'translate-y-10'
   return (
     <div
       ref={ref}
-      className={`transition-all duration-700 ease-out motion-reduce:transition-none motion-reduce:transform-none ${inView ? 'opacity-100 translate-x-0 translate-y-0' : `opacity-0 ${hiddenTransform}`} ${className}`}
+      className={`transition-all duration-700 ease-out motion-reduce:transition-none motion-reduce:transform-none ${inView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'} ${className}`}
       style={{ transitionDelay: inView ? `${delay}ms` : '0ms' }}
     >
       {children}
@@ -485,19 +484,24 @@ export default function Home() {
         <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(2,18,50,.78),rgba(3,19,52,.5),rgba(2,12,35,.8))]" />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(31,102,210,.28),transparent_45%)]" />
         <div aria-hidden="true" className="gl-float-a pointer-events-none absolute -left-16 top-10 h-56 w-56 rounded-full bg-[#ffae13]/20 blur-3xl" />
-        <div aria-hidden="true" className="gl-float-b pointer-events-none absolute -right-10 bottom-6 h-64 w-64 rounded-full bg-[#1f66d2]/25 blur-3xl" />
-        <div className="relative mx-auto flex min-h-[530px] max-w-7xl flex-col items-center px-5 pb-32 pt-12 text-center sm:min-h-[610px] sm:pt-10 lg:px-8">
-          <div className="gl-fade-up gl-pulse-ring flex items-center gap-2 rounded-2xl border border-white/15 bg-slate-400/40 px-4 py-2 shadow-xl backdrop-blur sm:px-7 sm:py-3"><img src={heroNetworkIcon} alt="Gloaro network" className="h-7 w-7 object-contain sm:h-8 sm:w-8" /><span className="text-base font-semibold tracking-tight text-white sm:text-2xl">GLOARO BUSINESS NETWORK</span></div>
-          <h1 className="mt-7 max-w-5xl font-playfair text-5xl font-medium italic leading-[0.92] tracking-tight text-white sm:mt-8 sm:text-7xl lg:text-8xl">
-            <span className="gl-fade-up block" style={{ animationDelay: '120ms' }}>We Give. <span className="gl-gold-text">We Grow.</span></span>
-            <span className="gl-fade-up mt-3 block sm:mt-4" style={{ animationDelay: '280ms' }}><span className="text-[#ff9515]">We</span> Win Together.</span>
-          </h1>
-          <p className="gl-fade-up mt-6 max-w-7xl font-urbanist text-base font-medium leading-7 tracking-[0.05em] text-white sm:text-lg" style={{ animationDelay: '420ms' }}>A trusted network of professionals and entrepreneurs building relationships, creating opportunities,<br className="hidden md:block" /> and shaping future success together.</p>
-          <div className="gl-fade-up mt-5 flex flex-wrap justify-center gap-3" style={{ animationDelay: '540ms' }}>
-            <a href="/register?type=membership" className="gl-shimmer rounded-lg bg-[#10499b] px-6 py-3 text-lg font-bold text-white shadow-lg shadow-black/30 transition duration-300 hover:-translate-y-0.5 hover:bg-[#12579c] hover:shadow-xl">Become a Member&nbsp; ↗</a>
-            <a href="#why-gloaro" className="rounded-lg border border-white/15 bg-slate-700/70 px-6 py-3 text-lg font-bold text-white shadow-lg shadow-black/30 backdrop-blur transition duration-300 hover:-translate-y-0.5 hover:bg-slate-700">Explore Network&nbsp; ↗</a>
+        <div aria-hidden="true" className="gl-float-b pointer-events-none absolute right-0 bottom-6 h-64 w-64 rounded-full bg-[#1f66d2]/25 blur-3xl" />
+        <div className="relative mx-auto flex min-h-[530px] max-w-7xl flex-col items-center px-4 pb-32 pt-9 text-center sm:min-h-[610px] sm:px-6 sm:pt-10 lg:px-8">
+          <div className="gl-fade-up gl-pulse-ring flex max-w-full items-center gap-2 rounded-2xl border border-white/15 bg-slate-400/40 px-3 py-2 shadow-xl backdrop-blur sm:px-7 sm:py-3"><img src={heroNetworkIcon} alt="Gloaro network" className="h-6 w-6 object-contain sm:h-8 sm:w-8" /><span className="text-sm font-semibold tracking-tight text-white sm:text-2xl">GLOARO BUSINESS NETWORK</span></div>
+          <div className="mt-4 flex w-full max-w-5xl flex-col items-center sm:mt-5">
+            <h2 className="gl-fade-up max-w-full font-urbanist text-2xl font-extrabold uppercase leading-tight tracking-[0.06em] text-white sm:text-3xl md:text-4xl lg:text-5xl" style={{ animationDelay: '120ms' }}>GLOARO BUSINESS NETWORK</h2>
+            <p className="gl-fade-up mt-1 font-playfair text-xl font-bold italic leading-tight text-[#f6a600] sm:text-2xl md:text-3xl lg:text-4xl" style={{ animationDelay: '220ms' }}>Innoviate digital future</p>
+            <p className="gl-fade-up mt-3 max-w-full rounded-full border border-[#ffae13]/45 bg-[#061633]/45 px-4 py-2 font-urbanist text-[11px] font-bold uppercase leading-5 tracking-[0.08em] text-white shadow-lg shadow-black/20 backdrop-blur sm:px-5 sm:text-sm sm:tracking-[0.14em]" style={{ animationDelay: '320ms' }}>One echo system multiple business solution</p>
           </div>
-          <p className="gl-fade-up mt-5 font-serif text-2xl font-bold text-[#f6a600]" style={{ animationDelay: '660ms' }}>Connect. Collaborate. Grow Globally</p>
+          <h1 className="mt-5 max-w-5xl font-playfair text-3xl font-medium italic leading-[1.02] tracking-tight text-white sm:mt-6 sm:text-5xl md:text-6xl lg:text-7xl">
+            <span className="gl-fade-up block" style={{ animationDelay: '420ms' }}>We Give. <span className="gl-gold-text">We Grow.</span></span>
+            <span className="gl-fade-up mt-2 block sm:mt-3" style={{ animationDelay: '540ms' }}><span className="text-[#ff9515]">We</span> Win Together.</span>
+          </h1>
+          <p className="gl-fade-up mt-5 max-w-4xl font-urbanist text-sm font-medium leading-6 tracking-[0.03em] text-white sm:text-base md:text-lg md:leading-7 md:tracking-[0.05em]" style={{ animationDelay: '660ms' }}>A trusted network of professionals and entrepreneurs building relationships, creating opportunities,<br className="hidden md:block" /> and shaping future success together.</p>
+          <div className="gl-fade-up mt-5 flex w-full flex-col justify-center gap-3 sm:w-auto sm:flex-row sm:flex-wrap" style={{ animationDelay: '780ms' }}>
+            <a href="/register?type=membership" className="gl-shimmer w-full rounded-lg bg-[#10499b] px-6 py-3 text-base font-bold text-white shadow-lg shadow-black/30 transition duration-300 hover:-translate-y-0.5 hover:bg-[#12579c] hover:shadow-xl sm:w-auto sm:text-lg">Become a Member&nbsp; ↗</a>
+            <a href="#why-gloaro" className="w-full rounded-lg border border-white/15 bg-slate-700/70 px-6 py-3 text-base font-bold text-white shadow-lg shadow-black/30 backdrop-blur transition duration-300 hover:-translate-y-0.5 hover:bg-slate-700 sm:w-auto sm:text-lg">Explore Network&nbsp; ↗</a>
+          </div>
+          <p className="gl-fade-up mt-5 font-serif text-xl font-bold text-[#f6a600] sm:text-2xl" style={{ animationDelay: '900ms' }}>Connect. Collaborate. Grow Globally</p>
           <div className="mt-5 flex gap-2">{heroSlides.map((_, index) => <button key={index} onClick={() => setActiveSlide(index)} aria-label={`Show slide ${index + 1}`} className={`h-1.5 rounded-full transition-all duration-500 ${index === activeSlide ? 'w-7 bg-[#ffad16]' : 'w-1.5 bg-white/50'}`} />)}</div>
         </div>
       </div>
@@ -507,20 +511,29 @@ export default function Home() {
     </section>
 
     {/* Services marquee ticker — puts the full breadth of the network to work as a signature strip */}
-    <div className="overflow-hidden border-y border-[#0d4697]/10 bg-white py-4">
-      <div className="gl-marquee flex w-max gap-12 whitespace-nowrap px-6">
+    <div className="border-y border-[#0d4697]/10 bg-white">
+      <div className="flex flex-wrap justify-center gap-x-6 gap-y-2 px-4 py-3 xl:hidden">
+        {serviceItems.map((item) => (
+          <span key={item} className="flex items-center gap-2 font-urbanist text-[11px] font-extrabold uppercase tracking-[0.18em] text-[#0d4697]/70 sm:text-xs">
+            {item}<span className="text-[#ffae13]">✦</span>
+          </span>
+        ))}
+      </div>
+      <div className="relative hidden h-14 overflow-hidden xl:block">
+        <div className="gl-marquee absolute left-0 top-1/2 flex w-max -translate-y-1/2 gap-12 whitespace-nowrap px-6">
         {[...serviceItems, ...serviceItems].map((item, index) => (
           <span key={`${item}-${index}`} className="flex items-center gap-3 font-urbanist text-sm font-extrabold uppercase tracking-[0.24em] text-[#0d4697]/70">
             {item}<span className="text-[#ffae13]">✦</span>
           </span>
         ))}
+        </div>
       </div>
     </div>
 
     {/* 2. Why Gloaro */}
     <section id="why-gloaro" className="relative isolate overflow-hidden bg-[#fdf9e9] py-14 sm:py-18 lg:py-24">
       <div aria-hidden="true" className="absolute -left-20 top-10 h-56 w-56 rounded-full bg-[#0d4697]/8 blur-3xl" />
-      <div aria-hidden="true" className="absolute -right-16 bottom-0 h-72 w-72 rounded-full bg-[#ffae13]/12 blur-3xl" />
+      <div aria-hidden="true" className="absolute right-0 bottom-0 h-72 w-72 rounded-full bg-[#ffae13]/12 blur-3xl" />
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(13,70,151,0.07),transparent_30%),radial-gradient(circle_at_bottom_right,rgba(255,174,19,0.12),transparent_28%)]" />
 
       <div className="relative mx-auto grid max-w-7xl items-center gap-8 px-5 sm:gap-10 lg:grid-cols-[minmax(0,430px)_minmax(0,1fr)] lg:gap-14 lg:px-8">
@@ -586,7 +599,7 @@ export default function Home() {
     {/* Gloaro Gallery — managed by Superadmin */}
     {galleryItems.length > 0 && <section id="gallery" className="relative isolate overflow-hidden bg-white px-5 py-14 sm:py-16 lg:px-8 lg:py-20">
       <div aria-hidden="true" className="absolute -left-20 top-0 h-56 w-56 rounded-full bg-[#0d4697]/8 blur-3xl" />
-      <div aria-hidden="true" className="absolute -right-20 bottom-0 h-56 w-56 rounded-full bg-[#ffae13]/12 blur-3xl" />
+      <div aria-hidden="true" className="absolute right-0 bottom-0 h-56 w-56 rounded-full bg-[#ffae13]/12 blur-3xl" />
       <div className="relative mx-auto max-w-7xl">
         <Reveal className="mx-auto max-w-3xl text-center">
           <div className="inline-flex items-center gap-2 rounded-full border border-[#0d4697]/10 bg-[#fdf9e9] px-4 py-2 text-xs font-black uppercase tracking-[0.24em] text-[#0d4697] shadow-sm"><Sparkles className="h-4 w-4 text-[#ffae13]" />Gloaro Gallery</div>
@@ -635,7 +648,7 @@ export default function Home() {
 
     <section id="network-details" className="relative isolate overflow-hidden border-y border-slate-200 bg-[linear-gradient(180deg,#fbfdff,#ffffff)] px-5 py-16 sm:py-18 lg:px-8 lg:py-24">
       <div aria-hidden="true" className="absolute -left-24 top-0 h-72 w-72 rounded-full bg-[#0d4697]/8 blur-3xl" />
-      <div aria-hidden="true" className="absolute -right-20 bottom-0 h-80 w-80 rounded-full bg-[#ffae13]/12 blur-3xl" />
+      <div aria-hidden="true" className="absolute right-0 bottom-0 h-80 w-80 rounded-full bg-[#ffae13]/12 blur-3xl" />
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(13,70,151,0.06),transparent_28%),radial-gradient(circle_at_bottom_right,rgba(255,174,19,0.10),transparent_30%)]" />
 
       <div className="relative mx-auto max-w-7xl">
@@ -743,7 +756,7 @@ export default function Home() {
     {/* 6. Member Benefits */}
     <section id="membership" className="relative isolate overflow-hidden border-t-2 border-[#0d4697] bg-[#fdf9e9] px-5 py-14 sm:py-16 lg:px-8 lg:py-20">
       <div aria-hidden="true" className="absolute -left-20 top-0 h-56 w-56 rounded-full bg-[#0d4697]/8 blur-3xl" />
-      <div aria-hidden="true" className="absolute -right-16 bottom-0 h-72 w-72 rounded-full bg-[#ffae13]/12 blur-3xl" />
+      <div aria-hidden="true" className="absolute right-0 bottom-0 h-72 w-72 rounded-full bg-[#ffae13]/12 blur-3xl" />
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(13,70,151,0.06),transparent_28%),radial-gradient(circle_at_bottom_right,rgba(255,174,19,0.10),transparent_30%)]" />
 
       <div className="relative mx-auto max-w-7xl">
@@ -770,7 +783,7 @@ export default function Home() {
     {/* 10. Our Leaders */}
     <section id="leaders" onMouseEnter={() => setLeadersPaused(true)} onMouseLeave={() => setLeadersPaused(false)} onTouchStart={() => setLeadersPaused(true)} onTouchEnd={() => setLeadersPaused(false)} className="relative isolate overflow-hidden border-b-4 border-[#163960] bg-[#fdf9e9] px-5 py-14 sm:py-16 lg:px-8 lg:py-20">
       <div aria-hidden="true" className="absolute -left-20 top-0 h-56 w-56 rounded-full bg-[#0d4697]/8 blur-3xl" />
-      <div aria-hidden="true" className="absolute -right-16 bottom-0 h-72 w-72 rounded-full bg-[#ffae13]/12 blur-3xl" />
+      <div aria-hidden="true" className="absolute right-0 bottom-0 h-72 w-72 rounded-full bg-[#ffae13]/12 blur-3xl" />
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(13,70,151,0.06),transparent_28%),radial-gradient(circle_at_bottom_right,rgba(255,174,19,0.10),transparent_30%)]" />
 
       <div className="relative mx-auto max-w-7xl">
@@ -836,7 +849,7 @@ export default function Home() {
     {/* 10. Awards */}
     <section className="relative isolate overflow-hidden bg-[#08213d] px-5 py-14 text-white sm:py-16 lg:px-8 lg:py-20">
       <div aria-hidden="true" className="absolute -left-20 top-6 h-56 w-56 rounded-full bg-[#ffae13]/10 blur-3xl" />
-      <div aria-hidden="true" className="absolute -right-20 bottom-0 h-72 w-72 rounded-full bg-white/5 blur-3xl" />
+      <div aria-hidden="true" className="absolute right-0 bottom-0 h-72 w-72 rounded-full bg-white/5 blur-3xl" />
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,174,19,0.12),transparent_30%),radial-gradient(circle_at_bottom_right,rgba(255,255,255,0.06),transparent_28%)]" />
 
       <div className="relative mx-auto grid max-w-7xl items-center gap-8 md:grid-cols-[0.92fr_1.08fr] lg:gap-12">
@@ -908,7 +921,7 @@ export default function Home() {
     {/* 11. Meetings & Events */}
     <section id="events" className="relative isolate overflow-hidden scroll-mt-48 bg-[#fdf9e9] px-5 py-14 sm:py-16 lg:scroll-mt-52 lg:px-8 lg:py-20">
       <div aria-hidden="true" className="absolute -left-20 top-0 h-56 w-56 rounded-full bg-[#0d4697]/8 blur-3xl" />
-      <div aria-hidden="true" className="absolute -right-16 bottom-0 h-72 w-72 rounded-full bg-[#ffae13]/10 blur-3xl" />
+      <div aria-hidden="true" className="absolute right-0 bottom-0 h-72 w-72 rounded-full bg-[#ffae13]/10 blur-3xl" />
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(13,70,151,0.06),transparent_28%),radial-gradient(circle_at_bottom_right,rgba(255,174,19,0.10),transparent_28%)]" />
 
       <div className="relative mx-auto max-w-7xl">
@@ -1039,7 +1052,7 @@ export default function Home() {
     {/* 12. Success Stories / Testimonials */}
     <section id="testimonials" onMouseEnter={() => setStoriesPaused(true)} onMouseLeave={() => setStoriesPaused(false)} onTouchStart={() => setStoriesPaused(true)} onTouchEnd={() => setStoriesPaused(false)} className="relative scroll-mt-48 overflow-hidden border-b-4 border-white bg-[radial-gradient(circle_at_top_left,#2563a9_0,#0d4697_38%,#082e70_100%)] px-5 py-12 text-white sm:py-16 lg:scroll-mt-52 lg:px-8">
       <div aria-hidden="true" className="gl-float-a absolute -left-24 top-16 h-64 w-64 rounded-full border border-white/10" />
-      <div aria-hidden="true" className="gl-float-b absolute -right-20 -top-24 h-72 w-72 rounded-full bg-[#ffae13]/10 blur-2xl" />
+      <div aria-hidden="true" className="gl-float-b absolute right-0 -top-24 h-72 w-72 rounded-full bg-[#ffae13]/10 blur-2xl" />
       <div className="relative mx-auto max-w-7xl">
         <Reveal className="text-center">
           <span className="mb-2 inline-flex rounded-full border border-[#ffae13]/50 bg-[#ffae13]/10 px-4 py-1.5 font-urbanist text-[11px] font-black uppercase tracking-[0.22em] text-[#ffd36e]">Real people. Real growth.</span>
@@ -1074,7 +1087,7 @@ export default function Home() {
     {/* 13. FAQ */}
     <section id="join" className="relative overflow-hidden bg-[#fdf9e9] px-5 py-14 sm:py-18 lg:px-8 lg:py-24">
       <div aria-hidden="true" className="absolute -left-16 top-0 h-56 w-56 rounded-full bg-[#0d4697]/8 blur-3xl" />
-      <div aria-hidden="true" className="absolute -right-20 bottom-0 h-64 w-64 rounded-full bg-[#ffae13]/12 blur-3xl" />
+      <div aria-hidden="true" className="absolute right-0 bottom-0 h-64 w-64 rounded-full bg-[#ffae13]/12 blur-3xl" />
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(13,70,151,0.07),transparent_32%),radial-gradient(circle_at_bottom_right,rgba(255,174,19,0.10),transparent_26%)]" />
 
       <div className="relative mx-auto grid max-w-6xl gap-8 lg:grid-cols-[0.88fr_1.12fr] lg:gap-10">
