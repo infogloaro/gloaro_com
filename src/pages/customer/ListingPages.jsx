@@ -474,7 +474,7 @@ function ServiceCard({ service }) {
 function scopeLabel(scope) {
   if (!scope) return ''
   const parts = []
-  if (scope.chapterName) parts.push(`${scope.chapterName} Chapter`)
+  if (scope.chapterName) parts.push(`${scope.chapterName} Unit`)
   else if (scope.districtName) parts.push(`${scope.districtName} District`)
   else if (scope.stateName) parts.push(`${scope.stateName} State`)
   else if (scope.regionName) parts.push(`${scope.regionName} Region`)

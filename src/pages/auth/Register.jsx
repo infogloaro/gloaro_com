@@ -269,7 +269,7 @@ export default function Register() {
                 </p>
                 <p className="font-extrabold">Assigned Vendor: <span className="font-black text-slate-800">{referralInfo.assignedVendor}</span></p>
                 <div className="mt-2 grid grid-cols-2 gap-2 border-t border-emerald-200 pt-2 font-bold text-emerald-700">
-                  <p>Chapter: {referralInfo.chapter}</p>
+                  <p>Unit: {referralInfo.chapter}</p>
                   <p>Member ID: {referralInfo.memberId}</p>
                 </div>
               </div>

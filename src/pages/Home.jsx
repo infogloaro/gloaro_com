@@ -21,7 +21,6 @@ import growthIcon from '../assets/growth.png'
 import rocketIcon from '../assets/rocket.png'
 import whyImage from '../assets/why_img.png'
 import api from '../api/axios'
-import leader2 from '../assets/leader2.png'
 
 const awardsHighlightImage = 'https://images.unsplash.com/photo-1764874299025-d8b2251f307d?auto=format&fit=crop&fm=jpg&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&ixlib=rb-4.1.0&q=60&w=3000'
 
@@ -177,21 +176,7 @@ const networkDetailGroups = [
   },
 ]
 
-const fallbackLeaders = [
-  {
-    name: 'G.MANI VANNAN',
-    role: 'FOUNDER AND MANAGING DIRECTOR',
-    bio: 'Visionary leader with 15+ years of experience in business strategy and growth.',
-    image: leader2,
-  },
-  // {
-  //   name: 'Kannan',
-  //   role: 'Co-Founder and CEO',
-  //   bio: 'Operations expert focused on delivering excellence and scaling impact.',
-  //   image: leader1,
-  // },
-]
-
+// Removed fallbackLeaders
 // Shared scroll-reveal styling primitive. Keeps every section's entrance
 // consistent (fade + rise) without repeating IntersectionObserver wiring.
 function useInViewOnce(threshold = 0.15) {
@@ -268,9 +253,8 @@ export default function Home() {
   const [publicLeaders, setPublicLeaders] = useState(null)
   const [galleryItems, setGalleryItems] = useState([])
   const [galleryPaused, setGalleryPaused] = useState(false)
-  // The original founder card stays on the public page; active leaders created
-  // by Superadmin are added after it.
-  const visibleLeaders = [...fallbackLeaders, ...(publicLeaders || [])]
+  // Fetch leaders dynamically from backend API
+  const visibleLeaders = publicLeaders || []
   const featuredBusinessesRef = useRef(null)
   const leadersRef = useRef(null)
   const successStoriesRef = useRef(null)
@@ -803,45 +787,65 @@ export default function Home() {
         </Reveal>
 
         <div className={`mt-7 ${showExecutiveVision ? 'flex flex-col items-center gap-8 lg:flex-row lg:items-stretch lg:justify-between' : ''}`}>
-          <Reveal direction="left" delay={100} className={`relative w-full ${showExecutiveVision ? 'shrink-0 lg:w-auto' : ''}`}>
-            {canScrollLeaders && <button type="button" onClick={() => scrollLeaders(-1)} aria-label="Previous leaders" className="absolute -left-4 top-1/2 z-10 grid h-11 w-11 -translate-y-1/2 place-items-center rounded-full border border-white/70 bg-white/95 text-2xl font-bold text-[#1c2433] shadow-[0_12px_30px_rgba(15,23,42,0.16)] backdrop-blur transition duration-300 hover:-translate-y-1 hover:scale-110 lg:-left-7">‹</button>}
-            <div ref={leadersRef} className="flex snap-x gap-5 overflow-x-auto scroll-smooth pb-2 [scrollbar-width:none] lg:gap-6 [&::-webkit-scrollbar]:hidden">
-              {visibleLeaders.map((leader, index) => (
-                <article key={leader._id || leader.name} data-leader-card className="group relative w-full shrink-0 snap-start overflow-hidden rounded-[30px] border border-white/80 bg-[linear-gradient(180deg,rgba(255,255,255,0.98),rgba(248,251,255,0.98))] shadow-[0_18px_50px_rgba(15,23,42,.10)] transition duration-300 hover:-translate-y-2 hover:shadow-[0_26px_60px_rgba(13,70,151,.16)] sm:w-[320px] lg:w-[340px]">
-                  <div className="absolute inset-x-0 top-0 h-1 bg-[linear-gradient(90deg,#0d4697,#ffae13,#0d4697)] bg-[length:200%_100%] opacity-70" />
-                  <div className="relative h-[250px] overflow-hidden bg-[radial-gradient(circle_at_top,rgba(13,70,151,0.18),transparent_60%),linear-gradient(180deg,#10223d,#1f4f8f)] sm:h-[270px] lg:h-[265px]">
-                    <img src={leader.image?.url || leader.image} alt={leader.name} className="h-full w-full object-cover object-top transition duration-700 group-hover:scale-110 group-hover:contrast-105" />
-                    <div className="absolute inset-x-0 bottom-0 h-28 bg-[linear-gradient(180deg,transparent,rgba(5,15,36,0.95))]" />
-                    <div className="absolute bottom-4 left-4 right-4 flex items-end justify-between gap-4">
-                      <div className="max-w-[75%]">
-                        <p className="text-[11px] font-black uppercase tracking-[0.22em] !text-[#ffd36e]">{leader.role}</p>
-                        <h3 className="mt-1 font-playfair text-2xl font-semibold italic leading-tight !text-white drop-shadow">{leader.name}</h3>
+          
+          {visibleLeaders.length === 0 ? (
+            <div className="flex w-full flex-col items-center justify-center rounded-[30px] border border-white/20 bg-white/5 py-16 text-center shadow-lg">
+              <UserRound className="mb-4 h-12 w-12 text-white/30" />
+              <p className="font-urbanist text-lg font-semibold text-white/60">Leadership profiles will be updated shortly.</p>
+            </div>
+          ) : (
+            <>
+              <Reveal direction="left" delay={100} className={`relative w-full ${showExecutiveVision ? 'shrink-0 lg:w-auto' : ''}`}>
+                {canScrollLeaders && <button type="button" onClick={() => scrollLeaders(-1)} aria-label="Previous leaders" className="absolute -left-4 top-1/2 z-10 grid h-11 w-11 -translate-y-1/2 place-items-center rounded-full border border-white/70 bg-white/95 text-2xl font-bold text-[#1c2433] shadow-[0_12px_30px_rgba(15,23,42,0.16)] backdrop-blur transition duration-300 hover:-translate-y-1 hover:scale-110 lg:-left-7">‹</button>}
+                <div ref={leadersRef} className="flex snap-x gap-5 overflow-x-auto scroll-smooth pb-2 [scrollbar-width:none] lg:gap-6 [&::-webkit-scrollbar]:hidden">
+                  {visibleLeaders.map((leader) => (
+                    <article key={leader._id || leader.name} data-leader-card className="group relative w-full shrink-0 snap-start overflow-hidden rounded-[30px] border border-white/80 bg-[linear-gradient(180deg,rgba(255,255,255,0.98),rgba(248,251,255,0.98))] shadow-[0_18px_50px_rgba(15,23,42,.10)] transition duration-300 hover:-translate-y-2 hover:shadow-[0_26px_60px_rgba(13,70,151,.16)] sm:w-[320px] lg:w-[340px]">
+                      <div className="absolute inset-x-0 top-0 h-1 bg-[linear-gradient(90deg,#0d4697,#ffae13,#0d4697)] bg-[length:200%_100%] opacity-70" />
+                      <div className="relative h-[250px] overflow-hidden bg-[radial-gradient(circle_at_top,rgba(13,70,151,0.18),transparent_60%),linear-gradient(180deg,#10223d,#1f4f8f)] sm:h-[270px] lg:h-[265px]">
+                        <img src={leader.image?.url || leader.image} alt={leader.name} className="h-full w-full object-cover object-top transition duration-700 group-hover:scale-110 group-hover:contrast-105" />
+                        <div className="absolute inset-x-0 bottom-0 h-28 bg-[linear-gradient(180deg,transparent,rgba(5,15,36,0.95))]" />
+                        <div className="absolute bottom-4 left-4 right-4 flex items-end justify-between gap-4">
+                          <div className="max-w-[75%]">
+                            <p className="text-[11px] font-black uppercase tracking-[0.22em] !text-[#ffd36e]">{leader.role}</p>
+                            <h3 className="mt-1 font-playfair text-2xl font-semibold italic leading-tight !text-white drop-shadow">{leader.name}</h3>
+                          </div>
+                          <div className="grid h-12 w-12 shrink-0 place-items-center rounded-full border border-white/20 bg-white/15 text-white shadow-lg backdrop-blur">
+                            <UserRound className="h-6 w-6" strokeWidth={1.8} />
+                          </div>
+                        </div>
                       </div>
-                      <div className="grid h-12 w-12 shrink-0 place-items-center rounded-full border border-white/20 bg-white/15 text-white shadow-lg backdrop-blur">
-                        <UserRound className="h-6 w-6" strokeWidth={1.8} />
+                      <div className="p-5 sm:p-6">
+                        <p className="font-urbanist text-sm font-semibold leading-6 text-[#1f2937]">{leader.bio}</p>
                       </div>
+                    </article>
+                  ))}
+                </div>
+                {canScrollLeaders && <button type="button" onClick={() => scrollLeaders(1)} aria-label="Next leaders" className="absolute -right-4 top-1/2 z-10 grid h-11 w-11 -translate-y-1/2 place-items-center rounded-full border border-white/70 bg-white/95 text-2xl font-bold text-[#1c2433] shadow-[0_12px_30px_rgba(15,23,42,0.16)] backdrop-blur transition duration-300 hover:-translate-y-1 hover:scale-110 lg:-right-7">›</button>}
+              </Reveal>
+              
+              {showExecutiveVision && visibleLeaders[0]?.visionTitle && (
+                <Reveal direction="right" delay={200} className="w-full min-w-0 flex-1">
+                  <div className="flex h-full flex-col justify-between rounded-[34px] border border-white/70 bg-[linear-gradient(180deg,rgba(8,26,67,0.98),rgba(11,41,94,0.98))] p-6 text-white shadow-[0_24px_70px_rgba(2,8,23,0.24)] sm:p-8">
+                    <div>
+                      <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/10 px-4 py-2 text-xs font-black uppercase tracking-[0.24em] text-[#ffd36e]"><ShieldCheck className="h-4 w-4" />Executive Vision</div>
+                      <h3 className="mt-5 font-playfair text-3xl font-semibold italic leading-tight sm:text-4xl">{visibleLeaders[0].visionTitle} {visibleLeaders[0].visionHighlight && <span className="text-[#ffae13]">{visibleLeaders[0].visionHighlight}</span>}</h3>
+                      {visibleLeaders[0].visionDescription && <p className="mt-4 font-urbanist text-base font-semibold leading-7 text-white/82 sm:text-lg">{visibleLeaders[0].visionDescription}</p>}
                     </div>
+                    {visibleLeaders[0].visionPoints?.length > 0 && (
+                      <div className="mt-6 grid gap-3 sm:grid-cols-3">
+                        {visibleLeaders[0].visionPoints.filter(p => p.title || p.description).map((point, index) => (
+                          <div key={index} className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                            {point.title && <p className="text-sm font-extrabold text-white">{point.title}</p>}
+                            {point.description && <p className="mt-1 text-xs font-semibold leading-5 text-white/70">{point.description}</p>}
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
-                  <div className="p-5 sm:p-6">
-                    <p className="font-urbanist text-sm font-semibold leading-6 text-[#1f2937]">{leader.bio}</p>
-                  </div>
-                </article>
-              ))}
-            </div>
-            {canScrollLeaders && <button type="button" onClick={() => scrollLeaders(1)} aria-label="Next leaders" className="absolute -right-4 top-1/2 z-10 grid h-11 w-11 -translate-y-1/2 place-items-center rounded-full border border-white/70 bg-white/95 text-2xl font-bold text-[#1c2433] shadow-[0_12px_30px_rgba(15,23,42,0.16)] backdrop-blur transition duration-300 hover:-translate-y-1 hover:scale-110 lg:-right-7">›</button>}
-          </Reveal>
-          {showExecutiveVision && <Reveal direction="right" delay={200} className="w-full min-w-0 flex-1">
-            <div className="flex h-full flex-col justify-between rounded-[34px] border border-white/70 bg-[linear-gradient(180deg,rgba(8,26,67,0.98),rgba(11,41,94,0.98))] p-6 text-white shadow-[0_24px_70px_rgba(2,8,23,0.24)] sm:p-8">
-              <div>
-                <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/10 px-4 py-2 text-xs font-black uppercase tracking-[0.24em] text-[#ffd36e]"><ShieldCheck className="h-4 w-4" />Executive Vision</div>
-                <h3 className="mt-5 font-playfair text-3xl font-semibold italic leading-tight sm:text-4xl">Leadership That <span className="text-[#ffae13]">Drives Growth</span></h3>
-                <p className="mt-4 font-urbanist text-base font-semibold leading-7 text-white/82 sm:text-lg">Our leadership team brings vision, innovation, and disciplined execution together to help businesses grow with confidence. Their commitment to excellence shapes every connection, opportunity, and partnership across the Gloaro network.</p>
-              </div>
-              <div className="mt-6 grid gap-3 sm:grid-cols-3">
-                {[['Vision', 'Clear direction for long-term expansion'], ['Execution', 'Structured leadership and accountability'], ['Community', 'A network that grows together']].map(([title, text]) => <div key={title} className="rounded-2xl border border-white/10 bg-white/5 p-4"><p className="text-sm font-extrabold text-white">{title}</p><p className="mt-1 text-xs font-semibold leading-5 text-white/70">{text}</p></div>)}
-              </div>
-            </div>
-          </Reveal>}
+                </Reveal>
+              )}
+            </>
+          )}
         </div>
       </div>
     </section>

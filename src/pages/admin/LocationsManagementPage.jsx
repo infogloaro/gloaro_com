@@ -51,8 +51,8 @@ export default function LocationsManagementPage() {
   const isGlobalAdmin = [ROLES.SUPERADMIN, ROLES.ADMIN].includes(user?.role)
   
   const unitLabel = user?.role === ROLES.DIRECT_CONSULTANT ? 'unit' : 'chapter'
-  const UnitLabel = user?.role === ROLES.DIRECT_CONSULTANT ? 'Unit' : 'Chapter'
-  const UnitsLabel = user?.role === ROLES.DIRECT_CONSULTANT ? 'Units' : 'Chapters'
+  const UnitLabel = user?.role === ROLES.DIRECT_CONSULTANT ? 'Unit' : 'Unit'
+  const UnitsLabel = user?.role === ROLES.DIRECT_CONSULTANT ? 'Units' : 'Units'
 
   const loadLocations = async () => {
     setLoading(true)
@@ -258,7 +258,7 @@ export default function LocationsManagementPage() {
   const resubmitChapter = async (node) => {
     try {
       const response = await adminApi.resubmitChapter(node._id)
-      toast.success('Chapter resubmitted for approval')
+      toast.success('Unit resubmitted for approval')
       setSelectedNode(response.data?.data || node)
       loadLocations()
     } catch (err) {
@@ -356,7 +356,7 @@ export default function LocationsManagementPage() {
       return { label: 'Add District', type: 'district', parentId: selectedNode._id }
     }
     if (selectedNode.type === 'district') {
-      return { label: 'Add Chapter', type: 'chapter', parentId: selectedNode._id }
+      return { label: 'Add Unit', type: 'chapter', parentId: selectedNode._id }
     }
     return null
   }, [selectedNode, user])
@@ -391,8 +391,8 @@ export default function LocationsManagementPage() {
     pageTitle = "Organization Districts Master"
     pageDesc = "Manage geographical Districts under your assigned State."
   } else if (user?.role === ROLES.DISTRICT_DIRECTOR) {
-    pageTitle = "Organization Chapters Master"
-    pageDesc = "Manage geographical Chapters under your assigned District."
+    pageTitle = "Organization Units Master"
+    pageDesc = "Manage geographical Units under your assigned District."
   } else if (user?.role === ROLES.DIRECT_CONSULTANT) {
     pageTitle = "Organization Units Master"
     pageDesc = "Manage geographical Units under your assigned District."

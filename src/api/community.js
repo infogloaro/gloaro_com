@@ -42,7 +42,7 @@ export const communityApi = {
   getDirectory: (params, config) => api.get('/community/directory', { params, ...config }),
   getMentions: (params) => api.get('/community/mentions', { params }),
 
-  // 6b. Chapter Community switcher (Super Admin / Admin)
+  // 6b. Unit Community switcher (Super Admin / Admin)
   getChapterList: () => api.get('/community/chapters'),
   getChapterCommunity: (chapterId) => api.get(`/community/chapter/${chapterId}`),
   getChapterMembers: (chapterId, params, config) => api.get(`/community/members/${chapterId}`, { params, ...config }),
@@ -53,7 +53,7 @@ export const communityApi = {
   getDistricts: (stateId, scope) => api.get('/organization/districts', { params: { stateId, ...(scope ? { scope } : {}) } }),
   getChapters: (districtId, scope) => api.get('/organization/chapters', { params: { districtId, ...(scope ? { scope } : {}) } }),
 
-  // 8. Chapter Performance Dashboard
+  // 8. Unit Performance Dashboard
   getChapterStats: () => api.get('/community/chapter-stats'),
 
   // 9. Unified Calendar

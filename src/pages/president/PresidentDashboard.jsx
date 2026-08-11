@@ -133,7 +133,7 @@ export default function PresidentDashboard() {
     ['approvals', 'Pending Membership Requests', stats.pendingMembershipApplications ?? '—', 'Needs review', ClipboardList],
     [ROLES.VICE_PRESIDENT, 'Vice Unit Chairman', vpCount ?? '—', 'Assigned official', Users],
     ['meetings', 'Meetings', stats.totalMeetings ?? '—', 'Scheduled sessions', CalendarDays],
-    ['revenue', 'Business Generated', stats.revenue != null ? formatCurrency(stats.revenue) : '—', 'Chapter value', FileBarChart],
+    ['revenue', 'Business Generated', stats.revenue != null ? formatCurrency(stats.revenue) : '—', 'Unit value', FileBarChart],
   ]
 
   if (dashboard.loading || analytics.loading) {

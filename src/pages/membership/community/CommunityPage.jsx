@@ -50,7 +50,7 @@ const reactionTypes = [
 ]
 
 const visibilityOptions = [
-  ['chapter', 'Chapter'],
+  ['chapter', 'Unit'],
   ['district', 'District'],
   ['state', 'State'],
   ['region', 'Region'],
@@ -91,7 +91,7 @@ const getOrgName = (organization, key, suffix = '') => {
 
 const getAuthorMetadataLine = (author, createdAt) => {
   const org = author?.organization || {}
-  const chapter = getOrgName(org, 'chapter', 'Chapter')
+  const chapter = getOrgName(org, 'chapter', 'Unit')
   const district = getOrgName(org, 'district', 'District')
   const state = getOrgName(org, 'state')
   const region = getOrgName(org, 'region', 'Region')
@@ -214,7 +214,7 @@ function CommunityFilters({ scope, type, visibility, dealStatus, filters, locati
               {!loadingLocations.districts && locations.districts.map((item) => <option key={item._id} value={item._id}>{item.name}</option>)}
             </select>
             <select value={filters.chapter} onChange={(event) => onFilterChange('chapter', event.target.value)} disabled={!filters.district || loadingLocations.chapters} className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-extrabold text-slate-600 outline-none focus:border-[#0d4697] disabled:opacity-50">
-              <option value="">{loadingLocations.chapters ? 'Loading chapters...' : (filters.district && !locations.chapters.length ? 'No chapters available' : 'All Chapters')}</option>
+              <option value="">{loadingLocations.chapters ? 'Loading chapters...' : (filters.district && !locations.chapters.length ? 'No chapters available' : 'All Units')}</option>
               {!loadingLocations.chapters && locations.chapters.map((item) => <option key={item._id} value={item._id}>{item.name}</option>)}
             </select>
           </>
@@ -377,7 +377,7 @@ function PostComposer({ scope, onCreated, chapterId, chapterName }) {
 
     communityApi.createPost(form)
       .then(() => {
-        toast.success(scope === 'chapter' ? 'Posted to Chapter Community' : 'Posted to Gloaro Network')
+        toast.success(scope === 'chapter' ? 'Posted to Unit Community' : 'Posted to Gloaro Network')
         setContent('')
         setMedia([])
         setBusinessTarget('business')
@@ -708,7 +708,7 @@ function MemberDiscovery({ members, scope, search }) {
         <div className="shrink-0 border-b border-slate-100 px-5 py-4">
           <h3 className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.12em] text-slate-500">
             <UsersRound className="h-4 w-4 text-[#0d4697]" />
-            {scope === 'chapter' ? 'Chapter Members' : 'Network Discovery'}
+            {scope === 'chapter' ? 'Unit Members' : 'Network Discovery'}
             <span className="ml-auto rounded-full bg-blue-50 px-2 py-1 text-[10px] font-black text-[#0d4697]">{uniqueMembers.length}</span>
           </h3>
           {search && <p className="mt-2 truncate text-[11px] font-semibold text-slate-500">Matches for “{search}”</p>}
@@ -735,7 +735,7 @@ function MemberDiscovery({ members, scope, search }) {
       </section>
       <section className="shrink-0 rounded-2xl border border-blue-100 bg-[#0d4697] p-5 text-white shadow-sm">
         <Sparkles className="h-5 w-5 text-[#ffbf1a]" />
-        <h3 className="mt-3 text-sm font-black">{scope === 'chapter' ? 'Chapter Community' : 'Gloaro Network'}</h3>
+        <h3 className="mt-3 text-sm font-black">{scope === 'chapter' ? 'Unit Community' : 'Gloaro Network'}</h3>
         <p className="mt-2 text-xs font-semibold leading-5 text-blue-100">
           {scope === 'chapter'
             ? 'Collaborate with members from your chapter through posts, comments, mentions, photos, and messages.'
@@ -776,7 +776,7 @@ export default function CommunityPage({ scope = 'chapter' }) {
   const chapterFilterValue = isGlobalAdmin && scope === 'chapter' ? (selectedChapterId || undefined) : (filters.chapter || undefined)
   const loadingChapters = scope === 'chapter' && isGlobalAdmin && !chaptersLoaded
 
-  const title = scope === 'chapter' ? 'Chapter Community' : 'Gloaro Network'
+  const title = scope === 'chapter' ? 'Unit Community' : 'Gloaro Network'
   const subtitle = scope === 'chapter'
     ? `Create posts, share photos, comment, reply, mention, and connect with members in ${selectedChapter ? `${selectedChapter.name} chapter` : 'your chapter'}.`
     : 'Communicate and discover members across chapters, districts, states, and regions.'
@@ -1006,7 +1006,7 @@ export default function CommunityPage({ scope = 'chapter' }) {
           <div className="mt-6 flex flex-col gap-5 rounded-2xl border border-white/15 bg-white/10 p-5 backdrop-blur sm:flex-row sm:items-center sm:justify-between">
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
               <label htmlFor="chapter-selector" className="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[#ffbf1a]">
-                Chapter
+                Unit
               </label>
               <select
                 id="chapter-selector"

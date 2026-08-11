@@ -18,9 +18,9 @@ const REPORTING_STRUCTURE = {
   [ROLES.DISTRICT_DIRECTOR]: 'State Director',
   [ROLES.EXECUTIVE_DIRECTOR]: 'District Director',
   [ROLES.LAUNCH_DIRECTOR]: 'District President',
-  [ROLES.DIRECT_CONSULTANT]: 'Direct Consultant',
-  [ROLES.CHAPTER_PRESIDENT]: 'Launch Director',
-  [ROLES.VICE_PRESIDENT]: 'Chapter Unit Chairman',
+  [ROLES.DIRECT_CONSULTANT]: 'Launch Director',
+  [ROLES.CHAPTER_PRESIDENT]: 'Direct Consultant',
+  [ROLES.VICE_PRESIDENT]: 'Unit Unit Chairman',
   [ROLES.SECRETARY]: 'Unit Vice Chairman',
 }
 

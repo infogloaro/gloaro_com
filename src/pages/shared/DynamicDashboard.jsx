@@ -93,7 +93,7 @@ export default function DynamicDashboard() {
   }
 
   const hierarchyParts = []
-  if (chapter) hierarchyParts.push(formatName(chapter, 'Chapter'))
+  if (chapter) hierarchyParts.push(formatName(chapter, 'Unit'))
   if (district) hierarchyParts.push(formatName(district, 'District'))
   if (state) hierarchyParts.push(state)
   if (region) hierarchyParts.push(formatName(region, 'Region'))
@@ -142,19 +142,19 @@ export default function DynamicDashboard() {
       color: 'text-teal-600 bg-teal-50'
     },
     assignedChapters: {
-      label: 'Assigned Chapters',
+      label: 'Assigned Units',
       value: formatVal(stats.roleStats?.totalChapters),
       icon: Building2,
       color: 'text-blue-600 bg-blue-50'
     },
     chaptersReady: {
-      label: 'Chapters Ready',
+      label: 'Units Ready',
       value: formatVal(stats.roleStats?.activeChapters),
       icon: CheckCircle2,
       color: 'text-emerald-600 bg-emerald-50'
     },
     chaptersPending: {
-      label: 'Chapters Pending',
+      label: 'Units Pending',
       value: formatVal(stats.roleStats?.pendingChapters),
       icon: Clock,
       color: 'text-amber-600 bg-amber-50'

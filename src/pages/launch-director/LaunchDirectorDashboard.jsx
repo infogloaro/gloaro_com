@@ -129,11 +129,11 @@ export default function LaunchDirectorDashboard() {
   const activeChaptersCount = stats.roleStats?.activeChapters ?? 0;
 
   const topCards = [
-    ['consultants', 'Launch Directors', directConsultantsCount, 'Assigned team', Users],
-    ['chapters', 'Active Chapters', activeChaptersCount, 'Chapter status', Building2],
+    ['consultants', 'Direct Consultants', directConsultantsCount, 'Assigned team', Users],
+    ['chapters', 'Active Units', activeChaptersCount, 'Unit status', Building2],
     ['members', 'Total Members', stats.totalUsers ?? '—', `${stats.newUsersToday ?? 0} today`, Users],
     ['active', 'Active Memberships', scopeOverview?.activeMembers ?? stats.activeUsers ?? '—', 'Verified network', CheckCircle2],
-    ['revenue', 'Business Generated', stats.revenue != null ? formatCurrency(stats.revenue) : '—', 'Chapter value', FileBarChart]
+    ['revenue', 'Business Generated', stats.revenue != null ? formatCurrency(stats.revenue) : '—', 'Unit value', FileBarChart]
   ]
 
   if (dashboard.loading || analytics.loading) {
@@ -150,7 +150,7 @@ export default function LaunchDirectorDashboard() {
         </p>
         <h1 className="mt-3 text-3xl font-black text-slate-950">Direct Consultant Dashboard</h1>
         <p className="mt-2 max-w-4xl text-sm font-semibold leading-6 text-slate-555">
-          Manage chapter launches, launch directors, and membership details under your assigned chapter.
+          Manage unit launches, launch directors, and membership details under your assigned unit.
         </p>
       </header>
 

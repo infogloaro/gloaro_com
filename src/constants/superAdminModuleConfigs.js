@@ -25,7 +25,7 @@ export const superAdminModuleConfigs = {
       ['States', 'Group states under regions for clean hierarchy.', MapPinned],
       ['Areas', 'Assign area directors and business development ownership.', Users],
       ['Districts', 'Organize district-level network operations.', Building2],
-      ['Chapters', 'Create chapters and assign chapter leaders.', Workflow],
+      ['Units', 'Create chapters and assign chapter leaders.', Workflow],
       ['Hierarchy Tree', 'Visualize organization hierarchy from region to chapter.', LayoutGrid],
     ],
   },

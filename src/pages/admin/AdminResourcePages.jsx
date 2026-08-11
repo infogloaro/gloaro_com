@@ -117,6 +117,14 @@ function LeaderForm({ initialValues = {}, onSubmit }) {
     bio: safeInitialValues.bio || '',
     order: safeInitialValues.order ?? 0,
     isActive: safeInitialValues.isActive ?? true,
+    visionTitle: safeInitialValues.visionTitle || '',
+    visionHighlight: safeInitialValues.visionHighlight || '',
+    visionDescription: safeInitialValues.visionDescription || '',
+    visionPoints: safeInitialValues.visionPoints?.length ? safeInitialValues.visionPoints : [
+      { title: '', description: '' },
+      { title: '', description: '' },
+      { title: '', description: '' }
+    ],
   }), [safeInitialValues.name, safeInitialValues.role, safeInitialValues.bio, safeInitialValues.order, safeInitialValues.isActive])
   const { register, handleSubmit, reset, formState: { isSubmitting } } = useForm({ defaultValues })
   useEffect(() => { reset(defaultValues) }, [defaultValues, reset])
@@ -128,6 +136,10 @@ function LeaderForm({ initialValues = {}, onSubmit }) {
     formData.append('bio', values.bio || '')
     formData.append('order', String(values.order ?? 0))
     formData.append('isActive', String(values.isActive !== 'false'))
+    formData.append('visionTitle', values.visionTitle || '')
+    formData.append('visionHighlight', values.visionHighlight || '')
+    formData.append('visionDescription', values.visionDescription || '')
+    formData.append('visionPoints', JSON.stringify(values.visionPoints || []))
     if (values.image?.[0]) formData.append('image', values.image[0])
     onSubmit(formData)
   }
@@ -141,6 +153,26 @@ function LeaderForm({ initialValues = {}, onSubmit }) {
     <div className="grid gap-4 sm:grid-cols-2">
       <FormField label="Leader Image"><input {...register('image')} type="file" accept="image/*" className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-500 file:mr-4 file:rounded-md file:border-0 file:bg-blue-50 file:px-3 file:py-2 file:text-xs file:font-extrabold file:text-[#0d4697]" />{safeInitialValues.image?.url && <img src={safeInitialValues.image.url} alt="" className="mt-2 h-24 w-24 rounded-md object-cover" />}</FormField>
       <div className="grid gap-4 sm:grid-cols-2"><FormField label="Display Order"><input {...register('order', { valueAsNumber: true })} type="number" min="0" className="h-11 w-full rounded-md border border-slate-300 bg-white px-3 text-black outline-none focus:border-[#0d4697]" /></FormField><FormField label="Status"><select {...register('isActive')} className="h-11 w-full rounded-md border border-slate-300 bg-white px-3 text-black outline-none focus:border-[#0d4697]"><option value="true">Active</option><option value="false">Inactive</option></select></FormField></div>
+    </div>
+    
+    <div className="mt-8 rounded-xl border border-slate-200 bg-slate-50 p-5">
+      <h3 className="mb-4 text-sm font-bold text-slate-800">Executive Vision (Used on Public Page)</h3>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <FormField label="Vision Title (e.g. Leadership That)"><input {...register('visionTitle')} className="h-11 w-full rounded-md border border-slate-300 bg-white px-3 text-black outline-none focus:border-[#0d4697]" /></FormField>
+        <FormField label="Vision Highlight (e.g. Drives Growth)"><input {...register('visionHighlight')} className="h-11 w-full rounded-md border border-slate-300 bg-white px-3 text-black outline-none focus:border-[#0d4697]" /></FormField>
+      </div>
+      <div className="mt-4">
+        <FormField label="Vision Description"><textarea {...register('visionDescription')} rows={3} className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-black outline-none focus:border-[#0d4697]" /></FormField>
+      </div>
+      <div className="mt-5 space-y-4">
+        <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500">Vision Points (Up to 3)</h4>
+        {[0, 1, 2].map(i => (
+          <div key={i} className="grid gap-4 sm:grid-cols-[1fr_2fr]">
+            <FormField label={`Point ${i+1} Title`}><input {...register(`visionPoints.${i}.title`)} className="h-11 w-full rounded-md border border-slate-300 bg-white px-3 text-black outline-none focus:border-[#0d4697]" /></FormField>
+            <FormField label={`Point ${i+1} Description`}><input {...register(`visionPoints.${i}.description`)} className="h-11 w-full rounded-md border border-slate-300 bg-white px-3 text-black outline-none focus:border-[#0d4697]" /></FormField>
+          </div>
+        ))}
+      </div>
     </div>
     <button disabled={isSubmitting} className="h-11 rounded-md bg-[#0d4697] px-5 text-sm font-extrabold text-white disabled:opacity-60">Save</button>
   </form>
@@ -1201,7 +1233,7 @@ export function AdminMembershipApplicationsPage() {
         { key: 'region', header: 'Region', render: (row) => row.regionId?.name || 'Not assigned' },
         { key: 'state', header: 'State', render: (row) => row.stateId?.name || 'Not assigned' },
         { key: 'district', header: 'District', render: (row) => row.districtId?.name || 'Not assigned' },
-        { key: 'chapter', header: 'Chapter', render: (row) => row.chapterId?.name || 'Not assigned' },
+        { key: 'chapter', header: 'Unit', render: (row) => row.chapterId?.name || 'Not assigned' },
         { key: 'referredBy', header: 'Referred By', render: (row) => row.submittedBy?.referredBy?.name || row.submittedBy?.referredBy?.email || 'Direct' },
         { key: 'forwardedBy', header: 'Forwarded By (VP)', render: (row) => row.forwardedBy?.name || row.forwardedBy?.email || row.reviewedBy?.name || row.reviewedBy?.email || 'Pending' },
         { key: 'forwardedRole', header: 'Forwarded By Role', render: (row) => row.forwardedByRole?.replaceAll('_', ' ') || row.reviewedByRole?.replaceAll('_', ' ') || 'Pending' },
@@ -1364,7 +1396,7 @@ function MembershipApplicationDetails({ application, adminNotes, onNotesChange, 
           ['Region', application.regionId?.name || 'Not Assigned'],
           ['State', application.stateId?.name || 'Not Assigned'],
           ['District', application.districtId?.name || 'Not Assigned'],
-          ['Chapter', application.chapterId?.name || 'Not Assigned'],
+          ['Unit', application.chapterId?.name || 'Not Assigned'],
         ]} />
         <DetailSection title="Professional Details" items={[
         ['Company Name', application.professional?.companyName],
@@ -1767,7 +1799,7 @@ export function AdminMembersPage() {
     { key: 'region', header: 'Region', render: (row) => row.region || 'N/A' },
     { key: 'state', header: 'State', render: (row) => row.state || 'N/A' },
     { key: 'district', header: 'District', render: (row) => row.district || 'N/A' },
-    { key: 'chapter', header: 'Chapter', render: (row) => row.chapter || 'N/A' },
+    { key: 'chapter', header: 'Unit', render: (row) => row.chapter || 'N/A' },
     { key: 'approvedBy', header: 'Approved By', render: (row) => row.approvedBy || 'N/A' },
     { key: 'approvedRole', header: 'Approver Role', render: (row) => <span className="capitalize font-semibold text-xs text-slate-500">{row.approvedRole?.replaceAll('_', ' ')}</span> },
     { key: 'approvedAt', header: 'Approved Date', render: (row) => formatDate(row.approvedAt) },
@@ -1802,7 +1834,7 @@ export function AdminMembersPage() {
           <SelectFilter label="Region" value={filters.region} onChange={(value) => updateFilter('region', value)} options={regionOptions} placeholder={loadingLocations ? 'Loading regions...' : 'All Regions'} />
           <SelectFilter label="State" value={filters.state} onChange={(value) => updateFilter('state', value)} options={stateOptions} placeholder={loadingLocations ? 'Loading states...' : 'All States'} />
           <SelectFilter label="District" value={filters.district} onChange={(value) => updateFilter('district', value)} options={districtOptions} placeholder={loadingLocations ? 'Loading districts...' : 'All Districts'} />
-          <SelectFilter label="Chapter" value={filters.chapter} onChange={(value) => updateFilter('chapter', value)} options={chapterOptions} placeholder={loadingLocations ? 'Loading chapters...' : 'All Chapters'} />
+          <SelectFilter label="Unit" value={filters.chapter} onChange={(value) => updateFilter('chapter', value)} options={chapterOptions} placeholder={loadingLocations ? 'Loading chapters...' : 'All Units'} />
         </div>
       </div>
 

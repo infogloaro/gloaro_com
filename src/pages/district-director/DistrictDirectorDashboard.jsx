@@ -129,7 +129,7 @@ export default function DistrictDirectorDashboard() {
   const chapterDirectorsCount = stats.roleStats?.executiveDirectors ?? 0;
 
   const topCards = [
-    ['chapters', 'Total Chapters', chaptersCount, 'Jurisdiction chapters', MapPinned],
+    ['chapters', 'Total Units', chaptersCount, 'Jurisdiction chapters', MapPinned],
     ['directors', 'District Presidents', chapterDirectorsCount, 'Assigned team', Users],
     ['members', 'Total Members', stats.totalUsers ?? '—', `${stats.newUsersToday ?? 0} today`, Users],
     ['active', 'Active Memberships', scopeOverview?.activeMembers ?? stats.activeUsers ?? '—', 'Verified network', CheckCircle2],

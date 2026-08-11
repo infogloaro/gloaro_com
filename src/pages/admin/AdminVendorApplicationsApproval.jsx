@@ -84,7 +84,7 @@ export default function AdminVendorApplicationsApproval() {
           { key: 'region', header: 'Region', render: (row) => row.regionId?.name || '-' },
           { key: 'state', header: 'State', render: (row) => row.stateId?.name || '-' },
           { key: 'district', header: 'District', render: (row) => row.districtId?.name || '-' },
-          { key: 'chapter', header: 'Chapter', render: (row) => row.chapterId?.name || '-' },
+          { key: 'chapter', header: 'Unit', render: (row) => row.chapterId?.name || '-' },
           { key: 'createdAt', header: 'Submitted Date', render: (row) => formatDate(row.createdAt) },
           { key: 'status', header: 'Status', render: (row) => <StatusBadge value={row.status} /> },
         ]}
@@ -227,7 +227,7 @@ function VendorApplicationDetails({ application, adminNotes, onNotesChange, onCl
           ['Region', application.regionId?.name || 'Not Scoped'],
           ['State', application.stateId?.name || 'Not Scoped'],
           ['District', application.districtId?.name || 'Not Scoped'],
-          ['Chapter', application.chapterId?.name || 'Not Scoped'],
+          ['Unit', application.chapterId?.name || 'Not Scoped'],
         ]} />
         <DetailSection title="Business Details" items={[
           ['Business Name', application.step2?.details?.businessName],

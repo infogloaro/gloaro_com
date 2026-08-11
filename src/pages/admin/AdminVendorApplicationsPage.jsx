@@ -113,7 +113,7 @@ export default function AdminVendorApplicationsPage({
           { key: 'source', header: 'Source', render: (row) => row.applicationSource || row.submittedFromLabel || row.submittedFrom?.replaceAll('_', ' ') || 'Unknown' },
           { key: 'mobile', header: 'Mobile', render: (row) => row.step2?.personal?.mobileNumber || '-' },
           { key: 'email', header: 'Email', render: (row) => row.step2?.personal?.email || '-' },
-          { key: 'chapter', header: 'Chapter', render: (row) => row.chapterId?.name || '-' },
+          { key: 'chapter', header: 'Unit', render: (row) => row.chapterId?.name || '-' },
           { key: 'createdAt', header: 'Submitted Date', render: (row) => formatDate(row.createdAt) },
           { key: 'status', header: 'Current Status', render: (row) => <StatusBadge value={row.status} /> },
         ]}
@@ -123,7 +123,7 @@ export default function AdminVendorApplicationsPage({
           const isFinalized = ['approved', 'rejected'].includes(row.status)
           const isChapterDirector = userRole === ROLES.EXECUTIVE_DIRECTOR
           
-          // Boundaries check for Chapter Director
+          // Boundaries check for Unit Director
           const userOrg = user?.meta?.adminProfile?.organization || {}
           if (isChapterDirector && getIdentifier(row.districtId) !== getIdentifier(userOrg.district)) {
             return null
@@ -286,7 +286,7 @@ function VendorApplicationDetails({ application, adminNotes, onNotesChange, onCl
           ['Region', application.regionId?.name || 'Not Scoped'],
           ['State', application.stateId?.name || 'Not Scoped'],
           ['District', application.districtId?.name || 'Not Scoped'],
-          ['Chapter', application.chapterId?.name || 'Not Scoped'],
+          ['Unit', application.chapterId?.name || 'Not Scoped'],
         ]} />
         <DetailSection title="Business Details" items={[
           ['Business Name', application.step2?.details?.businessName],

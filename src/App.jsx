@@ -213,9 +213,9 @@ function App() {
     { path: '/assignments', element: <HierarchyAssignmentPage />, roles: [ROLES.SUPERADMIN] },
     { path: '/features', element: <FeatureManagementPage />, roles: [ROLES.SUPERADMIN] },
     { path: '/dashboard-config', element: <DashboardConfigurationPage />, roles: [ROLES.SUPERADMIN] },
-    { path: '/banners', element: <AdminBannersPage />, roles: [ROLES.SUPERADMIN] },
-    { path: '/leaders', element: <AdminLeadersPage />, roles: [ROLES.SUPERADMIN] },
-    { path: '/gallery', element: <AdminGalleryPage />, roles: [ROLES.SUPERADMIN] },
+    { path: '/banners', element: <AdminBannersPage />, roles: [ROLES.SUPERADMIN, ROLES.ADMIN] },
+    { path: '/leaders', element: <AdminLeadersPage />, roles: [ROLES.SUPERADMIN, ROLES.ADMIN] },
+    { path: '/gallery', element: <AdminGalleryPage />, roles: [ROLES.SUPERADMIN, ROLES.ADMIN] },
     { path: '/membership-workflow', element: <WorkflowEnginePage />, roles: [ROLES.SUPERADMIN] },
     { path: '/users', element: <AdminManagementPage /> },
     { path: '/vendors', element: <ApprovedVendorsPage /> },
@@ -566,7 +566,7 @@ function App() {
               <Route path="/district-director/members" element={<AdminMembersPage />} />
             </Route>
 
-            {/* Chapter Director Console */}
+            {/* Unit Director Console */}
             <Route element={<ProtectedRoute roles={[ROLES.EXECUTIVE_DIRECTOR]} />}>
               <Route path="/chapter-director" element={<Navigate to="/chapter-director/dashboard" replace />} />
               <Route path="/chapter-director/dashboard" element={<ChapterDirectorDashboard />} />
@@ -596,7 +596,7 @@ function App() {
               <Route path="/chapter-director/vendors" element={<ChapterDirectorVendorsPage />} />
               <Route path="/chapter-director/profile" element={<MembershipProfilePage />} />
 
-              {/* Chapter Director specific sub-routes */}
+              {/* Unit Director specific sub-routes */}
               <Route path="/chapter-director/launch-directors" element={<AdminManagementPage role={ROLES.LAUNCH_DIRECTOR} />} />
               <Route path="/chapter-director/vendor-applications" element={<AdminVendorApplicationsPage />} />
               <Route path="/chapter-director/marketplace-approval" element={<AdminVendorApplicationsPage title="Marketplace Approval" description="Review and manage vendor marketplace applications for your chapter." />} />
@@ -660,7 +660,7 @@ function App() {
               <Route path="/vice-president/profile" element={<MembershipProfilePage />} />
             </Route>
 
-            {/* Direct Consultant Console (Backend: Launch Director) */}
+            {/* Launch Director Console (Backend: Direct Consultant) */}
             <Route element={<ProtectedRoute roles={[ROLES.LAUNCH_DIRECTOR]} />}>
               <Route path="/launch-director" element={<Navigate to="/launch-director/dashboard" replace />} />
               <Route path="/launch-director/dashboard" element={<LaunchDirectorDashboard />} />
@@ -681,14 +681,14 @@ function App() {
               <Route path="/launch-director/vendors" element={<LaunchDirectorVendorsPage />} />
               <Route path="/launch-director/profile" element={<MembershipProfilePage />} />
 
-              {/* Direct Consultant Specific Modules */}
+              {/* Launch Director Specific Modules */}
               <Route path="/launch-director/members" element={<AdminManagementPage role={ROLES.CUSTOMER} />} />
               <Route path="/launch-director/direct-consultants" element={<AdminManagementPage role={ROLES.DIRECT_CONSULTANT} />} />
               <Route path="/launch-director/launch-reports" element={<EnterpriseReportBuilderPage />} />
               <Route path="/launch-director/membership-reports" element={<EnterpriseReportBuilderPage />} />
             </Route>
 
-            {/* Launch Director Console (Backend: Direct Consultant) */}
+            {/* Direct Consultant Console (Backend: Launch Director) */}
             <Route element={<ProtectedRoute roles={[ROLES.DIRECT_CONSULTANT]} />}>
               <Route path="/direct-consultant" element={<Navigate to="/direct-consultant/dashboard" replace />} />
               <Route path="/direct-consultant/dashboard" element={<DirectConsultantDashboard />} />
@@ -709,7 +709,7 @@ function App() {
               <Route path="/direct-consultant/vendors" element={<DirectConsultantVendorsPage />} />
               <Route path="/direct-consultant/profile" element={<MembershipProfilePage />} />
 
-              {/* Launch Director Specific Modules */}
+              {/* Direct Consultant Specific Modules */}
               <Route path="/direct-consultant/members" element={<AdminManagementPage role={ROLES.CUSTOMER} />} />
               <Route path="/direct-consultant/units" element={<LocationsManagementPage />} />
               <Route path="/direct-consultant/presidents" element={<AdminManagementPage role={ROLES.CHAPTER_PRESIDENT} />} />

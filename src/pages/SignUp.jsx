@@ -21,7 +21,7 @@ export default function SignUp() {
             </div>
             <h1 className="mt-5 font-inter text-4xl font-extrabold tracking-[0.22em]">GLOARO</h1>
             <p className="font-inter text-xs font-extrabold tracking-[0.2em]">BUSINESS NETWORK</p>
-            <p className="mt-2 font-inter text-[8px] font-extrabold tracking-[0.12em]">360 REFERRAL • CONNECT • GROW • COLLABORATE</p>
+            <p className="mt-2 font-inter text-[8px] font-extrabold tracking-[0.12em]">360 CONNECT • CONNECT • GROW • COLLABORATE</p>
           </div>
         </div>
 

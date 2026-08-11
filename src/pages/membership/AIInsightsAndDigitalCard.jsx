@@ -94,7 +94,7 @@ export default function AIInsightsAndDigitalCard() {
 
             <div className="space-y-1 text-xs">
               <p className="font-semibold text-blue-200">ID: {user?.officialId || 'MEM-TN-0012'}</p>
-              <p className="font-semibold text-blue-200">Chapter: {org.assignedChapter?.name || org.chapter || 'Alpha chapter'}</p>
+              <p className="font-semibold text-blue-200">Unit: {org.assignedChapter?.name || org.chapter || 'Alpha chapter'}</p>
             </div>
 
             <div className="flex justify-between items-center text-[10px] text-blue-200 font-bold border-t border-white/10 pt-3">

@@ -302,11 +302,8 @@ export default function AdminManagementPage({ role: overrideRole }) {
 
   const listData = getList(payload)
   const isCreateDisabled = (
-    (user?.role === ROLES.DISTRICT_DIRECTOR && childRole === ROLES.EXECUTIVE_DIRECTOR && listData.length >= 1) ||
-    (user?.role === ROLES.EXECUTIVE_DIRECTOR && listData.length >= 1) ||
     (user?.role === ROLES.CHAPTER_PRESIDENT && listData.length >= 1) ||
     (user?.role === ROLES.VICE_PRESIDENT && childRole === ROLES.SECRETARY && listData.length >= 1) ||
-    (user?.role === ROLES.LAUNCH_DIRECTOR && childRole === ROLES.DIRECT_CONSULTANT && listData.length >= 1) ||
     (user?.role === ROLES.DIRECT_CONSULTANT && childRole === ROLES.CHAPTER_PRESIDENT && unitCount === 0)
   )
 
@@ -314,10 +311,8 @@ export default function AdminManagementPage({ role: overrideRole }) {
 
   const getDisabledTitle = () => {
     if (!isCreateDisabled) return ""
-    if (user?.role === ROLES.DISTRICT_DIRECTOR && childRole === ROLES.EXECUTIVE_DIRECTOR) return "A District President already exists for this District"
-    if (user?.role === ROLES.EXECUTIVE_DIRECTOR) return "A Chapter Unit Chairman already exists for this Chapter"
-    if (user?.role === ROLES.CHAPTER_PRESIDENT) return "A Unit Vice Chairman already exists for this Chapter"
-    if (user?.role === ROLES.VICE_PRESIDENT) return "A Coordinator already exists for this Chapter"
+    if (user?.role === ROLES.CHAPTER_PRESIDENT) return "A Unit Vice Chairman already exists for this Unit"
+    if (user?.role === ROLES.VICE_PRESIDENT) return "A Coordinator already exists for this Unit"
     if (user?.role === ROLES.DIRECT_CONSULTANT && childRole === ROLES.CHAPTER_PRESIDENT && unitCount === 0) return "Create a Unit before assigning a Unit Chairman"
     return ""
   }
@@ -915,7 +910,7 @@ function OrganizationAssignmentSection({ organization, onChangeOrg, user, target
       .finally(() => setLoadingDistricts(false))
   }, [creatorRole, creatorOrg.assignedDistrict, organization.state, creatorOrg.state])
 
-  // 4. Fetch Chapters
+  // 4. Fetch Units
   useEffect(() => {
     if ([ROLES.EXECUTIVE_DIRECTOR, ROLES.CHAPTER_PRESIDENT, ROLES.VICE_PRESIDENT].includes(creatorRole)) {
       const assigned = creatorOrg.assignedChapter
@@ -1017,9 +1012,9 @@ function OrganizationAssignmentSection({ organization, onChangeOrg, user, target
         )}
         {showChapter && (
           <SelectField
-            label={[ROLES.DIRECT_CONSULTANT, ROLES.LAUNCH_DIRECTOR].includes(creatorRole) ? "Unit" : "Chapter"}
+            label={[ROLES.DIRECT_CONSULTANT, ROLES.LAUNCH_DIRECTOR].includes(creatorRole) ? "Unit" : "Unit"}
             value={organization.chapter || ''}
-            placeholder={[ROLES.DIRECT_CONSULTANT, ROLES.LAUNCH_DIRECTOR].includes(creatorRole) ? "Select Unit" : "Select Chapter"}
+            placeholder={[ROLES.DIRECT_CONSULTANT, ROLES.LAUNCH_DIRECTOR].includes(creatorRole) ? "Select Unit" : "Select Unit"}
             disabled={isChapterLocked || !organization.district}
             loading={loadingChapters}
             error={errChapters}
@@ -1037,7 +1032,7 @@ function OrganizationAssignmentSection({ organization, onChangeOrg, user, target
           {showRegion && <div><span className="text-slate-555 dark:text-slate-400 font-bold">Region:</span> {getSelectedLabel(organization.region, regionsList, isRegionLocked ? creatorOrg.region : null)}</div>}
           {showState && <div><span className="text-slate-555 dark:text-slate-400 font-bold">State:</span> {getSelectedLabel(organization.state, states, isStateLocked ? creatorOrg.state : null)}</div>}
           {showDistrict && <div><span className="text-slate-555 dark:text-slate-400 font-bold">District:</span> {getSelectedLabel(organization.district, districts, isDistrictLocked ? creatorOrg.district : null)}</div>}
-          {showChapter && <div><span className="text-slate-555 dark:text-slate-400 font-bold">{[ROLES.DIRECT_CONSULTANT, ROLES.LAUNCH_DIRECTOR].includes(creatorRole) ? "Unit" : "Chapter"}:</span> {getSelectedLabel(organization.chapter, chapters, isChapterLocked ? creatorOrg.chapter : null)}</div>}
+          {showChapter && <div><span className="text-slate-555 dark:text-slate-400 font-bold">{[ROLES.DIRECT_CONSULTANT, ROLES.LAUNCH_DIRECTOR].includes(creatorRole) ? "Unit" : "Unit"}:</span> {getSelectedLabel(organization.chapter, chapters, isChapterLocked ? creatorOrg.chapter : null)}</div>}
         </div>
       </div>
     </div>

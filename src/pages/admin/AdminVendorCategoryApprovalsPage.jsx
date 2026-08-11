@@ -171,7 +171,7 @@ export default function AdminVendorCategoryApprovalsPage() {
       { key: 'region', header: 'Region', render: (row) => getOrgValue(row, 'regionId') },
       { key: 'state', header: 'State', render: (row) => getOrgValue(row, 'stateId') },
       { key: 'district', header: 'District', render: (row) => getOrgValue(row, 'districtId') },
-      { key: 'chapter', header: 'Chapter', render: (row) => getOrgValue(row, 'chapterId') },
+      { key: 'chapter', header: 'Unit', render: (row) => getOrgValue(row, 'chapterId') },
     ] : []
 
     return [
@@ -297,7 +297,7 @@ export default function AdminVendorCategoryApprovalsPage() {
                   <DetailField label="Region" value={getOrgValue(selectedRequest, 'regionId')} />
                   <DetailField label="State" value={getOrgValue(selectedRequest, 'stateId')} />
                   <DetailField label="District" value={getOrgValue(selectedRequest, 'districtId')} />
-                  <DetailField label="Chapter" value={getOrgValue(selectedRequest, 'chapterId')} />
+                  <DetailField label="Unit" value={getOrgValue(selectedRequest, 'chapterId')} />
                 </>
               )}
               <DetailField label="Category" value={getCategoryName(selectedRequest)} />

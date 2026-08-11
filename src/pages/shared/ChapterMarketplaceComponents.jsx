@@ -9,7 +9,7 @@ import ResourceListPage from './ResourceListPage'
 
 export function ChapterMarketplaceProducts({
   title = "Products Monitoring",
-  description = "Chapter-wide view of products offered by approved vendors in your assigned chapter."
+  description = "Unit-wide view of products offered by approved vendors in your assigned unit."
 }) {
   const [selectedProduct, setSelectedProduct] = useState(null)
   const [categories, setCategories] = useState([])
@@ -142,7 +142,7 @@ export function ChapterMarketplaceProducts({
 
 export function ChapterMarketplaceServices({
   title = "Services Monitoring",
-  description = "Chapter-wide view of services offered by approved vendors in your assigned chapter.",
+  description = "Unit-wide view of services offered by approved vendors in your assigned unit.",
   showStatus = true,
 }) {
   const [selectedService, setSelectedService] = useState(null)
@@ -317,7 +317,7 @@ export function ChapterMarketplaceVendors({
           { key: 'phone', header: 'Mobile', render: (row) => row.phone || '-' },
           { key: 'email', header: 'Email', render: (row) => row.email || '-' },
           { key: 'district', header: 'District', render: (row) => row.districtId?.name || '-' },
-          { key: 'chapter', header: 'Chapter', render: (row) => row.chapterId?.name || '-' },
+          { key: 'chapter', header: 'Unit', render: (row) => row.chapterId?.name || '-' },
           { key: 'approvedAt', header: 'Approval Date', render: (row) => formatDate(row.approvedAt || row.createdAt) },
           ...(showStatus ? [{ key: 'status', header: 'Vendor Status', render: (row) => <StatusBadge value={row.status} /> }] : []),
         ]}

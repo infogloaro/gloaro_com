@@ -207,9 +207,9 @@ export default function EnterpriseScorecardPage() {
     }
     popup.document.write(`
       <html>
-        <head><title>Enterprise Scorecard</title></head>
+        <head><title>Mr. 360</title></head>
         <body>
-          <h1>Enterprise Scorecard</h1>
+          <h1>Mr. 360</h1>
           <table border="1" cellspacing="0" cellpadding="6">
             <thead><tr><th>Rank</th><th>Official ID</th><th>Name</th><th>Role</th><th>Members Added</th><th>Vendors Added</th><th>Membership Revenue</th><th>Vendor Revenue</th><th>Total Earned</th></tr></thead>
             <tbody>${exportData.map((row) => `<tr><td>${row.rank}</td><td>${row.officialId}</td><td>${row.name}</td><td>${row.roleLabel}</td><td>${row.membersAdded}</td><td>${row.vendorsAdded}</td><td>${money(row.membershipRevenue)}</td><td>${money(row.vendorRevenue)}</td><td>${money(row.totalEarned)}</td></tr>`).join('')}</tbody>
@@ -226,7 +226,7 @@ export default function EnterpriseScorecardPage() {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p className="text-xs font-black uppercase tracking-wider text-[#1558b0]">Organization-Wide Performance</p>
-          <h1 className="text-2xl font-black text-slate-950">Enterprise Scorecard</h1>
+          <h1 className="text-2xl font-black text-slate-950">Mr. 360</h1>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <button onClick={() => handleExport('excel')} className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 shadow-sm transition hover:bg-slate-50">

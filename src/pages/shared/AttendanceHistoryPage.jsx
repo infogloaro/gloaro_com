@@ -200,7 +200,7 @@ export default function AttendanceHistoryPage() {
           {visible('region') && <input value={filters.region} onChange={(e) => setFilter('region', e.target.value)} placeholder="Region" className={fieldClass} />}
           {visible('state') && <input value={filters.state} onChange={(e) => setFilter('state', e.target.value)} placeholder="State" className={fieldClass} />}
           {visible('district') && <input value={filters.district} onChange={(e) => setFilter('district', e.target.value)} placeholder="District" className={fieldClass} />}
-          {visible('chapter') && <input value={filters.chapter} onChange={(e) => setFilter('chapter', e.target.value)} placeholder="Chapter" className={fieldClass} />}
+          {visible('chapter') && <input value={filters.chapter} onChange={(e) => setFilter('chapter', e.target.value)} placeholder="Unit" className={fieldClass} />}
           <select value={filters.sort || 'newest'} onChange={(e) => setFilter('sort', e.target.value)} className={fieldClass}>
             <option value="newest">Newest first</option>
             <option value="oldest">Oldest first</option>
@@ -223,7 +223,7 @@ export default function AttendanceHistoryPage() {
                   {visible('region') && <th className="px-4 py-3">Region</th>}
                   {visible('state') && <th className="px-4 py-3">State</th>}
                   {visible('district') && <th className="px-4 py-3">District</th>}
-                  {visible('chapter') && <th className="px-4 py-3">Chapter</th>}
+                  {visible('chapter') && <th className="px-4 py-3">Unit</th>}
                   {visible('secretary') && <th className="px-4 py-3">Coordinator</th>}
                   {visible('member') && <th className="px-4 py-3">Member</th>}
                   {visible('memberRole') && <th className="px-4 py-3">Role</th>}

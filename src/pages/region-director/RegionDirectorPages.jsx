@@ -310,7 +310,7 @@ export function RegionDirectorVendorsPage() {
           { key: 'region', header: 'Region', render: (row) => row.regionId?.name || '-' },
           { key: 'state', header: 'State', render: (row) => row.stateId?.name || '-' },
           { key: 'district', header: 'District', render: (row) => row.districtId?.name || '-' },
-          { key: 'chapter', header: 'Chapter', render: (row) => row.chapterId?.name || '-' },
+          { key: 'chapter', header: 'Unit', render: (row) => row.chapterId?.name || '-' },
           { key: 'approvedAt', header: 'Approval Date', render: (row) => formatDate(row.approvedAt || row.createdAt) },
           { key: 'status', header: 'Vendor Status', render: (row) => <StatusBadge value={row.status} /> },
         ]}

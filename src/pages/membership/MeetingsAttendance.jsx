@@ -94,7 +94,7 @@ export default function MeetingsAttendance() {
       <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm space-y-4">
         <h3 className="text-base font-extrabold text-slate-900 flex items-center gap-2">
           <ClipboardList className="h-5 w-5 text-[#0d4697]" />
-          Chapter Meetings Registry
+          Unit Meetings Registry
         </h3>
 
         <div className="divide-y divide-slate-100">
@@ -109,7 +109,7 @@ export default function MeetingsAttendance() {
                     {event.startDate ? new Date(event.startDate).getDate() : '—'}
                   </span>
                   <div>
-                    <p className="text-sm font-extrabold text-slate-800 leading-tight">{event.title || 'Weekly Chapter Meeting'}</p>
+                    <p className="text-sm font-extrabold text-slate-800 leading-tight">{event.title || 'Weekly Unit Meeting'}</p>
                     <p className="text-[10px] font-semibold text-slate-400 mt-1">
                       {formatDate(meeting.startDate)} • Venue: {getVenueString(meeting.venue)}
                     </p>
@@ -141,7 +141,7 @@ export default function MeetingsAttendance() {
             <div className="flex items-start justify-between border-b border-slate-100 px-6 py-5">
               <div>
                 <p className="text-xs font-extrabold uppercase tracking-wider text-[#0d4697]">Meeting details</p>
-                <h3 className="mt-1 text-xl font-black text-slate-900">{selectedMeeting.meeting.title || 'Weekly Chapter Meeting'}</h3>
+                <h3 className="mt-1 text-xl font-black text-slate-900">{selectedMeeting.meeting.title || 'Weekly Unit Meeting'}</h3>
               </div>
               <button type="button" onClick={() => setSelectedMeeting(null)} className="text-2xl leading-none text-slate-400 hover:text-slate-700" aria-label="Close details">×</button>
             </div>
@@ -150,7 +150,7 @@ export default function MeetingsAttendance() {
               <div className="grid gap-3 sm:grid-cols-2">
                 <div className="rounded-xl bg-slate-50 p-3"><p className="text-[10px] font-extrabold uppercase text-slate-400">Date</p><p className="mt-1 text-sm font-bold text-slate-800">{formatDate(selectedMeeting.meeting.startDate)}</p></div>
                 <div className="rounded-xl bg-slate-50 p-3"><p className="text-[10px] font-extrabold uppercase text-slate-400">Venue</p><p className="mt-1 text-sm font-bold text-slate-800">{getVenueString(selectedMeeting.meeting.venue)}</p></div>
-                <div className="rounded-xl bg-slate-50 p-3"><p className="text-[10px] font-extrabold uppercase text-slate-400">Meeting type</p><p className="mt-1 text-sm font-bold capitalize text-slate-800">{selectedMeeting.meeting.type || 'Chapter meeting'}</p></div>
+                <div className="rounded-xl bg-slate-50 p-3"><p className="text-[10px] font-extrabold uppercase text-slate-400">Meeting type</p><p className="mt-1 text-sm font-bold capitalize text-slate-800">{selectedMeeting.meeting.type || 'Unit meeting'}</p></div>
                 <div className="rounded-xl bg-slate-50 p-3"><p className="text-[10px] font-extrabold uppercase text-slate-400">Time</p><p className="mt-1 text-sm font-bold text-slate-800">{selectedMeeting.meeting.startDate ? new Date(selectedMeeting.meeting.startDate).toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit' }) : '—'}</p></div>
               </div>
 

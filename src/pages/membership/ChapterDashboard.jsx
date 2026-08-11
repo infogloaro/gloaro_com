@@ -25,7 +25,7 @@ export default function ChapterDashboard() {
         setStats(res.data?.data || null)
       })
       .catch(() => {
-        toast.error('Failed to load Chapter Dashboard analytics')
+        toast.error('Failed to load Unit Dashboard analytics')
       })
       .finally(() => {
         setLoading(false)
@@ -33,17 +33,17 @@ export default function ChapterDashboard() {
   }, [])
 
   if (loading || !stats) {
-    return <LoadingScreen label="Loading Chapter Dashboard metrics..." />
+    return <LoadingScreen label="Loading Unit Dashboard metrics..." />
   }
 
   const { chapterName, summary, performers, growth } = stats
 
   return (
     <div className="space-y-6">
-      {/* Chapter header */}
+      {/* Unit header */}
       <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
         <div>
-          <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-[#0d4697]">Chapter Dashboard Context</p>
+          <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-[#0d4697]">Unit Dashboard Context</p>
           <h2 className="mt-1 text-2xl font-black text-slate-900">{chapterName} Overview</h2>
         </div>
         <div className="shrink-0 flex items-center gap-1 bg-blue-50 border border-blue-100 rounded-full px-4 py-1.5 text-xs font-extrabold text-[#0d4697]">
@@ -61,11 +61,11 @@ export default function ChapterDashboard() {
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
-        {/* Top Performers in Chapter */}
+        {/* Top Performers in Unit */}
         <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-4">
           <h3 className="text-base font-extrabold text-slate-900 flex items-center gap-2">
             <Award className="h-5 w-5 text-[#0d4697]" />
-            Top Chapter Performers (Monthly score)
+            Top Unit Performers (Monthly score)
           </h3>
           
           <div className="divide-y divide-slate-100">
@@ -90,12 +90,12 @@ export default function ChapterDashboard() {
         <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-4">
           <h3 className="text-base font-extrabold text-slate-900 flex items-center gap-2">
             <LineChart className="h-5 w-5 text-[#0d4697]" />
-            Chapter Standing
+            Unit Standing
           </h3>
 
           <div className="space-y-4 text-xs font-bold text-slate-600">
             <div className="flex justify-between items-center rounded-lg bg-slate-50 p-3">
-              <span>Chapter Growth Rate</span>
+              <span>Unit Growth Rate</span>
               <span className="text-sm font-black text-emerald-600">+{growth.growthPct}</span>
             </div>
             <div className="flex justify-between items-center rounded-lg bg-slate-50 p-3">

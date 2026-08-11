@@ -27,7 +27,7 @@ const filters = [
 
 export default function MinutesPage() {
   // TODO:
-  // When the Chapter module and MeetingMinutes model are implemented,
+  // When the Unit module and MeetingMinutes model are implemented,
   // scope queries using req.user.chapterId and retrieve
   // chapter-specific meeting minutes.
   return (

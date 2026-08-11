@@ -51,7 +51,7 @@ export default function MyChapter() {
     return {
       type: 'chapter',
       id: org.chapter || org.assignedChapter?._id,
-      title: 'My Chapter',
+      title: 'My Unit',
     }
   }, [user])
 
@@ -170,7 +170,7 @@ export default function MyChapter() {
       }
     }
 
-    // Chapter scope
+    // Unit scope
     return {
       totalMembers: overview?.totalMembers ?? 0,
       activeMembers: overview?.activeMembers ?? 0,
@@ -202,19 +202,19 @@ export default function MyChapter() {
           <StatItem title="Districts" value={stats.districts} icon={Shield} />
         )}
         {stats.chapters !== undefined && (
-          <StatItem title="Chapters" value={stats.chapters} icon={Building2} />
+          <StatItem title="Units" value={stats.chapters} icon={Building2} />
         )}
         <StatItem title="Total Members" value={stats.totalMembers} icon={UsersRound} />
         <StatItem title="Active Members" value={stats.activeMembers} icon={UsersRound} />
       </div>
 
-      {/* Chapter Leadership (Only for Chapter-level roles) */}
+      {/* Unit Leadership (Only for Chapter-level roles) */}
       {scopeInfo.type === 'chapter' && (
         <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-4">
-          <h3 className="text-base font-extrabold text-slate-900">Chapter Leadership & Directory</h3>
+          <h3 className="text-base font-extrabold text-slate-900">Unit Leadership & Directory</h3>
           <div className="grid gap-4 sm:grid-cols-3">
             <LeadershipCard
-              title="Chapter Unit Chairman"
+              title="Unit Unit Chairman"
               name={overview?.leadership?.president?.name}
             />
             <LeadershipCard

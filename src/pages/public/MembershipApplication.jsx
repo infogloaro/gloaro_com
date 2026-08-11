@@ -236,7 +236,7 @@ export default function MembershipApplication() {
             </div>
           </ApplicationSection>
 
-          <ApplicationSection icon={MapPin} title="Location & Chapter Assignment">
+          <ApplicationSection icon={MapPin} title="Location & Unit Assignment">
             <OrganizationAssignmentFields
               value={organization}
               onChange={handleOrganizationChange}

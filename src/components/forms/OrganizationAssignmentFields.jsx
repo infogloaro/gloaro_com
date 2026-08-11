@@ -12,7 +12,7 @@ export default function OrganizationAssignmentFields({
   value = defaultValue,
   onChange,
   disabled = false,
-  title = 'Location & Chapter Assignment',
+  title = 'Location & Unit Assignment',
   description,
   className = '',
   hideHeader = false,
@@ -153,10 +153,10 @@ export default function OrganizationAssignmentFields({
           disabled={disabled || !currentValue.stateId}
         />
         <SelectField
-          label="Chapter *"
+          label="Unit *"
           value={currentValue.chapterId}
           onChange={(chapterId) => setLocation({ regionId: currentValue.regionId, stateId: currentValue.stateId, districtId: currentValue.districtId, chapterId })}
-          placeholder="Select Chapter"
+          placeholder="Select Unit"
           options={chapters.map((chapter) => ({ label: chapter.name, value: chapter._id }))}
           disabled={disabled || !currentValue.districtId}
           className="md:col-span-2"
