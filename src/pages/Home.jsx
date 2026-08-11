@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import BusinessCategories from '../components/common/BusinessCategories'
 import { ArrowRight, BadgeCheck, CalendarDays, ChevronDown, Clock3, Mail, MapPin, PhoneCall, ShieldCheck, Sparkles, ShoppingBag, ShoppingCart, Store, Ticket, UserRound, UsersRound } from 'lucide-react'
-import heroNetworkIcon from '../assets/hero_net_icon.png'
+import heroNetworkIcon from '../assets/signup_logo.png'
 import heroBackground from '../assets/herobg-1.png'
 import businessImage from '../assets/business_img.png'
 import benefitImage1 from '../assets/img1.png'
