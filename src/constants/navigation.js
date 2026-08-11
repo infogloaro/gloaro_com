@@ -211,6 +211,7 @@ export const customerFoundationNav = [
   { label: 'Communication', icon: MessageSquare, children: [['Notifications', '/notifications', Bell]] },
   ['Profile', '/customer/profile', User],
   ['Addresses', '/customer/addresses', MapPinned],
+  ['Back to Home', '/', Home],
   ['Logout', '__logout__', LogOut],
 ]
 
