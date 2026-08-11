@@ -128,10 +128,10 @@ export default function DirectConsultantDashboard() {
   const chapterPresidentsCount = stats.roleStats?.chapterPresidents ?? 0;
 
   const topCards = [
-    ['presidents', 'Chapter Presidents', chapterPresidentsCount, 'Assigned team', Users],
+    ['presidents', 'Unit Chairmen', chapterPresidentsCount, 'Assigned team', Users],
     ['members', 'Total Members', stats.totalUsers ?? '—', `${stats.newUsersToday ?? 0} today`, Users],
     ['active', 'Active Memberships', scopeOverview?.activeMembers ?? stats.activeUsers ?? '—', 'Verified network', CheckCircle2],
-    ['revenue', 'Business Generated', stats.revenue != null ? formatCurrency(stats.revenue) : '—', 'Chapter value', FileBarChart]
+    ['revenue', 'Business Generated', stats.revenue != null ? formatCurrency(stats.revenue) : '—', 'Unit value', FileBarChart]
   ]
 
   if (dashboard.loading || analytics.loading) {
@@ -144,11 +144,11 @@ export default function DirectConsultantDashboard() {
       <header className="rounded-2xl border border-white/60 bg-white/85 p-6 shadow-sm backdrop-blur">
         <p className="inline-flex items-center gap-2 text-xs font-extrabold uppercase tracking-[0.18em] text-[#0d4697]">
           <Building2 className="h-4 w-4" />
-          Direct Consultant Command Center
+          Launch Director Command Center
         </p>
-        <h1 className="mt-3 text-3xl font-black text-slate-950">Gloaro Consultant Dashboard</h1>
+        <h1 className="mt-3 text-3xl font-black text-slate-950">Launch Director Dashboard</h1>
         <p className="mt-2 max-w-4xl text-sm font-semibold leading-6 text-slate-555">
-          Manage chapter presidents and membership details under your assigned chapter.
+          Manage units, unit chairmen, and membership details under your assigned district.
         </p>
       </header>
 

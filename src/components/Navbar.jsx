@@ -35,7 +35,7 @@ const SearchIcon = () => <svg viewBox="0 0 24 24" className="h-4 w-4 shrink-0 fi
 const networkMenu = [
   [Users, 'Membership', ['Join Gloaro Network', 'Membership Benefits', 'Member Access']],
   [Network, 'Business Network', ['360 Gloaro Network', 'Global Business Network', 'Business Growth', 'Business Opportunities']],
-  [Handshake, 'Referral Program', ['Referral Meeting', 'Referral Join', 'Referral Benefits']],
+  [Handshake, 'Connect Program', ['Connect Meeting', 'Connect Join', 'Connect Benefits']],
   [Smartphone, 'Mobile App', ['Gloaro App', 'Member App', 'Business Management App']],
   [BriefcaseBusiness, 'Business Services', ['Technology Development', 'Mobile App Development', 'Digital Marketing', 'IT Solutions', 'SaaS Solution']],
   [CalendarDays, 'Events & Community', ['Monthly Meetings', 'Business Expo', 'Social Events', 'District Community', 'Tamil Nadu Community', 'Global Community']],
@@ -58,9 +58,9 @@ const networkTargets = {
   'Global Business Network': 'global-business-network',
   'Business Growth': 'business-growth',
   'Business Opportunities': 'business-opportunities',
-  'Referral Meeting': 'referral-meeting',
-  'Referral Join': 'referral-join',
-  'Referral Benefits': 'referral-benefits',
+  'Connect Meeting': 'referral-meeting',
+  'Connect Join': 'referral-join',
+  'Connect Benefits': 'referral-benefits',
   'Gloaro App': 'gloaro-app',
   'Member App': 'member-app',
   'Business Management App': 'business-management-app',
@@ -202,7 +202,7 @@ export default function Navbar() {
   }
 
   const navItems = [
-    [nearMeIcon, 'Near Me', '/nearby', 'hidden border border-slate-200/80 bg-white/70 text-slate-700 hover:border-slate-300 hover:bg-white', 'group-hover:-translate-y-0.5'],
+    [nearMeIcon, 'Near Me', '/nearby', 'border border-slate-200/80 bg-white/70 text-slate-700 hover:border-slate-300 hover:bg-white', 'group-hover:-translate-y-0.5'],
     [shopIcon, 'Shop', '/products', 'border border-amber-200/80 bg-gradient-to-r from-amber-300 to-amber-200 text-[#073b7a] shadow-[0_12px_24px_rgba(255,174,19,0.16)] hover:shadow-[0_16px_30px_rgba(255,174,19,0.22)]', 'brightness-0 contrast-125'],
     [brandIcon, 'B2B Services', '/services', 'border border-emerald-200/80 bg-gradient-to-r from-emerald-500 to-emerald-400 text-white shadow-[0_12px_24px_rgba(16,185,129,0.18)] hover:shadow-[0_16px_30px_rgba(16,185,129,0.24)]', 'brightness-0 invert'],
     [aboutIcon, 'About', '/about', 'border border-amber-200/80 bg-white/80 text-[#073b7a] hover:border-amber-300 hover:bg-amber-50/90', ''],

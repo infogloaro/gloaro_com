@@ -292,21 +292,21 @@ export default function ChatSystem() {
                 <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold ${isMine ? 'bg-blue-100 text-[#0d4697]' : 'bg-slate-100 text-slate-700'}`}>
                   {getInitial(msg.sender)}
                 </span>
-                <div className={`rounded-2xl px-4 py-2.5 ${isMine ? 'bg-[#0d4697] text-white' : 'bg-slate-100 text-slate-700'}`}>
+                <div className={`rounded-2xl px-4 py-2.5 ${isMine ? 'bg-[#0d4697] !text-white' : 'bg-slate-100 text-slate-700'}`} style={isMine ? { backgroundColor: '#0d4697', color: '#ffffff' } : undefined}>
                   {!isMine && <p className="mb-1 text-[10px] font-black leading-none text-slate-900">{msg.sender?.name || 'Member'}</p>}
-                  {msg.content && <p className={`text-xs font-medium leading-normal ${isMine ? 'text-white' : 'text-slate-700'}`}>{msg.content}</p>}
+                  {msg.content && <p className={`text-xs font-semibold leading-normal ${isMine ? '!text-white' : 'text-slate-700'}`} style={isMine ? { color: '#ffffff' } : undefined}>{msg.content}</p>}
                   {!!msg.attachments?.length && (
                     <div className="mt-2 grid gap-2">
                       {msg.attachments.map((item, index) => (
                         item.mediaType === 'image'
                           ? <img key={`${item.url}-${index}`} src={item.url} alt={item.name || 'Attachment'} className="max-h-44 rounded-lg border border-white object-cover" />
-                          : <a key={`${item.url}-${index}`} href={item.url} target="_blank" rel="noreferrer" className={`text-xs font-bold ${isMine ? 'text-blue-100' : 'text-[#0d4697]'}`}>{item.name || 'Document'}</a>
+                          : <a key={`${item.url}-${index}`} href={item.url} target="_blank" rel="noreferrer" className={`text-xs font-bold ${isMine ? '!text-blue-100' : 'text-[#0d4697]'}`} style={isMine ? { color: '#dbeafe' } : undefined}>{item.name || 'Document'}</a>
                       ))}
                     </div>
                   )}
-                  <div className={`mt-1 flex items-center justify-end gap-1 text-[9px] font-bold ${isMine ? 'text-blue-100' : 'text-slate-400'}`}>
-                    <span>{new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                    {isMine && <CheckCheck className="h-3 w-3" />}
+                  <div className={`mt-1 flex items-center justify-end gap-1 text-[9px] font-bold ${isMine ? '!text-blue-100' : 'text-slate-400'}`} style={isMine ? { color: '#dbeafe' } : undefined}>
+                    <span style={isMine ? { color: '#dbeafe' } : undefined}>{new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                    {isMine && <CheckCheck className="h-3 w-3 text-white" />}
                   </div>
                 </div>
               </div>

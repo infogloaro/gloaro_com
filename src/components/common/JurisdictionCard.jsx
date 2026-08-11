@@ -85,9 +85,9 @@ export default function JurisdictionCard() {
 
         {overview?.leadership && (
           <div className="mt-3 grid grid-cols-1 gap-2 text-xs font-semibold text-slate-500 sm:grid-cols-3 border-t border-slate-100 pt-3">
-            <div>👑 President: {overview.leadership.president?.name || 'Not assigned'}</div>
-            <div>⚡ Vice President: {overview.leadership.vicePresident?.name || 'Not assigned'}</div>
-            <div>📋 Secretary: {overview.leadership.secretary?.name || 'Not assigned'}</div>
+            <div>👑 Unit Chairman: {overview.leadership.president?.name || 'Not assigned'}</div>
+            <div>⚡ Unit Vice Chairman: {overview.leadership.vicePresident?.name || 'Not assigned'}</div>
+            <div>📋 Coordinator: {overview.leadership.secretary?.name || 'Not assigned'}</div>
           </div>
         )}
       </div>

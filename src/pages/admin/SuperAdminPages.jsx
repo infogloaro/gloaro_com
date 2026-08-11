@@ -342,7 +342,7 @@ export function MembershipWorkflowPage() {
         <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
           <h2 className="text-lg font-extrabold text-slate-950">Who can create membership?</h2>
           <div className="mt-4 space-y-3">
-            {['Executive Director', 'Launch Director', 'Direct Consultant', 'President', 'Secretary'].map((role, index) => (
+            {['District Unit Chairman', 'Direct Consultant', 'Launch Director', 'Unit Chairman', 'Coordinator'].map((role, index) => (
               <label key={role} className="flex items-center justify-between rounded-xl bg-slate-50 px-4 py-3 text-sm font-extrabold text-slate-700">
                 {role}
                 <input type="checkbox" defaultChecked={index < 3} className="h-4 w-4 accent-[#0d4697]" />
@@ -659,7 +659,7 @@ function ReferralDetailModal({ referral, onClose }) {
   const ref = referral.referrer || {}
   const mem = referral.referred || {}
   const stages = [
-    { key: 'referral_code_used', label: 'Referral Code Used' },
+    { key: 'referral_code_used', label: 'Connect Code Used' },
     { key: 'registration_started', label: 'Registration Started' },
     { key: 'registered', label: 'Registered' },
     { key: 'application_submitted', label: 'Application Submitted' },
@@ -674,7 +674,7 @@ function ReferralDetailModal({ referral, onClose }) {
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-200/80 p-4 backdrop-blur-sm" onClick={onClose}>
       <div className="mx-auto max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-white p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between border-b border-slate-200 pb-4">
-          <h2 className="text-xl font-black text-slate-900">Referral Details</h2>
+          <h2 className="text-xl font-black text-slate-900">Connect Details</h2>
           <button onClick={onClose} className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600">
             <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
           </button>
@@ -682,7 +682,7 @@ function ReferralDetailModal({ referral, onClose }) {
 
         <div className="mt-5 grid grid-cols-2 gap-4">
           <div className="rounded-lg bg-slate-50 p-4">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500">Referral Owner</h3>
+            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500">Connect Owner</h3>
             <p className="mt-1 text-sm font-bold text-slate-900">{ref.name || 'N/A'}</p>
             <p className="text-xs text-slate-500">{ref.email}</p>
             <p className="text-xs font-mono text-[#0d4697]">{ref.referralCode}</p>
@@ -697,7 +697,7 @@ function ReferralDetailModal({ referral, onClose }) {
 
         <div className="mt-4 grid grid-cols-3 gap-3 rounded-lg bg-slate-50 p-4">
           <div>
-            <p className="text-xs font-bold uppercase tracking-wider text-slate-500">Referral Code</p>
+            <p className="text-xs font-bold uppercase tracking-wider text-slate-500">Connect Code</p>
             <p className="mt-0.5 text-sm font-bold text-[#0d4697]">{referral.usedReferralCode || referral.code}</p>
           </div>
           <div>
@@ -824,7 +824,7 @@ export function ReferralManagementPage() {
       a.click()
       document.body.removeChild(a)
       URL.revokeObjectURL(url)
-      toast.success('Referrals exported to CSV')
+      toast.success('Connects exported to CSV')
     } catch { toast.error('Failed to export CSV') }
     setExporting(false)
   }
@@ -853,9 +853,9 @@ export function ReferralManagementPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-black text-slate-900">Referral Management</h1>
+          <h1 className="text-2xl font-black text-slate-900">Connect Management</h1>
           <p className="mt-1 text-sm font-semibold text-slate-500">
-            {role === 'superadmin' ? 'Full system referral overview and management' : 'Referrals within your organization hierarchy'}
+            {role === 'superadmin' ? 'Full system referral overview and management' : 'Connects within your organization hierarchy'}
           </p>
         </div>
         <div className="flex gap-2">
@@ -869,7 +869,7 @@ export function ReferralManagementPage() {
       {/* Dashboard Stats */}
       {dashboard && (
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-7">
-          <StatCard title="Total Referrals" value={dashboard.totalReferrals} icon={Handshake} color="bg-[#0d4697]" />
+          <StatCard title="Total Connects" value={dashboard.totalReferrals} icon={Handshake} color="bg-[#0d4697]" />
           <StatCard title="Referrers" value={dashboard.totalReferrers} icon={Users} color="bg-purple-600" />
           <StatCard title="Pending" value={dashboard.pending} icon={Clock} color="bg-yellow-500" />
           <StatCard title="Approved" value={dashboard.approved} icon={CheckCircle2} color="bg-green-600" />
@@ -897,7 +897,7 @@ export function ReferralManagementPage() {
             <input type="text" value={filters.ownerId} onChange={(e) => handleFilterChange('ownerId', e.target.value)} placeholder="User ID" className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-700" />
           </div>
           <div className="min-w-[160px] flex-1">
-            <label className="block text-xs font-bold uppercase tracking-wider text-slate-500">Referral Code</label>
+            <label className="block text-xs font-bold uppercase tracking-wider text-slate-500">Connect Code</label>
             <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search code..." className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-700" />
           </div>
           <div className="min-w-[140px]">

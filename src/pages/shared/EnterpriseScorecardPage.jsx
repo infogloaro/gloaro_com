@@ -67,9 +67,16 @@ function compactMoney(value) {
 
 function ChartPanel({ title, children }) {
   return (
-    <section className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-      <h2 className="text-sm font-black text-slate-950">{title}</h2>
-      <div className="mt-4 h-72 min-w-0">{children}</div>
+    <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm overflow-hidden">
+      <div className="flex items-center justify-between gap-2 border-b border-slate-100 pb-3">
+        <h2 className="text-sm font-black text-slate-950">{title}</h2>
+        <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#0d4697] bg-blue-50 px-2 py-0.5 rounded sm:hidden">Swipe graph →</span>
+      </div>
+      <div className="mt-3 rounded-lg border border-slate-200 bg-slate-50/60 p-2 shadow-inner overflow-hidden">
+        <div className="h-72 w-full overflow-x-auto overflow-y-hidden [scrollbar-width:thin] touch-pan-x">
+          {children}
+        </div>
+      </div>
     </section>
   )
 }
@@ -216,37 +223,33 @@ export default function EnterpriseScorecardPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <p className="text-xs font-extrabold uppercase text-[#1558b0]">Organization-wide performance</p>
-          <h1 className="mt-1 text-2xl font-black text-slate-950">Enterprise Scorecard</h1>
+          <p className="text-xs font-black uppercase tracking-wider text-[#1558b0]">Organization-Wide Performance</p>
+          <h1 className="text-2xl font-black text-slate-950">Enterprise Scorecard</h1>
         </div>
-        <div className="flex flex-wrap gap-2">
-          <button type="button" onClick={exportExcel} className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-black text-slate-700 shadow-sm">
+        <div className="flex flex-wrap items-center gap-2">
+          <button onClick={() => handleExport('excel')} className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 shadow-sm transition hover:bg-slate-50">
             <Download className="h-4 w-4" /> Excel
           </button>
-          <button type="button" onClick={exportPdf} className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-black text-slate-700 shadow-sm">
+          <button onClick={() => handleExport('pdf')} className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 shadow-sm transition hover:bg-slate-50">
             <FileText className="h-4 w-4" /> PDF
           </button>
         </div>
       </div>
 
-      <section className="grid gap-3 rounded-lg border border-slate-200 bg-white p-4 shadow-sm md:grid-cols-5">
+      <section className="grid gap-3 rounded-lg border border-slate-200 bg-white p-4 shadow-sm sm:grid-cols-2 lg:grid-cols-5">
         <label className="text-xs font-black uppercase text-slate-500">
           Name
-          <div className="mt-1 flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2">
-            <Search className="h-4 w-4 text-slate-400" />
-            <input value={searchNameInput} onChange={(event) => setSearchNameInput(event.target.value)} className="min-w-0 flex-1 outline-none" placeholder="Search name" />
-          </div>
+          <input type="text" placeholder="Search name" value={searchNameInput} onChange={(e) => setSearchNameInput(e.target.value)} className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 outline-none" />
         </label>
         <label className="text-xs font-black uppercase text-slate-500">
           Official ID
-          <input value={searchOfficialIdInput} onChange={(event) => setSearchOfficialIdInput(event.target.value)} className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 outline-none" placeholder="Search ID" />
+          <input type="text" placeholder="Search ID" value={searchOfficialIdInput} onChange={(e) => setSearchOfficialIdInput(e.target.value)} className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 outline-none" />
         </label>
         <label className="text-xs font-black uppercase text-slate-500">
           Role
           <select value={filters.role} onChange={(event) => updateFilter('role', event.target.value)} className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 outline-none">
-            <option value="">All roles</option>
             {roles.map((role) => <option key={role.value} value={role.value}>{role.label}</option>)}
           </select>
         </label>
@@ -273,71 +276,83 @@ export default function EnterpriseScorecardPage() {
 
       <section className="grid gap-4 xl:grid-cols-2">
         <ChartPanel title="Revenue by Role">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={charts.revenueByRole || []}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-              <XAxis dataKey="roleLabel" interval={0} angle={-20} textAnchor="end" height={70} />
-              <YAxis tickFormatter={compactMoney} />
-              <Tooltip formatter={(value) => money(value)} />
-              <Bar dataKey="revenue" fill="#1558b0" radius={[4, 4, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
+          <div className="h-full min-w-[620px] sm:min-w-0">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={charts.revenueByRole || []} margin={{ bottom: 25, left: 10, right: 10 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                <XAxis dataKey="roleLabel" interval={0} angle={-35} textAnchor="end" height={80} tick={{ fontSize: 11, fontWeight: 700 }} />
+                <YAxis tickFormatter={compactMoney} tick={{ fontSize: 11 }} />
+                <Tooltip formatter={(value) => money(value)} />
+                <Bar dataKey="revenue" fill="#1558b0" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
         </ChartPanel>
         <ChartPanel title="Monthly Revenue Trend">
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={charts.monthlyRevenueTrend || []}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-              <XAxis dataKey="month" />
-              <YAxis tickFormatter={compactMoney} />
-              <Tooltip formatter={(value) => money(value)} />
-              <Line type="monotone" dataKey="totalRevenue" stroke="#1558b0" strokeWidth={3} dot={false} />
-            </LineChart>
-          </ResponsiveContainer>
+          <div className="h-full min-w-[450px] sm:min-w-0">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={charts.monthlyRevenueTrend || []}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                <XAxis dataKey="month" tick={{ fontSize: 11 }} />
+                <YAxis tickFormatter={compactMoney} tick={{ fontSize: 11 }} />
+                <Tooltip formatter={(value) => money(value)} />
+                <Line type="monotone" dataKey="totalRevenue" stroke="#1558b0" strokeWidth={3} dot={false} />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
         </ChartPanel>
         <ChartPanel title="Membership Revenue vs Vendor Revenue">
-          <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={charts.membershipVsVendorRevenue || []}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-              <XAxis dataKey="month" />
-              <YAxis tickFormatter={compactMoney} />
-              <Tooltip formatter={(value) => money(value)} />
-              <Area type="monotone" dataKey="membershipRevenue" stroke="#1558b0" fill="#bfdbfe" />
-              <Area type="monotone" dataKey="vendorRevenue" stroke="#0f766e" fill="#99f6e4" />
-            </AreaChart>
-          </ResponsiveContainer>
+          <div className="h-full min-w-[450px] sm:min-w-0">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={charts.membershipVsVendorRevenue || []}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                <XAxis dataKey="month" tick={{ fontSize: 11 }} />
+                <YAxis tickFormatter={compactMoney} tick={{ fontSize: 11 }} />
+                <Tooltip formatter={(value) => money(value)} />
+                <Area type="monotone" dataKey="membershipRevenue" stroke="#1558b0" fill="#bfdbfe" />
+                <Area type="monotone" dataKey="vendorRevenue" stroke="#0f766e" fill="#99f6e4" />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
         </ChartPanel>
         <ChartPanel title="Top 10 Earners">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={charts.topEarners || []} layout="vertical" margin={{ left: 20 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-              <XAxis type="number" tickFormatter={compactMoney} />
-              <YAxis dataKey="name" type="category" width={100} />
-              <Tooltip formatter={(value) => money(value)} />
-              <Bar dataKey="totalEarned" fill="#1558b0" radius={[0, 4, 4, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
+          <div className="h-full min-w-[400px] sm:min-w-0">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={charts.topEarners || []} layout="vertical" margin={{ left: 20 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                <XAxis type="number" tickFormatter={compactMoney} tick={{ fontSize: 11 }} />
+                <YAxis dataKey="name" type="category" width={100} tick={{ fontSize: 11 }} />
+                <Tooltip formatter={(value) => money(value)} />
+                <Bar dataKey="totalEarned" fill="#1558b0" radius={[0, 4, 4, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
         </ChartPanel>
         <ChartPanel title="Top 10 Members Added">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={charts.topMembersAdded || []}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-              <XAxis dataKey="name" />
-              <YAxis allowDecimals={false} />
-              <Tooltip />
-              <Bar dataKey="membersAdded" fill="#0f766e" radius={[4, 4, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
+          <div className="h-full min-w-[450px] sm:min-w-0">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={charts.topMembersAdded || []}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                <XAxis dataKey="name" tick={{ fontSize: 11 }} />
+                <YAxis allowDecimals={false} tick={{ fontSize: 11 }} />
+                <Tooltip />
+                <Bar dataKey="membersAdded" fill="#0f766e" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
         </ChartPanel>
         <ChartPanel title="Top 10 Vendors Added">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={charts.topVendorsAdded || []}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-              <XAxis dataKey="name" />
-              <YAxis allowDecimals={false} />
-              <Tooltip />
-              <Bar dataKey="vendorsAdded" fill="#7c3aed" radius={[4, 4, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
+          <div className="h-full min-w-[450px] sm:min-w-0">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={charts.topVendorsAdded || []}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                <XAxis dataKey="name" tick={{ fontSize: 11 }} />
+                <YAxis allowDecimals={false} tick={{ fontSize: 11 }} />
+                <Tooltip />
+                <Bar dataKey="vendorsAdded" fill="#7c3aed" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
         </ChartPanel>
       </section>
 

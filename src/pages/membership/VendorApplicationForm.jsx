@@ -427,7 +427,7 @@ export default function VendorApplicationForm() {
               <StatusBadge value={app ? app.status : 'Submitted'} />
             </div>
             <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 text-center max-w-sm mt-1">
-              The Vice President is reviewing your credentials. You will be notified once the decision is finalized.
+              The Unit Vice Chairman is reviewing your credentials. You will be notified once the decision is finalized.
             </p>
           </div>
 

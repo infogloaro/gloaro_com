@@ -15,7 +15,7 @@ const expectations = [
   ['Professional Conduct', 'Gloaro Network members are expected to maintain the highest levels of professional decorum during all interactions. This includes punctuality for network meetings, respectful communication across all digital channels, and upholding the brand’s prestige in public forums.'],
   ['Networking Commitment', 'Gloaro is a give-first network. Members are expected to dedicate time for one-on-one discovery sessions with fellow members to truly understand their business models and support requirements, fostering deep-rooted professional trust.'],
   ['Business Integrity', 'Honesty and transparency form the bedrock of our ecosystem. Members commit to ethical business practices, honoring all professional agreements made within the network, and disclosing any conflicts of interest that may arise during joint ventures or referrals.'],
-  ['Referral Responsibility', 'When referring a fellow member, you are lending your personal credibility. Members must ensure all referrals are vetted and relevant. Conversely, receiving a referral entails a commitment to provide premium, high-priority service to the referred party.'],
+  ['Connect Responsibility', 'When referring a fellow member, you are lending your personal credibility. Members must ensure all referrals are vetted and relevant. Conversely, receiving a referral entails a commitment to provide premium, high-priority service to the referred party.'],
   ['Meeting Participation', 'Membership requires active presence. Consistent attendance at weekly executive briefings and quarterly summits is mandatory. Engagement is measured not just by presence, but by the quality of contributions to strategic discussions and workshop sessions.'],
   ['Community Contribution', 'Beyond individual gain, members contribute to the collective intelligence of the network. This involves sharing industry insights, mentoring junior executive members, and participating in the Professional Standards Division’s peer-review processes.'],
 ]
@@ -141,10 +141,10 @@ export default function MembershipQualification() {
         setReferralInfo(res.data?.data || null)
         const draftData = getMembershipDraft()
         localStorage.setItem('gloaro_membership_onboarding', JSON.stringify({ ...draftData, referralCode: referralCode.trim() }))
-        toast.success('Referral code verified!')
+        toast.success('Connect code verified!')
       })
       .catch((err) => {
-        setReferralError(err.response?.data?.message || 'Invalid Referral Code')
+        setReferralError(err.response?.data?.message || 'Invalid Connect Code')
       })
       .finally(() => {
         setValidatingCode(false)
@@ -240,7 +240,7 @@ export default function MembershipQualification() {
               <ReferenceFields title="Reference Contact 2" value={references[1] || {}} onChange={(field, value) => updateReference(1, field, value)} />
             </div>
             <div className="mt-6 pt-6 border-t border-slate-100">
-              <h3 className="mb-3 text-xs font-black uppercase tracking-[0.08em] text-[#0b469e]">Referral Code Verification (Optional)</h3>
+              <h3 className="mb-3 text-xs font-black uppercase tracking-[0.08em] text-[#0b469e]">Connect Code Verification (Optional)</h3>
               <div className="flex gap-2 max-w-md">
                 <input
                   type="text"
@@ -264,7 +264,7 @@ export default function MembershipQualification() {
               {referralInfo && (
                 <div className="mt-2 rounded-lg bg-emerald-50 border border-emerald-200 p-3.5 text-xs text-emerald-800 space-y-1 max-w-md">
                   <p className="font-extrabold flex items-center gap-1">
-                    <span className="text-emerald-600">✓</span> Verified Referral: <span className="font-black text-slate-800">{referralInfo.referredBy}</span>
+                    <span className="text-emerald-600">✓</span> Verified Connect: <span className="font-black text-slate-800">{referralInfo.referredBy}</span>
                   </p>
                   <p className="font-semibold text-slate-600">Chapter: <span className="font-bold text-slate-800">{referralInfo.chapter}</span></p>
                 </div>

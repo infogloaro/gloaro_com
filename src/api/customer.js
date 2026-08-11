@@ -68,6 +68,7 @@ export const customerApi = {
   banners: (params) => api.get('/banners', { params }),
   organizationHierarchy: (config = {}) => api.get('/directory/organization-hierarchy', config),
   globalSearch: (params) => api.get('/directory/global-search', { params }),
+  organizationHierarchy: () => api.get('/directory/organization-hierarchy'),
   submitEnquiry: (data) => api.post('/leads', data),
   wishlist: (params) => api.get('/customers/wishlist', { params }),
   addWishlist: (data, config = {}) => api.post('/customers/wishlist', data, config),

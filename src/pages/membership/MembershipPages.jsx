@@ -16,7 +16,7 @@ const benefitCards = [
     icon: ShieldCheck,
   },
   {
-    title: 'Referral Growth',
+    title: 'Connect Growth',
     description: 'Share your referral code, track member introductions, and grow through trusted business connections.',
     icon: Handshake,
   },
@@ -34,7 +34,7 @@ const benefitCards = [
 
 const programSteps = [
   'Monthly networking meetings',
-  'Referral program participation',
+  'Connect program participation',
   'Member-only event access',
   'Business promotion opportunities',
   'Priority support for membership queries',
@@ -82,7 +82,7 @@ export function MembershipBenefitsPage() {
           <p className="mt-2 text-sm font-semibold leading-6 text-blue-50">Join events, share referrals, and explore benefits from the membership dashboard.</p>
           <div className="mt-5 flex flex-wrap gap-3">
             <Link to="/membership/events" className="rounded-md bg-[#ffbf1a] px-4 py-2 text-sm font-extrabold text-[#0b1f3d]">View Events</Link>
-            <Link to="/membership/referral" className="rounded-md border border-white/30 px-4 py-2 text-sm font-extrabold text-white">Referral</Link>
+            <Link to="/membership/referral" className="rounded-md border border-white/30 px-4 py-2 text-sm font-extrabold text-white">Connect</Link>
           </div>
         </div>
       </section>
@@ -113,7 +113,7 @@ export function MembershipReferralPage() {
   return (
     <section className="space-y-5">
       <header>
-        <h1 className="text-3xl font-extrabold text-slate-950">Membership Referral</h1>
+        <h1 className="text-3xl font-extrabold text-slate-950">Membership Connect</h1>
         <p className="mt-1 text-sm font-semibold text-slate-500">Share your referral code and track your network growth.</p>
       </header>
 
@@ -127,9 +127,9 @@ export function MembershipReferralPage() {
         </section>
 
         <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
-          <h2 className="text-lg font-extrabold text-slate-950">Referral Summary</h2>
+          <h2 className="text-lg font-extrabold text-slate-950">Connect Summary</h2>
           <div className="mt-4 grid gap-3 sm:grid-cols-3">
-            <Metric label="Total Referrals" value={stats.data?.totalReferrals || stats.data?.total || 0} />
+            <Metric label="Total Connects" value={stats.data?.totalConnects || stats.data?.total || 0} />
             <Metric label="Approved" value={stats.data?.approved || 0} />
             <Metric label="Rewards" value={stats.data?.rewards || stats.data?.rewardAmount || 0} />
           </div>
@@ -137,7 +137,7 @@ export function MembershipReferralPage() {
       </div>
 
       <ResourceListPage
-        title="Referral History"
+        title="Connect History"
         description="Your recent referral activity."
         fetcher={customerApi.referrals}
         columns={[

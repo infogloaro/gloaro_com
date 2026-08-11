@@ -28,7 +28,7 @@ export const dashboardConfig = {
       "business"
     ],
     quickActions: [
-      { label: "View Vice Presidents", path: "/president/vice-presidents" },
+      { label: "View Unit Vice Chairmen", path: "/president/vice-presidents" },
       { label: "Business Wall", path: "/president/wall" }
     ],
     permissions: ["view_chapter"]
@@ -63,7 +63,7 @@ export const dashboardConfig = {
     ],
     quickActions: [
       { label: "Register Member", path: "/launch-director/register-member" },
-      { label: "Assign President", path: "/launch-director/assign-president" },
+      { label: "Assign Unit Chairman", path: "/launch-director/assign-president" },
       { label: "Approve Membership", path: "/launch-director/membership-applications" },
       { label: "Verify Vendor", path: "/launch-director/vendor-applications" },
       { label: "Schedule Meeting", path: "/launch-director/meetings" }
@@ -116,7 +116,7 @@ export const dashboardConfig = {
       { label: "Approve Membership", path: "/chapter-director/memberships" },
       { label: "Marketplace Vendors", path: "/chapter-director/vendors" },
       { label: "Chapter Management", path: "/chapter-director/chapter-management" },
-      { label: "Presidents List", path: "/chapter-director/president" },
+      { label: "Unit Chairmen List", path: "/chapter-director/president" },
       { label: "Members List", path: "/chapter-director/members" },
       { label: "Business Wall", path: "/chapter-director/wall" },
       { label: "Referrals Log", path: "/chapter-director/referrals" },
@@ -143,7 +143,7 @@ export const dashboardConfig = {
       { label: "Approve Membership", path: "/chapter-director/memberships" },
       { label: "Marketplace Vendors", path: "/chapter-director/vendors" },
       { label: "Chapter Management", path: "/chapter-director/chapter-management" },
-      { label: "Presidents List", path: "/chapter-director/president" },
+      { label: "Unit Chairmen List", path: "/chapter-director/president" },
       { label: "Members List", path: "/chapter-director/members" },
       { label: "Business Wall", path: "/chapter-director/wall" },
       { label: "Referrals Log", path: "/chapter-director/referrals" },
