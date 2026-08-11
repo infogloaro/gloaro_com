@@ -45,13 +45,6 @@ import {
   Truck,
   Upload,
   X,
-  BookOpen,
-  Car,
-  Dumbbell,
-  Home as HomeIcon,
-  Shirt,
-  ShoppingBasket,
-  Smartphone,
 } from "lucide-react";
 import { customerApi } from "../../api/customer";
 import { ordersApi } from "../../api/orders";
@@ -396,18 +389,20 @@ function sortProducts(products, sortBy) {
   return sorter ? list.sort(sorter) : list;
 }
 
-const SHOP_CATEGORY_PALETTE = [
-  { tone: "from-sky-100 to-indigo-100" },
-  { tone: "from-blue-50 to-sky-100" },
-  { tone: "from-pink-50 to-rose-100" },
-  { tone: "from-slate-50 to-slate-100" },
-  { tone: "from-cyan-50 to-blue-100" },
-  { tone: "from-amber-50 to-orange-100" },
-  { tone: "from-emerald-50 to-teal-100" },
-  { tone: "from-stone-50 to-orange-100" },
-  { tone: "from-violet-50 to-purple-100" },
-  { tone: "from-lime-50 to-emerald-100" },
-];
+// const SHOP_CATEGORY_PALETTE = [
+//   { tone: "from-sky-100 to-indigo-100" },
+//   { tone: "from-blue-50 to-sky-100" },
+//   { tone: "from-pink-50 to-rose-100" },
+//   { tone: "from-slate-50 to-slate-100" },
+//   { tone: "from-cyan-50 to-blue-100" },
+//   { tone: "from-amber-50 to-orange-100" },
+//   { tone: "from-emerald-50 to-teal-100" },
+//   { tone: "from-stone-50 to-orange-100" },
+//   { tone: "from-violet-50 to-purple-100" },
+//   { tone: "from-lime-50 to-emerald-100" },
+// ];
+
+/*
 
 function getCategoryPalette(index = 0) {
   return SHOP_CATEGORY_PALETTE[index % SHOP_CATEGORY_PALETTE.length];
@@ -434,16 +429,16 @@ function getCategoryEmoji(label) {
   return "🛍️";
 }
 
-const SHOP_CATEGORY_ICONS = [
-  { match: ["electronic", "mobile"], Icon: Smartphone },
-  { match: ["fashion", "cloth"], Icon: Shirt },
-  { match: ["home"], Icon: HomeIcon },
-  { match: ["sport"], Icon: Dumbbell },
-  { match: ["book"], Icon: BookOpen },
-  { match: ["grocery", "food"], Icon: ShoppingBasket },
-  { match: ["beauty"], Icon: Sparkles },
-  { match: ["auto"], Icon: Car },
-];
+// const SHOP_CATEGORY_ICONS = [
+//   { match: ["electronic", "mobile"], Icon: Smartphone },
+//   { match: ["fashion", "cloth"], Icon: Shirt },
+//   { match: ["home"], Icon: HomeIcon },
+//   { match: ["sport"], Icon: Dumbbell },
+//   { match: ["book"], Icon: BookOpen },
+//   { match: ["grocery", "food"], Icon: ShoppingBasket },
+//   { match: ["beauty"], Icon: Sparkles },
+//   { match: ["auto"], Icon: Car },
+// ];
 
 function getCategoryIconComponent(label) {
   const key = normalizeKey(label);
@@ -486,6 +481,8 @@ function resolveQuickCategorySelection(label, categories = []) {
 
   return { category: "", search: label };
 }
+
+*/
 
 function takeUniqueProducts(products, limit = 4, excludedIds = new Set()) {
   const seen = new Set(excludedIds);
