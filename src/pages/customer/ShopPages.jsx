@@ -4054,23 +4054,35 @@ function ProductCard({
   onDecrementCart,
   onOpen,
 }) {
+  const location = useLocation();
   const variant = getVariantOptions(product)[0] || null;
   const badge = getBadge(product);
   const price = getPrice(product, variant);
   const originalPrice = getOriginalPrice(product, variant);
   const discount = getDiscount(product, variant);
   const stockStatus = getStockStatus(product, variant);
+  const detailState = { from: location.pathname + location.search };
 
   return (
     <article className="group relative isolate overflow-hidden rounded-[1.85rem] border border-white/70 bg-[linear-gradient(180deg,rgba(255,255,255,0.98),rgba(248,250,252,0.98))] shadow-[0_18px_45px_rgba(11,36,81,0.08)] transition-all duration-500 hover:-translate-y-1.5 hover:shadow-[0_30px_70px_rgba(11,36,81,0.14)]">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(13,70,151,0.08),transparent_40%),radial-gradient(circle_at_bottom_right,rgba(214,167,68,0.08),transparent_38%)] opacity-0 transition duration-500 group-hover:opacity-100" />
       <div className="relative overflow-hidden rounded-t-[1.85rem]">
-        <img
-          src={getProductImage(product, variant)}
-          alt={product.title}
-          className="h-52 w-full object-cover transition duration-700 group-hover:scale-110 sm:h-56 lg:h-64"
+        <Link
+          to={`/products/${product._id}`}
+          state={detailState}
+          aria-label={`View details for ${product.title}`}
+          className="block focus:outline-none focus-visible:ring-2 focus-visible:ring-navy focus-visible:ring-offset-2 focus-visible:ring-offset-white"
+        >
+          <img
+            src={getProductImage(product, variant)}
+            alt={product.title}
+            className="h-52 w-full cursor-pointer object-cover transition duration-700 group-hover:scale-110 sm:h-56 lg:h-64"
+          />
+        </Link>
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#07152d]/45 via-transparent to-transparent opacity-80"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#07152d]/45 via-transparent to-transparent opacity-80" />
         <div className="absolute left-3 top-3 flex max-w-[70%] flex-wrap gap-2">
           <span className="rounded-full border border-white/20 bg-navy/90 px-3 py-1 text-[10px] font-black uppercase tracking-[0.22em] text-white backdrop-blur-sm">
             {badge}
