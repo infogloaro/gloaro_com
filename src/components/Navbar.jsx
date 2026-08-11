@@ -9,11 +9,14 @@ import {
   CalendarDays,
   CircleHelp,
   ChevronDown,
+  Heart,
   Handshake,
   Network,
+  Package,
   Rocket,
   ShieldCheck,
   Smartphone,
+  ShoppingCart,
   Trophy,
   TrendingUp,
   Users,
@@ -216,6 +219,12 @@ export default function Navbar() {
     // [aboutIcon, 'About', '/about', 'border border-amber-200/80 bg-white/80 text-[#073b7a] hover:border-amber-300 hover:bg-amber-50/90', ''],
   ]
 
+  const shopQuickLinks = [
+    [ShoppingCart, 'Cart', '/cart'],
+    [Heart, 'Wishlist', '/wishlist'],
+    [Package, 'Orders', '/orders'],
+  ]
+
   return (
     <header className="sticky top-0 z-50 font-jakarta">
       <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#0b469e]/40 to-transparent" />
@@ -300,63 +309,78 @@ export default function Navbar() {
               </button>
             </div>
 
-            <form onSubmit={submitSearch} className="relative mt-3 w-full max-w-[640px] lg:mt-4">
-              <label className="flex h-11 w-full items-center gap-3 rounded-full border border-slate-200 bg-white/90 px-5 text-[#0b469e] shadow-[0_12px_28px_rgba(15,23,42,0.06)] transition duration-300 focus-within:border-[#0b469e]/30 focus-within:shadow-[0_16px_34px_rgba(11,70,158,0.14)]">
-                <SearchIcon />
-                <input
-                  value={searchQuery}
-                  onChange={(event) => {
-                    const nextQuery = event.target.value
-                    setSearchQuery(nextQuery)
-                    if (nextQuery.trim().length < 2) {
-                      setSearchResults([])
-                      setSearchLoading(false)
-                    }
-                    setSearchOpen(true)
-                  }}
-                  onFocus={() => setSearchOpen(true)}
-                  onBlur={() => window.setTimeout(() => setSearchOpen(false), 150)}
-                  className="w-full bg-transparent text-sm text-slate-800 outline-none placeholder:text-slate-500"
-                  placeholder="Search for Products and Services"
-                  aria-label="Search products and services"
-                  autoComplete="off"
-                />
-              </label>
+            <div className="relative mt-3 flex w-full flex-col gap-3 lg:mt-4 lg:flex-row lg:items-center">
+              <form onSubmit={submitSearch} className="relative w-full flex-1">
+                <label className="flex h-11 w-full items-center gap-3 rounded-full border border-slate-200 bg-white/90 px-5 text-[#0b469e] shadow-[0_12px_28px_rgba(15,23,42,0.06)] transition duration-300 focus-within:border-[#0b469e]/30 focus-within:shadow-[0_16px_34px_rgba(11,70,158,0.14)]">
+                  <SearchIcon />
+                  <input
+                    value={searchQuery}
+                    onChange={(event) => {
+                      const nextQuery = event.target.value
+                      setSearchQuery(nextQuery)
+                      if (nextQuery.trim().length < 2) {
+                        setSearchResults([])
+                        setSearchLoading(false)
+                      }
+                      setSearchOpen(true)
+                    }}
+                    onFocus={() => setSearchOpen(true)}
+                    onBlur={() => window.setTimeout(() => setSearchOpen(false), 150)}
+                    className="w-full bg-transparent text-sm text-slate-800 outline-none placeholder:text-slate-500"
+                    placeholder="Search for Products and Services"
+                    aria-label="Search products and services"
+                    autoComplete="off"
+                  />
+                </label>
 
-              <AnimatePresence>
-                {searchOpen && searchQuery.trim().length >= 2 && (
-                  <motion.div
-                    key="search-results"
-                    {...searchMotion}
-                    className="absolute left-0 right-0 top-[calc(100%+8px)] z-[70] overflow-hidden rounded-2xl border border-white/70 bg-white/95 shadow-[0_24px_60px_rgba(15,23,42,0.16)] backdrop-blur-xl"
-                  >
-                    {searchLoading ? (
-                      <p className="px-4 py-4 text-sm font-medium text-slate-500">Searching products...</p>
-                    ) : searchResults.length ? (
-                      searchResults.map((product) => (
-                        <button
-                          key={product._id}
-                          type="button"
-                          onMouseDown={(event) => event.preventDefault()}
-                          onClick={() => openSearchResult(product)}
-                          className="flex w-full items-center gap-3 border-b border-slate-100/80 px-4 py-3 text-left transition hover:bg-slate-50 last:border-0"
-                        >
-                          <img src={getSearchResultImage(product)} alt="" className="h-11 w-11 rounded-xl bg-slate-100 object-cover ring-1 ring-slate-200" />
-                          <span className="min-w-0">
-                            <span className="block truncate text-sm font-bold text-slate-900">{getSearchResultTitle(product)}</span>
-                            <span className="block text-xs font-semibold text-[#0b469e]">
-                              {product.searchType === 'service' ? 'Service' : 'Product'} · ₹{getSearchResultPrice(product)}
+                <AnimatePresence>
+                  {searchOpen && searchQuery.trim().length >= 2 && (
+                    <motion.div
+                      key="search-results"
+                      {...searchMotion}
+                      className="absolute left-0 right-0 top-[calc(100%+8px)] z-[70] overflow-hidden rounded-2xl border border-white/70 bg-white/95 shadow-[0_24px_60px_rgba(15,23,42,0.16)] backdrop-blur-xl"
+                    >
+                      {searchLoading ? (
+                        <p className="px-4 py-4 text-sm font-medium text-slate-500">Searching products...</p>
+                      ) : searchResults.length ? (
+                        searchResults.map((product) => (
+                          <button
+                            key={product._id}
+                            type="button"
+                            onMouseDown={(event) => event.preventDefault()}
+                            onClick={() => openSearchResult(product)}
+                            className="flex w-full items-center gap-3 border-b border-slate-100/80 px-4 py-3 text-left transition hover:bg-slate-50 last:border-0"
+                          >
+                            <img src={product.images?.[0]?.url || product.gallery?.[0]?.url || '/logo.png'} alt="" className="h-11 w-11 rounded-xl bg-slate-100 object-cover ring-1 ring-slate-200" />
+                            <span className="min-w-0">
+                              <span className="block truncate text-sm font-bold text-slate-900">{product.title}</span>
+                              <span className="block text-xs font-semibold text-[#0b469e]">
+                                {product.searchType === 'service' ? 'Service' : 'Product'} · ₹{product.pricing?.sellingPrice ?? product.pricing?.minPrice ?? 0}
+                              </span>
                             </span>
-                          </span>
-                        </button>
-                      ))
-                    ) : (
-                      <p className="px-4 py-4 text-sm font-medium text-slate-500">No products or services found</p>
-                    )}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </form>
+                          </button>
+                        ))
+                      ) : (
+                        <p className="px-4 py-4 text-sm font-medium text-slate-500">No products or services found</p>
+                      )}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </form>
+
+              <div className="hidden items-center gap-2 lg:flex">
+                {shopQuickLinks.map(([Icon, label, href]) => (
+                  <a
+                    key={label}
+                    href={href}
+                    className="group flex h-11 items-center gap-2 rounded-full border border-slate-200/80 bg-white/85 px-3 text-sm font-semibold text-slate-700 shadow-[0_10px_22px_rgba(15,23,42,0.06)] transition duration-300 hover:-translate-y-0.5 hover:border-[#0b469e]/20 hover:text-[#0b469e] hover:shadow-[0_16px_28px_rgba(11,70,158,0.12)]"
+                  >
+                    <Icon className="h-4 w-4 transition duration-300 group-hover:scale-110" />
+                    <span>{label}</span>
+                  </a>
+                ))}
+              </div>
+            </div>
           </div>
         </motion.div>
       </div>
@@ -394,6 +418,17 @@ export default function Navbar() {
                 <AnimatePresence>{mobileNetworkOpen && <MobileGloaroNetworkMenu key="mobile-network" onNavigate={() => setOpen(false)} />}</AnimatePresence>
 
                 <div className="grid gap-2 sm:grid-cols-2">
+                  {shopQuickLinks.map(([Icon, label, href]) => (
+                    <a
+                      key={label}
+                      onClick={() => setOpen(false)}
+                      href={href}
+                      className="flex items-center rounded-2xl border border-slate-200/80 bg-white px-4 py-3 font-semibold text-slate-700 shadow-sm transition hover:border-[#0b469e]/20 hover:text-[#0b469e]"
+                    >
+                      <Icon className="mr-2 h-4 w-4" />
+                      {label}
+                    </a>
+                  ))}
                   {isAuthenticated ? (
                     <a onClick={() => setOpen(false)} href={getDashboardRoute(user?.role, user)} className="flex items-center rounded-2xl border border-[#0b469e]/10 bg-white px-4 py-3 font-semibold text-[#0b469e] shadow-sm sm:col-span-2">
                       <img src={loginIcon} alt="" className="mr-2 h-4 w-4 object-contain brightness-0 filter" />

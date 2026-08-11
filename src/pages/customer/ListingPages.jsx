@@ -2,6 +2,19 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { useForm } from 'react-hook-form'
+import {
+  ArrowRight,
+  BadgeCheck,
+  BriefcaseBusiness,
+  Clock3,
+  Filter,
+  MapPin,
+  Search,
+  Sparkles,
+  Star,
+  ShieldCheck,
+  Zap,
+} from 'lucide-react'
 import { customerApi } from '../../api/customer'
 import EmptyState from '../../components/common/EmptyState'
 import LoadingSpinner from '../../components/common/LoadingSpinner'
@@ -55,6 +68,30 @@ function CardGrid({ items, type }) {
         )))}
     </div>
   )
+}
+
+const SERVICE_ACCENTS = [
+  'from-[#0d4697] via-[#1f6fd6] to-[#67b7ff]',
+  'from-[#ff8a00] via-[#ffb547] to-[#ffe1a8]',
+  'from-[#0f766e] via-[#14b8a6] to-[#9bf5d0]',
+  'from-[#4f46e5] via-[#7c3aed] to-[#c4b5fd]',
+]
+
+function getServiceAccent(index = 0) {
+  return SERVICE_ACCENTS[index % SERVICE_ACCENTS.length]
+}
+
+function getServiceLocation(vendor = {}) {
+  const address = vendor.address || {}
+  return [address.city, address.state].filter(Boolean).join(', ') || 'Location on request'
+}
+
+function getServiceRating(service = {}) {
+  return Number(service.stats?.avgRating || 0)
+}
+
+function getServiceReviewCount(service = {}) {
+  return Number(service.stats?.totalReviews || 0)
 }
 
 export function CustomerHomePage() {
@@ -479,8 +516,11 @@ export function ProductsPage() {
   const [category, setCategory] = useState('')
   const [sortBy, setSortBy] = useState('')
   const [categories, setCategories] = useState([])
-  const [payload, setPayload] = useState(null)
-  const [loading, setLoading] = useState(true)
+  const { data: payload, loading, execute: fetchProducts } = useApi(
+    (params) => customerApi.products(params),
+    [],
+    { immediate: false, initialData: {} },
+  )
 
   useEffect(() => {
     customerApi.categories({ type: 'product', limit: 100 })
@@ -491,20 +531,9 @@ export function ProductsPage() {
   }, [])
 
   useEffect(() => {
-    setSearch((current) => current === urlSearch ? current : urlSearch)
-    setPage(1)
-  }, [urlSearch])
-
-  useEffect(() => {
-    setLoading(true)
-    customerApi.products({ page, limit: 12, search: search || undefined, category: category || undefined, sortBy: sortBy || undefined })
-      .then((res) => {
-        setPayload(res.data)
-      })
-      .finally(() => {
-        setLoading(false)
-      })
-  }, [page, search, category, sortBy])
+    fetchProducts({ page, limit: 12, search: search || undefined, category: category || undefined, sortBy: sortBy || undefined })
+      .catch(() => {})
+  }, [page, search, category, sortBy, fetchProducts])
 
   const productsList = getList(payload)
   const pagination = getPagination(payload)
@@ -662,8 +691,12 @@ export function ServicesPage() {
   const [category, setCategory] = useState('')
   const [sortBy, setSortBy] = useState('')
   const [categories, setCategories] = useState([])
-  const [payload, setPayload] = useState(null)
-  const [loading, setLoading] = useState(true)
+  const [mounted, setMounted] = useState(false)
+  const { data: payload, loading, execute: fetchServices } = useApi(
+    (params) => customerApi.services(params),
+    [],
+    { immediate: false, initialData: {} },
+  )
 
   useEffect(() => {
     customerApi.categories({ type: 'service', limit: 100 })
@@ -674,156 +707,307 @@ export function ServicesPage() {
   }, [])
 
   useEffect(() => {
-    setSearch((current) => current === urlSearch ? current : urlSearch)
-    setPage(1)
-  }, [urlSearch])
+    fetchServices({ page, limit: 12, search: search || undefined, category: category || undefined, sortBy: sortBy || undefined })
+      .catch(() => {})
+  }, [page, search, category, sortBy, fetchServices])
 
   useEffect(() => {
-    setLoading(true)
-    customerApi.services({ page, limit: 12, search: search || undefined, category: category || undefined, sortBy: sortBy || undefined })
-      .then((res) => {
-        setPayload(res.data)
-      })
-      .finally(() => {
-        setLoading(false)
-      })
-  }, [page, search, category, sortBy])
+    const timer = window.setTimeout(() => setMounted(true), 40)
+    return () => window.clearTimeout(timer)
+  }, [])
 
   const servicesList = getList(payload)
   const pagination = getPagination(payload)
+  const featuredServices = servicesList.filter((service) => service.isFeatured).slice(0, 3)
+  const totalServices = Number(pagination.total || servicesList.length || 0)
+  const totalCategories = categories.length
+  const averageRating = servicesList.length
+    ? servicesList.reduce((sum, service) => sum + getServiceRating(service), 0) / servicesList.length
+    : 0
+  const activeCategoryName =
+    categories.find((cat) => String(cat._id) === String(category))?.name ||
+    'All services'
 
   return (
-    <div className="min-h-screen bg-[#f5f8fc] pb-14">
-      <section className="border-b border-[#0d4697]/10 bg-[radial-gradient(circle_at_15%_20%,rgba(255,174,19,.20),transparent_26%),linear-gradient(120deg,#082d66,#0d4697_58%,#1660b7)]">
-        <div className="mx-auto max-w-7xl px-5 py-12 sm:py-14 lg:px-8">
-          <p className="text-xs font-black uppercase tracking-[0.24em] text-[#ffd36e]">Gloaro business network</p>
-          <h1 className="mt-3 font-playfair text-4xl font-bold italic text-white sm:text-5xl">B2B Services</h1>
-          <p className="mt-3 max-w-2xl text-base font-medium leading-7 text-blue-50/90 sm:text-lg">Find trusted specialists, compare business solutions, and connect with verified providers built for growth.</p>
-        </div>
-      </section>
-      <div className="mx-auto max-w-7xl px-5 py-8 lg:px-8">
-      <div className="mb-8 rounded-[26px] border border-slate-200 bg-white p-4 shadow-[0_14px_40px_rgba(15,23,42,.07)] sm:p-5">
-        <div className="mb-3 flex items-center justify-between"><p className="text-sm font-extrabold text-slate-800">Browse available services</p><p className="text-xs font-semibold text-slate-400">Refine your search</p></div>
-        <div className="flex flex-col gap-3 lg:flex-row">
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => { setSearch(e.target.value); setPage(1) }}
-            placeholder="Search services, providers, or business needs..."
-            className="h-12 w-full flex-1 rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm font-bold text-slate-800 outline-none transition focus:border-[#0d4697] focus:bg-white focus:ring-4 focus:ring-[#0d4697]/10"
-          />
-          <select
-            value={category}
-            onChange={(e) => { setCategory(e.target.value); setPage(1) }}
-            className="h-12 rounded-xl border border-slate-200 bg-white px-4 text-sm font-bold text-slate-700 outline-none transition focus:border-[#0d4697] focus:ring-4 focus:ring-[#0d4697]/10"
-          >
-            <option value="">All Categories</option>
-            {categories.map((cat) => (
-              <option key={cat._id} value={cat._id}>{cat.name}</option>
-            ))}
-          </select>
-          <select
-            value={sortBy}
-            onChange={(e) => { setSortBy(e.target.value); setPage(1) }}
-            className="h-12 rounded-xl border border-slate-200 bg-white px-4 text-sm font-bold text-slate-700 outline-none transition focus:border-[#0d4697] focus:ring-4 focus:ring-[#0d4697]/10"
-          >
-            <option value="">Sort By</option>
-            <option value="newest">Newest</option>
-            <option value="pricing.minPrice">Price: Low to High</option>
-            <option value="-pricing.minPrice">Price: High to Low</option>
-            <option value="title">Alphabetical</option>
-          </select>
-        </div>
-      </div>
+    <main className="relative overflow-hidden bg-[radial-gradient(circle_at_top_left,_rgba(255,183,77,0.16),_transparent_34%),radial-gradient(circle_at_top_right,_rgba(13,70,151,0.18),_transparent_28%),linear-gradient(180deg,_#f8fbff_0%,_#f5f7fb_38%,_#eef4ff_100%)] px-4 py-8 sm:px-6 lg:px-8">
+      <div className="absolute left-[-8rem] top-24 h-64 w-64 rounded-full bg-[#0d4697]/10 blur-3xl" />
+      <div className="absolute right-[-6rem] top-56 h-72 w-72 rounded-full bg-[#ffb20c]/15 blur-3xl" />
 
-      {loading ? (
-        <div className="flex h-60 items-center justify-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#0d4697]" />
-        </div>
-      ) : servicesList.length === 0 ? (
-        <EmptyState title="No services found" description="Try searching for another service or selecting a different category." />
-      ) : (
-        <>
-          <div className="mb-5 flex items-center justify-between"><p className="text-sm font-bold text-slate-500"><span className="font-black text-[#0d4697]">{pagination.total || servicesList.length}</span> services available</p><div className="ml-4 h-px flex-1 bg-slate-200" /></div>
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {servicesList.map((service) => {
-              const vendor = service.vendor || {}
-              const providerName = vendor.user?.name || vendor.ownerName || 'Gloaro vendor'
-              const businessName = vendor.businessName || 'Gloaro business'
-              const address = vendor.address || {}
-              const location = [address.city, address.state].filter(Boolean).join(', ') || 'Location not listed'
+      <div className="relative mx-auto max-w-7xl">
+        <section
+          className={`overflow-hidden rounded-[2rem] border border-white/60 bg-white/75 p-6 shadow-[0_20px_70px_rgba(15,23,42,0.12)] backdrop-blur-xl transition-all duration-700 sm:p-8 lg:p-10 ${mounted ? 'translate-y-0 opacity-100' : 'translate-y-5 opacity-0'}`}
+        >
+          <div className="grid gap-8 lg:grid-cols-[1.15fr_0.85fr] lg:items-center">
+            <div>
+              <div className="inline-flex items-center gap-2 rounded-full border border-[#0d4697]/15 bg-[#0d4697]/10 px-4 py-2 text-[11px] font-black uppercase tracking-[0.24em] text-[#0d4697]">
+                <Sparkles className="h-3.5 w-3.5" />
+                Premium B2B Services
+              </div>
+              <h1 className="mt-5 max-w-3xl font-playfair text-4xl font-black leading-tight text-slate-950 sm:text-5xl lg:text-6xl">
+                Discover polished, vendor-led services built for serious business work.
+              </h1>
+              <p className="mt-4 max-w-2xl text-sm font-medium leading-7 text-slate-600 sm:text-base">
+                Compare verified providers, explore premium service packages, and send qualified enquiries from one refined marketplace.
+              </p>
 
-              return (
-                <article key={service._id} className="group flex min-h-full flex-col overflow-hidden rounded-[24px] border border-slate-200/80 bg-white shadow-[0_10px_28px_rgba(15,23,42,.07)] transition duration-300 hover:-translate-y-1.5 hover:border-[#0d4697]/30 hover:shadow-[0_20px_42px_rgba(13,70,151,.16)]">
+              <div className="mt-6 flex flex-wrap gap-3">
+                {[
+                  { label: `${totalServices.toLocaleString()} Services`, value: 'Marketplace ready' },
+                  { label: `${totalCategories.toLocaleString()} Categories`, value: activeCategoryName },
+                  { label: averageRating ? `${averageRating.toFixed(1)} Avg Rating` : 'New premium listings', value: 'Vendor quality signal' },
+                ].map((item) => (
+                  <div key={item.label} className="rounded-2xl border border-slate-200/80 bg-white px-4 py-3 shadow-sm">
+                    <p className="text-sm font-black text-slate-900">{item.label}</p>
+                    <p className="mt-0.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">{item.value}</p>
+                  </div>
+                ))}
+              </div>
+
+              <div className="mt-6 flex flex-wrap gap-2">
+                {categories.slice(0, 6).map((cat) => {
+                  const active = String(category) === String(cat._id)
+                  return (
+                    <button
+                      key={cat._id}
+                      type="button"
+                      onClick={() => { setCategory(active ? '' : cat._id); setPage(1) }}
+                      className={`rounded-full px-4 py-2 text-xs font-black uppercase tracking-[0.18em] transition ${active ? 'bg-[#0d4697] text-white shadow-lg shadow-[#0d4697]/20' : 'border border-slate-200 bg-white text-slate-600 hover:border-[#0d4697]/30 hover:text-[#0d4697]'}`}
+                    >
+                      {cat.name}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+
+            <div className="relative">
+              <div className="absolute inset-0 rounded-[2rem] bg-gradient-to-br from-[#0d4697] via-[#133c7b] to-[#0f2447] opacity-95 shadow-[0_30px_80px_rgba(13,70,151,0.35)]" />
+              <div className="relative overflow-hidden rounded-[2rem] p-6 text-white sm:p-7">
+                <div className="absolute right-0 top-0 h-32 w-32 rounded-bl-full bg-white/10" />
+                <div className="absolute -left-10 bottom-0 h-28 w-28 rounded-full bg-[#ffb20c]/20 blur-2xl" />
+                <div className="flex items-center justify-between gap-3">
                   <div>
-                    <div className="relative aspect-[16/10] overflow-hidden bg-slate-100">
-                      <img 
-                        src={service.gallery?.[0]?.url || '/logo.png'} 
-                        alt={service.title} 
-                        className="h-full w-full object-cover transition duration-700 group-hover:scale-110" 
-                      />
-                    </div>
-                    <div className="p-5">
-                      <span className="text-[10px] font-black uppercase tracking-[0.1em] text-[#0d4697]">
-                        {service.category?.name || 'Service'}
-                      </span>
-                      <h3 className="mt-1 text-lg font-extrabold leading-tight text-slate-900 line-clamp-1 group-hover:text-[#0d4697] transition">
-                        {service.title}
-                      </h3>
-                      <p className="mt-2 min-h-10 text-sm font-medium leading-5 text-slate-500 line-clamp-2">
-                        {service.shortDescription || service.description}
-                      </p>
-                      <div className="mt-2 space-y-1 border-t border-slate-100 pt-2 text-[11px] font-semibold text-slate-500">
-                        <p>Provider: {providerName}</p>
-                        <p>Business: {businessName}</p>
-                        <p className="text-slate-400">📍 {location}</p>
+                    <p className="text-[10px] font-black uppercase tracking-[0.28em] text-white/70">B2B service spotlight</p>
+                    <h2 className="mt-2 text-2xl font-black">Fast, credible, and enquiry ready.</h2>
+                  </div>
+                  <div className="rounded-2xl bg-white/15 px-3 py-2 text-right backdrop-blur">
+                    <p className="text-[10px] font-black uppercase tracking-[0.18em] text-white/60">Curated</p>
+                    <p className="text-lg font-black text-[#ffdf8a]">{featuredServices.length || 3}</p>
+                  </div>
+                </div>
+
+                <div className="mt-6 space-y-3">
+                  {[
+                    ['Verified vendors', 'Strong business profiles, service readiness, and professional presentation.'],
+                    ['Premium discovery', 'Cleaner cards, stronger hierarchy, and faster filtering.'],
+                    ['Business enquiries', 'Send structured briefs straight to the vendor inbox.'],
+                  ].map(([title, description]) => (
+                    <div key={title} className="rounded-2xl border border-white/10 bg-white/8 p-4">
+                      <div className="flex items-start gap-3">
+                        <div className="grid h-10 w-10 place-items-center rounded-xl bg-white/15">
+                          <BadgeCheck className="h-5 w-5 text-[#ffdf8a]" />
+                        </div>
+                        <div>
+                          <p className="font-black text-white">{title}</p>
+                          <p className="mt-1 text-sm leading-6 text-white/75">{description}</p>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                  <div className="mt-auto flex items-center justify-between border-t border-slate-100 bg-slate-50/70 p-5">
-                    <div className="flex flex-col">
-                      <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">Starting at</span>
-                      <span className="mt-0.5 text-lg font-black text-[#0d4697]">
-                        {getServicePriceText(service)}
-                      </span>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className={`mt-6 rounded-[1.75rem] border border-slate-200/80 bg-white/85 p-4 shadow-[0_18px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl transition-all duration-700 delay-100 ${mounted ? 'translate-y-0 opacity-100' : 'translate-y-5 opacity-0'}`}>
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+            <div className="grid flex-1 gap-3 sm:grid-cols-3">
+              <label className="group flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 transition focus-within:border-[#0d4697]/30 focus-within:bg-white">
+                <Search className="h-4 w-4 text-slate-400 group-focus-within:text-[#0d4697]" />
+                <input
+                  type="text"
+                  value={search}
+                  onChange={(e) => { setSearch(e.target.value); setPage(1) }}
+                  placeholder="Search premium services"
+                  className="w-full bg-transparent text-sm font-semibold text-slate-900 outline-none placeholder:text-slate-400"
+                />
+              </label>
+              <label className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+                <BriefcaseBusiness className="h-4 w-4 text-slate-400" />
+                <select
+                  value={category}
+                  onChange={(e) => { setCategory(e.target.value); setPage(1) }}
+                  className="w-full bg-transparent text-sm font-semibold text-slate-900 outline-none"
+                >
+                  <option value="">All categories</option>
+                  {categories.map((cat) => (
+                    <option key={cat._id} value={cat._id}>{cat.name}</option>
+                  ))}
+                </select>
+              </label>
+              <label className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+                <Filter className="h-4 w-4 text-slate-400" />
+                <select
+                  value={sortBy}
+                  onChange={(e) => { setSortBy(e.target.value); setPage(1) }}
+                  className="w-full bg-transparent text-sm font-semibold text-slate-900 outline-none"
+                >
+                  <option value="">Sort by</option>
+                  <option value="newest">Newest</option>
+                  <option value="pricing.minPrice">Price: Low to High</option>
+                  <option value="-pricing.minPrice">Price: High to Low</option>
+                  <option value="title">Alphabetical</option>
+                </select>
+              </label>
+            </div>
+            <div className="flex items-center gap-2 rounded-2xl bg-[#0d4697]/8 px-4 py-3 text-sm font-bold text-slate-700">
+              <ShieldCheck className="h-4 w-4 text-[#0d4697]" />
+              Verified marketplace listings
+            </div>
+          </div>
+        </section>
+
+        {loading ? (
+          <div className="flex h-72 items-center justify-center">
+            <div className="rounded-3xl border border-slate-200 bg-white px-6 py-5 shadow-lg">
+              <div className="flex items-center gap-3">
+                <div className="h-5 w-5 animate-spin rounded-full border-2 border-[#0d4697] border-t-transparent" />
+                <p className="text-sm font-bold text-slate-600">Loading premium services...</p>
+              </div>
+            </div>
+          </div>
+        ) : servicesList.length === 0 ? (
+          <div className="mt-6">
+            <EmptyState title="No services found" description="Try another keyword or category to discover more premium offerings." />
+          </div>
+        ) : (
+          <div className="mt-6 grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+            {servicesList.map((service, index) => {  
+              const vendor = service.vendor || {}
+              const providerName = vendor.user?.name || vendor.ownerName || 'Gloaro vendor'
+              const location = getServiceLocation(vendor)
+              const accent = getServiceAccent(index)
+              const rating = getServiceRating(service)
+              const reviews = getServiceReviewCount(service)
+              const image = service.gallery?.[0]?.url || '/logo.png'
+
+              return (
+                <article
+                  key={service._id}
+                  style={{ transitionDelay: `${index * 70}ms` }}
+                  className={`group relative overflow-hidden rounded-[2rem] border border-white/70 bg-white shadow-[0_18px_60px_rgba(15,23,42,0.08)] transition-all duration-700 hover:-translate-y-1 hover:shadow-[0_22px_80px_rgba(15,23,42,0.15)] ${mounted ? 'translate-y-0 opacity-100' : 'translate-y-6 opacity-0'}`}
+                >
+                  <div className={`absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r ${accent}`} />
+                  <div className="relative">
+                    <div className="relative aspect-[4/3] overflow-hidden bg-slate-100">
+                      <img
+                        src={image}
+                        alt={service.title}
+                        className="h-full w-full object-cover transition duration-700 group-hover:scale-105"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/15 to-transparent" />
+                      <div className="absolute left-4 top-4 flex flex-wrap gap-2">
+                        <span className="rounded-full bg-white/90 px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-[#0d4697]">
+                          {service.category?.name || 'Service'}
+                        </span>
+                        {service.isFeatured && (
+                          <span className="rounded-full bg-[#ffb20c] px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-white">
+                            Featured
+                          </span>
+                        )}
+                      </div>
+                      <div className="absolute bottom-4 left-4 right-4 flex items-end justify-between gap-3">
+                        <div>
+                          <p className="text-[10px] font-black uppercase tracking-[0.2em] !text-white/65">Starting from</p>
+                          <p className="mt-1 text-2xl font-black !text-white">{getServicePriceText(service)}</p>
+                        </div>
+                        <div className="rounded-2xl bg-white/90 px-3 py-2 text-right shadow-lg backdrop-blur">
+                          <div className="flex items-center gap-1 text-sm font-black text-amber-500">
+                            <Star className="h-4 w-4 fill-current" />
+                            {rating ? rating.toFixed(1) : 'New'}
+                          </div>
+                          <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+                            {reviews ? `${reviews} reviews` : 'No reviews yet'}
+                          </p>
+                        </div>
+                      </div>
                     </div>
-                    <Link 
-                      to={`/services/${service._id}`} 
-                      className="rounded-xl bg-[#0d4697] px-4 py-2.5 text-xs font-extrabold text-white shadow-[0_8px_16px_rgba(13,70,151,.18)] transition hover:bg-[#08387a]"
-                    >
-                      View Details
-                    </Link>
+
+                    <div className="p-5">
+                      <h3 className="font-playfair text-2xl font-black leading-tight text-slate-950 transition group-hover:text-[#0d4697]">
+                        {service.title}
+                      </h3>
+                      <p className="mt-3 line-clamp-3 text-sm leading-6 text-slate-600">
+                        {service.shortDescription || service.description}
+                      </p>
+
+                      <div className="mt-4 grid gap-2 sm:grid-cols-2">
+                        <div className="flex items-center gap-2 rounded-2xl bg-slate-50 px-3 py-2 text-xs font-bold text-slate-600">
+                          <BriefcaseBusiness className="h-4 w-4 text-[#0d4697]" />
+                          {providerName}
+                        </div>
+                        <div className="flex items-center gap-2 rounded-2xl bg-slate-50 px-3 py-2 text-xs font-bold text-slate-600">
+                          <MapPin className="h-4 w-4 text-[#0d4697]" />
+                          {location}
+                        </div>
+                        {service.deliveryTime && (
+                          <div className="flex items-center gap-2 rounded-2xl bg-slate-50 px-3 py-2 text-xs font-bold text-slate-600">
+                            <Clock3 className="h-4 w-4 text-[#0d4697]" />
+                            {service.deliveryTime}
+                          </div>
+                        )}
+                        {service.features?.length ? (
+                          <div className="flex items-center gap-2 rounded-2xl bg-slate-50 px-3 py-2 text-xs font-bold text-slate-600">
+                            <Zap className="h-4 w-4 text-[#0d4697]" />
+                            {service.features[0]}
+                          </div>
+                        ) : null}
+                      </div>
+
+                      <div className="mt-5 flex gap-3">
+                        <Link
+                          to={`/services/${service._id}`}
+                          className="inline-flex flex-1 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#0d4697] to-[#1f6fd6] px-4 py-3 text-sm font-black text-white shadow-lg shadow-[#0d4697]/20 transition hover:translate-y-[-1px]"
+                        >
+                          View details
+                          <ArrowRight className="h-4 w-4" />
+                        </Link>
+                        <div className="inline-flex items-center rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-black text-slate-700">
+                          Premium
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </article>
               )
             })}
           </div>
+        )}
 
-          {pagination.totalPages > 1 && (
-            <div className="mt-4 flex items-center justify-end gap-2">
-              <button
-                disabled={page <= 1}
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
-                className="rounded-lg border border-slate-300 bg-white px-3 py-2 font-medium text-slate-700 transition-all duration-200 hover:border-blue-600 hover:bg-blue-600 hover:text-white disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400 disabled:opacity-70 disabled:hover:border-slate-200 disabled:hover:bg-slate-100 disabled:hover:text-slate-400"
-              >
-                Previous
-              </button>
-              <span className="text-sm font-medium text-slate-600">
-                Page {pagination.page} of {pagination.totalPages}
-              </span>
-              <button
-                disabled={page >= pagination.totalPages}
-                onClick={() => setPage((p) => Math.min(pagination.totalPages, p + 1))}
-                className="rounded-lg border border-slate-300 bg-white px-3 py-2 font-medium text-slate-700 transition-all duration-200 hover:border-blue-600 hover:bg-blue-600 hover:text-white disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400 disabled:opacity-70 disabled:hover:border-slate-200 disabled:hover:bg-slate-100 disabled:hover:text-slate-400"
-              >
-                Next
-              </button>
-            </div>
-          )}
-        </>
-      )}
+        {pagination.totalPages > 1 && (
+          <div className="mt-8 flex items-center justify-center gap-3">
+            <button
+              disabled={page <= 1}
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              className="rounded-full border border-slate-200 bg-white px-4 py-2.5 text-sm font-black text-slate-700 shadow-sm transition hover:border-[#0d4697]/30 hover:text-[#0d4697] disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Previous
+            </button>
+            <span className="rounded-full bg-white px-4 py-2.5 text-sm font-bold text-slate-600 shadow-sm">
+              Page {pagination.page} of {pagination.totalPages}
+            </span>
+            <button
+              disabled={page >= pagination.totalPages}
+              onClick={() => setPage((p) => Math.min(pagination.totalPages, p + 1))}
+              className="rounded-full border border-slate-200 bg-white px-4 py-2.5 text-sm font-black text-slate-700 shadow-sm transition hover:border-[#0d4697]/30 hover:text-[#0d4697] disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Next
+            </button>
+          </div>
+        )}
       </div>
-    </div>
+    </main>
   )
 }
 

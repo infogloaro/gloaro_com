@@ -348,6 +348,8 @@ export function VendorProductsPage() {
     formData.append('category', data.category)
     formData.append('pricing[mrp]', data.pricing?.mrp)
     formData.append('pricing[sellingPrice]', data.pricing?.sellingPrice)
+    formData.append('pricing[taxPercent]', data.pricing?.taxPercent ?? 12)
+    formData.append('shippingInfo[shippingCharge]', data.shippingInfo?.shippingCharge ?? 0)
     formData.append('inventory[quantity]', data.inventory?.quantity ?? 0)
     if (data.images && data.images.length > 0) {
       for (let i = 0; i < data.images.length; i++) {
@@ -470,6 +472,8 @@ export function VendorProductsPage() {
               { name: 'category', label: 'Category', type: 'select', options: categories, required: true },
               { name: 'pricing.mrp', label: 'MRP (₹)', type: 'number', required: true },
               { name: 'pricing.sellingPrice', label: 'Selling Price (₹)', type: 'number', required: true },
+              { name: 'pricing.taxPercent', label: 'GST / Tax (%)', type: 'number', required: true },
+              { name: 'shippingInfo.shippingCharge', label: 'Shipping Charge (₹)', type: 'number', required: true },
               { name: 'inventory.quantity', label: 'Stock Quantity', type: 'number', required: true },
               { name: 'images', label: 'Product Images', type: 'file' }
             ]}
