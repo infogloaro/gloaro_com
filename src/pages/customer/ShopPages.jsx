@@ -934,10 +934,22 @@ function ShopHeroShowcase({
   onSearchSubmit,
 }) {
   const [ref, inView] = useInViewOnce(0.08);
+  const [locationOpen, setLocationOpen] = useState(false);
   const visibleCategories = useMemo(
     () => buildShopHeroCategories(categories),
     [categories],
   );
+  const selectedDistrict = useMemo(
+    () =>
+      (districts || []).find(
+        (district) => String(district?._id) === String(locationValue),
+      ),
+    [districts, locationValue],
+  );
+  const locationLabel =
+    locationValue === "__current"
+      ? "Current Location"
+      : selectedDistrict?.name || "All Locations";
 
   const handleLocationSelect = (value) => {
     if (value === "__current") onUseCurrentLocation?.();
