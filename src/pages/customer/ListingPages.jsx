@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { useForm } from 'react-hook-form'
 import {
@@ -509,8 +509,10 @@ export function VendorsPage() {
 }
 
 export function ProductsPage() {
+  const [searchParams] = useSearchParams()
+  const urlSearch = searchParams.get('search') || ''
   const [page, setPage] = useState(1)
-  const [search, setSearch] = useState('')
+  const [search, setSearch] = useState(() => urlSearch)
   const [category, setCategory] = useState('')
   const [sortBy, setSortBy] = useState('')
   const [categories, setCategories] = useState([])
@@ -682,8 +684,10 @@ export function ProductsPage() {
 }
 
 export function ServicesPage() {
+  const [searchParams] = useSearchParams()
+  const urlSearch = searchParams.get('search') || ''
   const [page, setPage] = useState(1)
-  const [search, setSearch] = useState('')
+  const [search, setSearch] = useState(() => urlSearch)
   const [category, setCategory] = useState('')
   const [sortBy, setSortBy] = useState('')
   const [categories, setCategories] = useState([])
