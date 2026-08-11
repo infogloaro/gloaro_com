@@ -470,11 +470,21 @@ export default function Home() {
         <div aria-hidden="true" className="gl-float-a pointer-events-none absolute -left-16 top-10 h-56 w-56 rounded-full bg-[#ffae13]/20 blur-3xl" />
         <div aria-hidden="true" className="gl-float-b pointer-events-none absolute right-0 bottom-6 h-64 w-64 rounded-full bg-[#1f66d2]/25 blur-3xl" />
         <div className="relative mx-auto flex min-h-[530px] max-w-7xl flex-col items-center px-4 pb-32 pt-9 text-center sm:min-h-[610px] sm:px-6 sm:pt-10 lg:px-8">
-          <div className="gl-fade-up gl-pulse-ring flex max-w-full items-center gap-2 rounded-2xl border border-white/15 bg-slate-400/40 px-3 py-2 shadow-xl backdrop-blur sm:px-7 sm:py-3"><img src={heroNetworkIcon} alt="Gloaro network" className="h-6 w-6 object-contain sm:h-8 sm:w-8" /><span className="text-sm font-semibold tracking-tight text-white sm:text-2xl">GLOARO BUSINESS NETWORK</span></div>
+          <div className="gl-fade-up gl-pulse-ring flex max-w-full items-center gap-2 rounded-2xl border border-white/15 bg-slate-400/40 px-3 py-2 shadow-xl backdrop-blur sm:px-7 sm:py-3">
+  <img
+    src={heroNetworkIcon}
+    alt="Gloaro network"
+    className="h-6 w-6 object-contain sm:h-8 sm:w-8"
+  />
+
+  <span className="font-serif italic text-sm font-semibold tracking-tight text-white sm:text-2xl">
+    ONE ECO SYSTEM MULTIPLE BUSINESS SOLUTION
+  </span>
+</div>
           <div className="mt-4 flex w-full max-w-5xl flex-col items-center sm:mt-5">
             <h2 className="gl-fade-up max-w-full font-urbanist text-2xl font-extrabold uppercase leading-tight tracking-[0.06em] text-white sm:text-3xl md:text-4xl lg:text-5xl" style={{ animationDelay: '120ms' }}>GLOARO BUSINESS NETWORK</h2>
             <p className="gl-fade-up mt-1 font-playfair text-xl font-bold italic leading-tight text-[#f6a600] sm:text-2xl md:text-3xl lg:text-4xl" style={{ animationDelay: '220ms' }}>Innovate the Digital Future</p>
-            <p className="gl-fade-up mt-3 max-w-full rounded-full border border-[#ffae13]/45 bg-[#061633]/45 px-4 py-2 font-urbanist text-[11px] font-bold uppercase leading-5 tracking-[0.08em] text-white shadow-lg shadow-black/20 backdrop-blur sm:px-5 sm:text-sm sm:tracking-[0.14em]" style={{ animationDelay: '320ms' }}>One eco system multiple business solution</p>
+            {/* <p className="gl-fade-up mt-3 max-w-full rounded-full border border-[#ffae13]/45 bg-[#061633]/45 px-4 py-2 font-urbanist text-[11px] font-bold uppercase leading-5 tracking-[0.08em] text-white shadow-lg shadow-black/20 backdrop-blur sm:px-5 sm:text-sm sm:tracking-[0.14em]" style={{ animationDelay: '320ms' }}>One eco system multiple business solution</p> */}
           </div>
           <h1 className="mt-5 max-w-5xl font-playfair text-3xl font-medium italic leading-[1.02] tracking-tight text-white sm:mt-6 sm:text-5xl md:text-6xl lg:text-7xl">
             <span className="gl-fade-up block" style={{ animationDelay: '420ms' }}>We Give. <span className="gl-gold-text">We Grow.</span></span>
