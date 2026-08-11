@@ -128,18 +128,18 @@ export default function Register() {
       initial={{ opacity: 0, y: 18 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-      className="w-full overflow-hidden rounded-[34px] border border-white/70 bg-[linear-gradient(180deg,rgba(255,255,255,0.98),rgba(247,250,255,0.98))] p-6 shadow-[0_28px_90px_rgba(15,23,42,.12)] sm:p-8"
+      className="w-full overflow-hidden rounded-[28px] border border-white/70 bg-[linear-gradient(180deg,rgba(255,255,255,0.98),rgba(247,250,255,0.98))] p-5 shadow-[0_24px_70px_rgba(15,23,42,.11)] sm:p-6 lg:p-7"
     >
-      <div className="inline-flex items-center gap-2 rounded-full border border-[#0d4697]/10 bg-white px-4 py-2 text-[11px] font-black uppercase tracking-[0.24em] text-[#0d4697] shadow-sm">
+      {/* <div className="inline-flex items-center gap-2 rounded-full border border-[#0d4697]/10 bg-white px-4 py-2 text-[11px] font-black uppercase tracking-[0.24em] text-[#0d4697] shadow-sm">
         <BadgeCheck className="h-4 w-4 text-[#ffae13]" />
         Join the network
-      </div>
-      <h2 className="mt-5 font-playfair text-4xl font-bold italic leading-[0.92] text-[#0d4697] sm:text-5xl">
+      </div> */}
+      <h2 className="font-playfair text-3xl font-bold italic leading-[0.92] text-[#0d4697] sm:text-4xl lg:text-[2.55rem]">
         {title}
       </h2>
-      <p className="mt-4 max-w-md text-sm font-medium leading-7 text-slate-600">{roleDescription}</p>
+      <p className="mt-3 max-w-md text-sm font-medium leading-6 text-slate-600">{roleDescription}</p>
 
-      <div className="mt-6 grid gap-3 sm:grid-cols-3">
+      {/* <div className="mt-6 grid gap-3 sm:grid-cols-3">
         {[
           ['Secure signup', 'Protected onboarding flow'],
           ['Flexible roles', 'Choose customer, member, or vendor'],
@@ -150,14 +150,14 @@ export default function Register() {
             <p className="mt-1 text-xs font-semibold leading-5 text-slate-500">{text}</p>
           </div>
         ))}
-      </div>
+      </div> */}
 
-      <div className="mt-6 space-y-4">
+      <div className="mt-5 space-y-3">
         <FormField label="Role">
           <select
             value={role}
             onChange={(event) => handleRoleChange(event.target.value)}
-            className="h-12 w-full rounded-2xl border border-slate-200 bg-white px-4 outline-none transition focus:border-[#0d4697] focus:ring-4 focus:ring-[#0d4697]/10"
+            className="h-11 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold outline-none transition focus:border-[#0d4697] focus:ring-4 focus:ring-[#0d4697]/10"
           >
             {REGISTER_ROLES.map((option) => (
               <option key={option.value} value={option.value}>{option.label}</option>
@@ -173,7 +173,7 @@ export default function Register() {
               nameField.onChange(event)
             }}
             autoComplete="name"
-            className="h-12 w-full rounded-2xl border border-slate-200 bg-white px-4 outline-none transition placeholder:text-slate-400 focus:border-[#0d4697] focus:ring-4 focus:ring-[#0d4697]/10"
+            className="h-11 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold outline-none transition placeholder:text-slate-400 focus:border-[#0d4697] focus:ring-4 focus:ring-[#0d4697]/10"
           />
         </FormField>
 
@@ -181,7 +181,7 @@ export default function Register() {
           <input
             {...register('email', { required: 'Email is required' })}
             type="email"
-            className="h-12 w-full rounded-2xl border border-slate-200 bg-white px-4 outline-none transition placeholder:text-slate-400 focus:border-[#0d4697] focus:ring-4 focus:ring-[#0d4697]/10"
+            className="h-11 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold outline-none transition placeholder:text-slate-400 focus:border-[#0d4697] focus:ring-4 focus:ring-[#0d4697]/10"
           />
         </FormField>
 
@@ -196,7 +196,7 @@ export default function Register() {
             inputMode="numeric"
             maxLength={10}
             autoComplete="tel"
-            className="h-12 w-full rounded-2xl border border-slate-200 bg-white px-4 outline-none transition placeholder:text-slate-400 focus:border-[#0d4697] focus:ring-4 focus:ring-[#0d4697]/10"
+            className="h-11 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold outline-none transition placeholder:text-slate-400 focus:border-[#0d4697] focus:ring-4 focus:ring-[#0d4697]/10"
           />
         </FormField>
 
@@ -208,7 +208,7 @@ export default function Register() {
                 minLength: { value: 8, message: 'Minimum 8 characters' },
               })}
               type={showPassword ? 'text' : 'password'}
-              className="h-12 w-full rounded-2xl border border-slate-200 bg-white px-4 pr-12 outline-none transition placeholder:text-slate-400 focus:border-[#0d4697] focus:ring-4 focus:ring-[#0d4697]/10"
+              className="h-11 w-full rounded-xl border border-slate-200 bg-white px-4 pr-12 text-sm font-semibold outline-none transition placeholder:text-slate-400 focus:border-[#0d4697] focus:ring-4 focus:ring-[#0d4697]/10"
             />
             <button
               type="button"
@@ -221,7 +221,7 @@ export default function Register() {
           </div>
         </FormField>
 
-        <label className="flex items-start gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm font-semibold text-slate-600">
+        <label className="flex items-start gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold leading-5 text-slate-600">
           <input
             type="checkbox"
             {...register('termsAccepted', { required: 'Please accept the terms and conditions' })}
@@ -249,13 +249,13 @@ export default function Register() {
                 value={referralCode}
                 onChange={(event) => setReferralCode(event.target.value)}
                 placeholder="e.g. GLR-REF-000245"
-                className="h-12 flex-1 rounded-2xl border border-slate-200 bg-white px-4 outline-none font-bold text-slate-800 transition placeholder:text-slate-400 focus:border-[#0d4697] focus:ring-4 focus:ring-[#0d4697]/10"
+                className="h-11 flex-1 rounded-xl border border-slate-200 bg-white px-4 text-sm font-bold text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-[#0d4697] focus:ring-4 focus:ring-[#0d4697]/10"
               />
               <button
                 type="button"
                 onClick={handleValidateReferral}
                 disabled={validatingCode}
-                className="h-12 shrink-0 rounded-full bg-[linear-gradient(135deg,#0d4697,#1b6fe0)] px-4 text-xs font-extrabold text-white shadow-[0_12px_26px_rgba(13,70,151,0.18)] transition duration-300 hover:-translate-y-0.5 disabled:translate-y-0 disabled:opacity-60"
+                className="h-11 shrink-0 rounded-full bg-[linear-gradient(135deg,#0d4697,#1b6fe0)] px-4 text-xs font-extrabold text-white shadow-[0_12px_26px_rgba(13,70,151,0.18)] transition duration-300 hover:-translate-y-0.5 disabled:translate-y-0 disabled:opacity-60"
               >
                 {validatingCode ? 'Checking...' : 'Validate'}
               </button>
@@ -280,18 +280,18 @@ export default function Register() {
 
       <button
         disabled={isSubmitting}
-        className="mt-6 inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-[linear-gradient(135deg,#0d4697,#1b6fe0)] px-5 font-extrabold text-white shadow-[0_16px_34px_rgba(13,70,151,0.22)] transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_20px_42px_rgba(13,70,151,0.28)] disabled:translate-y-0 disabled:opacity-60"
+        className="mt-5 inline-flex h-11 w-full items-center justify-center gap-2 rounded-full bg-[linear-gradient(135deg,#0d4697,#1b6fe0)] px-5 font-extrabold text-white shadow-[0_14px_28px_rgba(13,70,151,0.20)] transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_18px_34px_rgba(13,70,151,0.25)] disabled:translate-y-0 disabled:opacity-60"
       >
         {isSubmitting ? 'Creating...' : 'Create Account'}
         {!isSubmitting && <ArrowRight className="h-4 w-4" />}
       </button>
 
-      <div className="mt-6 rounded-2xl border border-[#0d4697]/10 bg-[#f8fbff] p-4">
-        <div className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.2em] text-[#0d4697]">
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-[#0d4697]/10 bg-[#f8fbff] px-4 py-3">
+        <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.18em] text-[#0d4697]">
           <ShieldCheck className="h-4 w-4 text-[#ffae13]" />
           Guided onboarding
         </div>
-        <p className="mt-2 text-sm font-medium leading-6 text-slate-600">
+        <p className="text-sm font-medium text-slate-600">
           Already have an account? <Link to="/login" className="font-extrabold text-[#0d4697] transition hover:text-[#082e70]">Sign in</Link>
         </p>
       </div>
