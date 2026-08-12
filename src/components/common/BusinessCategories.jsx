@@ -13,7 +13,7 @@ const serviceItems = [
 
 export default function BusinessCategories({ className = '' }) {
   return (
-    <section id="business-categories" className={`relative isolate overflow-hidden bg-[linear-gradient(180deg,#0d4697_0%,#0a357c_100%)] px-5 py-14 sm:py-16 lg:px-8 lg:py-20 ${className}`}>
+    <section id="business-categories" className={`relative isolate scroll-mt-48 overflow-hidden bg-[linear-gradient(180deg,#0d4697_0%,#0a357c_100%)] px-5 py-14 sm:py-16 lg:scroll-mt-52 lg:px-8 lg:py-20 ${className}`}>
       <div aria-hidden="true" className="absolute -left-20 top-8 h-56 w-56 rounded-full bg-[#ffae13]/12 blur-3xl" />
       <div aria-hidden="true" className="absolute right-0 bottom-0 h-72 w-72 rounded-full bg-white/8 blur-3xl" />
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,174,19,0.14),transparent_28%),radial-gradient(circle_at_bottom_right,rgba(255,255,255,0.08),transparent_30%)]" />

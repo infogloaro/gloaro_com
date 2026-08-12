@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import BusinessCategories from '../components/common/BusinessCategories'
 import { ArrowRight, BadgeCheck, CalendarDays, ChevronDown, Clock3, Mail, MapPin, PhoneCall, ShieldCheck, Sparkles, ShoppingBag, ShoppingCart, Store, Ticket, UserRound, UsersRound } from 'lucide-react'
 import heroNetworkIcon from '../assets/hero_net_icon.png'
@@ -14,7 +14,6 @@ import benefitImage6 from '../assets/img6.png'
 import benefitImage7 from '../assets/img7.png'
 import benefitImage8 from '../assets/img8.png'
 import benefitImage9 from '../assets/img9.png'
-import brandIcon from '../assets/brand_icon.png'
 import analyticsIcon from '../assets/analytics.png'
 import programIcon from '../assets/program.png'
 import offerIcon from '../assets/offers.png'
@@ -73,7 +72,7 @@ const premiumBenefits = [
   [growthIcon, 'Business Growth Training & Workshops', 'Learn from industry experts and enhance your professional skills.'],
   [programIcon, 'Entrepreneur Development Programs', 'Programs designed to strengthen your business mindset and strategy.'],
   [analyticsIcon, 'Business Networking Opportunities', 'Connect with entrepreneurs, business leaders, and industry experts to expand your professional network.'],
-  [brandIcon, 'Brand Building & Personal Branding', 'Create a powerful brand identity and build your market presence.'],
+  [heroNetworkIcon, 'Brand Building & Personal Branding', 'Create a powerful brand identity and build your market presence.'],
   [offerIcon, 'Exclusive Member-to-Member Offers', 'Enjoy special offers and discounts from fellow community members.'],
   [rocketIcon, 'Startup & SME Growth Guidance', 'Special support for startups and small-to-medium businesses.'],
 ]
@@ -243,6 +242,7 @@ function CountUpStat({ value }) {
 }
 
 export default function Home() {
+  const location = useLocation()
   const [activeSlide, setActiveSlide] = useState(0)
   const [leaderCardsPerView, setLeaderCardsPerView] = useState(getLeaderCardsPerView)
   const [featuredBusinessesPaused, setFeaturedBusinessesPaused] = useState(false)
@@ -304,7 +304,7 @@ export default function Home() {
   }, [])
 
   useEffect(() => {
-    const targetId = window.location.hash.slice(1)
+    const targetId = location.hash.slice(1)
     if (!targetId) return
 
     const scrollToTarget = () => {
@@ -329,7 +329,7 @@ export default function Home() {
       window.cancelAnimationFrame(frameId)
       window.clearTimeout(timeoutId)
     }
-  }, [])
+  }, [location.hash, location.pathname])
   const businesses = [
     ['Google India Pvt. Ltd.', 'Technology', 'https://images.unsplash.com/photo-1573804633927-bfcbcd909acd?auto=format&fit=crop&w=600&q=80', 'G', 'text-[#4285f4]'],
     ['Eco-Manu Corp', 'Manufacturing', 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=600&q=80', '⌂', 'text-[#03a66a]'],
@@ -516,7 +516,7 @@ export default function Home() {
     </div>
 
     {/* 2. Why Gloaro */}
-    <section id="why-gloaro" className="relative isolate overflow-hidden bg-[#fdf9e9] py-14 sm:py-18 lg:py-24">
+    <section id="why-gloaro" className="relative isolate scroll-mt-48 overflow-hidden bg-[#fdf9e9] py-14 sm:py-18 lg:scroll-mt-52 lg:py-24">
       <div aria-hidden="true" className="absolute -left-20 top-10 h-56 w-56 rounded-full bg-[#0d4697]/8 blur-3xl" />
       <div aria-hidden="true" className="absolute right-0 bottom-0 h-72 w-72 rounded-full bg-[#ffae13]/12 blur-3xl" />
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(13,70,151,0.07),transparent_30%),radial-gradient(circle_at_bottom_right,rgba(255,174,19,0.12),transparent_28%)]" />
@@ -601,7 +601,7 @@ export default function Home() {
    
 
     {/* 4. Features */}
-    <section id="features" className="border-t-4 border-[#0d4697] bg-[#fdf9e9] py-12 sm:py-16 lg:py-18"><div className="mx-auto grid max-w-5xl items-center gap-10 px-5 lg:grid-cols-[1.15fr_.85fr] lg:gap-16 lg:px-8"><div><Reveal><h2 className="font-playfair text-4xl font-semibold leading-tight sm:text-5xl"><span className="italic text-[#ffae13]">Features</span> of <span className="italic text-[#0d4697]">Gloaro</span> <span className="font-play not-italic text-[#0d4697]">360</span></h2></Reveal><div className="mt-4 space-y-5 font-urbanist">{whyGloaroPoints.map((point, index) => <Reveal key={point.title} delay={index * 120} direction="left" className="border-l-2 border-[#ffae13]/40 pl-4"><h3 className="text-xl font-bold text-[#0d4697]">{index + 1}. {point.title}</h3><p className="mt-1 text-base font-semibold leading-[1.28] text-[#161616]">{point.description}</p></Reveal>)}</div></div><Reveal direction="right" delay={150}><img src={whyImage} alt="Business team in a strategy meeting" className="h-72 w-full rounded-[28px] object-cover shadow-md transition duration-500 hover:shadow-2xl sm:h-96 lg:h-[330px]" /></Reveal></div></section>
+    <section id="features" className="border-t-4 border-[#0d4697] scroll-mt-48 bg-[#fdf9e9] py-12 sm:py-16 lg:scroll-mt-52 lg:py-18"><div className="mx-auto grid max-w-5xl items-center gap-10 px-5 lg:grid-cols-[1.15fr_.85fr] lg:gap-16 lg:px-8"><div><Reveal><h2 className="font-playfair text-4xl font-semibold leading-tight sm:text-5xl"><span className="italic text-[#ffae13]">Features</span> of <span className="italic text-[#0d4697]">Gloaro</span> <span className="font-play not-italic text-[#0d4697]">360</span></h2></Reveal><div className="mt-4 space-y-5 font-urbanist">{whyGloaroPoints.map((point, index) => <Reveal key={point.title} delay={index * 120} direction="left" className="border-l-2 border-[#ffae13]/40 pl-4"><h3 className="text-xl font-bold text-[#0d4697]">{index + 1}. {point.title}</h3><p className="mt-1 text-base font-semibold leading-[1.28] text-[#161616]">{point.description}</p></Reveal>)}</div></div><Reveal direction="right" delay={150}><img src={whyImage} alt="Business team in a strategy meeting" className="h-72 w-full rounded-[28px] object-cover shadow-md transition duration-500 hover:shadow-2xl sm:h-96 lg:h-[330px]" /></Reveal></div></section>
 
     {/* 5. Gloaro 360 Ecosystem */}
     <section id="marketplace" className="bg-white px-5 py-10 sm:py-12 lg:px-8">
