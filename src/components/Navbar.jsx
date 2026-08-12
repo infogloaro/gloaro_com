@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import api from '../api/axios'
 import { useAuth } from '../hooks/useAuth'
@@ -213,9 +213,9 @@ export default function Navbar() {
   }
 
   const navItems = [
-    [nearMeIcon, 'Near Me', '/nearby', 'border border-slate-200/80 bg-white/70 text-slate-700 hover:border-slate-300 hover:bg-white', 'group-hover:-translate-y-0.5'],
     [shopIcon, 'Shop', '/products', 'border border-amber-200/80 bg-gradient-to-r from-amber-300 to-amber-200 text-[#073b7a] shadow-[0_12px_24px_rgba(255,174,19,0.16)] hover:shadow-[0_16px_30px_rgba(255,174,19,0.22)]', 'brightness-0 contrast-125'],
     [brandIcon, 'B2B Services', '/services', 'border border-emerald-200/80 bg-gradient-to-r from-emerald-500 to-emerald-400 text-white shadow-[0_12px_24px_rgba(16,185,129,0.18)] hover:shadow-[0_16px_30px_rgba(16,185,129,0.24)]', 'brightness-0 invert'],
+    [nearMeIcon, 'Near Me', '/nearby', 'border border-slate-200/80 bg-white/70 text-slate-700 hover:border-slate-300 hover:bg-white', 'group-hover:-translate-y-0.5'],
     // [aboutIcon, 'About', '/about', 'border border-amber-200/80 bg-white/80 text-[#073b7a] hover:border-amber-300 hover:bg-amber-50/90', ''],
   ]
 
@@ -239,9 +239,9 @@ export default function Navbar() {
           <div className="rounded-[28px] border border-white/70 bg-white/80 px-3 py-3 shadow-[0_16px_60px_rgba(11,70,158,0.12)] backdrop-blur-xl sm:px-4">
             <div className="pointer-events-none absolute inset-0 rounded-[28px] bg-[radial-gradient(circle_at_top_left,rgba(11,70,158,0.14),transparent_28%),radial-gradient(circle_at_top_right,rgba(255,178,12,0.16),transparent_24%)]" />
             <div className="relative flex min-w-0 items-center gap-2 xl:gap-3">
-              <a href="/" aria-label="Go to home page" className="group flex w-24 shrink-0 items-center lg:w-20 xl:w-28">
+              <Link to="/" aria-label="Go to home page" className="group flex w-24 shrink-0 items-center lg:w-20 xl:w-28">
                 <img src={logo} alt="Gloaro Business Network" className="h-auto w-full origin-left object-contain transition duration-300 group-hover:scale-[1.03] group-hover:drop-shadow-[0_8px_20px_rgba(11,70,158,0.12)]" />
-              </a>
+              </Link>
 
               <div className="hidden min-w-0 flex-1 items-center gap-1.5 lg:flex xl:gap-3">
                 <div className="relative shrink-0">
@@ -257,7 +257,7 @@ export default function Navbar() {
                   </button>
                 </div>
                 {navItems.map(([icon, label, href, colors, iconClass = '']) => (
-                  <a key={label} href={href} className={`group flex h-11 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full px-2 text-[11px] font-semibold transition duration-300 hover:-translate-y-0.5 xl:gap-2 xl:px-4 xl:text-sm ${colors}`}>
+                  <Link key={label} to={href} className={`group flex h-11 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full px-2 text-[11px] font-semibold transition duration-300 hover:-translate-y-0.5 xl:gap-2 xl:px-4 xl:text-sm ${colors}`}>
                     <span className="grid h-6 w-6 place-items-center rounded-full bg-white/70 ring-1 ring-black/5 xl:h-7 xl:w-7">
                       <img src={icon} alt="" className={`h-3.5 w-3.5 object-contain transition duration-300 group-hover:scale-110 ${iconClass}`} />
                     </span>
@@ -265,31 +265,31 @@ export default function Navbar() {
                       {label}
                       <span className="absolute -bottom-1 left-0 h-0.5 w-0 rounded-full bg-current transition-all duration-300 group-hover:w-full" />
                     </span>
-                  </a>
+                  </Link>
                 ))}
               </div>
 
               <div className="ml-auto hidden shrink-0 items-center gap-2 text-[#0b469e] lg:flex xl:gap-4">
                 {isAuthenticated ? (
-                  <a href={getDashboardRoute(user?.role, user)} aria-label="Open account dashboard" className="group flex h-11 items-center gap-2.5 rounded-full border border-[#0b469e]/15 bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(239,246,255,0.95))] px-2.5 pr-4 text-[#0b469e] shadow-[0_10px_24px_rgba(11,70,158,0.12)] transition duration-300 hover:-translate-y-0.5 hover:border-[#0b469e]/30 hover:shadow-[0_16px_30px_rgba(11,70,158,0.18)]">
+                  <Link to={getDashboardRoute(user?.role, user)} aria-label="Open account dashboard" className="group flex h-11 items-center gap-2.5 rounded-full border border-[#0b469e]/15 bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(239,246,255,0.95))] px-2.5 pr-4 text-[#0b469e] shadow-[0_10px_24px_rgba(11,70,158,0.12)] transition duration-300 hover:-translate-y-0.5 hover:border-[#0b469e]/30 hover:shadow-[0_16px_30px_rgba(11,70,158,0.18)]">
                     <span className="grid h-7 w-7 place-items-center rounded-full bg-[linear-gradient(135deg,#0b469e,#1b6fe0)] ring-2 ring-blue-100">
                       <img src={loginIcon} alt="" className="h-4 w-4 object-contain brightness-0 invert" />
                     </span>
                     <span className="max-w-32 truncate text-sm font-bold">{user?.name || 'Account'}</span>
                     <span className="text-xs transition duration-300 group-hover:translate-x-1">›</span>
-                  </a>
+                  </Link>
                 ) : (
                   <>
-                    <a href="/login" className="group flex items-center gap-1 text-xs font-semibold transition duration-300 hover:-translate-y-0.5 hover:text-[#0b469e] xl:gap-1.5 xl:text-sm">
+                    <Link to="/login" className="group flex items-center gap-1 text-xs font-semibold transition duration-300 hover:-translate-y-0.5 hover:text-[#0b469e] xl:gap-1.5 xl:text-sm">
                       <img src={loginIcon} alt="" className="h-4 w-4 object-contain xl:h-5 xl:w-5" />
                       <span className="relative">
                         Login
                         <span className="absolute -bottom-1 left-0 h-0.5 w-0 rounded-full bg-[#0b469e] transition-all duration-300 group-hover:w-full" />
                       </span>
-                    </a>
-                    <a href="/register" className="rounded-full border border-[#0b469e]/15 bg-[linear-gradient(135deg,#0b469e,#1b6fe0)] px-3 py-2 text-xs font-semibold text-white shadow-[0_12px_26px_rgba(11,70,158,0.2)] transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_16px_32px_rgba(11,70,158,0.26)] xl:px-4 xl:text-sm">
+                    </Link>
+                    <Link to="/register" className="rounded-full border border-[#0b469e]/15 bg-[linear-gradient(135deg,#0b469e,#1b6fe0)] px-3 py-2 text-xs font-semibold text-white shadow-[0_12px_26px_rgba(11,70,158,0.2)] transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_16px_32px_rgba(11,70,158,0.26)] xl:px-4 xl:text-sm">
                       Register
-                    </a>
+                    </Link>
                   </>
                 )}
               </div>
@@ -370,14 +370,14 @@ export default function Navbar() {
 
               <div className="hidden items-center gap-2 lg:flex">
                 {shopQuickLinks.map(([Icon, label, href]) => (
-                  <a
+                  <Link
                     key={label}
-                    href={href}
+                    to={href}
                     className="group flex h-11 items-center gap-2 rounded-full border border-slate-200/80 bg-white/85 px-3 text-sm font-semibold text-slate-700 shadow-[0_10px_22px_rgba(15,23,42,0.06)] transition duration-300 hover:-translate-y-0.5 hover:border-[#0b469e]/20 hover:text-[#0b469e] hover:shadow-[0_16px_28px_rgba(11,70,158,0.12)]"
                   >
                     <Icon className="h-4 w-4 transition duration-300 group-hover:scale-110" />
                     <span>{label}</span>
-                  </a>
+                  </Link>
                 ))}
               </div>
             </div>
@@ -418,39 +418,48 @@ export default function Navbar() {
                 <AnimatePresence>{mobileNetworkOpen && <MobileGloaroNetworkMenu key="mobile-network" onNavigate={() => setOpen(false)} />}</AnimatePresence>
 
                 <div className="grid gap-2 sm:grid-cols-2">
-                  {shopQuickLinks.map(([Icon, label, href]) => (
-                    <a
-                      key={label}
-                      onClick={() => setOpen(false)}
-                      href={href}
-                      className="flex items-center rounded-2xl border border-slate-200/80 bg-white px-4 py-3 font-semibold text-slate-700 shadow-sm transition hover:border-[#0b469e]/20 hover:text-[#0b469e]"
-                    >
-                      <Icon className="mr-2 h-4 w-4" />
-                      {label}
-                    </a>
-                  ))}
+                  {navItems.flatMap(([icon, label, href, colors, iconClass = '']) => {
+                    const mainItem = (
+                      <Link onClick={() => setOpen(false)} key={label} to={href} className={`flex items-center rounded-2xl px-4 py-3 font-semibold transition duration-300 ${colors}`}>
+                        <img src={icon} alt="" className={`mr-2 h-4 w-4 object-contain ${iconClass}`} />
+                        {label}
+                      </Link>
+                    )
+
+                    if (label === 'Shop') {
+                      const subItems = shopQuickLinks.map(([Icon, subLabel, subHref]) => (
+                        <Link
+                          key={subLabel}
+                          onClick={() => setOpen(false)}
+                          to={subHref}
+                          className="flex items-center rounded-2xl border border-slate-200/80 bg-white px-4 py-3 font-semibold text-slate-700 shadow-sm transition hover:border-[#0b469e]/20 hover:text-[#0b469e] ml-6 sm:ml-8"
+                        >
+                          <Icon className="mr-2 h-4 w-4 text-slate-400" />
+                          {subLabel}
+                        </Link>
+                      ))
+                      return [mainItem, ...subItems]
+                    }
+
+                    return [mainItem]
+                  })}
+
                   {isAuthenticated ? (
-                    <a onClick={() => setOpen(false)} href={getDashboardRoute(user?.role, user)} className="flex items-center rounded-2xl border border-[#0b469e]/10 bg-white px-4 py-3 font-semibold text-[#0b469e] shadow-sm sm:col-span-2">
+                    <Link onClick={() => setOpen(false)} to={getDashboardRoute(user?.role, user)} className="flex items-center rounded-2xl border border-[#0b469e]/10 bg-white px-4 py-3 font-semibold text-[#0b469e] shadow-sm sm:col-span-2">
                       <img src={loginIcon} alt="" className="mr-2 h-4 w-4 object-contain brightness-0 filter" />
                       {user?.name || 'Account'}
-                    </a>
+                    </Link>
                   ) : (
                     <>
-                      <a onClick={() => setOpen(false)} href="/login" className="flex items-center rounded-2xl border border-[#0b469e]/10 bg-white px-4 py-3 font-semibold text-[#0b469e] shadow-sm sm:col-span-2">
+                      <Link onClick={() => setOpen(false)} to="/login" className="flex items-center rounded-2xl border border-[#0b469e]/10 bg-white px-4 py-3 font-semibold text-[#0b469e] shadow-sm sm:col-span-2">
                         <img src={loginIcon} alt="" className="mr-2 h-4 w-4 object-contain brightness-0 filter" />
                         Login
-                      </a>
-                      <a onClick={() => setOpen(false)} href="/register" className="flex items-center justify-center rounded-2xl bg-[linear-gradient(135deg,#0b469e,#1b6fe0)] px-4 py-3 font-semibold text-white shadow-[0_14px_28px_rgba(11,70,158,0.2)] sm:col-span-2">
+                      </Link>
+                      <Link onClick={() => setOpen(false)} to="/register" className="flex items-center justify-center rounded-2xl bg-[linear-gradient(135deg,#0b469e,#1b6fe0)] px-4 py-3 font-semibold text-white shadow-[0_14px_28px_rgba(11,70,158,0.2)] sm:col-span-2">
                         Register
-                      </a>
+                      </Link>
                     </>
                   )}
-                  {navItems.map(([icon, label, href, colors, iconClass = '']) => (
-                    <a onClick={() => setOpen(false)} key={label} href={href} className={`flex items-center rounded-2xl px-4 py-3 font-semibold transition duration-300 ${colors}`}>
-                      <img src={icon} alt="" className={`mr-2 h-4 w-4 object-contain ${iconClass}`} />
-                      {label}
-                    </a>
-                  ))}
                 </div>
               </div>
             </div>
@@ -511,10 +520,10 @@ function MobileGloaroNetworkMenu({ onNavigate }) {
               <ul className="mt-4 space-y-2 pl-[3.25rem]">
                 {links.map((link) => (
                   <li key={link} className="text-sm font-medium text-black">
-                    <a href={getNetworkHref(link)} onClick={onNavigate} className={`inline-flex items-center gap-2 rounded-full px-3 py-1.5 transition hover:bg-[#f5f8ff] hover:text-[#0b469e] ${link === 'Join Gloaro Network' ? 'font-semibold text-[#0b469e]' : ''}`}>
+                    <Link to={getNetworkHref(link)} onClick={onNavigate} className={`inline-flex items-center gap-2 rounded-full px-3 py-1.5 transition hover:bg-[#f5f8ff] hover:text-[#0b469e] ${link === 'Join Gloaro Network' ? 'font-semibold text-[#0b469e]' : ''}`}>
                       <span className="grid h-4 w-4 place-items-center rounded-full bg-[#0b469e]/10 text-[10px] text-[#0b469e]">›</span>
                       {link}
-                    </a>
+                    </Link>
                   </li>
                 ))}
               </ul>
@@ -522,13 +531,13 @@ function MobileGloaroNetworkMenu({ onNavigate }) {
           ))}
         </div>
 
-        <a href="/register" onClick={onNavigate} className="mt-5 flex items-center justify-between rounded-[22px] bg-[linear-gradient(135deg,#0b469e,#1b6fe0)] px-4 py-4 text-white shadow-[0_14px_28px_rgba(11,70,158,0.2)]">
+        <Link to="/register" onClick={onNavigate} className="mt-5 flex items-center justify-between rounded-[22px] bg-[linear-gradient(135deg,#0b469e,#1b6fe0)] px-4 py-4 text-white shadow-[0_14px_28px_rgba(11,70,158,0.2)]">
           <span>
             <span className="block text-xs font-black uppercase tracking-[0.18em] text-[#ffd36e]">Start here</span>
             <span className="mt-1 block text-sm font-semibold">Explore Membership</span>
           </span>
           <span className="grid h-10 w-10 place-items-center rounded-full bg-white/15 text-lg">→</span>
-        </a>
+        </Link>
       </div>
     </motion.div>
   )
@@ -564,7 +573,7 @@ function GloaroNetworkMenu({ onClose }) {
                 <ul className="mt-3 space-y-3">
                   {links.map((link) => (
                     <li key={link} className="text-sm font-medium text-black">
-                      <a href={getNetworkHref(link)} onClick={onClose} className={`transition hover:text-[#0b469e] hover:underline ${link === 'Join Gloaro Network' ? 'font-semibold text-[#0b469e]' : ''}`}>{link}</a>
+                      <Link to={getNetworkHref(link)} onClick={onClose} className={`transition hover:text-[#0b469e] hover:underline ${link === 'Join Gloaro Network' ? 'font-semibold text-[#0b469e]' : ''}`}>{link}</Link>
                     </li>
                   ))}
                 </ul>
@@ -586,7 +595,7 @@ function GloaroNetworkMenu({ onClose }) {
               </div>
             ))}
           </div>
-          <a href="/register" onClick={onClose} className="mt-6 block w-full rounded-lg bg-[#0b469e] px-4 py-3 text-center text-xs font-extrabold text-white shadow-lg shadow-blue-950/20 lg:mt-auto">Explore Membership</a>
+          <Link to="/register" onClick={onClose} className="mt-6 block w-full rounded-lg bg-[#0b469e] px-4 py-3 text-center text-xs font-extrabold text-white shadow-lg shadow-blue-950/20 lg:mt-auto">Explore Membership</Link>
         </aside>
       </motion.div>
     </motion.div>

@@ -931,31 +931,12 @@ function ShopHeroShowcase({
   onCategorySelect,
   onLocationChange,
   onUseCurrentLocation,
-  onSearchSubmit,
 }) {
   const [ref, inView] = useInViewOnce(0.08);
-  const [locationOpen, setLocationOpen] = useState(false);
   const visibleCategories = useMemo(
     () => buildShopHeroCategories(categories),
     [categories],
   );
-  const selectedDistrict = useMemo(
-    () =>
-      (districts || []).find(
-        (district) => String(district?._id) === String(locationValue),
-      ),
-    [districts, locationValue],
-  );
-  const locationLabel =
-    locationValue === "__current"
-      ? "Current Location"
-      : selectedDistrict?.name || "All Locations";
-
-  const handleLocationSelect = (value) => {
-    if (value === "__current") onUseCurrentLocation?.();
-    else onLocationChange?.(value);
-    setLocationOpen(false);
-  };
 
   return (
     <section
@@ -969,76 +950,6 @@ function ShopHeroShowcase({
           <span className="text-[#0d4697]">Explore </span>
           <span className="text-[#f0a329]">Categories</span>
         </h2>
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-          <div className="relative">
-            <button
-              type="button"
-              onClick={() => setLocationOpen((open) => !open)}
-              className="inline-flex max-w-full items-center gap-2 rounded-full border border-[#0d4697]/10 bg-white px-3 py-2 text-xs font-black text-[#0d4697] shadow-sm transition hover:border-[#0d4697]/25 sm:text-sm"
-              aria-expanded={locationOpen}
-            >
-              <MapPin className="h-4 w-4 shrink-0 text-[#f0a329]" />
-              <span className="max-w-[190px] truncate">{locationLabel}</span>
-              <ChevronDown
-                className={`h-4 w-4 shrink-0 transition ${locationOpen ? "rotate-180" : ""}`}
-              />
-            </button>
-
-            {locationOpen && (
-              <div className="absolute right-auto top-[calc(100%+0.5rem)] z-30 w-72 max-w-[calc(100vw-2rem)] overflow-hidden rounded-2xl border border-slate-200 bg-white p-2 shadow-xl sm:right-0">
-                <button
-                  type="button"
-                  onClick={() => handleLocationSelect("")}
-                  className="flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-sm font-bold text-slate-700 transition hover:bg-slate-50"
-                >
-                  All Locations
-                  {!locationValue && <Check className="h-4 w-4 text-[#0d4697]" />}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleLocationSelect("__current")}
-                  className="flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-sm font-bold text-slate-700 transition hover:bg-slate-50"
-                >
-                  Current Location
-                  {locationValue === "__current" && (
-                    <Check className="h-4 w-4 text-[#0d4697]" />
-                  )}
-                </button>
-                <div className="my-2 border-t border-slate-100" />
-                <div className="max-h-56 overflow-y-auto pr-1">
-                  {districts.length ? (
-                    districts.map((district) => (
-                      <button
-                        key={district._id}
-                        type="button"
-                        onClick={() => handleLocationSelect(district._id)}
-                        className="flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2 text-left text-sm font-bold text-slate-700 transition hover:bg-slate-50"
-                      >
-                        <span className="min-w-0 truncate">{district.name}</span>
-                        {String(locationValue) === String(district._id) && (
-                          <Check className="h-4 w-4 shrink-0 text-[#0d4697]" />
-                        )}
-                      </button>
-                    ))
-                  ) : (
-                    <p className="px-3 py-2 text-sm font-semibold text-slate-400">
-                      No districts available
-                    </p>
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
-
-          <button
-            type="button"
-            onClick={onSearchSubmit}
-            className="group inline-flex items-center gap-1.5 self-start text-sm font-semibold text-[#0d4697] transition hover:text-[#0b3c82] sm:self-auto sm:text-[15px]"
-          >
-            View All Categories
-            <ChevronRight className="h-4 w-4 transition group-hover:translate-x-0.5" />
-          </button>
-        </div>
       </div>
 
       <div className="mt-4 flex gap-3 overflow-x-auto pb-1 pt-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:gap-4">
@@ -1060,9 +971,15 @@ function ShopHeroShowcase({
                 }`}
                 aria-hidden="true"
               >
-                <span className="text-[1.35rem] leading-none sm:text-[1.5rem]">
-                  {category.emoji || "•"}
-                </span>
+                {category.imageUrl ? (
+                  <img src={category.imageUrl} alt={category.label} className="h-full w-full object-contain p-1.5" />
+                ) : category.iconComponent ? (
+                  <category.iconComponent className="h-5 w-5 sm:h-6 sm:w-6" />
+                ) : (
+                  <span className="text-[1.35rem] leading-none sm:text-[1.5rem]">
+                    {category.emoji || "•"}
+                  </span>
+                )}
               </span>
               <span
                 className={`max-w-[76px] truncate text-[11px] font-semibold transition ${
@@ -1567,7 +1484,6 @@ export function ProductsPage() {
             if (value !== "__current") setCurrentLocation(null);
           }}
           onUseCurrentLocation={handleUseCurrentLocation}
-          onSearchSubmit={() => window.scrollTo({ top: 920, behavior: "smooth" })}
         />
       </div>
 

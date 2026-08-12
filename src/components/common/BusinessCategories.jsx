@@ -28,7 +28,7 @@ export default function BusinessCategories({ className = '' }) {
               <span className="text-[#ffae13]">Business</span> Categories
             </h2>
             <p className="mt-5 max-w-xl font-urbanist text-base font-medium leading-7 text-white/78 sm:text-lg">
-              Explore business opportunities across the Gloaro network, from networking and referrals to digital growth, services, and expansion.
+              Explore business opportunities across the Gloaro network, from networking and connections to digital growth, services, and expansion.
             </p>
 
             <div className="mt-7 grid gap-3 sm:grid-cols-3">

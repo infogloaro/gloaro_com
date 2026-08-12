@@ -103,15 +103,15 @@ export default function Footer() {
               <ul className="space-y-2 text-xs font-medium text-slate-300 sm:text-sm">
                 {links.quick.map(([label, href]) => (
                   <li key={label}>
-                    <a
+                    <Link
                       className="group inline-flex items-center gap-2 transition duration-200 hover:translate-x-1 hover:text-[#ffd36e]"
-                      href={href}
+                      to={href}
                     >
                       <span className="grid h-4 w-4 place-items-center rounded-full border border-white/10 bg-white/10 text-[8px] transition duration-200 group-hover:border-[#ffae13] group-hover:bg-[#ffae13] group-hover:text-[#08142b]">
                         ›
                       </span>
                       {label}
-                    </a>
+                    </Link>
                   </li>
                 ))}
               </ul>
@@ -125,15 +125,15 @@ export default function Footer() {
               <ul className="space-y-2 text-xs font-medium text-slate-300 sm:text-sm">
                 {links.useful.map(([label, href]) => (
                   <li key={label}>
-                    <a
+                    <Link
                       className="group inline-flex items-center gap-2 transition duration-200 hover:translate-x-1 hover:text-[#ffd36e]"
-                      href={href}
+                      to={href}
                     >
                       <span className="grid h-4 w-4 place-items-center rounded-full border border-white/10 bg-white/10 text-[8px] transition duration-200 group-hover:border-[#ffae13] group-hover:bg-[#ffae13] group-hover:text-[#08142b]">
                         ›
                       </span>
                       {label}
-                    </a>
+                    </Link>
                   </li>
                 ))}
               </ul>

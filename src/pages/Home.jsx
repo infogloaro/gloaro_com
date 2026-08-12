@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { Link } from 'react-router-dom'
 import BusinessCategories from '../components/common/BusinessCategories'
 import { ArrowRight, BadgeCheck, CalendarDays, ChevronDown, Clock3, Mail, MapPin, PhoneCall, ShieldCheck, Sparkles, ShoppingBag, ShoppingCart, Store, Ticket, UserRound, UsersRound } from 'lucide-react'
 import heroNetworkIcon from '../assets/hero_net_icon.png'
@@ -90,17 +91,17 @@ const networkDetailGroups = [
     eyebrow: 'Connect & belong',
     items: [
       ['membership-benefits-detail', 'Membership Benefits', 'One-to-one referrals, verified networking, business promotion, digital support, training, leadership development, expos and recognition programs.'],
-      ['membership-investment', 'Yearly Subscription', 'Annual membership is ₹30,000 plus ₹5,400 GST (18%), totaling ₹35,400. It includes the referral network, meetings, training, community access, digital support and business promotion.'],
-      ['member-access', 'Member Access', 'Approved members enter a verified community with business directory visibility, structured meetings, referral opportunities and digital growth resources.'],
+      ['membership-investment', 'Yearly Subscription', 'Annual membership is ₹30,000 plus ₹5,400 GST (18%), totaling ₹35,400. It includes the network connections, meetings, training, community access, digital support and business promotion.'],
+      ['member-access', 'Member Access', 'Approved members enter a verified community with business directory visibility, structured meetings, connection opportunities and digital growth resources.'],
     ],
   },
   {
     title: 'Business Network',
     eyebrow: 'One complete ecosystem',
     items: [
-      ['gloaro-360-network', '360 Gloaro Network', 'A unified ecosystem connecting entrepreneurs, businesses, technology, referrals, digital opportunities, marketplace access and community growth.'],
+      ['gloaro-360-network', '360 Gloaro Network', 'A unified ecosystem connecting entrepreneurs, businesses, technology, connections, digital opportunities, marketplace access and community growth.'],
       ['global-business-network', 'Global Business Network', 'GLOARO is building toward international business communities and global visits with industry leaders as part of its future expansion.'],
-      ['business-growth', 'Business Growth', 'Trusted relationships, qualified referrals, digital promotion, training, technology and marketplace visibility work together to support long-term growth.'],
+      ['business-growth', 'Business Growth', 'Trusted relationships, qualified connections digital promotion, training, technology and marketplace visibility work together to support long-term growth.'],
       ['business-opportunities', 'Business Opportunities', 'Members can discover collaborations, strategic partnerships, marketplace opportunities, franchise growth and business expansion pathways.'],
     ],
   },
@@ -110,15 +111,15 @@ const networkDetailGroups = [
     items: [
       ['referral-meeting', 'Connect Meeting', 'Members attend structured weekly and one-to-one business meetings designed to build trusted relationships and qualified opportunities.'],
       ['referral-join', 'Connect Join', 'A prospective member is referred by an existing verified member, completes offline verification and receives membership approval before joining.'],
-      ['referral-benefits', 'Connect Benefits', 'The referral engine creates genuine introductions, business relationships, qualified leads and ongoing community support.'],
+      ['referral-benefits', 'Connect Benefits', 'The connection engine creates genuine introductions, business relationships, qualified leads and ongoing community support.'],
     ],
   },
   {
     title: 'Mobile App',
     eyebrow: 'Business on the move',
     items: [
-      ['gloaro-app', 'Gloaro App', 'A planned mobile ecosystem for networking, referrals, community participation and access to GLOARO digital opportunities.'],
-      ['member-app', 'Member App', 'A member-focused experience for profiles, connections, meeting updates, referrals and recognition activity.'],
+      ['gloaro-app', 'Gloaro App', 'A planned mobile ecosystem for networking, connections, community participation and access to GLOARO digital opportunities.'],
+      ['member-app', 'Member App', 'A member-focused experience for profiles, connections, meeting updates and recognition activity.'],
       ['business-management-app', 'Business Management App', 'A proposed workspace to organize business activity, opportunities, customer follow-ups and performance insights.'],
     ],
   },
@@ -137,10 +138,10 @@ const networkDetailGroups = [
     title: 'Events & Community',
     eyebrow: 'Learn & grow together',
     items: [
-      ['monthly-meetings', 'Monthly Meetings', 'Regular networking meetings create space for referrals, learning, accountability and trusted business relationships.'],
+      ['monthly-meetings', 'Monthly Meetings', 'Regular networking meetings create space for connections, learning, accountability and trusted business relationships.'],
       ['business-expo', 'Business Expo', 'Business expos and trade events give members opportunities to showcase, connect and discover new markets.'],
       ['social-events', 'Social Events', 'Community and cultural events strengthen relationships beyond formal business meetings.'],
-      ['district-community', 'District Community', 'The district model supports five chapters per district, with approximately 45–70 members in each chapter.'],
+      ['district-community', 'District Community', 'The district model supports five chapters per district, with approximately 45–70 members in each unit.'],
       ['tamil-nadu-community', 'Tamil Nadu Community', 'A growing regional community connecting verified entrepreneurs and business leaders across Tamil Nadu districts.'],
       ['global-community', 'Global Community', 'The future roadmap includes international business communities, global visits and smart digital networking.'],
     ],
@@ -149,19 +150,19 @@ const networkDetailGroups = [
     title: 'Franchise',
     eyebrow: 'Lead regional expansion',
     items: [
-      ['available-locations', 'Available Locations', 'District-wise expansion is planned across India, with regional opportunities organized around scalable local chapters.'],
+      ['available-locations', 'Available Locations', 'District-wise expansion is planned across India, with regional opportunities organized around scalable local units.'],
       ['apply-franchise', 'Apply Franchise', 'The district franchise model is ₹21.30 lakhs, royalty-free, with a one-year agreement and 35% franchise commission.'],
-      ['franchise-partners', 'Franchise Partners', 'Partners receive district control, chapter expansion opportunities, website access, regional leadership and recurring member-revenue potential.'],
+      ['franchise-partners', 'Franchise Partners', 'Partners receive district control, unit expansion opportunities, website access, regional leadership and recurring member-revenue potential.'],
     ],
   },
   {
     title: 'Leaders & Achievements',
     eyebrow: 'Recognize excellence',
     items: [
-      ['network-leaders', 'Leaders', 'A structured multi-tier leadership ecosystem supports accountability, chapter growth, learning and community direction.'],
+      ['network-leaders', 'Leaders', 'A structured multi-tier leadership ecosystem supports accountability, unit growth, learning and community direction.'],
       ['network-coordinators', 'Coordinators', 'Community coordinators help organize meetings, member communication and local business activities.'],
       ['business-runner', 'Business Runner', 'A recognition pathway for members who demonstrate consistent participation, collaboration and business momentum.'],
-      ['goal-achiever', 'Goal Achiever', 'A milestone-based recognition for members who make measurable progress toward referral, leadership and growth goals.'],
+      ['goal-achiever', 'Goal Achiever', 'A milestone-based recognition for members who make measurable progress toward connections, leadership and growth goals.'],
       ['member-achievements', 'Member Achievements', 'Programs include the Mr. 360° Lead Champion Award, Connect Excellence Awards, leadership recognition and Business Achievement Awards.'],
     ],
   },
@@ -179,7 +180,7 @@ const networkDetailGroups = [
 // Removed fallbackLeaders
 // Shared scroll-reveal styling primitive. Keeps every section's entrance
 // consistent (fade + rise) without repeating IntersectionObserver wiring.
-function useInViewOnce(threshold = 0.15) {
+function useInViewOnce(threshold = 0.05) {
   const ref = useRef(null)
   const [inView, setInView] = useState(() => typeof window === 'undefined' || !('IntersectionObserver' in window))
   useEffect(() => {
@@ -482,7 +483,7 @@ export default function Home() {
           </h1>
           <p className="gl-fade-up mt-5 max-w-4xl font-urbanist text-sm font-medium leading-6 tracking-[0.03em] text-white sm:text-base md:text-lg md:leading-7 md:tracking-[0.05em]" style={{ animationDelay: '660ms' }}>A trusted network of professionals and entrepreneurs building relationships, creating opportunities,<br className="hidden md:block" /> and shaping future success together.</p>
           <div className="gl-fade-up mt-5 flex w-full flex-col justify-center gap-3 sm:w-auto sm:flex-row sm:flex-wrap" style={{ animationDelay: '780ms' }}>
-            <a href="/register?type=membership" className="gl-shimmer w-full rounded-lg bg-[#10499b] px-6 py-3 text-base font-bold text-white shadow-lg shadow-black/30 transition duration-300 hover:-translate-y-0.5 hover:bg-[#12579c] hover:shadow-xl sm:w-auto sm:text-lg">Become a Member&nbsp; ↗</a>
+            <Link></Link>
             <a href="#why-gloaro" className="w-full rounded-lg border border-white/15 bg-slate-700/70 px-6 py-3 text-base font-bold text-white shadow-lg shadow-black/30 backdrop-blur transition duration-300 hover:-translate-y-0.5 hover:bg-slate-700 sm:w-auto sm:text-lg">Explore Network&nbsp; ↗</a>
           </div>
           <p className="gl-fade-up mt-5 font-serif text-xl font-bold text-[#f6a600] sm:text-2xl" style={{ animationDelay: '900ms' }}>Connect. Collaborate. Grow Globally</p>
@@ -532,7 +533,7 @@ export default function Home() {
               <div className="flex items-center justify-between gap-4">
                 <div>
                   <p className="text-xs font-bold uppercase tracking-[0.24em] text-[#0d4697]/70">Community-led growth</p>
-                  <p className="mt-1 text-base font-bold text-[#0d4697]">Built for trust, referrals, and momentum.</p>
+                  <p className="mt-1 text-base font-bold text-[#0d4697]">Built for trust, Business connect, and Momentum.</p>
                 </div>
                 <div className="grid h-12 w-12 place-items-center rounded-full bg-[#fff3d0] text-[#ff9515] shadow-sm">
                   <Sparkles className="h-5 w-5" />
@@ -557,7 +558,7 @@ export default function Home() {
           <div className="mt-7 grid gap-4 sm:grid-cols-3">
             {[
               ['Verified members', 'Trust-first networking'],
-              ['Qualified referrals', 'Connections that convert'],
+              ['Qualified connections', 'Connections that convert'],
               ['Digital support', 'Growth beyond meetings'],
             ].map(([title, text]) => (
               <div key={title} className="rounded-2xl border border-[#0d4697]/10 bg-white/90 p-4 text-left shadow-[0_12px_30px_rgba(15,23,42,0.06)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_18px_36px_rgba(13,70,151,0.12)]">
@@ -568,10 +569,7 @@ export default function Home() {
           </div>
 
           <div className="mt-7 flex flex-wrap justify-center gap-3 lg:justify-start">
-            <a href="/register" className="inline-flex items-center gap-2 rounded-full bg-[linear-gradient(135deg,#0d4697,#1b6fe0)] px-6 py-3 font-urbanist text-base font-bold text-white shadow-[0_14px_32px_rgba(13,70,151,0.22)] transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_18px_40px_rgba(13,70,151,0.28)]">
-              Explore Network
-              <ArrowRight className="h-4 w-4" />
-            </a>
+            <Link></Link>
             <a href="#join" className="inline-flex items-center gap-2 rounded-full border border-[#0d4697]/12 bg-white px-6 py-3 font-urbanist text-base font-bold text-[#0d4697] shadow-sm transition duration-300 hover:-translate-y-0.5 hover:bg-[#fff8e7]">
               Read FAQ
             </a>
@@ -616,14 +614,7 @@ export default function Home() {
         <div className="mx-auto mt-5 grid max-w-6xl gap-5 sm:grid-cols-2 lg:grid-cols-5">
           {ecosystemActions.map(({ Icon, title, description, action, href, color, bg }, index) => (
             <Reveal key={title} delay={index * 90}>
-              <a href={href} className="group flex min-h-[190px] flex-col items-center rounded-lg border border-[#e6ebf2] bg-white px-4 py-5 text-center shadow-[0_8px_24px_rgba(15,23,42,.06)] transition duration-300 hover:-translate-y-1.5 hover:border-[#ffae13]/50 hover:shadow-[0_18px_36px_rgba(15,23,42,.14)]">
-                <span className="relative grid h-12 w-12 place-items-center rounded-full transition duration-300 group-hover:scale-110" style={{ backgroundColor: bg }}>
-                  <Icon className={`h-10 w-10 ${color}`} strokeWidth={2.4} />
-                </span>
-                <h3 className="mt-3 font-urbanist text-base font-extrabold text-[#111827]">{title}</h3>
-                <p className="mt-2 min-h-[58px] max-w-[145px] font-urbanist text-xs font-semibold leading-5 text-[#4b5563]">{description}</p>
-                <span className="mt-2 inline-flex items-center gap-2 font-urbanist text-xs font-extrabold text-[#1366d6]">{action} <span className="transition group-hover:translate-x-1">→</span></span>
-              </a>
+              <Link></Link>
             </Reveal>
           ))}
         </div>
@@ -672,10 +663,7 @@ export default function Home() {
             </div>
 
             <div className="mt-7 flex flex-wrap items-center gap-3">
-              <a href="/register" className="inline-flex items-center gap-2 rounded-full bg-[linear-gradient(135deg,#ffae13,#ffd36e)] px-6 py-3 text-sm font-black uppercase tracking-[0.18em] text-[#081a43] shadow-[0_14px_30px_rgba(255,174,19,0.20)] transition duration-300 hover:-translate-y-0.5">
-                Join Gloaro Network
-                <ArrowRight className="h-4 w-4" />
-              </a>
+              <Link></Link>
               <a href="#membership" className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-6 py-3 text-sm font-bold text-white transition duration-300 hover:-translate-y-0.5 hover:bg-white/10">
                 View Benefits
               </a>
@@ -730,9 +718,7 @@ export default function Home() {
             <p className="text-xs font-black uppercase tracking-[0.22em] text-[#ff9500]">Ready to grow together?</p>
             <h3 className="mt-2 font-playfair text-2xl font-bold text-[#0b469e]">Join a verified ecosystem where relationships create opportunities.</h3>
           </div>
-          <a href="/register" className="shrink-0 rounded-full bg-[linear-gradient(135deg,#0d4697,#1b6fe0)] px-7 py-3 font-urbanist text-sm font-extrabold text-white shadow-[0_14px_30px_rgba(13,70,151,0.20)] transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_18px_36px_rgba(13,70,151,0.26)]">
-            Join Gloaro Network
-          </a>
+          <Link></Link>
         </Reveal>
       </div>
     </section>
