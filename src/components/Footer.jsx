@@ -6,11 +6,11 @@ import { motion } from 'framer-motion'
 
 const links = {
   quick: [
-    ['Home', '#top'],
-    ['Why Gloaro', '#why-gloaro'],
-    ['Business Categories', '#business-categories'],
-    ['Features', '#features'],
-    ['Success Stories', '#testimonials'],
+    ['Home', '/#top'],
+    ['Why Gloaro', '/#why-gloaro'],
+    ['Business Categories', '/#business-categories'],
+    ['Features', '/#features'],
+    ['Success Stories', '/#testimonials'],
   ],
   useful: [
     ['Membership', '/register'],
