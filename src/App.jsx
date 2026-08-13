@@ -327,6 +327,8 @@ function App() {
           <Route path="/about" element={<Suspense fallback={<LoadingScreen />}><AboutPage /></Suspense>} />
           <Route path="/terms-and-conditions" element={<LegalPage type="terms" />} />
           <Route path="/privacy-policy" element={<LegalPage type="privacy" />} />
+          <Route path="/shipping-policy" element={<LegalPage type="shipping" />} />
+          <Route path="/cancellation-refund-policy" element={<LegalPage type="refund" />} />
         </Route>
 
         <Route element={<ProtectedRoute roles={[ROLES.ADMIN, ROLES.SUPERADMIN, ROLES.REGION_DIRECTOR, ROLES.STATE_DIRECTOR, ROLES.DISTRICT_DIRECTOR, ROLES.EXECUTIVE_DIRECTOR, ROLES.LAUNCH_DIRECTOR, ROLES.DIRECT_CONSULTANT, ROLES.CHAPTER_PRESIDENT, ROLES.VICE_PRESIDENT, ROLES.SECRETARY, ROLES.CUSTOMER, ROLES.USER, ROLES.VENDOR]} />}>
