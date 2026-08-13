@@ -3499,7 +3499,7 @@ export function OrdersPage() {
               Order Center
             </p>
             <h1 className="mt-1 font-playfair text-3xl font-black text-navy">
-              Track, return, and manage your orders
+              Track, Return, and Manage your Orders
             </h1>
           </div>
           <select
