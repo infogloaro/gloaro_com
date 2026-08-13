@@ -3530,24 +3530,11 @@ export function OrdersPage() {
                 className="rounded-[2rem] border border-slate-200/80 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-[0_16px_40px_rgba(11,36,81,0.08)]"
               >
                 {(() => {
-                  const stages = [
-                    "placed",
-                    "confirmed",
-                    "processing",
-                    "shipped",
-                    "delivered",
-                  ];
-                  const currentIndex = Math.max(
-                    0,
-                    stages.findIndex((stage) => stage === order.status),
-                  );
-                  const progress = Math.round(
-                    ((currentIndex + 1) / stages.length) * 100,
-                  );
+                  const listTracking = getOrderTrackingProgress(order);
                   const orderDate = formatDate(order.createdAt);
                   const eta = order.estimatedDeliveryDate
                     ? formatDate(order.estimatedDeliveryDate)
-                    : "To be updated";
+                    : "ETA not available";
                   const shipmentCount = Array.isArray(
                     order.shiprocket?.shipments,
                   )
@@ -3596,17 +3583,11 @@ export function OrdersPage() {
                             </div>
                             <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4">
                               <p className="text-[10px] font-black uppercase tracking-[0.24em] text-slate-400">
-                                Progress
+                                Status
                               </p>
-                              <p className="mt-1 text-sm font-black text-navy">
-                                {progress}%
+                              <p className="mt-1 text-sm font-bold capitalize text-slate-700">
+                                {listTracking.currentStageLabel}
                               </p>
-                              <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-slate-200">
-                                <div
-                                  className="h-full rounded-full bg-gradient-to-r from-navy to-royal"
-                                  style={{ width: `${progress}%` }}
-                                />
-                              </div>
                             </div>
                             <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4">
                               <p className="text-[10px] font-black uppercase tracking-[0.24em] text-slate-400">
@@ -3903,35 +3884,16 @@ export function OrderDetailPage() {
     );
   }
 
-  const deliveryTimeline = [
-    { key: "placed", title: "Placed", note: "Order accepted by the shop" },
-    {
-      key: "confirmed",
-      title: "Confirmed",
-      note: "Seller confirmed your order",
-    },
-    {
-      key: "processing",
-      title: "Processing",
-      note: "Warehouse packing in progress",
-    },
-    { key: "shipped", title: "Shipped", note: "Courier hand-off completed" },
-    {
-      key: "delivered",
-      title: "Delivered",
-      note: "Delivered to the selected address",
-    },
-  ];
-  const currentStepIndex = Math.max(
-    0,
-    deliveryTimeline.findIndex((step) => step.key === order.status),
-  );
-  const progressPercent = Math.round(
-    ((currentStepIndex + 1) / deliveryTimeline.length) * 100,
-  );
   const estimatedDelivery = order.estimatedDeliveryDate
     ? formatDate(order.estimatedDeliveryDate)
-    : "To be updated";
+    : "ETA not available";
+  const trackingProgress = getOrderTrackingProgress(order);
+  const shipmentStageMap = new Map(
+    trackingProgress.shipmentStages.map((entry) => [
+      String(entry.shipment?.shipmentId || entry.shipment?.orderId || ""),
+      entry,
+    ]),
+  );
   const orderSummary = [
     { label: "Status", value: order.status },
     { label: "Payment", value: order.paymentStatus },
@@ -3979,8 +3941,16 @@ export function OrderDetailPage() {
                 Order tracking
               </h1>
               <p className="mt-2 text-sm font-medium text-slate-500">
-                Placed on {formatDate(order.createdAt)} · Estimated delivery{" "}
-                {formatDate(order.estimatedDeliveryDate)}
+                Placed on {formatDate(order.createdAt)}
+                {order.estimatedDeliveryDate ? (
+                  <>
+                    {" "}
+                    · Estimated delivery{" "}
+                    {formatDate(order.estimatedDeliveryDate)}
+                  </>
+                ) : (
+                  " · ETA not available"
+                )}
               </p>
             </div>
             <div className="flex flex-wrap gap-2">
@@ -4012,22 +3982,37 @@ export function OrderDetailPage() {
           </div>
 
           <div className="mt-5 rounded-2xl border border-slate-100 bg-slate-50 p-4">
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <p className="text-[10px] font-black uppercase tracking-[0.24em] text-slate-400">
-                  Fulfillment Progress
-                </p>
-                <p className="mt-1 text-sm font-semibold text-slate-600">
-                  Track the same order journey your vendor sees.
-                </p>
-              </div>
-              <p className="text-sm font-black text-navy">{progressPercent}%</p>
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-[0.24em] text-slate-400">
+                Order Tracking
+              </p>
+              <p className="mt-1 text-sm font-semibold text-slate-600">
+                Live shipment status from your courier.
+              </p>
             </div>
-            <div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-200">
-              <div
-                className="h-full rounded-full bg-gradient-to-r from-navy to-royal transition-all"
-                style={{ width: `${progressPercent}%` }}
+            <div className="mt-4 space-y-3">
+              {ORDER_TRACKING_STAGES.map((stage, index) => (
+                <TrackingStage
+                  key={stage.key}
+                  title={stage.label}
+                  note={stage.note}
+                  state={
+                    index < trackingProgress.currentIndex
+                      ? "done"
+                      : index === trackingProgress.currentIndex
+                        ? "current"
+                        : "pending"
+                  }
+                />
+              ))}
+            </div>
+            <div className="mt-4 grid gap-3 sm:grid-cols-3">
+              <InfoTile
+                label="Current Status"
+                value={trackingProgress.statusText}
               />
+              <InfoTile label="Courier" value={trackingProgress.courier} />
+              <InfoTile label="AWB" value={trackingProgress.awb} />
             </div>
           </div>
 
@@ -4049,17 +4034,6 @@ export function OrderDetailPage() {
               </p>
             </div>
           )}
-
-          <div className="mt-6 space-y-4">
-            {deliveryTimeline.map((step, index) => (
-              <TimelineStep
-                key={step.key}
-                title={step.title}
-                note={step.note}
-                active={index <= currentStepIndex}
-              />
-            ))}
-          </div>
 
           <div className="mt-6 rounded-2xl border border-slate-100 bg-slate-50 p-4">
             <div className="flex items-center justify-between gap-3">
@@ -4083,7 +4057,22 @@ export function OrderDetailPage() {
               </p>
             ) : (
               <div className="mt-4 grid gap-4">
-                {vendorShipments.map((shipment, index) => (
+                {vendorShipments.map((shipment, index) => {
+                  const stageInfo = shipmentStageMap.get(
+                    String(shipment.shipmentId || shipment.orderId || ""),
+                  );
+                  const stageCourier =
+                    stageInfo?.courier && stageInfo.courier !== "Not Assigned"
+                      ? stageInfo.courier
+                      : shipment.courierName ||
+                        shipment.courier_name ||
+                        shipment.courier ||
+                        "-";
+                  const stageAwb =
+                    stageInfo?.awb && stageInfo.awb !== "Not Generated"
+                      ? stageInfo.awb
+                      : shipment.awbCode || shipment.awb || "-";
+                  return (
                   <div
                     key={shipment.shipmentId || shipment.orderId || index}
                     className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"
@@ -4105,6 +4094,7 @@ export function OrderDetailPage() {
                       </div>
                       <StatusBadge
                         value={
+                          stageInfo?.statusText ||
                           shipment.status ||
                           shipment.shipmentStatus ||
                           "pending"
@@ -4122,16 +4112,8 @@ export function OrderDetailPage() {
                           "-"
                         }
                       />
-                      <InfoTile
-                        label="AWB"
-                        value={shipment.awbCode || shipment.awb || "-"}
-                      />
-                      <InfoTile
-                        label="Courier"
-                        value={
-                          shipment.courierName || shipment.courier_name || "-"
-                        }
-                      />
+                      <InfoTile label="AWB" value={stageAwb} />
+                      <InfoTile label="Courier" value={stageCourier} />
                       <InfoTile
                         label="Shipping"
                         value={formatCurrency(shipment.shippingCharge || 0)}
@@ -4185,7 +4167,8 @@ export function OrderDetailPage() {
                       </div>
                     </div>
                   </div>
-                ))}
+                  );
+                })}
               </div>
             )}
 
@@ -4195,19 +4178,40 @@ export function OrderDetailPage() {
                   Live Tracking Snapshots
                 </p>
                 <div className="mt-3 space-y-3">
-                  {trackingSnapshots.map((snapshot, index) => (
-                    <div
-                      key={`${snapshot.shipmentId || index}`}
-                      className="rounded-xl bg-slate-50 p-3"
-                    >
-                      <p className="text-sm font-black text-slate-900">
-                        {snapshot.shipmentId || `Shipment ${index + 1}`}
-                      </p>
-                      <pre className="mt-2 overflow-auto text-[11px] font-mono text-slate-600">
-                        {JSON.stringify(snapshot.raw || snapshot, null, 2)}
-                      </pre>
-                    </div>
-                  ))}
+                  {trackingSnapshots.map((snapshot, index) => {
+                    const tracking = parseTrackingSnapshot(snapshot);
+                    return (
+                      <div
+                        key={`${snapshot.shipmentId || index}`}
+                        className="rounded-xl bg-slate-50 p-3"
+                      >
+                        <p className="text-sm font-black text-slate-900">
+                          {tracking.shipmentId !== "-"
+                            ? `Shipment ${tracking.shipmentId}`
+                            : `Shipment ${index + 1}`}
+                        </p>
+                        <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                          <InfoTile label="Order ID" value={tracking.orderId} />
+                          <InfoTile
+                            label="Shipment ID"
+                            value={tracking.shipmentId}
+                          />
+                          <InfoTile label="Status" value={tracking.status} />
+                          <InfoTile label="Courier" value={tracking.courier} />
+                          <InfoTile label="AWB" value={tracking.awb} />
+                          <InfoTile
+                            label="Pickup Status"
+                            value={tracking.pickup}
+                          />
+                          <InfoTile label="Tracking" value={tracking.tracking} />
+                          <InfoTile
+                            label="Last Updated"
+                            value={tracking.lastUpdated}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             )}
@@ -5739,6 +5743,349 @@ function InfoBlock({ icon: Icon, title, text }) {
   );
 }
 
+const SHIPROCKET_STATUS_CODES = {
+  1: "Requested",
+  2: "Ready to Ship",
+  4: "Picked Up",
+  7: "Out for Pickup",
+  8: "Pickup Exception",
+  9: "In Transit",
+  11: "Shipment Created",
+  12: "AWB Not Found",
+  13: "Delivered",
+  14: "Cancelled",
+  15: "Return Requested",
+  16: "Returned to Seller",
+  17: "Delivered to RTO",
+  18: "RTO Initiated",
+  19: "RTO Delivered",
+  20: "Delivery Attempted",
+  21: "Out for Delivery",
+  22: "Label Generated",
+  23: "Invoice Generated",
+  24: "Manifest Generated",
+  25: "Pickup Rescheduled",
+  26: "Out for Pickup",
+};
+
+const pickTrackingText = (...values) =>
+  values.find(
+    (value) =>
+      value !== undefined &&
+      value !== null &&
+      value !== "null" &&
+      String(value).trim() !== "",
+  ) ?? "";
+
+const parseTrackingSnapshot = (snapshot = {}) => {
+  const raw = snapshot.raw || {};
+  const trackingData = raw.tracking_data || raw.data || raw || {};
+  const rawData = raw.data || raw || {};
+
+  const activities = Array.isArray(trackingData.shipment_track_activities)
+    ? trackingData.shipment_track_activities
+    : Array.isArray(trackingData.track_activities)
+      ? trackingData.track_activities
+      : [];
+
+  const statusCode = Number(trackingData.status ?? rawData.status);
+  const statusText =
+    pickTrackingText(
+      trackingData.current_status,
+      trackingData.shipment_status,
+      trackingData.status_text,
+    ) ||
+    (statusCode && statusCode !== 200
+      ? SHIPROCKET_STATUS_CODES[statusCode] || `Status ${statusCode}`
+      : "");
+
+  const courier = pickTrackingText(
+    trackingData.courier_name,
+    trackingData.courierName,
+    trackingData.courier,
+    rawData.courier,
+  );
+  const awb = pickTrackingText(
+    trackingData.awb_code,
+    trackingData.awbCode,
+    trackingData.awb,
+    trackingData.tracking_number,
+    rawData.awb,
+  );
+
+  const normalizedStatus = String(statusText).toLowerCase();
+  const hasDeliveredDate = pickTrackingText(
+    trackingData.delivered_date,
+    rawData.delivered_date,
+  );
+  const eta = pickTrackingText(
+    trackingData.expected_delivery_date,
+    trackingData.promised_delivery_date,
+    trackingData.eta_date,
+  );
+  const pickupScheduled = pickTrackingText(trackingData.pickup_scheduled_date);
+  const pickupToken = pickTrackingText(
+    trackingData.pickup_token_number,
+    rawData.pickup_token_number,
+  );
+  const pickupGenerated = pickTrackingText(
+    trackingData.pickup_generated_date,
+    rawData.pickup_generated_date,
+  );
+
+  let pickup = "Awaiting pickup";
+  if (pickupGenerated || pickupToken) {
+    pickup = `Pickup Generated${pickupToken ? ` · Token ${pickupToken}` : ""}`;
+  } else if (pickupScheduled) {
+    pickup = `Pickup Scheduled · ${formatDate(pickupScheduled)}`;
+  } else if (
+    [
+      "out for pickup",
+      "picked up",
+      "in transit",
+      "out for delivery",
+      "delivered",
+    ].some((status) => normalizedStatus.includes(status))
+  ) {
+    pickup = "Picked Up";
+  }
+
+  let tracking = "Awaiting courier assignment";
+  if (hasDeliveredDate) {
+    tracking = `Delivered on ${formatDate(hasDeliveredDate)}`;
+  } else if (eta) {
+    tracking = `Estimated delivery ${formatDate(eta)}`;
+  } else if (activities.length) {
+    tracking = statusText || "In transit";
+  } else if (courier) {
+    tracking = statusText || "Shipment in progress";
+  }
+
+  const lastUpdated = pickTrackingText(
+    trackingData.updated_at,
+    trackingData.last_update_time,
+    trackingData.updatedAt,
+    rawData.updated_at,
+    rawData.created_at,
+    trackingData.created_at,
+  );
+
+  return {
+    orderId:
+      pickTrackingText(trackingData.order_id, rawData.order_id, snapshot.orderId) ||
+      "-",
+    shipmentId:
+      pickTrackingText(trackingData.id, rawData.id, snapshot.shipmentId) || "-",
+    status: statusText || "Shipment Created",
+    courier: courier || "Not Assigned",
+    awb: awb || "Not Generated",
+    pickup,
+    tracking,
+    lastUpdated: lastUpdated ? formatDate(lastUpdated) : "Not available",
+    delivered:
+      Boolean(hasDeliveredDate) ||
+      (normalizedStatus.includes("delivered") &&
+        !normalizedStatus.includes("rto") &&
+        !normalizedStatus.includes("return")),
+    courierAssigned: Boolean(courier),
+    awbGenerated: Boolean(awb),
+  };
+};
+
+const ORDER_TRACKING_STAGES = [
+  { key: "placed", label: "Order Placed", note: "Your order has been placed" },
+  {
+    key: "confirmed",
+    label: "Order Confirmed",
+    note: "Order confirmed and payment verified",
+  },
+  {
+    key: "processing",
+    label: "Processing / Shipment Created",
+    note: "Shipment created, awaiting courier",
+  },
+  {
+    key: "shipped",
+    label: "Shipped / Courier Assigned",
+    note: "Courier picked up your package",
+  },
+  {
+    key: "out_for_delivery",
+    label: "Out for Delivery",
+    note: "Out for delivery to your address",
+  },
+  {
+    key: "delivered",
+    label: "Delivered",
+    note: "Delivered to your address",
+  },
+];
+
+const TRACKING_STAGE_INDEX = {
+  placed: 0,
+  confirmed: 1,
+  processing: 2,
+  shipped: 3,
+  outForDelivery: 4,
+  delivered: 5,
+};
+
+const titleCaseTracking = (value) =>
+  String(value || "")
+    .replace(/_/g, " ")
+    .toLowerCase()
+    .replace(/\b\w/g, (char) => char.toUpperCase());
+
+const deriveShipmentStageIndex = ({
+  statusText,
+  hasCourier,
+  hasAwb,
+  delivered,
+}) => {
+  const status = String(statusText || "").toLowerCase();
+  if (
+    delivered ||
+    (status.includes("delivered") &&
+      !status.includes("rto") &&
+      !status.includes("return"))
+  ) {
+    return TRACKING_STAGE_INDEX.delivered;
+  }
+  if (status.includes("out for delivery") || status === "ofd") {
+    return TRACKING_STAGE_INDEX.outForDelivery;
+  }
+  if (
+    status.includes("in transit") ||
+    status.includes("picked up") ||
+    status.includes("out for pickup") ||
+    status.includes("shipped")
+  ) {
+    return TRACKING_STAGE_INDEX.shipped;
+  }
+  if (hasCourier && hasAwb) {
+    return TRACKING_STAGE_INDEX.shipped;
+  }
+  if (
+    status.includes("shipment created") ||
+    status.includes("processing") ||
+    status.includes("label generated") ||
+    status.includes("manifest generated") ||
+    status.includes("pickup") ||
+    status.includes("requested") ||
+    status.includes("ready to ship") ||
+    status.includes("courier selection") ||
+    status.includes("pending") ||
+    status.includes("awaiting") ||
+    status.includes("created")
+  ) {
+    return TRACKING_STAGE_INDEX.processing;
+  }
+  return -1;
+};
+
+const deriveVendorShipmentTracking = (shipment = {}, snapshot) => {
+  const parsed = snapshot ? parseTrackingSnapshot(snapshot) : null;
+  const shipmentStatus = titleCaseTracking(
+    shipment.status || shipment.shipmentStatus || "",
+  );
+  const statusText = parsed?.status || shipmentStatus || "Pending";
+  const hasCourier = parsed
+    ? parsed.courierAssigned
+    : Boolean(
+        shipment.courierName || shipment.courier_name || shipment.courier,
+      );
+  const hasAwb = parsed
+    ? parsed.awbGenerated
+    : Boolean(shipment.awbCode || shipment.awb);
+  const delivered = parsed
+    ? parsed.delivered
+    : String(shipment.status || "")
+        .toLowerCase()
+        .replace(/_/g, " ")
+        .includes("delivered");
+  const index = deriveShipmentStageIndex({
+    statusText,
+    hasCourier,
+    hasAwb,
+    delivered,
+  });
+  return {
+    statusText,
+    courier: parsed
+      ? parsed.courier
+      : shipment.courierName || shipment.courier_name || shipment.courier ||
+        "Not Assigned",
+    awb: parsed
+      ? parsed.awb
+      : shipment.awbCode || shipment.awb || "Not Generated",
+    index: index < 0 ? TRACKING_STAGE_INDEX.processing : index,
+    delivered,
+  };
+};
+
+const getOrderTrackingProgress = (order = {}) => {
+  const orderStatus = String(order.status || "").toLowerCase();
+  const isPaid = String(order.paymentStatus || "").toLowerCase() === "paid";
+  const confirmed =
+    ["confirmed", "processing", "shipped", "delivered", "completed"].includes(
+      orderStatus,
+    ) || isPaid;
+
+  const shipments = Array.isArray(order.shiprocket?.shipments)
+    ? order.shiprocket.shipments
+    : [];
+  const snapshots = Array.isArray(order.shiprocket?.trackingSnapshots)
+    ? order.shiprocket.trackingSnapshots
+    : [];
+  const snapshotMap = new Map(
+    snapshots.map((snapshot) => [
+      String(snapshot.shipmentId || snapshot.orderId || ""),
+      snapshot,
+    ]),
+  );
+
+  const shipmentStages = shipments.map((shipment) => {
+    const snapshot = snapshotMap.get(
+      String(shipment.shipmentId || shipment.orderId || ""),
+    );
+    return {
+      shipment,
+      snapshot,
+      ...deriveVendorShipmentTracking(shipment, snapshot),
+    };
+  });
+
+  let currentIndex = confirmed
+    ? TRACKING_STAGE_INDEX.confirmed
+    : TRACKING_STAGE_INDEX.placed;
+  const validStages = shipmentStages
+    .map((entry) => entry.index)
+    .filter((index) => index >= 0);
+  if (validStages.length) {
+    currentIndex = Math.max(currentIndex, Math.min(...validStages));
+  }
+  currentIndex = Math.max(
+    TRACKING_STAGE_INDEX.placed,
+    Math.min(currentIndex, TRACKING_STAGE_INDEX.delivered),
+  );
+
+  const limiting = shipmentStages.length
+    ? shipmentStages.reduce(
+        (least, entry) => (entry.index < least.index ? entry : least),
+        shipmentStages[0],
+      )
+    : null;
+
+  return {
+    currentIndex,
+    currentStageLabel: ORDER_TRACKING_STAGES[currentIndex].label,
+    statusText: limiting?.statusText || titleCaseTracking(orderStatus) || "Pending",
+    courier: limiting?.courier || "Not Assigned",
+    awb: limiting?.awb || "Not Generated",
+    shipmentStages,
+  };
+};
+
 function InfoTile({ label, value }) {
   return (
     <div className="rounded-xl bg-white p-3 shadow-sm">
@@ -5762,6 +6109,35 @@ function TimelineStep({ title, note, active }) {
       </div>
       <div>
         <p className="font-bold text-navy">{title}</p>
+        <p className="text-sm font-medium text-slate-500">{note}</p>
+      </div>
+    </div>
+  );
+}
+
+function TrackingStage({ title, note, state }) {
+  const isDone = state === "done";
+  const isCurrent = state === "current";
+  const isActive = isDone || isCurrent;
+  return (
+    <div
+      className={`flex gap-3 rounded-xl border p-4 transition ${isActive ? "border-navy bg-navy/5 shadow-sm" : "border-slate-200 bg-white"}`}
+    >
+      <div
+        className={`mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-full transition-all ${isDone ? "bg-navy text-white shadow-md" : isCurrent ? "bg-navy text-white shadow-md ring-4 ring-navy/20" : "bg-slate-100 text-slate-400"}`}
+      >
+        {isDone ? (
+          <Check className="h-4 w-4" />
+        ) : (
+          <span
+            className={`h-2.5 w-2.5 rounded-full ${isCurrent ? "bg-white" : "bg-slate-300"}`}
+          />
+        )}
+      </div>
+      <div className="flex-1">
+        <p className={`font-bold ${isActive ? "text-navy" : "text-slate-500"}`}>
+          {title}
+        </p>
         <p className="text-sm font-medium text-slate-500">{note}</p>
       </div>
     </div>

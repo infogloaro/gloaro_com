@@ -156,6 +156,16 @@ export default function Footer() {
                 </a>
 
                 <a
+                  href="tel:+917200537033"
+                  className="group flex items-start gap-2.5 transition duration-200 hover:text-[#ffd36e]"
+                >
+                  <div className="mt-0.5 grid h-6.5 w-6.5 shrink-0 place-items-center rounded-md border border-white/10 bg-white/5 transition duration-200 group-hover:border-[#ffae13]/40 group-hover:bg-[#ffae13]/10">
+                    <Phone className="h-3 w-3 text-[#ffae13]" />
+                  </div>
+                  <span>+91 7200537033</span>
+                </a>
+
+                <a
                   href="mailto:info@gloaro.com"
                   className="group flex items-start gap-2.5 transition duration-200 hover:text-[#ffd36e]"
                 >
@@ -190,6 +200,14 @@ export default function Footer() {
                 <span className="hidden h-3.5 w-px bg-white/15 sm:block" />
                 <Link className="transition duration-200 hover:text-[#ffd36e]" to="/privacy-policy">
                   Privacy Policy
+                </Link>
+                <span className="hidden h-3.5 w-px bg-white/15 sm:block" />
+                <Link className="transition duration-200 hover:text-[#ffd36e]" to="/shipping-policy">
+                  Shipping Policy
+                </Link>
+                <span className="hidden h-3.5 w-px bg-white/15 sm:block" />
+                <Link className="transition duration-200 hover:text-[#ffd36e]" to="/cancellation-refund-policy">
+                  Cancellation &amp; Refund Policy
                 </Link>
                 <span className="hidden h-3.5 w-px bg-white/15 sm:block" />
                 <a

@@ -588,7 +588,7 @@ export default function Home() {
       <div className="relative mx-auto max-w-7xl">
         <Reveal className="mx-auto max-w-3xl text-center">
           <div className="inline-flex items-center gap-2 rounded-full border border-[#0d4697]/10 bg-[#fdf9e9] px-4 py-2 text-xs font-black uppercase tracking-[0.24em] text-[#0d4697] shadow-sm"><Sparkles className="h-4 w-4 text-[#ffae13]" />Gloaro Gallery</div>
-          <h2 className="mt-4 font-playfair text-4xl font-semibold italic text-[#0d4697] sm:text-5xl">Moments that <span className="gl-gold-text">move us forward</span></h2>
+          <h2 className="mt-4 font-playfair text-3xl font-semibold italic leading-snug text-[#0d4697] sm:text-4xl lg:text-[2.6rem] lg:leading-tight">Gloaro — Connecting Businesses, <span className="gl-gold-text">Creating Opportunities</span></h2>
         </Reveal>
         <div onMouseEnter={() => setGalleryPaused(true)} onMouseLeave={() => setGalleryPaused(false)} onTouchStart={() => setGalleryPaused(true)} onTouchEnd={() => setGalleryPaused(false)} className="relative mt-8">
           <div ref={galleryRef} className="flex snap-x gap-5 overflow-x-auto scroll-smooth pb-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
