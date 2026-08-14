@@ -507,10 +507,10 @@ export function getSidebarNav(role, options = {}) {
         children = children.filter(([label]) => {
           if (label === 'Unit Community' && [ROLES.EXECUTIVE_DIRECTOR, ROLES.LAUNCH_DIRECTOR, ROLES.DIRECT_CONSULTANT].includes(normalizedRole)) return false
           if (label === 'Unit Community') return hasChapterAssignment(user)
-          return ['Gloaro Network', 'Messages', 'Connects'].includes(label)
+          return ['Gloaro Network', 'Messages', 'Connect'].includes(label)
         })
       } else if ([ROLES.CUSTOMER, ROLES.USER, ROLES.VENDOR].includes(normalizedRole)) {
-        children = children.filter(([label]) => ['Unit Community', 'Gloaro Network', 'Messages', 'Connects'].includes(label))
+        children = children.filter(([label]) => ['Unit Community', 'Gloaro Network', 'Messages', 'Connect'].includes(label))
       }
     }
     return {
