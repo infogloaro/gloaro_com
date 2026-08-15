@@ -56,7 +56,7 @@ export const ROLE_LABELS = Object.freeze({
 });
 
 export const ROLE_ROUTE_PREFIXES = Object.freeze({
-  [ROLES.SUPERADMIN]: "/admin",
+  [ROLES.SUPERADMIN]: "/super-admin",
   [ROLES.ADMIN]: "/admin",
   [ROLES.FRANCHISE_ADMIN]: "/admin",
   [ROLES.ECOMMERCE_ADMIN]: "/admin",

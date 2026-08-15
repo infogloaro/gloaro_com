@@ -6,7 +6,7 @@ import signupLogo from '../../assets/signup_logo.png'
 
 export default function AuthLayout() {
   return (
-    <main className="min-h-screen bg-[radial-gradient(circle_at_top_left,#dceafe_0,transparent_32%),radial-gradient(circle_at_bottom_right,#fff4ce_0,transparent_28%),linear-gradient(180deg,#f8fbff,#ffffff)] font-urbanist text-[#101827] lg:grid lg:h-screen lg:grid-cols-[1.08fr_0.92fr] lg:overflow-hidden">
+    <main className="min-h-screen bg-[radial-gradient(circle_at_top_left,#dceafe_0,transparent_32%),radial-gradient(circle_at_bottom_right,#fff4ce_0,transparent_28%),linear-gradient(180deg,#f8fbff,#ffffff)] font-urbanist text-[#101827] lg:grid lg:h-screen lg:grid-cols-[1.08fr_0.92fr]">
       <section className="relative hidden min-h-screen overflow-hidden bg-[linear-gradient(145deg,#071226_0%,#0b469e_52%,#081a43_100%)] lg:block lg:min-h-0">
         <img src={signupImage} alt="Gloaro workspace" className="absolute inset-0 h-full w-full object-cover opacity-25 mix-blend-screen" />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,174,19,0.16),transparent_30%),radial-gradient(circle_at_bottom_right,rgba(255,255,255,0.06),transparent_28%)]" />
@@ -57,7 +57,7 @@ export default function AuthLayout() {
         </div>
       </section>
 
-      <section className="flex min-h-screen flex-col px-4 py-5 sm:px-6 lg:min-h-0 lg:px-8 lg:py-3">
+      <section className="flex min-h-screen flex-col px-4 py-5 sm:px-6 lg:h-screen lg:min-h-0 lg:overflow-y-auto lg:px-8 lg:py-3">
         <div className="mx-auto flex w-full max-w-[620px] items-center justify-between">
           <Link to="/" className="text-sm font-black uppercase tracking-[0.2em] text-[#0d4697] transition hover:text-[#082e70]">
             Back to home

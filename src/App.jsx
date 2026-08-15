@@ -36,6 +36,7 @@ import {
   ReferralManagementPage,
 
   ReportsCenterPage,
+  AdminEnterpriseDashboard,
   SuperAdminDashboardPage,
   SuperAdminModulePage,
   SystemLogsPage,
@@ -280,10 +281,14 @@ function App() {
     return canAccessPath(buildAdminRoute(ROLES.ADMIN, route.path))
   }).map((route) => ({
     ...route,
-    path: buildAdminRoute(ROLES.ADMIN, route.path)
+    path: buildAdminRoute(ROLES.ADMIN, route.path),
+    element: route.path === '/dashboard' ? <AdminEnterpriseDashboard /> : route.element,
   }))
 
-  const adminHomePath = regularAdminRoutes[0]?.path || '/dashboard'
+  const adminDashboardPath = buildAdminRoute(ROLES.ADMIN, '/dashboard')
+  const adminHomePath = regularAdminRoutes.some((route) => route.path === adminDashboardPath)
+    ? adminDashboardPath
+    : (regularAdminRoutes[0]?.path || adminDashboardPath)
 
   return (
     <>

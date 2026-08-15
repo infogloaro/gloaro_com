@@ -20,6 +20,7 @@ import {
   CheckSquare,
   Sparkles,
   Trophy,
+  Receipt,
   Filter
 } from 'lucide-react'
 import { toast } from 'react-hot-toast'
@@ -60,7 +61,7 @@ export default function AnalyticsPage() {
         params.to = customRange.to
       }
       const response = await reportApi.analytics(params)
-      setData(response.data || response || {})
+      setData(response.data?.data || response.data || {})
     } catch (error) {
       console.error('Error fetching analytics:', error)
       toast.error('Failed to load analytics data')
@@ -189,13 +190,8 @@ export default function AnalyticsPage() {
     if ([ROLES.ADMIN, ROLES.MARKETPLACE_ADMIN, ROLES.TRAINING_ADMIN, ROLES.FINANCE_ADMIN, ROLES.MEMBERSHIP_VERIFICATION_ADMIN, ROLES.CUSTOM_ADMIN].includes(role)) {
       return "Organization Analytics";
     }
-    if (role === ROLES.REGION_DIRECTOR) return `${contextName} Analytics`;
-    if (role === ROLES.STATE_DIRECTOR) return `${contextName} Analytics`;
-    if (role === ROLES.DISTRICT_DIRECTOR || role === ROLES.EXECUTIVE_DIRECTOR) return `${contextName} Analytics`;
-    if ([ROLES.CHAPTER_PRESIDENT, ROLES.VICE_PRESIDENT, ROLES.SECRETARY, ROLES.LAUNCH_DIRECTOR].includes(role)) {
-      return `${role === ROLES.LAUNCH_DIRECTOR ? 'Launch' : 'My'} Chapter Analytics`;
-    }
-    if (role === ROLES.VENDOR) return "My Business Analytics";
+    if (scope === 'jurisdiction') return `${contextName} Analytics`;
+    if (scope === 'vendor') return "My Business Analytics";
     return "My Performance & Activity";
   }
 
@@ -232,7 +228,7 @@ export default function AnalyticsPage() {
     const val = isMe ? (overview.marketplace?.orders || 0) : (isVendor ? (overview.marketplace?.orders || 0) : (overview.orders || 0))
     kpiCards.push({ title: 'Total Orders', value: val, icon: ShoppingBag })
   }
-  if (hasModule('vendors') && isJurisdiction) {
+  if (hasModule(ROLES.VENDOR) && isJurisdiction) {
     kpiCards.push({ title: 'Total Vendors', value: overview.totalVendors || 0, icon: BriefcaseBusiness })
   }
   if (hasModule('members') && isJurisdiction) {
@@ -253,6 +249,10 @@ export default function AnalyticsPage() {
   if (hasModule('finance') || hasModule('payments')) {
     const val = isMe ? (overview.revenue?.revenue || 0) : (isVendor ? (overview.marketplace?.revenue || 0) : (overview.totalRevenue || 0))
     kpiCards.push({ title: 'Total Revenue', value: formatCurrency(val), icon: DollarSign })
+  }
+  if ((hasModule('finance') || hasModule('payments')) && (isVendor || isJurisdiction)) {
+    const val = isVendor ? (overview.marketplace?.transactions || 0) : (overview.totalTransactions || 0)
+    kpiCards.push({ title: 'Total Transactions', value: val, icon: Receipt })
   }
   if (hasModule('tasks')) {
     const val = isMe ? (overview.tasks?.total || 0) : (isVendor ? (overview.tasks?.total || 0) : (overview.tasks || 0))

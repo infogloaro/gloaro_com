@@ -272,6 +272,7 @@ export function createPermissionHelpers(user, permissionConfig = null) {
       .map((item) => normalizeKey(typeof item === 'string' ? item : item?.id))
       .filter(Boolean)
   )
+  const hasConfigData = modules.size > 0
   const sections = config?.sections || {}
   const operations = config?.operations || {}
   const permissions = config?.permissions || {}
@@ -348,13 +349,16 @@ export function createPermissionHelpers(user, permissionConfig = null) {
     if (!rule) return true
     if (isCoreAdmin && ['/network', '/wall', '/chat', '/notifications'].includes(rule.path)) return true
     if (rule.superadminOnly) return false
-    if (rule.module && !hasModule(rule.module)) return false
-    if (rule.section && !hasSection(rule.module, rule.section)) return false
+    if (hasConfigData) {
+      if (rule.module && !hasModule(rule.module)) return false
+      if (rule.section && !hasSection(rule.module, rule.section)) return false
+    }
     return true
   }
 
   return {
     isSuperAdmin,
+    hasConfigData,
     hasModule,
     hasSection,
     hasPermission,

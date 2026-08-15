@@ -297,7 +297,7 @@ export function getRoleBasedSidebarNav(role, user) {
 }
 
 export const rolePrefixes = {
-  [ROLES.SUPERADMIN]: '/admin',
+  [ROLES.SUPERADMIN]: '/super-admin',
   [ROLES.ADMIN]: '/admin',
   [ROLES.CUSTOMER]: '/member/dashboard',
   [ROLES.USER]: '/member/dashboard',
