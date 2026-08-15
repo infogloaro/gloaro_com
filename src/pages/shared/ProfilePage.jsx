@@ -222,9 +222,9 @@ export default function ProfilePage() {
                     <input type="password" {...regPassword('confirmPassword', { required: true })} className="h-11 w-full rounded-md border border-slate-300 bg-white px-3 text-slate-800 outline-none focus:border-[#0d4697]" />
                   </FormField>
                 </div>
-                <button disabled={updatingPassword} type="submit" className="mt-5 h-11 rounded-md bg-slate-950 px-5 text-sm font-extrabold text-white hover:bg-slate-800 transition">
+                {/* <button disabled={updatingPassword} type="submit" className="mt-5 h-11 rounded-md bg-slate-950 px-5 text-sm font-extrabold text-white hover:bg-slate-800 transition">
                   Change Password
-                </button>
+                </button> */}
               </form>
             </>
           )}
