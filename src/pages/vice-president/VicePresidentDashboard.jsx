@@ -126,27 +126,27 @@ export default function VicePresidentDashboard() {
 
       {/* 2. Unit Information Card */}
       <section className="grid gap-6">
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm flex flex-col justify-between">
+        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm flex flex-col justify-between dark:border-slate-800 dark:bg-slate-900">
           <div>
-            <h3 className="text-sm font-black uppercase text-slate-800 tracking-wider flex items-center gap-2 mb-4">
-              <MapPin className="h-4 w-4 text-[#0d4697]" /> My Unit Listing
+            <h3 className="text-sm font-black uppercase text-slate-800 dark:text-slate-200 tracking-wider flex items-center gap-2 mb-4">
+              <MapPin className="h-4 w-4 text-[#0d4697] dark:text-[#4d8fe0]" /> My Unit Listing
             </h3>
             <div className="space-y-2.5 text-xs">
-              <div className="flex justify-between border-b border-slate-100 pb-1.5">
-                <span className="font-semibold text-slate-500">Region</span>
-                <span className="font-extrabold text-slate-850">{region}</span>
+              <div className="flex justify-between border-b border-slate-100 dark:border-slate-800 pb-1.5">
+                <span className="font-semibold text-slate-500 dark:text-slate-400">Region</span>
+                <span className="font-extrabold text-slate-850 dark:text-white">{region}</span>
               </div>
-              <div className="flex justify-between border-b border-slate-100 pb-1.5">
-                <span className="font-semibold text-slate-500">State</span>
-                <span className="font-extrabold text-slate-850">{state}</span>
+              <div className="flex justify-between border-b border-slate-100 dark:border-slate-800 pb-1.5">
+                <span className="font-semibold text-slate-500 dark:text-slate-400">State</span>
+                <span className="font-extrabold text-slate-850 dark:text-white">{state}</span>
               </div>
-              <div className="flex justify-between border-b border-slate-100 pb-1.5">
-                <span className="font-semibold text-slate-500">District</span>
-                <span className="font-extrabold text-slate-850">{district}</span>
+              <div className="flex justify-between border-b border-slate-100 dark:border-slate-800 pb-1.5">
+                <span className="font-semibold text-slate-500 dark:text-slate-400">District</span>
+                <span className="font-extrabold text-slate-850 dark:text-white">{district}</span>
               </div>
               <div className="flex justify-between pb-1.5">
-                <span className="font-semibold text-slate-500">Unit</span>
-                <span className="font-extrabold text-slate-850">{chapter}</span>
+                <span className="font-semibold text-slate-500 dark:text-slate-400">Unit</span>
+                <span className="font-extrabold text-slate-850 dark:text-white">{chapter}</span>
               </div>
             </div>
           </div>

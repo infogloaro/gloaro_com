@@ -450,7 +450,40 @@ const createPdfRect = (x, y, width, height, fillColor = null, strokeColor = null
   return parts.join('\n')
 }
 
-const buildInvoicePdf = (order) => {
+const loadLogoPixels = () => new Promise((resolve, reject) => {
+  const img = new Image()
+  img.crossOrigin = 'anonymous'
+  img.onload = () => {
+    const size = 180
+    const canvas = document.createElement('canvas')
+    canvas.width = size
+    canvas.height = size
+    const ctx = canvas.getContext('2d')
+    ctx.drawImage(img, 0, 0, size, size)
+    const { data } = ctx.getImageData(0, 0, size, size)
+    const rgb = new Uint8Array(size * size * 3)
+    for (let i = 0, j = 0; i < data.length; i += 4, j += 3) {
+      rgb[j] = data[i]
+      rgb[j + 1] = data[i + 1]
+      rgb[j + 2] = data[i + 2]
+    }
+    resolve({ width: size, height: size, pixels: rgb })
+  }
+  img.onerror = reject
+  img.src = '/apple-touch-icon.png'
+})
+
+const hexEncodeBytes = (data) => {
+  const parts = []
+  const chunk = 4096
+  for (let i = 0; i < data.length; i += chunk) {
+    const slice = data.slice(i, Math.min(i + chunk, data.length))
+    parts.push(Array.from(slice).map((b) => b.toString(16).padStart(2, '0')).join(''))
+  }
+  return parts.join('')
+}
+
+const buildInvoicePdf = (order, logoPixels = null) => {
   const customerName = normalizePdfText(order.customerSnapshot?.name || order.user?.name || 'Guest Customer')
   const customerEmail = normalizePdfText(order.customerSnapshot?.email || order.user?.email || '-')
   const customerPhone = normalizePdfText(order.customerSnapshot?.phone || order.user?.phone || '-')
@@ -482,18 +515,32 @@ const buildInvoicePdf = (order) => {
 
     content.push(createPdfRect(0, 0, PDF_PAGE_WIDTH, PDF_PAGE_HEIGHT, '0.99 0.99 1.00'))
     content.push(createPdfRect(0, PDF_PAGE_HEIGHT - 104, PDF_PAGE_WIDTH, 104, dark))
-    content.push(createPdfRect(PDF_MARGIN_X, PDF_PAGE_HEIGHT - 72, 110, 24, gold))
-    content.push(createPdfText(PDF_MARGIN_X + 16, PDF_PAGE_HEIGHT - 56, 'GLOARO', 19, 'F2', '1 1 1'))
-    content.push(createPdfText(PDF_MARGIN_X, PDF_PAGE_HEIGHT - 82, 'Premium Marketplace Invoice', 9, 'F1', '0.90 0.93 0.97'))
+    if (logoPixels) {
+      const logoW = 48
+      const logoH = 48
+      const logoX = PDF_MARGIN_X
+      const logoY = PDF_PAGE_HEIGHT - 80
+      content.push('q')
+      content.push(`${logoW} 0 0 ${logoH} ${logoX.toFixed(2)} ${logoY.toFixed(2)} cm`)
+      content.push('/LogoImg Do')
+      content.push('Q')
+      content.push(createPdfText(PDF_MARGIN_X + 58, PDF_PAGE_HEIGHT - 60, 'Premium Marketplace Invoice', 12, 'F1', '0.90 0.93 0.97'))
+    } else {
+      content.push(createPdfRect(PDF_MARGIN_X, PDF_PAGE_HEIGHT - 72, 110, 24, gold))
+      content.push(createPdfText(PDF_MARGIN_X + 16, PDF_PAGE_HEIGHT - 56, 'GLOARO', 19, 'F2', '1 1 1'))
+      content.push(createPdfText(PDF_MARGIN_X, PDF_PAGE_HEIGHT - 82, 'Premium Marketplace Invoice', 9, 'F1', '0.90 0.93 0.97'))
+    }
     content.push(createPdfTextRight(PDF_PAGE_WIDTH - 38, PDF_PAGE_HEIGHT - 40, `Invoice No: ${invoiceNumber}`, 11, 'F2', '1 1 1'))
     content.push(createPdfTextRight(PDF_PAGE_WIDTH - 38, PDF_PAGE_HEIGHT - 58, `Order No: ${orderNumber}`, 9, 'F1', '0.90 0.93 0.97'))
 
     y -= 122
     const topCardY = y
+    const cardGap = 14
+    const cardW = Math.floor((PDF_PAGE_WIDTH - 2 * PDF_MARGIN_X - cardGap) / 2)
     const leftCardX = PDF_MARGIN_X
-    const leftCardW = 260
-    const rightCardX = 309
-    const rightCardW = PDF_PAGE_WIDTH - rightCardX - PDF_MARGIN_X
+    const leftCardW = cardW
+    const rightCardX = PDF_MARGIN_X + cardW + cardGap
+    const rightCardW = cardW
     const cardH = 124
 
     content.push(createPdfRect(leftCardX, topCardY - cardH, leftCardW, cardH, '1 1 1', border, 1))
@@ -524,17 +571,18 @@ const buildInvoicePdf = (order) => {
     const tableTop = topCardY - cardH - 26
     const tableLeft = PDF_MARGIN_X
     const tableWidth = PDF_PAGE_WIDTH - (PDF_MARGIN_X * 2)
-    const itemX = tableLeft + 14
-    const qtyX = tableLeft + tableWidth - 232
-    const unitX = tableLeft + tableWidth - 170
-    const totalX = tableLeft + tableWidth - 64
+    const pad = 14
+    const itemX = tableLeft + pad
+    const qtyRight = tableLeft + tableWidth - 140
+    const unitRight = tableLeft + tableWidth - 70
+    const amountRight = tableLeft + tableWidth - pad
     const rowHeight = 44
 
     content.push(createPdfRect(tableLeft, tableTop - 28, tableWidth, 28, navy))
     content.push(createPdfText(itemX, tableTop - 10, 'ITEM', 9, 'F2', '1 1 1'))
-    content.push(createPdfText(qtyX, tableTop - 10, 'QTY', 9, 'F2', '1 1 1'))
-    content.push(createPdfText(unitX, tableTop - 10, 'UNIT PRICE', 9, 'F2', '1 1 1'))
-    content.push(createPdfText(totalX, tableTop - 10, 'AMOUNT', 9, 'F2', '1 1 1'))
+    content.push(createPdfTextRight(qtyRight, tableTop - 10, 'QTY', 9, 'F2', '1 1 1'))
+    content.push(createPdfTextRight(unitRight, tableTop - 10, 'UNIT PRICE', 9, 'F2', '1 1 1'))
+    content.push(createPdfTextRight(amountRight, tableTop - 10, 'AMOUNT', 9, 'F2', '1 1 1'))
 
     let rowY = tableTop - 40
     pageItems.forEach((item, index) => {
@@ -544,9 +592,9 @@ const buildInvoicePdf = (order) => {
       content.push(createPdfRect(tableLeft, rowY - 20, tableWidth, rowHeight, rowFill, border, 0.6))
       content.push(createPdfText(itemX, rowY, title.slice(0, 54), 10, 'F2', '0.09 0.12 0.20'))
       content.push(createPdfText(itemX, rowY - 13, variant.slice(0, 46), 8, 'F1', muted))
-      content.push(createPdfTextRight(qtyX + 24, rowY, String(item.quantity || 1), 10, 'F2', '0.09 0.12 0.20'))
-      content.push(createPdfTextRight(unitX + 64, rowY, formatPdfMoney(item.unitPrice), 10, 'F2', '0.09 0.12 0.20'))
-      content.push(createPdfTextRight(totalX + 40, rowY, formatPdfMoney(item.lineTotal), 10, 'F2', navy))
+      content.push(createPdfTextRight(qtyRight, rowY, String(item.quantity || 1), 10, 'F2', '0.09 0.12 0.20'))
+      content.push(createPdfTextRight(unitRight, rowY, formatPdfMoney(item.unitPrice), 10, 'F2', '0.09 0.12 0.20'))
+      content.push(createPdfTextRight(amountRight, rowY, formatPdfMoney(item.lineTotal), 10, 'F2', navy))
       rowY -= rowHeight
     })
 
@@ -556,16 +604,16 @@ const buildInvoicePdf = (order) => {
     content.push(createPdfRect(totalsBoxX, totalsBoxY - 82, totalsBoxW, 96, '1 1 1', border, 1))
     content.push(createPdfRect(totalsBoxX, totalsBoxY + 14, totalsBoxW, 14, gold))
     content.push(createPdfText(totalsBoxX + 14, totalsBoxY + 28, 'SUBTOTAL', 8, 'F2', muted))
-    content.push(createPdfTextRight(PDF_PAGE_WIDTH - PDF_MARGIN_X - 14, totalsBoxY + 28, formatPdfMoney(order.subtotal), 9, 'F2', '0.10 0.12 0.16'))
+    content.push(createPdfTextRight(PDF_PAGE_WIDTH - PDF_MARGIN_X - pad, totalsBoxY + 28, formatPdfMoney(order.subtotal), 9, 'F2', '0.10 0.12 0.16'))
     content.push(createPdfText(totalsBoxX + 14, totalsBoxY + 12, 'TAX', 8, 'F2', muted))
-    content.push(createPdfTextRight(PDF_PAGE_WIDTH - PDF_MARGIN_X - 14, totalsBoxY + 12, formatPdfMoney(order.tax), 9, 'F2', '0.10 0.12 0.16'))
+    content.push(createPdfTextRight(PDF_PAGE_WIDTH - PDF_MARGIN_X - pad, totalsBoxY + 12, formatPdfMoney(order.tax), 9, 'F2', '0.10 0.12 0.16'))
     content.push(createPdfText(totalsBoxX + 14, totalsBoxY - 4, 'SHIPPING', 8, 'F2', muted))
-    content.push(createPdfTextRight(PDF_PAGE_WIDTH - PDF_MARGIN_X - 14, totalsBoxY - 4, formatPdfMoney(order.shipping), 9, 'F2', '0.10 0.12 0.16'))
+    content.push(createPdfTextRight(PDF_PAGE_WIDTH - PDF_MARGIN_X - pad, totalsBoxY - 4, formatPdfMoney(order.shipping), 9, 'F2', '0.10 0.12 0.16'))
     content.push(createPdfText(totalsBoxX + 14, totalsBoxY - 20, 'COUPON', 8, 'F2', muted))
-    content.push(createPdfTextRight(PDF_PAGE_WIDTH - PDF_MARGIN_X - 14, totalsBoxY - 20, `- ${formatPdfMoney(order.couponDiscount || 0)}`, 9, 'F2', '0.10 0.12 0.16'))
+    content.push(createPdfTextRight(PDF_PAGE_WIDTH - PDF_MARGIN_X - pad, totalsBoxY - 20, `- ${formatPdfMoney(order.couponDiscount || 0)}`, 9, 'F2', '0.10 0.12 0.16'))
     content.push(createPdfLine(totalsBoxX + 14, totalsBoxY - 34, PDF_PAGE_WIDTH - PDF_MARGIN_X - 14, totalsBoxY - 34, 0.8, border))
     content.push(createPdfText(totalsBoxX + 14, totalsBoxY - 52, 'GRAND TOTAL', 11, 'F2', navy))
-    content.push(createPdfTextRight(PDF_PAGE_WIDTH - PDF_MARGIN_X - 14, totalsBoxY - 52, formatPdfMoney(order.total), 14, 'F2', navy))
+    content.push(createPdfTextRight(PDF_PAGE_WIDTH - PDF_MARGIN_X - pad, totalsBoxY - 52, formatPdfMoney(order.total), 14, 'F2', navy))
 
     content.push(createPdfRect(PDF_MARGIN_X, PDF_BOTTOM + 54, 188, 30, soft, border, 1))
     content.push(createPdfText(PDF_MARGIN_X + 12, PDF_BOTTOM + 72, 'Paid securely through Gloaro checkout', 9, 'F2', navy))
@@ -592,8 +640,15 @@ const buildInvoicePdf = (order) => {
   const fontRegularId = addObject('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>')
   const fontBoldId = addObject('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>')
 
+  let logoImageId = null
+  if (logoPixels) {
+    const hexData = hexEncodeBytes(logoPixels.pixels)
+    logoImageId = addObject(`<< /Type /XObject /Subtype /Image /Width ${logoPixels.width} /Height ${logoPixels.height} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /ASCIIHexDecode /Length ${hexData.length} >>\nstream\n${hexData}\nendstream`)
+  }
+
   pageObjectIds.forEach((pageId, index) => {
-    objects[pageId - 1] = `<< /Type /Page /Parent 0 0 R /MediaBox [0 0 ${PDF_PAGE_WIDTH} ${PDF_PAGE_HEIGHT}] /Resources << /Font << /F1 ${fontRegularId} 0 R /F2 ${fontBoldId} 0 R >> >> /Contents ${contentObjectIds[index]} 0 R >>`
+    const xObj = logoImageId ? ` /XObject << /LogoImg ${logoImageId} 0 R >>` : ''
+    objects[pageId - 1] = `<< /Type /Page /Parent 0 0 R /MediaBox [0 0 ${PDF_PAGE_WIDTH} ${PDF_PAGE_HEIGHT}] /Resources << /Font << /F1 ${fontRegularId} 0 R /F2 ${fontBoldId} 0 R >>${xObj} >> /Contents ${contentObjectIds[index]} 0 R >>`
   })
 
   const pagesId = addObject(`<< /Type /Pages /Count ${pageObjectIds.length} /Kids [${pageObjectIds.map((id) => `${id} 0 R`).join(' ')}] >>`)
@@ -1169,8 +1224,14 @@ export function ShopProvider({ children }) {
     }
   }, [state.orders])
 
-  const downloadInvoice = useCallback((order) => {
-    const blob = buildInvoicePdf(order)
+  const downloadInvoice = useCallback(async (order) => {
+    let logoPixels = null
+    try {
+      logoPixels = await loadLogoPixels()
+    } catch {
+      logoPixels = null
+    }
+    const blob = buildInvoicePdf(order, logoPixels)
     const url = URL.createObjectURL(blob)
     const link = document.createElement('a')
     link.href = url

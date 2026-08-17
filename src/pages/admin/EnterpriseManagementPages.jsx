@@ -1051,12 +1051,12 @@ export function MarketplaceApprovalPage() {
         >
           Vendor Applications
         </button>
-        <button
+        {/* <button
           onClick={() => setActiveTab('products_services')}
           className={`px-4 py-2 text-sm font-bold border-b-2 transition ${activeTab === 'products_services' ? 'border-[#0d4697] text-[#0d4697]' : 'border-transparent text-slate-500 hover:text-slate-800'}`}
         >
           Products & Services
-        </button>
+        </button> */}
       </div>
 
       {activeTab === 'vendor_applications' ? (

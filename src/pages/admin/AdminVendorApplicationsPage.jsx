@@ -104,7 +104,7 @@ export default function AdminVendorApplicationsPage({
         defaultParams={isMarketplaceApprovalQueue ? { status: 'submitted' } : undefined}
         filters={[
           { key: 'status', label: 'Status', options: statusOptions.map((value) => ({ value, label: value.replaceAll('_', ' ') })) },
-          { key: 'businessCategory', label: 'Category', options: categories }
+          // { key: 'businessCategory', label: 'Category', options: categories }
         ]}
         columns={[
           { key: 'fullName', header: 'Applicant Name', render: (row) => row.step2?.personal?.fullName || 'Owner' },
