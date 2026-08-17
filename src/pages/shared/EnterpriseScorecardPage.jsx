@@ -15,11 +15,14 @@ import {
 import {
   ArrowDownUp,
   Banknote,
+  Briefcase,
   Download,
   FileText,
+  IndianRupee,
   ReceiptText,
   Store,
   Trophy,
+  TrendingUp,
   UserRound,
   Users,
   X,
@@ -43,7 +46,7 @@ const emptyData = {
   cards: {},
   charts: {},
   people: [],
-  pagination: { page: 1, limit: 10, total: 0, pages: 1 },
+  pagination: { page: 1, limit: 50, total: 0, pages: 1 },
   filters: { roles: [], regions: [], states: [], districts: [], chapters: [] },
 }
 
@@ -166,6 +169,8 @@ function PersonDetail({ person, onClose }) {
               {detail('Membership Revenue', money(person.membershipRevenue))}
               {detail('Vendor Revenue', money(person.vendorRevenue))}
               {detail('Other Revenue', money(person.otherRevenue))}
+              {detail('Business Generated', numberFormat.format(person.businessGenerated || 0))}
+              {detail('Business Earnings', money(person.businessEarnings))}
               {detail('Total Earned', money(person.totalEarned))}
             </div>
           </section>
@@ -189,7 +194,7 @@ export default function EnterpriseScorecardPage() {
     sortBy: 'totalEarned',
     sortOrder: 'desc',
     page: 1,
-    limit: 10,
+    limit: 50,
   })
   const [data, setData] = useState(emptyData)
   const [searchNameInput, setSearchNameInput] = useState('')
@@ -228,7 +233,7 @@ export default function EnterpriseScorecardPage() {
   const roleOptions = (filterOptions.roles || []).filter((role) => !HIDDEN_ROLE_FILTERS.has(role.value))
 
   const updateFilter = (key, value) => {
-    setFilters((current) => ({ ...current, [key]: value, page: 1 }))
+    setFilters((current) => ({ ...current, [key]: value, ...(key !== 'page' ? { page: 1 } : {}) }))
   }
 
   const toggleSort = (key) => {
@@ -375,6 +380,8 @@ export default function EnterpriseScorecardPage() {
         <Card label="Total Revenue Generated" value={compactMoney(cards.totalRevenueGenerated)} icon={Banknote} />
         <Card label="Total Membership Revenue" value={compactMoney(cards.totalMembershipRevenue)} icon={Users} />
         <Card label="Total Vendor Revenue" value={compactMoney(cards.totalVendorRevenue)} icon={Store} />
+        <Card label="Business Opportunities" value={numberFormat.format(cards.totalBusinessGenerated || 0)} helper="Total business referrals" icon={Briefcase} />
+        <Card label="Business Earnings" value={compactMoney(cards.totalBusinessEarnings)} helper="Commission earned" icon={IndianRupee} />
         <Card label="Total Transactions" value={numberFormat.format(cards.totalTransactions || 0)} icon={ReceiptText} />
         <Card label="Highest Earner" value={cards.highestEarner?.name || '-'} helper={cards.highestEarner ? money(cards.highestEarner.totalEarned) : ''} icon={Trophy} />
       </section>
@@ -486,6 +493,8 @@ export default function EnterpriseScorecardPage() {
                 {sortableHeader('Referrals', 'referrals')}
                 {sortableHeader('Membership Revenue', 'membershipRevenue')}
                 {sortableHeader('Vendor Revenue', 'vendorRevenue')}
+                {sortableHeader('Business Generated', 'businessGenerated')}
+                {sortableHeader('Business Earnings', 'businessEarnings')}
                 {sortableHeader('Total Earned', 'totalEarned')}
               </tr>
             </thead>
@@ -507,12 +516,14 @@ export default function EnterpriseScorecardPage() {
                   <td className="px-4 py-3 text-slate-600">{numberFormat.format(row.referrals || 0)}</td>
                   <td className="px-4 py-3 font-bold text-slate-700">{money(row.membershipRevenue)}</td>
                   <td className="px-4 py-3 font-bold text-slate-700">{money(row.vendorRevenue)}</td>
+                  <td className="px-4 py-3 font-bold text-emerald-600">{money(row.businessGenerated)}</td>
+                  <td className="px-4 py-3 font-bold text-emerald-600">{money(row.businessEarnings)}</td>
                   <td className="px-4 py-3 font-black text-slate-950">{money(row.totalEarned)}</td>
                 </tr>
               ))}
               {rows.length === 0 ? (
                 <tr>
-                  <td colSpan={14} className="px-4 py-10 text-center text-sm font-bold text-slate-500">No people found.</td>
+                  <td colSpan={16} className="px-4 py-10 text-center text-sm font-bold text-slate-500">No people found.</td>
                 </tr>
               ) : null}
             </tbody>

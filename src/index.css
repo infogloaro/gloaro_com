@@ -61,7 +61,7 @@ body {
   }
 }
 
-/* Keep form labels readable in light modal surfaces, including Secretary forms. */
+/* Keep form controls readable in light modal surfaces, including Secretary forms. */
 label,
 label input,
 label textarea,
@@ -69,8 +69,14 @@ label select {
   color: #0f172a !important;
 }
 
-label input::placeholder,
-label textarea::placeholder {
+input,
+textarea,
+select {
+  color: #0f172a !important;
+}
+
+input::placeholder,
+textarea::placeholder {
   color: #64748b !important;
   opacity: 1;
 }

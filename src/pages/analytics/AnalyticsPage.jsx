@@ -15,13 +15,15 @@ import {
   Clock, 
   Package, 
   BriefcaseBusiness,
+  Briefcase,
   Award,
   CalendarCheck,
   CheckSquare,
   Sparkles,
   Trophy,
   Receipt,
-  Filter
+  Filter,
+  IndianRupee,
 } from 'lucide-react'
 import { toast } from 'react-hot-toast'
 import { 
@@ -211,6 +213,11 @@ export default function AnalyticsPage() {
   if (hasModule('referrals')) {
     const val = isMe ? (overview.referrals?.total || 0) : (isVendor ? (overview.marketplace?.inquiries || 0) : (overview.totalReferrals || 0))
     kpiCards.push({ title: 'Total Connects / Referrals', value: val, icon: Handshake })
+    if (isMe && overview.business?.total > 0) {
+      kpiCards.push({ title: 'Business Opportunities', value: overview.business?.total || 0, icon: Briefcase })
+      kpiCards.push({ title: 'Business Won', value: overview.business?.won || 0, icon: Award })
+      kpiCards.push({ title: 'Business Earnings', value: formatCurrency(overview.business?.earnings), icon: IndianRupee })
+    }
   }
   if (hasModule('marketplace')) {
     if (isMe && overview.marketplace?.products > 0) {
@@ -374,6 +381,55 @@ export default function AnalyticsPage() {
               ) : (
                 <EmptyState title="My Referral Activity" />
               )}
+            </AnalyticsSection>
+          )}
+
+          {/* Business Connect Performance */}
+          {hasModule('referrals') && overview.business && (
+            <AnalyticsSection title="My Business Connect Performance">
+              <div className="space-y-6">
+                <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+                  <MetricCard title="Business Opportunities" value={overview.business.total || 0} icon={Briefcase} />
+                  <MetricCard title="Business Won" value={overview.business.won || 0} icon={Award} />
+                  <MetricCard title="Business Earnings" value={formatCurrency(overview.business.earnings)} icon={IndianRupee} />
+                  <MetricCard title="Conversion Rate" value={`${overview.business.conversionRate || 0}%`} icon={TrendingUp} />
+                </div>
+                <div className="grid gap-6 xl:grid-cols-3">
+                  <ChartContainer
+                    title="Business Created Trend"
+                    data={(overview.business.monthlyTrend || []).map(item => ({ label: item.label, count: item.count }))}
+                    dataKey="count"
+                  />
+                  <ChartContainer
+                    title="Business Earnings Trend"
+                    data={(overview.business.monthlyTrend || []).map(item => ({ label: item.label, amount: item.earnings }))}
+                    dataKey="amount"
+                  />
+                  <div className="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                    <h3 className="text-base font-extrabold text-slate-900 dark:text-white mb-4">Business Stage Distribution</h3>
+                    <div className="h-64 flex flex-col justify-center gap-4">
+                      {[
+                        ['created', 'Created'],
+                        ['contacted', 'Contacted'],
+                        ['meeting_scheduled', 'Meeting Scheduled'],
+                        ['proposal_sent', 'Proposal Sent'],
+                        ['negotiation', 'Negotiation'],
+                      ].map(([key, label]) => (
+                        <div key={key} className="flex justify-between border-b border-slate-50 pb-2 dark:border-slate-800">
+                          <span className="text-xs font-bold text-slate-500">{label}</span>
+                          <span className="text-xs font-black text-slate-900 dark:text-white">{overview.business[key] || 0}</span>
+                        </div>
+                      ))}
+                      <div className="flex justify-between">
+                        <span className="text-xs font-bold text-slate-500">Won / Lost</span>
+                        <span className="text-xs font-black text-emerald-600">
+                          {overview.business.won || 0} <span className="text-slate-300 dark:text-slate-700">/</span> {overview.business.lost || 0}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </AnalyticsSection>
           )}
 

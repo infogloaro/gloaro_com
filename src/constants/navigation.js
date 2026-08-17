@@ -3,6 +3,7 @@ import {
   BarChart3,
   BookOpen,
   Bell,
+  Briefcase,
   BriefcaseBusiness,
   Building2,
   CalendarDays,
@@ -80,6 +81,8 @@ export const adminNav = [
     children: [
       ['My Connects', '/my-referrals', User],
       ['Connect Management', '/referral-management', Handshake],
+      ['Business Sent', '/business-connects', Briefcase],
+      ['Business Received', '/received-business', Briefcase],
     ],
   },
   {
@@ -207,6 +210,7 @@ export const customerNav = [
 
 export const customerFoundationNav = [
   ['Dashboard', '/customer/dashboard', LayoutDashboard],
+  ['Business Opportunities', '/customer/business-opportunities', BriefcaseBusiness],
   ['Mr. 360', '/customer/scorecard', BarChart3],
   { label: 'Communication', icon: MessageSquare, children: [['Notifications', '/notifications', Bell]] },
   ['Profile', '/customer/profile', User],
@@ -333,6 +337,8 @@ const commonModules = [
       ['Gloaro Network', '/network', Network],
       ['Messages', '/chat', MessageSquare],
       ['Connect', '/referrals', Handshake],
+      ['Business Sent', '/business-connects', Briefcase],
+      ['Business Received', '/received-business', Briefcase],
       ['Business Directory', '/directory', Users]
     ]
   },
@@ -482,8 +488,14 @@ export function getSidebarNav(role, options = {}) {
         else label = 'My Unit';
       }
       const memberReferralPath = label === 'Connect' && to === '/referrals' && [ROLES.CUSTOMER, ROLES.USER, ROLES.VENDOR].includes(normalizedRole);
+      const memberBusinessSentPath = label === 'Business Sent' && to === '/business-connects' && [ROLES.CUSTOMER, ROLES.USER, ROLES.VENDOR].includes(normalizedRole);
+      const memberBusinessReceivedPath = label === 'Business Received' && to === '/received-business' && [ROLES.CUSTOMER, ROLES.USER, ROLES.VENDOR].includes(normalizedRole);
       const finalPath = memberReferralPath
         ? '/member/referrals'
+        : memberBusinessSentPath
+        ? '/member/business-connects'
+        : memberBusinessReceivedPath
+        ? '/member/received-business'
         : (to === '/notifications' || to === '/analytics' || to.startsWith('/admin/') || to === '/admin' || to.startsWith('/member/') || to === '/member') || to.startsWith('/super-admin') ? to : `${prefix}${to}`;
       return [label, finalPath, icon];
     }
@@ -508,10 +520,10 @@ export function getSidebarNav(role, options = {}) {
         children = children.filter(([label]) => {
           if (label === 'Unit Community' && [ROLES.EXECUTIVE_DIRECTOR, ROLES.LAUNCH_DIRECTOR, ROLES.DIRECT_CONSULTANT].includes(normalizedRole)) return false
           if (label === 'Unit Community') return hasChapterAssignment(user)
-          return ['Gloaro Network', 'Messages', 'Connect'].includes(label)
+          return ['Gloaro Network', 'Messages', 'Connect', 'Business Sent', 'Business Received'].includes(label)
         })
       } else if ([ROLES.CUSTOMER, ROLES.USER, ROLES.VENDOR].includes(normalizedRole)) {
-        children = children.filter(([label]) => ['Unit Community', 'Gloaro Network', 'Messages', 'Connect'].includes(label))
+        children = children.filter(([label]) => ['Unit Community', 'Gloaro Network', 'Messages', 'Connect', 'Business Sent', 'Business Received'].includes(label))
       }
     }
     return {
