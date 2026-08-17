@@ -14,7 +14,9 @@ import {
   Download,
   Flame,
   CheckCircle2,
-  AlertCircle
+  AlertCircle,
+  Briefcase,
+  IndianRupee,
 } from 'lucide-react'
 import { formatCurrency } from '../../utils/format'
 
@@ -79,6 +81,10 @@ export default function MemberDashboardBI() {
         <KPICard title="One-to-Ones" value={kpis.oneToOnesCompleted} icon={TrendingUp} subtitle="Peer networking sessions" />
         <KPICard title="Visitor Invites" value={kpis.visitorInvites} icon={UsersRound} subtitle="Invitations dispatched" />
         <KPICard title="Membership" value={kpis.membershipStatus} icon={CheckCircle2} subtitle="Active context state" />
+        <KPICard title="Business Opportunities" value={kpis.businessGenerated || 0} icon={Briefcase} subtitle="Business referrals created" />
+        <KPICard title="Business Won" value={kpis.businessWon || 0} icon={TrendingUp} subtitle="Closed business deals" />
+        <KPICard title="Business Earnings" value={formatCurrency(kpis.businessEarnings)} icon={IndianRupee} subtitle="Commission earned from business" />
+        <KPICard title="Business Pipeline" value={kpis.businessOpportunities || 0} icon={Flame} subtitle="Active business opportunities" />
       </div>
 
       {/* Analytics Charts */}
