@@ -175,6 +175,7 @@ export function AuthProvider({ children }) {
         storage.clearOnboardingContext()
         setUser(null)
         setPermissionConfig(null)
+        setLoading(false)
       } finally {
         if (storage.getAccessToken() === initialToken) {
           setLoading(false)

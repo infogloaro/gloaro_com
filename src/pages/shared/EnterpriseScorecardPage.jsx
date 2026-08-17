@@ -17,13 +17,12 @@ import {
   Banknote,
   Download,
   FileText,
-  Printer,
   ReceiptText,
-  Search,
   Store,
   Trophy,
   UserRound,
   Users,
+  X,
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { scorecardApi } from '../../api/scorecard'
@@ -40,19 +39,24 @@ const today = new Date()
 const defaultStartDate = new Date(today.getFullYear(), today.getMonth() - 11, 1).toISOString().slice(0, 10)
 const defaultEndDate = today.toISOString().slice(0, 10)
 
-const revenueColumns = [
-  ['membershipRevenue', 'Membership Revenue'],
-  ['vendorRevenue', 'Vendor Revenue'],
-  ['totalEarned', 'Total Earned'],
-]
-
 const emptyData = {
   cards: {},
   charts: {},
-  topEarners: [],
+  people: [],
   pagination: { page: 1, limit: 10, total: 0, pages: 1 },
-  filters: { roles: [] },
+  filters: { roles: [], regions: [], states: [], districts: [], chapters: [] },
 }
+
+// Roles hidden from the Mr.360 Role filter dropdown (UI-only).
+// Backend data, role definitions, RBAC/PBAC and role management are untouched.
+const HIDDEN_ROLE_FILTERS = new Set([
+  'franchise_admin',
+  'ecommerce_admin',
+  'marketplace_admin',
+  'digital_marketing_admin',
+  'training_admin',
+  'finance_admin',
+])
 
 function money(value) {
   return currency.format(Number(value || 0))
@@ -65,7 +69,13 @@ function compactMoney(value) {
   return money(numeric)
 }
 
-function ChartPanel({ title, children }) {
+function formatDate(value) {
+  if (!value) return '-'
+  const date = new Date(value)
+  return Number.isNaN(date.getTime()) ? '-' : date.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
+}
+
+function ChartPanel({ title, empty, children }) {
   return (
     <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm overflow-hidden">
       <div className="flex items-center justify-between gap-2 border-b border-slate-100 pb-3">
@@ -74,7 +84,13 @@ function ChartPanel({ title, children }) {
       </div>
       <div className="mt-3 rounded-lg border border-slate-200 bg-slate-50/60 p-2 shadow-inner overflow-hidden">
         <div className="h-72 w-full overflow-x-auto overflow-y-hidden [scrollbar-width:thin] touch-pan-x">
-          {children}
+          {empty ? (
+            <div className="grid h-full min-h-64 place-items-center">
+              <p className="text-sm font-bold text-slate-400">No data available.</p>
+            </div>
+          ) : (
+            children
+          )}
         </div>
       </div>
     </section>
@@ -98,11 +114,76 @@ function Card({ label, value, helper, icon: Icon }) {
   )
 }
 
+function PersonDetail({ person, onClose }) {
+  if (!person) return null
+  const detail = (label, value) => (
+    <div className="flex items-center justify-between gap-2 py-1.5">
+      <span className="text-xs font-extrabold uppercase tracking-wide text-slate-500">{label}</span>
+      <span className="text-sm font-black text-slate-900">{value}</span>
+    </div>
+  )
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4" onClick={onClose}>
+      <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl bg-white shadow-2xl" onClick={(event) => event.stopPropagation()}>
+        <div className="sticky top-0 flex items-start justify-between gap-3 border-b border-slate-100 bg-white p-5">
+          <div>
+            <p className="text-xs font-black uppercase tracking-wider text-[#1558b0]">{person.roleLabel}</p>
+            <h3 className="text-xl font-black text-slate-950">{person.name}</h3>
+          </div>
+          <button type="button" onClick={onClose} className="rounded-lg border border-slate-200 p-2 text-slate-500 transition hover:bg-slate-50">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+        <div className="space-y-5 p-5">
+          <section>
+            <h4 className="mb-1 text-xs font-black uppercase tracking-wider text-[#1558b0]">Person</h4>
+            <div className="divide-y divide-slate-100 rounded-xl border border-slate-200 px-4 py-1">
+              {detail('Official ID', person.officialId)}
+              {detail('Role', person.roleLabel)}
+              {detail('Status', person.status)}
+              {detail('Joined', formatDate(person.joinedAt))}
+            </div>
+          </section>
+          <section>
+            <h4 className="mb-1 text-xs font-black uppercase tracking-wider text-[#1558b0]">Organization</h4>
+            <div className="divide-y divide-slate-100 rounded-xl border border-slate-200 px-4 py-1">
+              {detail('Region', person.region)}
+              {detail('State', person.state)}
+              {detail('District', person.district)}
+              {detail('Chapter', person.chapter)}
+              {detail('Unit', person.unit)}
+            </div>
+          </section>
+          <section>
+            <h4 className="mb-1 text-xs font-black uppercase tracking-wider text-[#1558b0]">Performance</h4>
+            <div className="divide-y divide-slate-100 rounded-xl border border-slate-200 px-4 py-1">
+              {detail('Members Added', numberFormat.format(person.membersAdded || 0))}
+              {detail('Vendors Added', numberFormat.format(person.vendorsAdded || 0))}
+              {detail('Referrals / Connects', numberFormat.format(person.referrals || 0))}
+              {detail('Transactions', numberFormat.format(person.transactions || 0))}
+              {detail('Events', numberFormat.format(person.events || 0))}
+              {detail('Orders', numberFormat.format(person.orders || 0))}
+              {detail('Membership Revenue', money(person.membershipRevenue))}
+              {detail('Vendor Revenue', money(person.vendorRevenue))}
+              {detail('Other Revenue', money(person.otherRevenue))}
+              {detail('Total Earned', money(person.totalEarned))}
+            </div>
+          </section>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function EnterpriseScorecardPage() {
   const [filters, setFilters] = useState({
     searchName: '',
     searchOfficialId: '',
     role: '',
+    region: '',
+    state: '',
+    district: '',
+    chapter: '',
     startDate: defaultStartDate,
     endDate: defaultEndDate,
     sortBy: 'totalEarned',
@@ -113,6 +194,7 @@ export default function EnterpriseScorecardPage() {
   const [data, setData] = useState(emptyData)
   const [searchNameInput, setSearchNameInput] = useState('')
   const [searchOfficialIdInput, setSearchOfficialIdInput] = useState('')
+  const [selected, setSelected] = useState(null)
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -140,12 +222,13 @@ export default function EnterpriseScorecardPage() {
 
   const cards = data.cards || {}
   const charts = data.charts || {}
-  const rows = data.topEarners || []
+  const rows = data.people || []
   const pagination = data.pagination || emptyData.pagination
-  const roles = data.filters?.roles || []
+  const filterOptions = data.filters || emptyData.filters
+  const roleOptions = (filterOptions.roles || []).filter((role) => !HIDDEN_ROLE_FILTERS.has(role.value))
 
   const updateFilter = (key, value) => {
-    setFilters((current) => ({ ...current, [key]: value, page: key === 'page' ? value : 1 }))
+    setFilters((current) => ({ ...current, [key]: value, page: 1 }))
   }
 
   const toggleSort = (key) => {
@@ -165,13 +248,13 @@ export default function EnterpriseScorecardPage() {
 
   const exportRows = async () => {
     const response = await scorecardApi.enterprise({ ...filters, page: 1, limit: 1000 })
-    return response.data?.data?.topEarners || []
+    return response.data?.data?.people || []
   }
 
   const exportExcel = async () => {
     try {
       const exportData = await exportRows()
-      const header = ['Rank', 'Official ID', 'Name', 'Role', 'Members Added', 'Vendors Added', 'Membership Revenue', 'Vendor Revenue', 'Total Earned']
+      const header = ['Rank', 'Official ID', 'Name', 'Role', 'Region', 'State', 'District', 'Chapter', 'Members Added', 'Vendors Added', 'Referrals', 'Membership Revenue', 'Vendor Revenue', 'Total Earned']
       const lines = [
         header.join(','),
         ...exportData.map((row) => [
@@ -179,8 +262,13 @@ export default function EnterpriseScorecardPage() {
           row.officialId,
           row.name,
           row.roleLabel,
+          row.region,
+          row.state,
+          row.district,
+          row.chapter,
           row.membersAdded,
           row.vendorsAdded,
+          row.referrals,
           row.membershipRevenue,
           row.vendorRevenue,
           row.totalEarned,
@@ -190,7 +278,7 @@ export default function EnterpriseScorecardPage() {
       const url = URL.createObjectURL(blob)
       const link = document.createElement('a')
       link.href = url
-      link.download = 'enterprise-scorecard.csv'
+      link.download = 'mr360-people.csv'
       link.click()
       URL.revokeObjectURL(url)
     } catch {
@@ -211,8 +299,8 @@ export default function EnterpriseScorecardPage() {
         <body>
           <h1>Mr. 360</h1>
           <table border="1" cellspacing="0" cellpadding="6">
-            <thead><tr><th>Rank</th><th>Official ID</th><th>Name</th><th>Role</th><th>Members Added</th><th>Vendors Added</th><th>Membership Revenue</th><th>Vendor Revenue</th><th>Total Earned</th></tr></thead>
-            <tbody>${exportData.map((row) => `<tr><td>${row.rank}</td><td>${row.officialId}</td><td>${row.name}</td><td>${row.roleLabel}</td><td>${row.membersAdded}</td><td>${row.vendorsAdded}</td><td>${money(row.membershipRevenue)}</td><td>${money(row.vendorRevenue)}</td><td>${money(row.totalEarned)}</td></tr>`).join('')}</tbody>
+            <thead><tr><th>Rank</th><th>Official ID</th><th>Name</th><th>Role</th><th>Region</th><th>State</th><th>District</th><th>Chapter</th><th>Members Added</th><th>Vendors Added</th><th>Referrals</th><th>Membership Revenue</th><th>Vendor Revenue</th><th>Total Earned</th></tr></thead>
+            <tbody>${exportData.map((row) => `<tr><td>${row.rank}</td><td>${row.officialId}</td><td>${row.name}</td><td>${row.roleLabel}</td><td>${row.region}</td><td>${row.state}</td><td>${row.district}</td><td>${row.chapter}</td><td>${row.membersAdded}</td><td>${row.vendorsAdded}</td><td>${row.referrals}</td><td>${money(row.membershipRevenue)}</td><td>${money(row.vendorRevenue)}</td><td>${money(row.totalEarned)}</td></tr>`).join('')}</tbody>
           </table>
         </body>
       </html>
@@ -221,24 +309,42 @@ export default function EnterpriseScorecardPage() {
     popup.print()
   }
 
+  const renderSelect = (label, key, options) => (
+    <label className="text-xs font-black uppercase text-slate-500">
+      {label}
+      <select value={filters[key]} onChange={(event) => updateFilter(key, event.target.value)} className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 outline-none">
+        <option value="">All {label}s</option>
+        {options.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+      </select>
+    </label>
+  )
+
+  const sortableHeader = (label, key) => (
+    <th key={key} className="px-4 py-3 text-left font-black">
+      <button type="button" onClick={() => toggleSort(key)} className="inline-flex items-center gap-1">
+        {label}<ArrowDownUp className="h-3.5 w-3.5" />
+      </button>
+    </th>
+  )
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <p className="text-xs font-black uppercase tracking-wider text-[#1558b0]">Organization-Wide Performance</p>
+          <p className="text-xs font-black uppercase tracking-wider text-[#1558b0]">All Gloaro People &amp; Performance</p>
           <h1 className="text-2xl font-black text-slate-950">Mr. 360</h1>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <button onClick={() => handleExport('excel')} className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 shadow-sm transition hover:bg-slate-50">
+          <button onClick={exportExcel} className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 shadow-sm transition hover:bg-slate-50">
             <Download className="h-4 w-4" /> Excel
           </button>
-          <button onClick={() => handleExport('pdf')} className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 shadow-sm transition hover:bg-slate-50">
+          <button onClick={exportPdf} className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 shadow-sm transition hover:bg-slate-50">
             <FileText className="h-4 w-4" /> PDF
           </button>
         </div>
       </div>
 
-      <section className="grid gap-3 rounded-lg border border-slate-200 bg-white p-4 shadow-sm sm:grid-cols-2 lg:grid-cols-5">
+      <section className="grid gap-3 rounded-lg border border-slate-200 bg-white p-4 shadow-sm sm:grid-cols-2 xl:grid-cols-4">
         <label className="text-xs font-black uppercase text-slate-500">
           Name
           <input type="text" placeholder="Search name" value={searchNameInput} onChange={(e) => setSearchNameInput(e.target.value)} className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 outline-none" />
@@ -247,12 +353,11 @@ export default function EnterpriseScorecardPage() {
           Official ID
           <input type="text" placeholder="Search ID" value={searchOfficialIdInput} onChange={(e) => setSearchOfficialIdInput(e.target.value)} className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 outline-none" />
         </label>
-        <label className="text-xs font-black uppercase text-slate-500">
-          Role
-          <select value={filters.role} onChange={(event) => updateFilter('role', event.target.value)} className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 outline-none">
-            {roles.map((role) => <option key={role.value} value={role.value}>{role.label}</option>)}
-          </select>
-        </label>
+        {renderSelect('Role', 'role', roleOptions)}
+        {renderSelect('Region', 'region', filterOptions.regions)}
+        {renderSelect('State', 'state', filterOptions.states)}
+        {renderSelect('District', 'district', filterOptions.districts)}
+        {renderSelect('Chapter', 'chapter', filterOptions.chapters)}
         <label className="text-xs font-black uppercase text-slate-500">
           Start
           <input type="date" value={filters.startDate} onChange={(event) => updateFilter('startDate', event.target.value)} className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 outline-none" />
@@ -264,18 +369,18 @@ export default function EnterpriseScorecardPage() {
       </section>
 
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <Card label="Total People" value={numberFormat.format(cards.totalPeople || 0)} helper="All Gloaro people" icon={Users} />
+        <Card label="Total Members" value={numberFormat.format(cards.totalMembers || 0)} icon={UserRound} />
+        <Card label="Total Vendors" value={numberFormat.format(cards.totalVendors || 0)} icon={Store} />
         <Card label="Total Revenue Generated" value={compactMoney(cards.totalRevenueGenerated)} icon={Banknote} />
         <Card label="Total Membership Revenue" value={compactMoney(cards.totalMembershipRevenue)} icon={Users} />
         <Card label="Total Vendor Revenue" value={compactMoney(cards.totalVendorRevenue)} icon={Store} />
-        <Card label="Total Members" value={numberFormat.format(cards.totalMembers || 0)} icon={Users} />
-        <Card label="Total Vendors" value={numberFormat.format(cards.totalVendors || 0)} icon={Store} />
         <Card label="Total Transactions" value={numberFormat.format(cards.totalTransactions || 0)} icon={ReceiptText} />
         <Card label="Highest Earner" value={cards.highestEarner?.name || '-'} helper={cards.highestEarner ? money(cards.highestEarner.totalEarned) : ''} icon={Trophy} />
-        <Card label="Average Revenue per User" value={compactMoney(cards.averageRevenuePerUser)} icon={UserRound} />
       </section>
 
       <section className="grid gap-4 xl:grid-cols-2">
-        <ChartPanel title="Revenue by Role">
+        <ChartPanel title="Revenue by Role" empty={!charts.revenueByRole?.length}>
           <div className="h-full min-w-[620px] sm:min-w-0">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={charts.revenueByRole || []} margin={{ bottom: 25, left: 10, right: 10 }}>
@@ -288,7 +393,7 @@ export default function EnterpriseScorecardPage() {
             </ResponsiveContainer>
           </div>
         </ChartPanel>
-        <ChartPanel title="Monthly Revenue Trend">
+        <ChartPanel title="Monthly Revenue Trend" empty={!charts.monthlyRevenueTrend?.length}>
           <div className="h-full min-w-[450px] sm:min-w-0">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={charts.monthlyRevenueTrend || []}>
@@ -301,7 +406,7 @@ export default function EnterpriseScorecardPage() {
             </ResponsiveContainer>
           </div>
         </ChartPanel>
-        <ChartPanel title="Membership Revenue vs Vendor Revenue">
+        <ChartPanel title="Membership Revenue vs Vendor Revenue" empty={!charts.membershipVsVendorRevenue?.length}>
           <div className="h-full min-w-[450px] sm:min-w-0">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={charts.membershipVsVendorRevenue || []}>
@@ -315,7 +420,7 @@ export default function EnterpriseScorecardPage() {
             </ResponsiveContainer>
           </div>
         </ChartPanel>
-        <ChartPanel title="Top 10 Earners">
+        <ChartPanel title="Top 10 Earners" empty={!charts.topEarners?.length}>
           <div className="h-full min-w-[400px] sm:min-w-0">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={charts.topEarners || []} layout="vertical" margin={{ left: 20 }}>
@@ -328,7 +433,7 @@ export default function EnterpriseScorecardPage() {
             </ResponsiveContainer>
           </div>
         </ChartPanel>
-        <ChartPanel title="Top 10 Members Added">
+        <ChartPanel title="Top 10 Members Added" empty={!charts.topMembersAdded?.length}>
           <div className="h-full min-w-[450px] sm:min-w-0">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={charts.topMembersAdded || []}>
@@ -341,7 +446,7 @@ export default function EnterpriseScorecardPage() {
             </ResponsiveContainer>
           </div>
         </ChartPanel>
-        <ChartPanel title="Top 10 Vendors Added">
+        <ChartPanel title="Top 10 Vendors Added" empty={!charts.topVendorsAdded?.length}>
           <div className="h-full min-w-[450px] sm:min-w-0">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={charts.topVendorsAdded || []}>
@@ -358,32 +463,48 @@ export default function EnterpriseScorecardPage() {
 
       <section className="rounded-lg border border-slate-200 bg-white shadow-sm">
         <div className="flex items-center justify-between gap-3 border-b border-slate-200 p-4">
-          <h2 className="text-sm font-black text-slate-950">Top Earners</h2>
+          <div>
+            <h2 className="text-sm font-black text-slate-950">People Performance</h2>
+            <p className="mt-0.5 text-xs font-bold text-slate-500">Every person in Gloaro — including those with no activity yet.</p>
+          </div>
           <span className="text-xs font-bold text-slate-500">{visibleRange}</span>
         </div>
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-slate-200 text-sm">
             <thead className="bg-slate-50 text-xs uppercase text-slate-500">
               <tr>
-                {['Rank', 'Official ID', 'Name', 'Role', 'Members Added', 'Vendors Added'].map((head) => <th key={head} className="px-4 py-3 text-left font-black">{head}</th>)}
-                {revenueColumns.map(([key, label]) => (
-                  <th key={key} className="px-4 py-3 text-left font-black">
-                    <button type="button" onClick={() => toggleSort(key)} className="inline-flex items-center gap-1">
-                      {label}<ArrowDownUp className="h-3.5 w-3.5" />
-                    </button>
-                  </th>
-                ))}
+                <th className="px-4 py-3 text-left font-black">Rank</th>
+                <th className="px-4 py-3 text-left font-black">Official ID</th>
+                <th className="px-4 py-3 text-left font-black">Name</th>
+                <th className="px-4 py-3 text-left font-black">Role</th>
+                <th className="px-4 py-3 text-left font-black">Region</th>
+                <th className="px-4 py-3 text-left font-black">State</th>
+                <th className="px-4 py-3 text-left font-black">District</th>
+                <th className="px-4 py-3 text-left font-black">Chapter</th>
+                {sortableHeader('Members Added', 'membersAdded')}
+                {sortableHeader('Vendors Added', 'vendorsAdded')}
+                {sortableHeader('Referrals', 'referrals')}
+                {sortableHeader('Membership Revenue', 'membershipRevenue')}
+                {sortableHeader('Vendor Revenue', 'vendorRevenue')}
+                {sortableHeader('Total Earned', 'totalEarned')}
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {rows.map((row) => (
-                <tr key={row.id} className="hover:bg-slate-50">
+                <tr key={row.id} onClick={() => setSelected(row)} className="cursor-pointer transition hover:bg-slate-50">
                   <td className="px-4 py-3 font-black text-slate-900">{row.rank}</td>
                   <td className="px-4 py-3 font-bold text-slate-600">{row.officialId}</td>
                   <td className="px-4 py-3 font-black text-slate-900">{row.name}</td>
-                  <td className="px-4 py-3 text-slate-600">{row.roleLabel}</td>
+                  <td className="px-4 py-3">
+                    <span className="rounded-full bg-[#eef4ff] px-2.5 py-0.5 text-xs font-black text-[#1558b0]">{row.roleLabel}</span>
+                  </td>
+                  <td className="px-4 py-3 text-slate-600">{row.region}</td>
+                  <td className="px-4 py-3 text-slate-600">{row.state}</td>
+                  <td className="px-4 py-3 text-slate-600">{row.district}</td>
+                  <td className="px-4 py-3 text-slate-600">{row.chapter}</td>
                   <td className="px-4 py-3 text-slate-600">{numberFormat.format(row.membersAdded || 0)}</td>
                   <td className="px-4 py-3 text-slate-600">{numberFormat.format(row.vendorsAdded || 0)}</td>
+                  <td className="px-4 py-3 text-slate-600">{numberFormat.format(row.referrals || 0)}</td>
                   <td className="px-4 py-3 font-bold text-slate-700">{money(row.membershipRevenue)}</td>
                   <td className="px-4 py-3 font-bold text-slate-700">{money(row.vendorRevenue)}</td>
                   <td className="px-4 py-3 font-black text-slate-950">{money(row.totalEarned)}</td>
@@ -391,7 +512,7 @@ export default function EnterpriseScorecardPage() {
               ))}
               {rows.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="px-4 py-10 text-center text-sm font-bold text-slate-500">No scorecard data found.</td>
+                  <td colSpan={14} className="px-4 py-10 text-center text-sm font-bold text-slate-500">No people found.</td>
                 </tr>
               ) : null}
             </tbody>
@@ -413,6 +534,8 @@ export default function EnterpriseScorecardPage() {
           </div>
         </div>
       </section>
+
+      {selected ? <PersonDetail person={selected} onClose={() => setSelected(null)} /> : null}
     </div>
   )
 }

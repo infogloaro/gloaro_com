@@ -65,9 +65,31 @@ const moduleCards = [
 ]
 
 export function SuperAdminDashboardPage() {
-  const { hasSection, hasWidget } = useAuth()
+  return (
+    <EnterpriseDashboard
+      eyebrow="Super Admin Command Center"
+      title="Gloaro Network Enterprise Dashboard"
+      description="Control organization hierarchy, users, memberships, vendors, marketplace, reports, permissions, and system configuration from one console."
+    />
+  )
+}
+
+export function AdminEnterpriseDashboard() {
+  return (
+    <EnterpriseDashboard
+      eyebrow="Admin Command Center"
+      title="Gloaro Network Enterprise Dashboard"
+      description="Monitor members, vendors, marketplace listings, approvals, payments, and organization activity from one console."
+    />
+  )
+}
+
+export function EnterpriseDashboard({ eyebrow, title, description }) {
+  const { hasSection, hasWidget, hasConfigData } = useAuth()
   const dashboard = useApi(adminApi.dashboard)
   const stats = dashboard.data || {}
+
+  const showSection = (module, section) => (hasConfigData ? hasSection(module, section) : true)
 
   const topCards = [
     ['members', 'Total Members', (stats.totalUsers ?? stats.roleStats?.totalMembers ?? 0).toLocaleString(), `${stats.newUsersToday || 0} today`, Users],
@@ -85,18 +107,13 @@ export function SuperAdminDashboardPage() {
 
   return (
     <section className="space-y-6">
-      <EnterpriseHeader
-        eyebrow="Super Admin Command Center"
-        title="Gloaro Network Enterprise Dashboard"
-        description="Control organization hierarchy, users, memberships, vendors, marketplace, reports, permissions, and system configuration from one console."
-      />
+      <EnterpriseHeader eyebrow={eyebrow} title={title} description={description} />
 
-      {hasSection('dashboard', 'overview') && <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      {showSection('dashboard', 'overview') && <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {topCards.map(([, label, value, helper, Icon]) => <GlassStat key={label} label={label} value={value} helper={helper} icon={Icon} />)}
       </div>}
 
-
-      {hasSection('dashboard', 'payments') && <section className="grid gap-5 xl:grid-cols-[1.2fr_0.8fr]">
+      {showSection('dashboard', 'payments') && <section className="grid gap-5 xl:grid-cols-[1.2fr_0.8fr]">
         <DataTable
           columns={[
             { key: ROLES.USER, header: 'User', render: (row) => row.user?.name || row.user?.email || 'User' },

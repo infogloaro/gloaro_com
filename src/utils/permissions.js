@@ -89,7 +89,6 @@ const SIDEBAR_ALIASES = {
   support: 'settings',
   reports: 'reports',
   reports_center: 'reports',
-  analytics: 'reports',
   scorecards: 'reports',
   enterprise_scorecard: 'reports',
   executive_dashboard: 'reports',
@@ -158,8 +157,8 @@ const ADMIN_ROUTE_RULES = [
   { path: '/support', module: 'settings', section: 'support' },
   { path: '/reports', module: 'reports', section: 'reports' },
   { path: '/reports-center', module: 'reports', section: 'reports_center' },
-  { path: '/analytics', module: 'reports', section: 'analytics' },
-  { path: '/legacy-analytics', module: 'reports', section: 'analytics' },
+  { path: '/analytics', module: 'analytics', section: 'analytics' },
+  { path: '/legacy-analytics', module: 'analytics', section: 'analytics' },
   { path: '/scorecard', module: 'reports', section: 'enterprise_scorecard' },
   { path: '/scorecards', module: 'reports', section: 'scorecards' },
   { path: '/executive-dashboard', module: 'reports', section: 'executive_dashboard' },
@@ -273,6 +272,7 @@ export function createPermissionHelpers(user, permissionConfig = null) {
       .map((item) => normalizeKey(typeof item === 'string' ? item : item?.id))
       .filter(Boolean)
   )
+  const hasConfigData = modules.size > 0
   const sections = config?.sections || {}
   const operations = config?.operations || {}
   const permissions = config?.permissions || {}
@@ -349,13 +349,16 @@ export function createPermissionHelpers(user, permissionConfig = null) {
     if (!rule) return true
     if (isCoreAdmin && ['/network', '/wall', '/chat', '/notifications'].includes(rule.path)) return true
     if (rule.superadminOnly) return false
-    if (rule.module && !hasModule(rule.module)) return false
-    if (rule.section && !hasSection(rule.module, rule.section)) return false
+    if (hasConfigData) {
+      if (rule.module && !hasModule(rule.module)) return false
+      if (rule.section && !hasSection(rule.module, rule.section)) return false
+    }
     return true
   }
 
   return {
     isSuperAdmin,
+    hasConfigData,
     hasModule,
     hasSection,
     hasPermission,

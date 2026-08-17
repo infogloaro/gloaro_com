@@ -20,6 +20,7 @@ import ResetPassword from './pages/auth/ResetPassword'
 import VerifyEmail from './pages/auth/VerifyEmail'
 import AdminDashboard from './pages/admin/AdminDashboard'
 import AdminAnalytics from './pages/admin/AdminAnalytics'
+import AnalyticsPage from './pages/analytics/AnalyticsPage'
 import AdminManagementPage from './pages/admin/AdminManagementPage'
 import RegionDirectorManagementPage from './pages/admin/RegionDirectorManagementPage'
 import AdminVendorApplicationsPage from './pages/admin/AdminVendorApplicationsPage'
@@ -35,6 +36,7 @@ import {
   ReferralManagementPage,
 
   ReportsCenterPage,
+  AdminEnterpriseDashboard,
   SuperAdminDashboardPage,
   SuperAdminModulePage,
   SystemLogsPage,
@@ -48,7 +50,6 @@ import {
   BusinessNetworkingPage,
   ChapterManagementPage,
   ChapterDashboardPage,
-  EnterpriseAnalyticsPage,
   EnterpriseCalendarPage,
   EnterpriseReportBuilderPage,
   ExecutiveDashboardPage,
@@ -252,7 +253,7 @@ function App() {
     { path: '/reviews', element: <AdminReviewsPage /> },
     { path: '/faqs', element: <AdminFaqsPage /> },
     { path: '/settings', element: <AdminSettingsPage /> },
-    { path: '/analytics', element: <EnterpriseAnalyticsPage /> },
+    { path: '/analytics', element: <AnalyticsPage /> },
     { path: '/legacy-analytics', element: <AdminAnalytics /> },
     { path: '/notifications', element: <NotificationsPage /> },
     { path: '/tasks', element: <TaskManagementPage /> },
@@ -280,10 +281,14 @@ function App() {
     return canAccessPath(buildAdminRoute(ROLES.ADMIN, route.path))
   }).map((route) => ({
     ...route,
-    path: buildAdminRoute(ROLES.ADMIN, route.path)
+    path: buildAdminRoute(ROLES.ADMIN, route.path),
+    element: route.path === '/dashboard' ? <AdminEnterpriseDashboard /> : route.element,
   }))
 
-  const adminHomePath = regularAdminRoutes[0]?.path || '/dashboard'
+  const adminDashboardPath = buildAdminRoute(ROLES.ADMIN, '/dashboard')
+  const adminHomePath = regularAdminRoutes.some((route) => route.path === adminDashboardPath)
+    ? adminDashboardPath
+    : (regularAdminRoutes[0]?.path || adminDashboardPath)
 
   return (
     <>
@@ -334,6 +339,7 @@ function App() {
         <Route element={<ProtectedRoute roles={[ROLES.ADMIN, ROLES.SUPERADMIN, ROLES.REGION_DIRECTOR, ROLES.STATE_DIRECTOR, ROLES.DISTRICT_DIRECTOR, ROLES.EXECUTIVE_DIRECTOR, ROLES.LAUNCH_DIRECTOR, ROLES.DIRECT_CONSULTANT, ROLES.CHAPTER_PRESIDENT, ROLES.VICE_PRESIDENT, ROLES.SECRETARY, ROLES.CUSTOMER, ROLES.USER, ROLES.VENDOR]} />}>
           <Route element={<DashboardLayout title="Gloaro Portal" />}>
             <Route path="/notifications" element={<NotificationsPage />} />
+            <Route path="/analytics" element={<AnalyticsPage />} />
             {[
               '/scorecard',
               '/membership/scorecard',
@@ -440,7 +446,7 @@ function App() {
               <Route path="/member/dashboard/reviews" element={<VendorReviewsPage />} />
               <Route path="/member/dashboard/payments" element={<VendorPaymentsPage />} />
               <Route path="/member/dashboard/notifications" element={<VendorNotificationsPage />} />
-              <Route path="/member/dashboard/vendor-analytics" element={<VendorDashboard />} />
+              <Route path="/member/dashboard/vendor-analytics" element={<VendorAnalyticsPage />} />
             </Route>
             </Route>
 

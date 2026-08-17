@@ -159,7 +159,7 @@ export const memberVendorNav = [
   ['Leads', '/member/dashboard/leads', Ticket],
   ['Reviews', '/member/dashboard/reviews', Star],
   ['Payments', '/member/dashboard/payments', CreditCard],
-  ['Analytics', '/member/dashboard/vendor-analytics', BarChart3],
+  ['Analytics', '/analytics', BarChart3],
 ]
 
 export const applicantNav = [
@@ -297,7 +297,7 @@ export function getRoleBasedSidebarNav(role, user) {
 }
 
 export const rolePrefixes = {
-  [ROLES.SUPERADMIN]: '/admin',
+  [ROLES.SUPERADMIN]: '/super-admin',
   [ROLES.ADMIN]: '/admin',
   [ROLES.CUSTOMER]: '/member/dashboard',
   [ROLES.USER]: '/member/dashboard',
@@ -317,6 +317,7 @@ export const rolePrefixes = {
 const commonModules = [
   ['Dashboard', '', LayoutDashboard],
   ['Mr. 360', '/scorecard', BarChart3],
+  ['Analytics', '/analytics', BarChart3],
   {
     label: 'Communication',
     icon: MessageSquare,
@@ -417,7 +418,7 @@ export function getSidebarNav(role, options = {}) {
     const prefixPath = (item) => {
       if (Array.isArray(item)) {
         const [label, to, icon] = item;
-        if (to === '/notifications') return [label, to, icon];
+        if (to === '/notifications' || to === '/analytics') return [label, to, icon];
         return [label, buildAdminRoute(role, to), icon];
       }
       return {
@@ -483,7 +484,7 @@ export function getSidebarNav(role, options = {}) {
       const memberReferralPath = label === 'Connect' && to === '/referrals' && [ROLES.CUSTOMER, ROLES.USER, ROLES.VENDOR].includes(normalizedRole);
       const finalPath = memberReferralPath
         ? '/member/referrals'
-        : (to === '/notifications' || to.startsWith('/admin/') || to === '/admin' || to.startsWith('/member/') || to === '/member') || to.startsWith('/super-admin') ? to : `${prefix}${to}`;
+        : (to === '/notifications' || to === '/analytics' || to.startsWith('/admin/') || to === '/admin' || to.startsWith('/member/') || to === '/member') || to.startsWith('/super-admin') ? to : `${prefix}${to}`;
       return [label, finalPath, icon];
     }
     let children = item.children;
@@ -540,27 +541,28 @@ if (
     base = [
       base[0], // Dashboard
       base[1], // Mr. 360
-      base[2], // Communication
-      base[3], // Community
-      base[4], // Marketplace
-      base[5], // Meetings
-      base[6], // Training
+      base[2], // Analytics
+      base[3], // Communication
+      base[4], // Community
+      base[5], // Marketplace
+      base[6], // Meetings
+      base[7], // Training
       orgMgmt, // Organization / Location
-      base[7], // My Unit (not used by direct consultant, but keeping index parity)
-      base[8], // Profile
+      base[8], // My Unit (not used by direct consultant, but keeping index parity)
+      base[9], // Profile
     ].filter(Boolean);
   } else {
     base = [
       base[0], // Dashboard
       orgMgmt,
       base[1], // Mr. 360
-      base[2], // Communication
-      base[4], // Marketplace
-      base[5], // Meetings
-      base[3], // Community
-      base[6], // Training
-      base[7], // Unit
-      base[8], // Collaboration
+      base[2], // Analytics
+      base[3], // Communication
+      base[5], // Marketplace
+      base[6], // Meetings
+      base[4], // Community
+      base[7], // Training
+      base[8], // Unit
       base[9], // Profile
     ].filter(Boolean);
   }

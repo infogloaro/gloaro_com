@@ -237,14 +237,14 @@ export default function MemberProfilePage() {
               <PencilLine className="h-4 w-4" />
               Edit Profile
             </button>
-            <button
+            {/* <button
               type="button"
               onClick={() => setActivePanel(activePanel === 'password' ? null : 'password')}
               className="inline-flex items-center gap-2 rounded-xl bg-[#0d4697] px-4 py-2.5 text-sm font-extrabold text-white shadow-sm transition hover:bg-blue-800"
             >
               <KeyRound className="h-4 w-4" />
               Change Password
-            </button>
+            </button> */}
           </div>
         </div>
       </header>
