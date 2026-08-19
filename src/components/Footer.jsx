@@ -216,12 +216,12 @@ export default function Footer() {
                   rel="noopener noreferrer"
                   className="group inline-flex items-center gap-2 text-slate-400 transition duration-200 hover:text-[#ffd36e]"
                 >
-                  <span>Powered by</span>
+                  {/* <span>Powered by</span>
                   <img
                     src={leastActionLogo}
                     alt="Least Action Company"
                     className="h-10 sm:h-11 w-auto object-contain transition duration-300 group-hover:scale-105"
-                  />
+                  /> */}
                 </a>
               </div>
             </div>

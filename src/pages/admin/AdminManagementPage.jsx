@@ -50,6 +50,10 @@ const emptyForm = {
   organization: { region: '', state: '', district: '', chapter: '' },
   forcePasswordChange: true,
   sessionTimeoutMinutes: 60,
+  dateOfBirth: '',
+  gender: '',
+  industry: '',
+  companyName: '',
 }
 
 export default function AdminManagementPage({ role: overrideRole }) {
@@ -567,6 +571,26 @@ function AdminWizard({ form, setForm, editing, onSave, user, saving, isRoleLocke
               )}
             </div>
           )}
+          {form.role === ROLES.CUSTOMER && (
+            <>
+              <Input type="date" label="Date of Birth" value={form.dateOfBirth} onChange={(value) => update({ dateOfBirth: value })} />
+              <label className="block">
+                <span className="text-xs font-extrabold uppercase text-slate-500">Gender</span>
+                <select
+                  value={form.gender}
+                  onChange={(e) => update({ gender: e.target.value })}
+                  className="mt-1 block h-11 w-full rounded-md border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-900 outline-none focus:border-[#0d4697]"
+                >
+                  <option value="">Select Gender</option>
+                  <option value="Male">Male</option>
+                  <option value="Female">Female</option>
+                  <option value="Other">Other</option>
+                </select>
+              </label>
+              <Input label="Occupation / Profession" value={form.industry} onChange={(value) => update({ industry: value })} />
+              <Input label="Company / Business Name" value={form.companyName} onChange={(value) => update({ companyName: value })} />
+            </>
+          )}
           <label className="block">
             <span className="text-xs font-extrabold uppercase text-slate-500">Profile Photo</span>
             <input
@@ -693,6 +717,12 @@ function buildPayload(form, editing) {
     organization: form.organization,
     forcePasswordChange: form.forcePasswordChange,
     sessionTimeoutMinutes: form.sessionTimeoutMinutes,
+    ...(form.role === ROLES.CUSTOMER ? {
+      dateOfBirth: form.dateOfBirth,
+      gender: form.gender,
+      industry: form.industry,
+      companyName: form.companyName
+    } : {})
   }
   if (!form.avatar) return payload
 
