@@ -1,0 +1,74 @@
+name: Deploy Frontend
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: gloaro-production-frontend
+  cancel-in-progress: false
+
+env:
+  AWS_REGION: ap-south-1
+  S3_BUCKET: ${{ vars.S3_BUCKET }}
+  DISTRIBUTION_ID: ${{ vars.CLOUDFRONT_DISTRIBUTION_ID }}
+
+jobs:
+  deploy:
+    name: Build, upload to S3, invalidate CloudFront
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Write production env file
+        run: |
+          printf 'VITE_API_BASE_URL=%s\n' "${{ vars.VITE_API_BASE_URL }}" > .env.production
+          printf 'VITE_RAZORPAY_KEY_ID=%s\n' "${{ vars.VITE_RAZORPAY_KEY_ID }}" >> .env.production
+
+      - name: Build (production)
+        run: npm run build
+
+      - name: Verify build output
+        run: test -f dist/index.html && echo "dist/index.html exists"
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Upload hashed assets (long-term immutable cache)
+        run: |
+          aws s3 sync dist/assets "s3://${{ env.S3_BUCKET }}/assets" \
+            --delete \
+            --cache-control "public,max-age=31536000,immutable"
+
+      - name: Upload root files (no-cache) and sync delete
+        run: |
+          aws s3 sync dist/ "s3://${{ env.S3_BUCKET }}/" \
+            --delete \
+            --cache-control "no-cache" \
+            --exclude "assets/*"
+
+      - name: Create CloudFront invalidation
+        run: |
+          aws cloudfront create-invalidation \
+            --distribution-id "${{ env.DISTRIBUTION_ID }}" \
+            --paths "/*"
