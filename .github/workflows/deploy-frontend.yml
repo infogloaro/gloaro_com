@@ -8,20 +8,18 @@ on:
 
 permissions:
   contents: read
-  id-token: write
 
 concurrency:
   group: gloaro-frontend-production
   cancel-in-progress: true
 
 env:
-  AWS_REGION: ${{ vars.AWS_REGION }}
-  S3_BUCKET: ${{ vars.S3_BUCKET }}
   VITE_API_BASE_URL: https://api.gloaro.com/api/v1
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -40,34 +38,32 @@ jobs:
         run: npm run build
 
       - name: Verify build output
-        run: |
-          test -f dist/index.html
-          test -d dist/assets
+        run: test -f dist/index.html
 
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
-          aws-region: ${{ vars.AWS_REGION }}
-
-      - name: Sync hashed assets to S3
+      - name: Prepare SSH key
         run: |
-          aws s3 sync dist/assets/ "s3://${S3_BUCKET}/assets/" \
-            --delete \
-            --cache-control "public,max-age=31536000,immutable" \
-            --only-show-errors
+          set -euo pipefail
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          printf '%s\n' "${{ secrets.EC2_SSH_PRIVATE_KEY }}" > ~/.ssh/gloaro_deploy
+          chmod 600 ~/.ssh/gloaro_deploy
+          ssh-keyscan -H "${{ secrets.EC2_HOST }}" >> ~/.ssh/known_hosts
+          chmod 644 ~/.ssh/known_hosts
 
-      - name: Sync mutable files to S3
+      - name: Deploy build to EC2
         run: |
-          aws s3 sync dist/ "s3://${S3_BUCKET}/" \
-            --delete \
-            --exclude "assets/*" \
-            --cache-control "no-cache" \
-            --only-show-errors
+          set -euo pipefail
+          rsync -az --delete \
+            -e "ssh -i ~/.ssh/gloaro_deploy" \
+            dist/ \
+            "${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:/var/www/gloaro/frontend/"
 
-      - name: Invalidate CloudFront
-        if: ${{ vars.CLOUDFRONT_DISTRIBUTION_ID != '' }}
+      - name: Verify deployment on EC2
         run: |
-          aws cloudfront create-invalidation \
-            --distribution-id "${{ vars.CLOUDFRONT_DISTRIBUTION_ID }}" \
-            --paths "/*"
+          set -euo pipefail
+          ssh -i ~/.ssh/gloaro_deploy \
+            "${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}" \
+            'test -f /var/www/gloaro/frontend/index.html'
+
+      - name: Verify live site
+        run: curl --fail --silent --show-error https://www.gloaro.com/ >/dev/null
