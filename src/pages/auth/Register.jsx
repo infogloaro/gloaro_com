@@ -96,30 +96,35 @@ export default function Register() {
   }
 
   const onSubmit = async (values) => {
-    if (role === 'customer') {
-      await customerAuthApi.register({
-        fullName: values.name,
+    try {
+      if (role === 'customer') {
+        await customerAuthApi.register({
+          fullName: values.name,
+          email: values.email,
+          mobileNumber: values.phone,
+          password: values.password,
+          confirmPassword: values.password,
+        })
+        toast.success('Registration successful', { id: 'auth-register-success' })
+        navigate('/login', { replace: true })
+        return
+      }
+
+      const isVendor = role === 'online_vendor'
+      await createAccount({
+        name: values.name,
         email: values.email,
-        mobileNumber: values.phone,
+        phone: values.phone,
         password: values.password,
-        confirmPassword: values.password,
+        role: isVendor ? ROLES.VENDOR : ROLES.USER,
+        registrationType: isVendor ? 'vendor' : 'member',
+        onboardingType: isVendor ? 'vendor' : 'member',
+        referralCode: referralCode.trim() || undefined,
       })
       navigate('/login', { replace: true })
-      return
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Unable to create account', { id: 'auth-register-error' })
     }
-
-    const isVendor = role === 'online_vendor'
-    await createAccount({
-      name: values.name,
-      email: values.email,
-      phone: values.phone,
-      password: values.password,
-      role: isVendor ? ROLES.VENDOR : ROLES.USER,
-      registrationType: isVendor ? 'vendor' : 'member',
-      onboardingType: isVendor ? 'vendor' : 'member',
-      referralCode: referralCode.trim() || undefined,
-    })
-    navigate('/login', { replace: true })
   }
 
   return (

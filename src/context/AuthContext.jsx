@@ -26,6 +26,7 @@ export function AuthProvider({ children }) {
   const [permissionConfig, setPermissionConfig] = useState(() => storage.getPermissions() || (storage.getUser() ? undefined : null))
   const socketRef = useRef(null)
   const [socket, setSocket] = useState(null)
+  const logoutInFlightRef = useRef(false)
 
   const [vendorApplication, setVendorApplication] = useState(null)
   const [loadingVendorApp, setLoadingVendorApp] = useState(false)
@@ -80,6 +81,10 @@ export function AuthProvider({ children }) {
     return getMarketplaceAccess(user, vendorApplication)
   }, [user, vendorApplication])
 
+  const authToast = useCallback((type, message, id) => {
+    toast[type](message, { id })
+  }, [])
+
   const login = useCallback(async (payload, remember = true) => {
     const persistSession = (data) => {
       const nextUser = syncOnboardingContext(data.user, remember)
@@ -92,48 +97,60 @@ export function AuthProvider({ children }) {
     try {
       const response = await authApi.login(payload)
       const nextUser = persistSession(response.data.data)
-      toast.success('Signed in successfully')
+      authToast('success', 'Signed in successfully', 'auth-login-success')
       return nextUser
     } catch (authError) {
       try {
         const response = await customerAuthApi.login(payload)
         const nextUser = persistSession(response.data?.data || {})
-        toast.success('Signed in successfully')
+        authToast('success', 'Signed in successfully', 'auth-login-success')
         return nextUser
       } catch (customerError) {
-        toast.error(customerError.response?.data?.message || authError.response?.data?.message || 'Invalid email or password')
+        authToast(
+          'error',
+          customerError.response?.data?.message || authError.response?.data?.message || 'Invalid email or password',
+          'auth-login-error'
+        )
         throw customerError
       }
     }
-  }, [syncOnboardingContext])
+  }, [authToast, syncOnboardingContext])
 
   const register = useCallback(async (payload) => {
     const response = await authApi.register(payload)
     const data = response.data?.data || {}
     const nextUser = syncOnboardingContext(data.user, true)
-    toast.success(response.data.message || 'Registration successful')
+    authToast('success', response.data.message || 'Registration successful', 'auth-register-success')
     return { ...data, user: nextUser }
-  }, [syncOnboardingContext])
+  }, [authToast, syncOnboardingContext])
 
   const logout = useCallback(async () => {
+    if (logoutInFlightRef.current) return
+    logoutInFlightRef.current = true
+    if (typeof window !== 'undefined') window.__gloaroSuppressAuthToasts = true
     const isCustomerSession = isCustomerPortalSession(user)
     try {
       const sessionApi = isCustomerSession ? customerAuthApi : authApi
       await sessionApi.logout()
     } catch {
       // session is cleared locally either way
+    } finally {
+      storage.clearSession()
+      storage.clearOnboardingContext()
+      setUser(null)
+      setPermissionConfig(null)
+      socketRef.current?.disconnect()
+      setSocket(null)
+      authToast('success', 'Logged out', 'auth-logout-success')
+      if (isCustomerSession) {
+        window.location.href = '/'
+      }
+      logoutInFlightRef.current = false
+      window.setTimeout(() => {
+        window.__gloaroSuppressAuthToasts = false
+      }, 1500)
     }
-    storage.clearSession()
-    storage.clearOnboardingContext()
-    setUser(null)
-    setPermissionConfig(null)
-    socketRef.current?.disconnect()
-    setSocket(null)
-    toast.success('Logged out')
-    if (isCustomerSession) {
-      window.location.href = '/'
-    }
-  }, [user])
+  }, [authToast, user])
 
   const refreshUser = useCallback(async () => {
     try {

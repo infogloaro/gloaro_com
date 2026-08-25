@@ -10,6 +10,8 @@ const api = axios.create({
   timeout: 20000,
 })
 
+const isAuthToastSuppressed = () => typeof window !== 'undefined' && Boolean(window.__gloaroSuppressAuthToasts)
+
 let refreshing = null
 
 api.interceptors.request.use((config) => {
@@ -53,7 +55,9 @@ api.interceptors.response.use(
     // Keep authorization failures visible for user actions, but avoid alarming toasts
     // for background data-loading GET requests that are denied by backend scope rules.
     // Suppress timeout toasts — the request may have succeeded server-side or simply be slow.
-    if (!original?.silent && !isExpectedBackgroundForbidden && !isTimeout) toast.error(message)
+    if (!original?.silent && !isExpectedBackgroundForbidden && !isTimeout && !isAuthToastSuppressed()) {
+      toast.error(message)
+    }
     return Promise.reject(error)
   }
 )
