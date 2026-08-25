@@ -1,9 +1,8 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { ArrowRight, BadgeCheck, Eye, EyeOff, ShieldCheck } from 'lucide-react'
 import { motion } from 'framer-motion'
-import toast from 'react-hot-toast'
 import FormField from '../../components/forms/FormField'
 import { useAuth } from '../../hooks/useAuth'
 import { getVendorOnboardingRoutes } from '../../utils/onboarding'
@@ -17,10 +16,6 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false)
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm({ defaultValues: { remember: true } })
   const redirectError = location.state?.error
-
-  useEffect(() => {
-    if (redirectError) toast.error(redirectError)
-  }, [redirectError])
 
   const onSubmit = async (values) => {
     try {
