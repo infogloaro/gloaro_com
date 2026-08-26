@@ -302,13 +302,13 @@ export default function Seo({
     setMetaTag('meta[name="twitter:description"]', { name: 'twitter:description', content: config.description })
     setMetaTag('meta[name="twitter:image"]', { name: 'twitter:image', content: structuredUrl('/logo.png') })
 
-    let canonical = document.head.querySelector('link[rel="canonical"]')
-    if (!canonical) {
-      canonical = document.createElement('link')
-      canonical.setAttribute('rel', 'canonical')
-      document.head.appendChild(canonical)
+    let canonicalLink = document.head.querySelector('link[rel="canonical"]')
+    if (!canonicalLink) {
+      canonicalLink = document.createElement('link')
+      canonicalLink.setAttribute('rel', 'canonical')
+      document.head.appendChild(canonicalLink)
     }
-    canonical.setAttribute('href', config.canonical || routeConfig.canonical)
+    canonicalLink.setAttribute('href', config.canonical || routeConfig.canonical)
 
     const existingSchema = document.head.querySelector('script[data-seo="structured-data"]')
     if (existingSchema) existingSchema.remove()
