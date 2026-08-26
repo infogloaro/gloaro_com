@@ -53,6 +53,7 @@ import { paymentApi } from "../../api/payment";
 import EmptyState from "../../components/common/EmptyState";
 import LoadingScreen from "../../components/common/LoadingScreen";
 import LoadingSpinner from "../../components/common/LoadingSpinner";
+import Seo from "../../components/Seo";
 import StatusBadge from "../../components/common/StatusBadge";
 import { useApi } from "../../hooks/useApi";
 import { useAuth } from "../../hooks/useAuth";
@@ -1454,7 +1455,9 @@ export function ProductsPage() {
   }, []);
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-[#faf8f5] via-white to-[#f5f7fa]">
+    <>
+      <Seo title="Marketplace Products | GLOARO" description="Browse verified products from trusted GLOARO members and partners across the marketplace." canonical="/products" />
+      <main className="min-h-screen bg-gradient-to-b from-[#faf8f5] via-white to-[#f5f7fa]">
       <style>{`
         @keyframes gl-float-a { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(12px, -16px); } }
         @keyframes gl-float-b { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(-14px, 14px); } }
@@ -1745,7 +1748,8 @@ export function ProductsPage() {
           onBuyNow={() => navigate("/checkout")}
         />
       )}
-    </main>
+      </main>
+    </>
   );
 }
 
@@ -1807,6 +1811,53 @@ export function DetailPage({ type }) {
     () => (item?.images?.length ? item.images : selectedVariant?.images || []),
     [item, selectedVariant],
   );
+  const detailSeo = item
+    ? type === "vendors"
+      ? {
+          title: `${item.businessName || "Verified Vendor"} | GLOARO`,
+          description:
+            item.shortDescription ||
+            item.description ||
+            "Explore this verified vendor profile on GLOARO.",
+          canonical: `/vendors/${id}`,
+          schema: {
+            "@context": "https://schema.org",
+            "@type": "Organization",
+            name: item.businessName || "Verified Vendor",
+            description: item.shortDescription || item.description || "",
+            url: `${window.location.origin}/vendors/${id}`,
+          },
+        }
+      : type === "products"
+        ? {
+            title: `${item.title || "Product"} | GLOARO Marketplace`,
+            description:
+              item.shortDescription ||
+              item.description ||
+              "Discover this verified product on GLOARO.",
+            canonical: `/products/${id}`,
+            schema: {
+              "@context": "https://schema.org",
+              "@type": "Product",
+              name: item.title || "Product",
+              description: item.shortDescription || item.description || "",
+            },
+          }
+        : {
+            title: `${item.title || "Service"} | GLOARO Marketplace`,
+            description:
+              item.shortDescription ||
+              item.description ||
+              "Discover this verified service on GLOARO.",
+            canonical: `/services/${id}`,
+            schema: {
+              "@context": "https://schema.org",
+              "@type": "Service",
+              name: item.title || "Service",
+              description: item.shortDescription || item.description || "",
+            },
+          }
+    : null;
 
   useEffect(() => {
     if (!item) return;
@@ -1860,6 +1911,7 @@ export function DetailPage({ type }) {
   if (type === "vendors") {
     return (
       <section className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
+        <Seo {...detailSeo} />
         <div className="overflow-hidden rounded-[2.5rem] border border-slate-200 bg-white shadow-xl">
           <img
             src={item.logo?.url || item.coverImage?.url || "/logo.png"}
@@ -1945,6 +1997,7 @@ export function DetailPage({ type }) {
 
     return (
       <main className="min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(13,70,151,.12),transparent_30%),linear-gradient(180deg,#f8fbff,#f2f6fb)] py-8 sm:py-12">
+        <Seo {...detailSeo} />
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           {/* Top Hero Banner */}
           <div className="mb-8 rounded-[28px] bg-[linear-gradient(120deg,#06275d,#0d4697_62%,#1f6dc3)] px-6 py-7 text-white shadow-[0_20px_45px_rgba(13,70,151,.20)] sm:px-8">
@@ -2389,6 +2442,7 @@ export function DetailPage({ type }) {
 
   return (
     <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+      <Seo {...detailSeo} />
       <div className="grid gap-8 lg:grid-cols-[1.2fr_0.8fr]">
         <section className="space-y-6">
           <div className="overflow-hidden rounded-[2.5rem] border border-slate-200/80 bg-white shadow-[0_15px_50px_rgba(11,36,81,0.08)]">

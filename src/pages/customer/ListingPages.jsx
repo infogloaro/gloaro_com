@@ -19,6 +19,7 @@ import { customerApi } from '../../api/customer'
 import EmptyState from '../../components/common/EmptyState'
 import LoadingSpinner from '../../components/common/LoadingSpinner'
 import LoadingScreen from '../../components/common/LoadingScreen'
+import Seo from '../../components/Seo'
 import StatusBadge from '../../components/common/StatusBadge'
 import LocationAutocomplete from '../../components/common/LocationAutocomplete'
 import FormField from '../../components/forms/FormField'
@@ -329,7 +330,9 @@ export function NearbyPage() {
   const categoryOptions = getList(categories.data)
 
   return (
-    <section className="bg-[#f8fafc] px-4 py-6 sm:px-6 lg:px-8">
+    <>
+      <Seo title="Nearby Businesses | GLOARO" description="Find nearby verified services and products from your local GLOARO network, with chapter-aware and location-based discovery." canonical="/nearby" />
+      <section className="bg-[#f8fafc] px-4 py-6 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl">
         <div className="rounded-lg bg-[#0d4697] px-5 py-6 text-white sm:px-7">
           <p className="text-sm font-bold uppercase tracking-[0.18em] text-[#ffb20c]">Near Me</p>
@@ -445,7 +448,8 @@ export function NearbyPage() {
           </>
         )}
       </div>
-    </section>
+      </section>
+    </>
   )
 }
 
@@ -614,11 +618,14 @@ function buildChapterOptions(records) {
 }
 
 export function CategoriesPage() {
-  return <div className="mx-auto max-w-7xl px-5 py-8"><ResourceListPage title="Categories" fetcher={customerApi.categories} columns={[{ key: 'name', header: 'Name' }, { key: 'type', header: 'Type' }, { key: 'description', header: 'Description' }]} /></div>
+  return <>
+    <Seo title="Business Categories | GLOARO" description="Explore verified business categories to find products, services, and companies across the GLOARO network." canonical="/categories" />
+    <div className="mx-auto max-w-7xl px-5 py-8"><ResourceListPage title="Categories" fetcher={customerApi.categories} columns={[{ key: 'name', header: 'Name' }, { key: 'type', header: 'Type' }, { key: 'description', header: 'Description' }]} /></div>
+  </>
 }
 
 export function VendorsPage() {
-  return null
+  return <Seo title="Vendor Directory | GLOARO" description="Discover verified vendors, trusted suppliers, and professional business profiles in the GLOARO directory." canonical="/vendors" />
 }
 
 export function ProductsPage() {
@@ -652,7 +659,9 @@ export function ProductsPage() {
   const pagination = getPagination(payload)
 
   return (
-    <div className="mx-auto max-w-7xl px-5 py-8">
+    <>
+      <Seo title="Marketplace Products | GLOARO" description="Browse verified products from trusted GLOARO members and partners across the marketplace." canonical="/products" />
+      <div className="mx-auto max-w-7xl px-5 py-8">
       <div className="mb-8 flex flex-col justify-between gap-4 lg:flex-row lg:items-center">
         <div>
           <h1 className="font-playfair text-4xl font-bold text-[#0d4697]">Products</h1>
@@ -792,7 +801,8 @@ export function ProductsPage() {
           )}
         </>
       )}
-    </div>
+      </div>
+    </>
   )
 }
 
@@ -842,7 +852,9 @@ export function ServicesPage() {
     'All services'
 
   return (
-    <main className="relative overflow-hidden bg-[radial-gradient(circle_at_top_left,_rgba(255,183,77,0.16),_transparent_34%),radial-gradient(circle_at_top_right,_rgba(13,70,151,0.18),_transparent_28%),linear-gradient(180deg,_#f8fbff_0%,_#f5f7fb_38%,_#eef4ff_100%)] px-4 py-8 sm:px-6 lg:px-8">
+    <>
+      <Seo title="Business Services | GLOARO" description="Explore verified business services from trusted GLOARO providers, consultants, and partners." canonical="/services" />
+      <main className="relative overflow-hidden bg-[radial-gradient(circle_at_top_left,_rgba(255,183,77,0.16),_transparent_34%),radial-gradient(circle_at_top_right,_rgba(13,70,151,0.18),_transparent_28%),linear-gradient(180deg,_#f8fbff_0%,_#f5f7fb_38%,_#eef4ff_100%)] px-4 py-8 sm:px-6 lg:px-8">
       <div className="absolute left-[-8rem] top-24 h-64 w-64 rounded-full bg-[#0d4697]/10 blur-3xl" />
       <div className="absolute right-[-6rem] top-56 h-72 w-72 rounded-full bg-[#ffb20c]/15 blur-3xl" />
 
@@ -1120,7 +1132,8 @@ export function ServicesPage() {
           </div>
         )}
       </div>
-    </main>
+      </main>
+    </>
   )
 }
 
@@ -1564,7 +1577,10 @@ export function ReferralPage() {
 }
 
 export function EventsPage() {
-  return <ResourceListPage title="Events" fetcher={(params) => customerApi.events({ ...params, upcoming: true })} columns={[{ key: 'title', header: 'Event' }, { key: 'type', header: 'Type' }, { key: 'startDate', header: 'Starts', render: (row) => formatDate(row.startDate) }, { key: 'status', header: 'Status', render: (row) => <StatusBadge value={row.status} /> }]} />
+  return <>
+    <Seo title="Business Events | GLOARO" description="Discover networking events, workshops, and community meetups hosted across the GLOARO ecosystem." canonical="/events" />
+    <ResourceListPage title="Events" fetcher={(params) => customerApi.events({ ...params, upcoming: true })} columns={[{ key: 'title', header: 'Event' }, { key: 'type', header: 'Type' }, { key: 'startDate', header: 'Starts', render: (row) => formatDate(row.startDate) }, { key: 'status', header: 'Status', render: (row) => <StatusBadge value={row.status} /> }]} />
+  </>
 }
 
 export function CustomerNotificationsPage() { return <NotificationsPage /> }
@@ -1575,5 +1591,8 @@ export function CustomerSupportPage() {
 }
 
 export function ReviewsPage() {
-  return <div className="rounded-lg border border-slate-200 bg-white p-5"><h1 className="text-2xl font-extrabold">Reviews</h1><p className="mt-2 font-semibold text-slate-500">Open a vendor detail page to view and submit vendor reviews.</p></div>
+  return <>
+    <Seo title="Business Reviews | GLOARO" description="Read verified reviews and reputation signals for vendors and products across the GLOARO marketplace." canonical="/reviews" />
+    <div className="rounded-lg border border-slate-200 bg-white p-5"><h1 className="text-2xl font-extrabold">Reviews</h1><p className="mt-2 font-semibold text-slate-500">Open a vendor detail page to view and submit vendor reviews.</p></div>
+  </>
 }

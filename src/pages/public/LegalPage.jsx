@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { ArrowLeft, FileText, Mail, Phone } from 'lucide-react'
 import { Link } from 'react-router-dom'
+import Seo from '../../components/Seo'
 
 const termsSections = [
   ['1. About GLOARO', 'GLOARO provides business networking, memberships, digital services, franchise opportunities, e-commerce, training, and business solutions.'],
@@ -109,6 +110,29 @@ const content = {
 
 export default function LegalPage({ type }) {
   const page = content[type]
+  const seoMap = {
+    terms: {
+      title: 'Terms & Conditions | GLOARO',
+      description: 'Read the terms and conditions that govern use of the GLOARO platform, services, and membership ecosystem.',
+      canonical: '/terms-and-conditions',
+    },
+    privacy: {
+      title: 'Privacy Policy | GLOARO',
+      description: 'Understand how GLOARO collects, uses, and protects personal information across the platform.',
+      canonical: '/privacy-policy',
+    },
+    shipping: {
+      title: 'Shipping Policy | GLOARO',
+      description: 'Review GLOARO shipping, fulfilment, and delivery policies for marketplace orders.',
+      canonical: '/shipping-policy',
+    },
+    refund: {
+      title: 'Cancellation & Refund Policy | GLOARO',
+      description: 'See how cancellations, refunds, and returns work on the GLOARO platform.',
+      canonical: '/cancellation-refund-policy',
+    },
+  }
+  const seo = seoMap[type] || seoMap.terms
 
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: 'auto' })
@@ -116,6 +140,7 @@ export default function LegalPage({ type }) {
 
   return (
     <main className="bg-[#f8fafc] px-4 py-10 font-urbanist text-slate-700 sm:px-8 sm:py-14 lg:py-16">
+      <Seo {...seo} />
       <article className="mx-auto max-w-5xl overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-[0_18px_55px_rgba(15,23,42,0.08)]">
         <header className="border-b border-slate-200 px-6 py-10 text-center sm:px-12 sm:py-14">
           <span className="mx-auto mb-5 grid h-12 w-12 place-items-center rounded-2xl bg-amber-50 text-[#e58b00]">

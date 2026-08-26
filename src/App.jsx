@@ -11,6 +11,7 @@ import PublicLayout from './layouts/PublicLayout'
 import ProtectedRoute from './routes/ProtectedRoute'
 import RoleRedirect from './routes/RoleRedirect'
 import LoadingScreen from './components/common/LoadingScreen'
+import Seo from './components/Seo'
 import { useAuth } from './hooks/useAuth'
 import AuthLayout from './pages/auth/AuthLayout'
 import Login from './pages/auth/Login'
@@ -297,6 +298,7 @@ function App() {
 
   return (
     <>
+      <Seo />
       <ScrollToTop />
       <Routes>
         <Route element={<AuthLayout />}>
