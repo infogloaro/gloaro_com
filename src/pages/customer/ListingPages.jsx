@@ -458,7 +458,7 @@ function NearbyFilters({ filters, setFilters, categories }) {
     <div className="mt-6 rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
       <label className="block text-sm font-bold text-slate-700">
         Search nearby
-        <input value={filters.search} onChange={(event) => setFilters((current) => ({ ...current, search: event.target.value }))} placeholder="plumber, grocery, laptop, hospital..." className="mt-1 h-11 w-full rounded-md border border-slate-200 px-3 text-sm font-semibold outline-none focus:border-[#0d4697]" />
+        <input value={filters.search} onChange={(event) => setFilters((current) => ({ ...current, search: event.target.value }))} placeholder="watches, phones, laptop..." className="mt-1 h-11 w-full rounded-md border border-slate-200 px-3 text-sm font-semibold outline-none focus:border-[#0d4697]" />
       </label>
       <div className="mt-4 grid gap-3 md:grid-cols-3 lg:grid-cols-5">
         <label className="text-sm font-bold text-slate-700">
