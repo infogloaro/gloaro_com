@@ -35,6 +35,7 @@ export default function LocationsManagementPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [expandedNodes, setExpandedNodes] = useState({})
   const [selectedNode, setSelectedNode] = useState(null)
+  const [selectionCleared, setSelectionCleared] = useState(false)
 
   // Modal states
   const [isCreateOpen, setIsCreateOpen] = useState(false)
@@ -103,10 +104,10 @@ export default function LocationsManagementPage() {
   }, [locations])
 
   useEffect(() => {
-    if (!loading && treeData.length === 1 && !selectedNode) {
+    if (!loading && treeData.length === 1 && !selectedNode && !selectionCleared) {
       setSelectedNode(treeData[0])
     }
-  }, [loading, treeData, selectedNode])
+  }, [loading, treeData, selectedNode, selectionCleared])
   const getSubHierarchyCounts = (nodeId, nodeType) => {
     let statesCount = 0
     let districtsCount = 0
@@ -282,7 +283,10 @@ export default function LocationsManagementPage() {
           <span className="absolute -left-3 top-5 h-full w-px bg-slate-200 " />
         )}
         <div
-          onClick={() => setSelectedNode(node)}
+          onClick={() => {
+            setSelectedNode(node)
+            setSelectionCleared(false)
+          }}
           className={`flex items-center justify-between gap-3 py-1.5 group rounded-lg px-2 cursor-pointer transition ${
             isSelected
               ? 'bg-blue-50 border-l-4 border-[#0d4697]'
@@ -413,7 +417,10 @@ export default function LocationsManagementPage() {
         <div className="flex gap-2">
           {selectedNode && (
             <button
-              onClick={() => setSelectedNode(null)}
+              onClick={() => {
+                setSelectedNode(null)
+                setSelectionCleared(true)
+              }}
               className="inline-flex h-10 items-center justify-center rounded-md border border-slate-200 bg-white px-4 text-xs font-extrabold text-slate-700 hover:bg-slate-50"
             >
               Clear Selection

@@ -823,6 +823,7 @@ function OrganizationAssignmentSection({ organization, onChangeOrg, user, target
   const showState = ["state", "district", "chapter", "member"].includes(targetLevel);
   const showDistrict = ["district", "chapter", "member"].includes(targetLevel);
   const showChapter = ["chapter", "member"].includes(targetLevel);
+  const hasSelection = Boolean(organization.region || organization.state || organization.district || organization.chapter)
 
   // Determine locking states (lock if creator is bound to that level, or if editing an existing assigned field)
   const isRegionLocked = !isGlobal && (Boolean(creatorOrg.region) || (targetRole !== ROLES.REGION_DIRECTOR && Boolean(organization.region)));
@@ -978,8 +979,27 @@ function OrganizationAssignmentSection({ organization, onChangeOrg, user, target
     return match ? match.label || match.name : (lockedVal || id)
   }
 
+  const clearSection = () => {
+    onChangeOrg('region', '')
+    onChangeOrg('state', '')
+    onChangeOrg('district', '')
+    onChangeOrg('chapter', '')
+  }
+
   return (
     <div className="space-y-6 w-full">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <p className="text-sm font-semibold text-slate-500">Pick a hierarchy path or clear it to start a new assignment.</p>
+        <button
+          type="button"
+          onClick={clearSection}
+          disabled={!hasSelection}
+          className="inline-flex h-10 items-center rounded-md border border-slate-200 bg-white px-4 text-xs font-extrabold uppercase tracking-wide text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          Clear Section
+        </button>
+      </div>
+
       <div className="grid gap-4 md:grid-cols-4 w-full">
         {showRegion && (
           <SelectField
