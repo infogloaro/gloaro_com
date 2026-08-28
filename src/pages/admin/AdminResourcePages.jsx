@@ -286,6 +286,12 @@ export function AdminVendorsPage() {
 }
 
 export function AdminCategoriesPage() {
+  const categoryTypeOptions = [
+    { value: 'business', label: 'business' },
+    { value: 'product', label: 'product' },
+    { value: 'service', label: 'service' },
+  ]
+
   const moderateCategory = async (row, action, reload) => {
     try {
       await adminApi.moderateCategory(row._id, { action })
@@ -307,6 +313,7 @@ export function AdminCategoriesPage() {
       deleteAction={adminApi.deleteCategory}
       columns={[
         { key: 'name', header: 'Name' },
+        { key: 'type', header: 'Type', render: (row) => row.type || '-' },
         { key: 'isActive', header: 'Status', render: (row) => <StatusBadge value={row.isActive ? 'active' : 'inactive'} /> },
       ]}
       renderActions={(row, { reload }) => (
@@ -317,7 +324,16 @@ export function AdminCategoriesPage() {
           {row.isActive ? 'Disable' : 'Enable'}
         </button>
       )}
-      renderForm={(props) => <SimpleJsonForm {...props} fields={[{ name: 'name' }, { name: 'isActive', type: 'select', options: ['true', 'false'].map((value) => ({ value, label: value === 'true' ? 'active' : 'inactive' })) }]} />}
+      renderForm={(props) => (
+        <SimpleJsonForm
+          {...props}
+          fields={[
+            { name: 'name', label: 'Name' },
+            { name: 'type', label: 'Type', type: 'select', rules: { required: 'Type is required' }, options: categoryTypeOptions },
+            { name: 'isActive', label: 'Status', type: 'select', options: ['true', 'false'].map((value) => ({ value, label: value === 'true' ? 'active' : 'inactive' })) },
+          ]}
+        />
+      )}
     />
   )
 }
