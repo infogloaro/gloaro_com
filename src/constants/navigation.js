@@ -296,8 +296,8 @@ export function getVendorApplicantSidebarNav() {
   return vendorApplicantNav
 }
 
-export function getRoleBasedSidebarNav(role, user) {
-  return getSidebarNav(role, { user })
+export function getRoleBasedSidebarNav(role, user, options = {}) {
+  return getSidebarNav(role, { user, ...options })
 }
 
 export const rolePrefixes = {
@@ -419,6 +419,7 @@ const roleModules = {
 export function getSidebarNav(role, options = {}) {
   const normalizedRole = normalizeRole(role)
   const user = options.user || null
+  const currentPath = String(options.currentPath || '')
 
   if ([ROLES.SUPERADMIN, ROLES.ADMIN].includes(role)) {
     const prefixPath = (item) => {
@@ -541,6 +542,7 @@ if (
   [ROLES.REGION_DIRECTOR, ROLES.STATE_DIRECTOR, ROLES.DISTRICT_DIRECTOR, ROLES.DIRECT_CONSULTANT].includes(normalizedRole)
 ) {
   const isLaunchDirector = normalizedRole === ROLES.DIRECT_CONSULTANT;
+  const hideOrganizationLocation = normalizedRole === ROLES.DISTRICT_DIRECTOR && currentPath.startsWith('/district-director')
   const orgMgmt = {
     label: 'Organization / Location',
     icon: Building2,
@@ -549,7 +551,20 @@ if (
     ].map(prefixItem),
   };
   
-  if (normalizedRole === ROLES.DIRECT_CONSULTANT) {
+  if (hideOrganizationLocation) {
+    base = [
+      base[0], // Dashboard
+      base[1], // Mr. 360
+      base[2], // Analytics
+      base[3], // Communication
+      base[4], // Community
+      base[5], // Marketplace
+      base[6], // Meetings
+      base[7], // Training
+      base[8], // My Unit
+      base[9], // Profile
+    ].filter(Boolean);
+  } else if (normalizedRole === ROLES.DIRECT_CONSULTANT) {
     base = [
       base[0], // Dashboard
       base[1], // Mr. 360

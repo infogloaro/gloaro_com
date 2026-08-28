@@ -42,7 +42,7 @@ export const isMembershipApplicant = ({ user, onboardingType } = {}) => {
   return account.isMemberApplicant
 }
 
-export function resolveNavigation({ user, marketplaceAccess, navItems = [], onboardingType: onboardingTypeOverride = '' } = {}) {
+export function resolveNavigation({ user, marketplaceAccess, navItems = [], onboardingType: onboardingTypeOverride = '', currentPath = '' } = {}) {
   const role = normalizeRole(user?.role)
   const account = getAccountClassification(user)
 
@@ -57,7 +57,7 @@ export function resolveNavigation({ user, marketplaceAccess, navItems = [], onbo
   if (isAdministrativeRole(role)) {
     return {
       mode: NAVIGATION_MODES.ROLE_BASED,
-      items: getRoleBasedSidebarNav(user.role, user),
+      items: getRoleBasedSidebarNav(user.role, user, { currentPath }),
       title: 'Dashboard',
     }
   }
@@ -120,7 +120,7 @@ export function resolveNavigation({ user, marketplaceAccess, navItems = [], onbo
 
   return {
     mode: NAVIGATION_MODES.ROLE_BASED,
-    items: getRoleBasedSidebarNav(user.role, user),
+    items: getRoleBasedSidebarNav(user.role, user, { currentPath }),
     title: 'Dashboard',
   }
 }

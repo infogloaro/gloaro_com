@@ -38,7 +38,8 @@ export default function DashboardLayout({ navItems = [], title = 'Dashboard', th
     user,
     marketplaceAccess,
     navItems,
-  }), [marketplaceAccess, navItems, user])
+    currentPath: location.pathname,
+  }), [location.pathname, marketplaceAccess, navItems, user])
   const resolvedNavItems = hasExplicitNavItems ? navItems : navigation.items
   const navigationMode = hasExplicitNavItems ? NAVIGATION_MODES.ROLE_BASED : navigation.mode
   const displayTitle = hasExplicitNavItems ? title : (navigation.title === 'Dashboard' ? title : navigation.title)
