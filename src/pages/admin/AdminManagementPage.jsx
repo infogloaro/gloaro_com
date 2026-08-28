@@ -1080,12 +1080,26 @@ function OrganizationAssignmentSection({ organization, onChangeOrg, user, target
 
 function getSubordinateLocation(row) {
   const org = row.meta?.adminProfile?.organization || {}
-  if (row.role === ROLES.REGION_DIRECTOR) return org.assignedRegion?.name || 'Not Assigned'
-  if (row.role === ROLES.STATE_DIRECTOR) return org.assignedState?.name || 'Not Assigned'
-  if (row.role === ROLES.DISTRICT_DIRECTOR) {
-    return org.assignedDistrict?.name || 'Not Assigned'
+  const readLocation = (key) => {
+    const assignedKey = `assigned${key.charAt(0).toUpperCase() + key.slice(1)}`
+    const assigned = org[assignedKey]
+    if (assigned?.name) return assigned.name
+    if (assigned?.label) return assigned.label
+    const raw = org[key]
+    if (typeof raw === 'string' && raw.trim()) return raw
+    if (raw?.name) return raw.name
+    return null
   }
-  return org.assignedChapter?.name || 'Not Assigned'
+
+  if (row.role === ROLES.REGION_DIRECTOR) return readLocation('region') || 'Not Assigned'
+  if (row.role === ROLES.STATE_DIRECTOR) return readLocation('state') || 'Not Assigned'
+  if ([ROLES.DISTRICT_DIRECTOR, ROLES.EXECUTIVE_DIRECTOR, ROLES.LAUNCH_DIRECTOR, ROLES.DIRECT_CONSULTANT].includes(row.role)) {
+    return readLocation('district') || 'Not Assigned'
+  }
+  if ([ROLES.CHAPTER_PRESIDENT, ROLES.VICE_PRESIDENT, ROLES.SECRETARY].includes(row.role)) {
+    return readLocation('chapter') || 'Not Assigned'
+  }
+  return readLocation('chapter') || readLocation('district') || readLocation('state') || readLocation('region') || 'Not Assigned'
 }
 
 function getRegionSource(row) {
