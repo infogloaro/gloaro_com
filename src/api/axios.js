@@ -50,12 +50,13 @@ api.interceptors.response.use(
 
     const message = error.response?.data?.message || error.message || 'Something went wrong'
     const isExpectedBackgroundForbidden = status === 403 && method === 'get'
+    const isRateLimited = status === 429
     const isTimeout = error.code === 'ECONNABORTED'
 
     // Keep authorization failures visible for user actions, but avoid alarming toasts
     // for background data-loading GET requests that are denied by backend scope rules.
-    // Suppress timeout toasts — the request may have succeeded server-side or simply be slow.
-    if (!original?.silent && !isExpectedBackgroundForbidden && !isTimeout && !isAuthToastSuppressed()) {
+    // Suppress timeout and rate-limit toasts so the app falls back to a calm retry state.
+    if (!original?.silent && !isExpectedBackgroundForbidden && !isTimeout && !isRateLimited && !isAuthToastSuppressed()) {
       toast.error(message)
     }
     return Promise.reject(error)

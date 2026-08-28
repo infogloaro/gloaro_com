@@ -37,7 +37,9 @@ export default function SignIn() {
       const result = await response.json().catch(() => ({}))
 
       if (!response.ok) {
-        throw new Error(result.message || 'Unable to sign in. Please check your credentials.')
+        const error = new Error(result.message || 'Unable to sign in. Please check your credentials.')
+        error.status = response.status
+        throw error
       }
 
       const storage = formData.remember ? localStorage : sessionStorage
@@ -50,6 +52,10 @@ export default function SignIn() {
         window.location.href = getDashboardRoute(result.data.user?.role, result.data.user)
       }, 700)
     } catch (error) {
+      if (error.status === 429) {
+        setStatus({ type: '', message: '' })
+        return
+      }
       setStatus({ type: 'error', message: error.message || 'Sign in failed. Please try again.' })
     } finally {
       setIsSubmitting(false)
