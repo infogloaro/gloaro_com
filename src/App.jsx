@@ -12,6 +12,10 @@ import ProtectedRoute from './routes/ProtectedRoute'
 import RoleRedirect from './routes/RoleRedirect'
 import LoadingScreen from './components/common/LoadingScreen'
 import Seo from './components/Seo'
+const SolutionsPage = lazy(() => import('./pages/solutions/SolutionsPage'))
+const BusinessThemesPage = lazy(() => import('./pages/solutions/BusinessThemesPage'))
+const EnquiryPage = lazy(() => import('./pages/solutions/EnquiryPage'))
+const PrototypeShell = lazy(() => import('./prototypes/PrototypeShell'))
 import { useAuth } from './hooks/useAuth'
 import AuthLayout from './pages/auth/AuthLayout'
 import Login from './pages/auth/Login'
@@ -301,6 +305,7 @@ function App() {
       <Seo />
       <ScrollToTop />
       <Routes>
+        <Route path="/prototypes/:businessId/:themeId" element={<Suspense fallback={<LoadingScreen />}><PrototypeShell /></Suspense>} />
         <Route element={<AuthLayout />}>
           <Route path="/login" element={<Login />} />
           <Route path="/signin" element={<Navigate to="/login" replace />} />
@@ -337,6 +342,9 @@ function App() {
           <Route path="/membership-applications" element={<MembershipApplicationsRedirect />} />
           <Route path="/membership-qualification" element={<MembershipQualification />} />
           <Route path="/membership-application/track" element={<MembershipApplicationTrack />} />
+          <Route path="/solutions" element={<Suspense fallback={<LoadingScreen />}><SolutionsPage /></Suspense>} />
+          <Route path="/solutions/:businessId" element={<Suspense fallback={<LoadingScreen />}><BusinessThemesPage /></Suspense>} />
+          <Route path="/contact" element={<Suspense fallback={<LoadingScreen />}><EnquiryPage /></Suspense>} />
           <Route path="/about" element={<Suspense fallback={<LoadingScreen />}><AboutPage /></Suspense>} />
           <Route path="/terms-and-conditions" element={<LegalPage type="terms" />} />
           <Route path="/privacy-policy" element={<LegalPage type="privacy" />} />

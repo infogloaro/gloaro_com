@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import BusinessCategories from '../components/common/BusinessCategories'
+import ThemesShowcase from '../components/home/ThemesShowcase'
 import { ArrowRight, BadgeCheck, CalendarDays, ChevronDown, Clock3, Mail, MapPin, PhoneCall, ShieldCheck, Sparkles, ShoppingBag, ShoppingCart, Store, Ticket, UserRound, UsersRound } from 'lucide-react'
 import heroNetworkIcon from '../assets/signup_logo.png'
 import heroBackground from '../assets/herobg-1.png'
@@ -45,7 +46,7 @@ const whyGloaroPoints = [
 
 const serviceItems = [
   'Membership', 'Connects', 'Events', 'Meetings', 'Mobile App',
-  'Analytics', 'Franchise', 'B2B solutions', 'Digital Marketing', 'Resources',
+  'Analytics', 'Franchise', 'B2B solutions', 'Digital Marketing', 'Themes', 'Resources',
 ]
 
 const ecosystemActions = [
@@ -511,12 +512,17 @@ export default function Home() {
         <div className="gl-marquee absolute left-0 top-1/2 flex w-max -translate-y-1/2 gap-8 whitespace-nowrap px-4 sm:gap-10 sm:px-6 lg:gap-12">
           {[...serviceItems, ...serviceItems].map((item, index) => (
             <span key={`${item}-${index}`} className="flex items-center gap-2 font-urbanist text-[11px] font-extrabold uppercase tracking-[0.18em] text-[#0d4697]/70 sm:gap-3 sm:text-xs sm:tracking-[0.22em] lg:text-sm lg:tracking-[0.24em]">
-              {item}<span className="text-[#ffae13]">✦</span>
+              {item === 'Themes'
+                ? <a href="#themes" className="rounded-full bg-[#ffae13] px-3 py-1 text-[#0b2a55] transition hover:bg-[#0d4697] hover:text-white">Themes</a>
+                : item}
+              <span className="text-[#ffae13]">✦</span>
             </span>
           ))}
         </div>
       </div>
     </div>
+
+    <ThemesShowcase />
 
     {/* 2. Why Gloaro */}
     <section id="why-gloaro" className="relative isolate scroll-mt-48 overflow-hidden bg-[#fdf9e9] py-14 sm:py-18 lg:scroll-mt-52 lg:py-24">
