@@ -7,6 +7,7 @@ export const prototypes = {
       load: () => import('./_sandbox/index.jsx'),
     },
   },
+  retail: { default: { title: 'Retail & E-Commerce', load: () => import('./retail/default/index.jsx') } },
   food: { default: { title: 'Food & Restaurant', load: () => import('./food/default/index.jsx') } },
 }
 
