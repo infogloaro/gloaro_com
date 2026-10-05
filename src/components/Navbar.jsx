@@ -213,9 +213,9 @@ export default function Navbar() {
   }
 
   const navItems = [
-    [shopIcon, 'Shop', '/products', 'border border-amber-200/80 bg-gradient-to-r from-amber-300 to-amber-200 text-[#073b7a] shadow-[0_12px_24px_rgba(255,174,19,0.16)] hover:shadow-[0_16px_30px_rgba(255,174,19,0.22)]', 'brightness-0 contrast-125'],
-    [brandIcon, 'B2B Services', '/services', 'border border-emerald-200/80 bg-gradient-to-r from-emerald-500 to-emerald-400 text-white shadow-[0_12px_24px_rgba(16,185,129,0.18)] hover:shadow-[0_16px_30px_rgba(16,185,129,0.24)]', 'brightness-0 invert'],
-    [nearMeIcon, 'Near Me', '/nearby', 'border border-slate-200/80 bg-white/70 text-slate-700 hover:border-slate-300 hover:bg-white', 'group-hover:-translate-y-0.5'],
+    // [shopIcon, 'Shop', '/products', 'border border-amber-200/80 bg-gradient-to-r from-amber-300 to-amber-200 text-[#073b7a] shadow-[0_12px_24px_rgba(255,174,19,0.16)] hover:shadow-[0_16px_30px_rgba(255,174,19,0.22)]', 'brightness-0 contrast-125'],
+    // [brandIcon, 'B2B Services', '/services', 'border border-emerald-200/80 bg-gradient-to-r from-emerald-500 to-emerald-400 text-white shadow-[0_12px_24px_rgba(16,185,129,0.18)] hover:shadow-[0_16px_30px_rgba(16,185,129,0.24)]', 'brightness-0 invert'],
+    // [nearMeIcon, 'Near Me', '/nearby', 'border border-slate-200/80 bg-white/70 text-slate-700 hover:border-slate-300 hover:bg-white', 'group-hover:-translate-y-0.5'],
     // [aboutIcon, 'About', '/about', 'border border-amber-200/80 bg-white/80 text-[#073b7a] hover:border-amber-300 hover:bg-amber-50/90', ''],
   ]
 
@@ -245,19 +245,6 @@ export default function Navbar() {
 
               <div className="hidden min-w-0 flex-1 items-center gap-1.5 lg:flex xl:gap-3">
                 <div className="relative shrink-0">
-                  <button type="button" onClick={() => setNetworkOpen(true)} className="group relative flex h-11 items-center gap-1.5 overflow-hidden whitespace-nowrap rounded-full border border-blue-900/10 bg-[linear-gradient(135deg,#0b469e_0%,#1b6fe0_48%,#0b469e_100%)] px-3 text-xs font-semibold text-white shadow-[0_16px_30px_rgba(11,70,158,0.22)] transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_20px_40px_rgba(11,70,158,0.28)] xl:gap-2 xl:px-5 xl:text-sm" aria-expanded={networkOpen} aria-haspopup="true">
-                    <span className="absolute inset-0 bg-[linear-gradient(110deg,transparent,rgba(255,255,255,0.3),transparent)] bg-[length:200%_100%] opacity-0 transition duration-500 group-hover:animate-[navbar-shine_1.8s_linear_infinite] group-hover:opacity-100" />
-                    <span className="relative flex items-center gap-1.5 xl:gap-2">
-                      <span className="grid h-7 w-7 place-items-center rounded-full bg-white/15 ring-1 ring-white/25">
-                        <img src={networkIcon} alt="" className="h-4 w-4 object-contain" />
-                      </span>
-                      <span>Gloaro Network</span>
-                      <span className="hidden rounded-full bg-white/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.22em] text-white/90 xl:inline">Explore</span>
-                    </span>
-                  </button>
-                </div>
-
-                <div className="relative shrink-0">
                   <a href="https://www.gloaro.in" target="_blank" rel="noopener noreferrer" className="group relative flex h-11 items-center gap-1.5 overflow-hidden whitespace-nowrap rounded-full border border-indigo-900/10 bg-[linear-gradient(135deg,#4f46e5_0%,#6366f1_48%,#4f46e5_100%)] px-3 text-xs font-semibold text-white shadow-[0_16px_30px_rgba(79,70,229,0.22)] transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_20px_40px_rgba(79,70,229,0.28)] xl:gap-2 xl:px-5 xl:text-sm">
                     <span className="absolute inset-0 bg-[linear-gradient(110deg,transparent,rgba(255,255,255,0.3),transparent)] bg-[length:200%_100%] opacity-0 transition duration-500 group-hover:animate-[navbar-shine_1.8s_linear_infinite] group-hover:opacity-100" />
                     <span className="relative flex items-center gap-1.5 xl:gap-2">
@@ -268,6 +255,19 @@ export default function Navbar() {
                       <span className="hidden rounded-full bg-white/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.22em] text-white/90 xl:inline">Visit</span>
                     </span>
                   </a>
+                </div>
+
+                <div className="relative shrink-0">
+                  <button type="button" onClick={() => setNetworkOpen(true)} className="group relative flex h-11 items-center gap-1.5 overflow-hidden whitespace-nowrap rounded-full border border-blue-900/10 bg-[linear-gradient(135deg,#0b469e_0%,#1b6fe0_48%,#0b469e_100%)] px-3 text-xs font-semibold text-white shadow-[0_16px_30px_rgba(11,70,158,0.22)] transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_20px_40px_rgba(11,70,158,0.28)] xl:gap-2 xl:px-5 xl:text-sm" aria-expanded={networkOpen} aria-haspopup="true">
+                    <span className="absolute inset-0 bg-[linear-gradient(110deg,transparent,rgba(255,255,255,0.3),transparent)] bg-[length:200%_100%] opacity-0 transition duration-500 group-hover:animate-[navbar-shine_1.8s_linear_infinite] group-hover:opacity-100" />
+                    <span className="relative flex items-center gap-1.5 xl:gap-2">
+                      <span className="grid h-7 w-7 place-items-center rounded-full bg-white/15 ring-1 ring-white/25">
+                        <img src={networkIcon} alt="" className="h-4 w-4 object-contain" />
+                      </span>
+                      <span>Gloaro Network</span>
+                      <span className="hidden rounded-full bg-white/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.22em] text-white/90 xl:inline">Explore</span>
+                    </span>
+                  </button>
                 </div>
                 {navItems.map(([icon, label, href, colors, iconClass = '']) => (
                   <Link key={label} to={href} className={`group flex h-11 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full px-2 text-[11px] font-semibold transition duration-300 hover:-translate-y-0.5 xl:gap-2 xl:px-4 xl:text-sm ${colors}`}>
@@ -410,6 +410,21 @@ export default function Navbar() {
           >
             <div className="max-h-[calc(100vh-116px)] overflow-y-auto rounded-[30px] border border-white/70 bg-white/95 px-4 py-4 shadow-[0_24px_70px_rgba(15,23,42,0.18)] backdrop-blur-xl">
               <div className="grid gap-3">
+                <a href="https://www.gloaro.in" target="_blank" rel="noopener noreferrer" className="flex items-center justify-between rounded-[22px] bg-[linear-gradient(135deg,#4f46e5,#6366f1)] px-4 py-4 font-semibold text-white shadow-[0_14px_28px_rgba(79,70,229,0.22)]">
+                  <span className="flex items-center gap-3">
+                    <span className="grid h-10 w-10 place-items-center rounded-full bg-white/15 ring-1 ring-white/20">
+                      <Rocket className="h-5 w-5" />
+                    </span>
+                    <span className="text-left">
+                      <span className="block text-sm font-black uppercase tracking-[0.18em]">Gloaro Tech</span>
+                      <span className="block text-xs font-medium text-white/75">Visit Gloaro Technologies</span>
+                    </span>
+                  </span>
+                  <span className="grid h-9 w-9 place-items-center rounded-full bg-white/15 text-lg">
+                    →
+                  </span>
+                </a>
+
                 <button
                   type="button"
                   onClick={() => setMobileNetworkOpen((value) => !value)}
@@ -429,21 +444,6 @@ export default function Navbar() {
                   </span>
                 </button>
                 <AnimatePresence>{mobileNetworkOpen && <MobileGloaroNetworkMenu key="mobile-network" onNavigate={() => setOpen(false)} />}</AnimatePresence>
-
-                <a href="https://www.gloaro.in" target="_blank" rel="noopener noreferrer" className="flex items-center justify-between rounded-[22px] bg-[linear-gradient(135deg,#4f46e5,#6366f1)] px-4 py-4 font-semibold text-white shadow-[0_14px_28px_rgba(79,70,229,0.22)]">
-                  <span className="flex items-center gap-3">
-                    <span className="grid h-10 w-10 place-items-center rounded-full bg-white/15 ring-1 ring-white/20">
-                      <Rocket className="h-5 w-5" />
-                    </span>
-                    <span className="text-left">
-                      <span className="block text-sm font-black uppercase tracking-[0.18em]">Gloaro Tech</span>
-                      <span className="block text-xs font-medium text-white/75">Visit Gloaro Technologies</span>
-                    </span>
-                  </span>
-                  <span className="grid h-9 w-9 place-items-center rounded-full bg-white/15 text-lg">
-                    →
-                  </span>
-                </a>
 
                 <div className="grid gap-2 sm:grid-cols-2">
                   {navItems.flatMap(([icon, label, href, colors, iconClass = '']) => {
