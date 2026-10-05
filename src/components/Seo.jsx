@@ -76,6 +76,45 @@ const getRouteConfig = (pathname = '/') => {
       },
     },
     {
+      pattern: '/mart',
+      title: 'GLOARO MART | B2B & B2C Digital Marketplace',
+      description:
+        'GLOARO MART is a B2B and B2C marketplace connecting customers, vendors, retailers and local businesses. Shop nearby stores, search smarter, and sell online on web and mobile.',
+      keywords: 'GLOARO MART, B2B marketplace, B2C marketplace, multi-vendor marketplace, local vendors, online store for businesses, India',
+      schema: {
+        '@context': 'https://schema.org',
+        '@graph': [
+          {
+            '@type': 'WebPage',
+            '@id': structuredUrl('/mart#webpage'),
+            name: 'GLOARO MART | B2B & B2C Digital Marketplace',
+            url: structuredUrl('/mart'),
+            description:
+              'GLOARO MART is a B2B and B2C marketplace connecting customers, vendors, retailers and local businesses on web and mobile.',
+            inLanguage: 'en-IN',
+            isPartOf: { '@type': 'WebSite', name: DEFAULT_SITE_NAME, url: DEFAULT_SITE_URL },
+            about: { '@id': structuredUrl('/mart#store') },
+          },
+          {
+            '@type': 'OnlineStore',
+            '@id': structuredUrl('/mart#store'),
+            name: 'GLOARO MART',
+            url: structuredUrl('/mart'),
+            logo: structuredUrl('/logo.png'),
+            description: 'A multi-vendor B2B and B2C marketplace by GLOARO.',
+            parentOrganization: { '@type': 'Organization', name: DEFAULT_SITE_NAME, url: DEFAULT_SITE_URL },
+          },
+          {
+            '@type': 'BreadcrumbList',
+            itemListElement: [
+              { '@type': 'ListItem', position: 1, name: DEFAULT_SITE_NAME, item: DEFAULT_SITE_URL },
+              { '@type': 'ListItem', position: 2, name: 'GLOARO MART', item: structuredUrl('/mart') },
+            ],
+          },
+        ],
+      },
+    },
+    {
       pattern: '/about',
       title: 'About GLOARO | Verified Business Network in India',
       description:

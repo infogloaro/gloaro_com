@@ -136,6 +136,7 @@ import MembershipQualification from './pages/public/MembershipQualification'
 import MembershipApplicationTrack from './pages/public/MembershipApplicationTrack'
 import LegalPage from './pages/public/LegalPage'
 const AboutPage = lazy(() => import('./pages/public/AboutPage'))
+const MartLandingPage = lazy(() => import('./pages/mart/MartLandingPage'))
 import MembershipDashboard from './pages/membership/MembershipDashboard'
 import MemberDashboard from './pages/membership/MemberDashboard'
 import VendorApplicationForm from './pages/membership/VendorApplicationForm'
@@ -305,6 +306,7 @@ function App() {
       <Seo />
       <ScrollToTop />
       <Routes>
+        <Route path="/mart" element={<Suspense fallback={<LoadingScreen />}><MartLandingPage /></Suspense>} />
         <Route path="/prototypes/:businessId/:themeId" element={<Suspense fallback={<LoadingScreen />}><PrototypeShell /></Suspense>} />
         <Route element={<AuthLayout />}>
           <Route path="/login" element={<Login />} />

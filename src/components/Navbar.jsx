@@ -15,6 +15,7 @@ import {
   Package,
   Rocket,
   ShieldCheck,
+  ShoppingBag,
   Smartphone,
   ShoppingCart,
   Trophy,
@@ -269,6 +270,19 @@ export default function Navbar() {
                     </span>
                   </button>
                 </div>
+
+                <div className="relative shrink-0">
+                  <Link to="/mart" className="group relative flex h-11 items-center gap-1.5 overflow-hidden whitespace-nowrap rounded-full border border-amber-200/80 bg-[linear-gradient(135deg,#ffd36e_0%,#ffae13_55%,#ffc43d_100%)] px-3 text-xs font-semibold text-[#0b2451] shadow-[0_16px_30px_rgba(255,174,19,0.22)] transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_20px_40px_rgba(255,174,19,0.3)] xl:gap-2 xl:px-5 xl:text-sm">
+                    <span className="absolute inset-0 bg-[linear-gradient(110deg,transparent,rgba(255,255,255,0.45),transparent)] bg-[length:200%_100%] opacity-0 transition duration-500 group-hover:animate-[navbar-shine_1.8s_linear_infinite] group-hover:opacity-100" />
+                    <span className="relative flex items-center gap-1.5 xl:gap-2">
+                      <span className="grid h-7 w-7 place-items-center rounded-full bg-white/50 ring-1 ring-white/70">
+                        <ShoppingBag className="h-4 w-4" />
+                      </span>
+                      <span>Gloaro Mart</span>
+                      <span className="hidden rounded-full bg-[#0b2451]/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.22em] xl:inline">New</span>
+                    </span>
+                  </Link>
+                </div>
                 {navItems.map(([icon, label, href, colors, iconClass = '']) => (
                   <Link key={label} to={href} className={`group flex h-11 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full px-2 text-[11px] font-semibold transition duration-300 hover:-translate-y-0.5 xl:gap-2 xl:px-4 xl:text-sm ${colors}`}>
                     <span className="grid h-6 w-6 place-items-center rounded-full bg-white/70 ring-1 ring-black/5 xl:h-7 xl:w-7">
@@ -444,6 +458,19 @@ export default function Navbar() {
                   </span>
                 </button>
                 <AnimatePresence>{mobileNetworkOpen && <MobileGloaroNetworkMenu key="mobile-network" onNavigate={() => setOpen(false)} />}</AnimatePresence>
+
+                <Link to="/mart" onClick={() => setOpen(false)} className="flex items-center justify-between rounded-[22px] bg-[linear-gradient(135deg,#ffd36e,#ffae13)] px-4 py-4 font-semibold text-[#0b2451] shadow-[0_14px_28px_rgba(255,174,19,0.25)]">
+                  <span className="flex items-center gap-3">
+                    <span className="grid h-10 w-10 place-items-center rounded-full bg-white/50 ring-1 ring-white/70">
+                      <ShoppingBag className="h-5 w-5" />
+                    </span>
+                    <span className="text-left">
+                      <span className="block text-sm font-black uppercase tracking-[0.18em]">Gloaro Mart</span>
+                      <span className="block text-xs font-medium text-[#0b2451]/70">B2B + B2C marketplace</span>
+                    </span>
+                  </span>
+                  <span className="grid h-9 w-9 place-items-center rounded-full bg-white/50 text-lg">→</span>
+                </Link>
 
                 <div className="grid gap-2 sm:grid-cols-2">
                   {navItems.flatMap(([icon, label, href, colors, iconClass = '']) => {
