@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { useForm, useWatch } from 'react-hook-form'
 import { Link, useSearchParams } from 'react-router-dom'
-import Seo from '../../components/Seo'
 import FormField from '../../components/forms/FormField'
 import { allThemes, parseThemeKey } from '../../prototypes/catalog'
 
@@ -40,7 +39,6 @@ export default function EnquiryPage() {
 
   return (
     <main className="min-h-screen bg-slate-50 px-4 py-16">
-      <Seo title="Book a Theme | GLOARO" description="Tell us about your business and we will get back to you." canonical="/contact" />
       <div className="mx-auto max-w-xl rounded-2xl bg-white p-6 shadow-xl md:p-8">
         <h1 className="font-playfair text-3xl font-bold text-[#0d4697]">Book this theme</h1>
         {selected && <p className="mt-1 text-sm text-slate-600">{selected.business.name} · {selected.theme.name}</p>}

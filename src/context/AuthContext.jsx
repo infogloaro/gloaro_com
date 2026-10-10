@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import toast from 'react-hot-toast'
-import { io } from 'socket.io-client'
 import { adminApi } from '../api/admin'
 import { authApi } from '../api/auth'
 import { customerAuthApi } from '../api/customerAuth'
@@ -235,15 +234,25 @@ export function AuthProvider({ children }) {
     const token = storage.getAccessToken()
     if (!token || !user) return undefined
 
-    const client = io(socketUrl, { auth: { token }, transports: ['websocket'] })
-    client.on('notification', (notification) => toast(notification.title || notification.message || 'New notification'))
-    client.on('new_lead', (lead) => toast.success(`New lead: ${lead.subject || lead.name}`))
-    socketRef.current = client
-    setSocket(client)
+    // socket.io is only needed for signed-in users, so it loads on demand
+    // instead of sitting in the public site's entry bundle.
+    let client = null
+    let cancelled = false
+    import('socket.io-client').then(({ io }) => {
+      if (cancelled) return
+      client = io(socketUrl, { auth: { token }, transports: ['websocket'] })
+      client.on('notification', (notification) => toast(notification.title || notification.message || 'New notification'))
+      client.on('new_lead', (lead) => toast.success(`New lead: ${lead.subject || lead.name}`))
+      socketRef.current = client
+      setSocket(client)
+    })
 
     return () => {
-      client.disconnect()
-      if (socketRef.current === client) socketRef.current = null
+      cancelled = true
+      if (client) {
+        client.disconnect()
+        if (socketRef.current === client) socketRef.current = null
+      }
       setSocket(null)
     }
   }, [user?._id])

@@ -1,15 +1,9 @@
 import { Link } from 'react-router-dom'
-import Seo from '../../components/Seo'
 import { businesses, isThemeLive } from '../../prototypes/catalog'
 
 export default function SolutionsPage() {
   return (
     <main className="min-h-screen bg-slate-50 px-4 py-16">
-      <Seo
-        title="Business Solutions | GLOARO"
-        description="Explore interactive product prototypes for your industry and see what your digital product could become."
-        canonical="/solutions"
-      />
       <div className="mx-auto max-w-6xl">
         <h1 className="font-playfair text-4xl font-bold text-[#0d4697] md:text-5xl">Experience what your digital product could become</h1>
         <p className="mt-3 max-w-2xl text-slate-600">Choose your business and explore a fully clickable prototype designed for your industry.</p>

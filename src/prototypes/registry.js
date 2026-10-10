@@ -9,6 +9,10 @@ export const prototypes = {
   },
   retail: { default: { title: 'Retail & E-Commerce', load: () => import('./retail/default/index.jsx') } },
   food: { default: { title: 'Food & Restaurant', load: () => import('./food/default/index.jsx') } },
+  healthcare: { default: { title: 'Everwell Hospital', load: () => import('./healthcare/default/index.jsx') } },
+  logistics: { default: { title: 'Route One Logistics', load: () => import('./logistics/default/index.jsx') } },
+  pos: { default: { title: 'CounterFlow POS', load: () => import('./pos/default/index.jsx') } },
+  realestate: { default: { title: 'Prestige Horizon Real Estate', load: () => import('./realestate/default/index.jsx') } },
 }
 
 import { lazy } from 'react'

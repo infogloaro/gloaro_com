@@ -1,5 +1,5 @@
 import { Link, Outlet } from 'react-router-dom'
-import signupLogo from '../../assets/signup_logo.png'
+import signupLogo from '../../assets/signup_logo.webp'
 
 export default function CustomerAuthLayout() {
   return (

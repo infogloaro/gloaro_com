@@ -1,0 +1,306 @@
+/* Gloaro Mart hero visual — 3D marketplace scene used on the Home products section.
+   The scene is authored on a fixed design canvas and scaled to fit its container,
+   so every px value here is in design units. Continuous loops only run while the
+   scene reports itself live (in view, tab visible, motion allowed). */
+
+/* Absolutely positioned so the fixed-size canvas never widens its container. */
+.mh-scene {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform-origin: top left;
+  contain: layout style;
+  font-family: var(--font-work), var(--font-sans);
+  color: #0b2451;
+}
+
+.mh-layer {
+  position: absolute;
+  will-change: transform;
+}
+
+/* ---------- Atmosphere ---------- */
+
+.mh-glow {
+  position: absolute;
+  inset: 0;
+  border-radius: 48px;
+  background:
+    radial-gradient(42% 38% at 58% 44%, rgba(27, 111, 224, 0.16), transparent 70%),
+    radial-gradient(30% 30% at 22% 70%, rgba(255, 176, 0, 0.16), transparent 70%),
+    radial-gradient(26% 26% at 84% 26%, rgba(255, 176, 0, 0.12), transparent 70%),
+    radial-gradient(60% 50% at 50% 50%, rgba(255, 255, 255, 0.9), rgba(247, 249, 253, 0));
+  animation: mh-glow-drift 22s ease-in-out infinite alternate;
+  animation-play-state: paused;
+}
+
+.mh-floor {
+  position: absolute;
+  left: 12%;
+  right: 8%;
+  bottom: 2%;
+  height: 14%;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(11, 36, 81, 0.16), rgba(11, 36, 81, 0));
+  filter: blur(12px);
+}
+
+/* ---------- Golden orbit rings ---------- */
+
+.mh-ring-wrap {
+  position: absolute;
+  transform-style: preserve-3d;
+  pointer-events: none;
+}
+
+.mh-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  transform-style: preserve-3d;
+  animation: mh-orbit var(--mh-duration, 60s) linear infinite;
+  animation-direction: var(--mh-direction, normal);
+  animation-play-state: paused;
+}
+
+.mh-ring::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  padding: 3px;
+  background: conic-gradient(
+    from 0deg,
+    rgba(255, 176, 0, 0.05) 0deg,
+    rgba(255, 176, 0, 0.35) 80deg,
+    rgba(255, 196, 60, 1) 160deg,
+    rgba(255, 236, 170, 1) 200deg,
+    rgba(255, 176, 0, 0.9) 250deg,
+    rgba(255, 176, 0, 0.05) 350deg
+  );
+  filter: drop-shadow(0 0 6px rgba(255, 176, 0, 0.45));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+}
+
+.mh-ring-bead {
+  position: absolute;
+  top: 50%;
+  right: -7px;
+  width: 14px;
+  height: 14px;
+  margin-top: -7px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #fff3c4, #ffb000 55%, #e07b00);
+  box-shadow: 0 0 18px 4px rgba(255, 176, 0, 0.5);
+}
+
+/* ---------- Floating motion ---------- */
+
+.mh-float {
+  animation: mh-float var(--mh-duration, 7s) ease-in-out var(--mh-delay, 0s) infinite;
+  animation-play-state: paused;
+}
+
+.mh-float-tilt {
+  animation: mh-float-tilt var(--mh-duration, 8s) ease-in-out var(--mh-delay, 0s) infinite;
+  animation-play-state: paused;
+  transform-style: preserve-3d;
+}
+
+.mh-bounce {
+  animation: mh-bounce var(--mh-duration, 3.2s) cubic-bezier(0.45, 0, 0.25, 1) var(--mh-delay, 0s) infinite;
+  animation-play-state: paused;
+  transform-origin: 50% 100%;
+}
+
+.mh-bounce-shadow {
+  animation: mh-bounce-shadow var(--mh-duration, 3.2s) cubic-bezier(0.45, 0, 0.25, 1) var(--mh-delay, 0s) infinite;
+  animation-play-state: paused;
+}
+
+.mh-spark {
+  position: absolute;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #fff6d6, #ffb000 55%, #ff7a00);
+  box-shadow: 0 6px 14px -4px rgba(255, 122, 0, 0.55);
+  animation: mh-float var(--mh-duration, 6s) ease-in-out var(--mh-delay, 0s) infinite;
+  animation-play-state: paused;
+}
+
+/* Light sweep across glass / glossy surfaces. */
+.mh-sweep {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+.mh-sweep::after {
+  content: '';
+  position: absolute;
+  top: -20%;
+  bottom: -20%;
+  left: -60%;
+  width: 45%;
+  background: linear-gradient(100deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.35) 45%, rgba(255, 255, 255, 0.55) 50%, rgba(255, 255, 255, 0.35) 55%, rgba(255, 255, 255, 0) 100%);
+  transform: skewX(-18deg);
+  animation: mh-sweep 9s cubic-bezier(0.4, 0, 0.2, 1) var(--mh-delay, 2s) infinite;
+  animation-play-state: paused;
+}
+
+.mh-scene[data-live='true'] :is(.mh-glow, .mh-ring, .mh-float, .mh-float-tilt, .mh-bounce, .mh-bounce-shadow, .mh-spark, .mh-sweep::after) {
+  animation-play-state: running;
+}
+
+/* ---------- Devices ---------- */
+
+.mh-phone {
+  position: relative;
+  border-radius: 40px;
+  background: linear-gradient(160deg, #35435c 0%, #0f1a2f 40%, #1c2a45 100%);
+  padding: 9px;
+  box-shadow:
+    inset 0 0 0 1.5px rgba(255, 255, 255, 0.28),
+    inset 0 0 0 4px #0a1326,
+    0 40px 70px -30px rgba(7, 26, 61, 0.55),
+    0 18px 30px -18px rgba(7, 26, 61, 0.45);
+}
+
+.mh-phone::before,
+.mh-phone::after {
+  content: '';
+  position: absolute;
+  width: 3px;
+  border-radius: 2px;
+  background: linear-gradient(180deg, #2a3650, #0d1527);
+  right: -3px;
+}
+
+.mh-phone::before { top: 110px; height: 56px; }
+.mh-phone::after { top: 180px; height: 34px; }
+
+.mh-phone-screen {
+  position: relative;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+  border-radius: 32px;
+  background: linear-gradient(180deg, #f7f9fd 0%, #ffffff 100%);
+}
+
+.mh-phone-reflection {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(115deg, rgba(255, 255, 255, 0.28) 0%, rgba(255, 255, 255, 0.06) 28%, rgba(255, 255, 255, 0) 45%);
+  pointer-events: none;
+}
+
+.mh-browser {
+  position: relative;
+  border-radius: 20px;
+  overflow: hidden;
+  background: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 1),
+    0 0 0 1px rgba(11, 70, 158, 0.06),
+    0 50px 90px -40px rgba(7, 26, 61, 0.4),
+    0 20px 40px -24px rgba(7, 26, 61, 0.3);
+}
+
+/* ---------- Glass cards ---------- */
+
+.mh-glass {
+  position: relative;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.86), rgba(255, 255, 255, 0.66));
+  -webkit-backdrop-filter: blur(18px) saturate(150%);
+  backdrop-filter: blur(18px) saturate(150%);
+  border-radius: 18px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 1),
+    0 0 0 1px rgba(255, 255, 255, 0.7),
+    0 24px 50px -24px rgba(11, 36, 81, 0.35),
+    0 2px 6px rgba(11, 36, 81, 0.05);
+}
+
+.mh-glass::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(160deg, rgba(255, 214, 120, 0.9), rgba(255, 255, 255, 0.5) 40%, rgba(255, 255, 255, 0.2) 65%, rgba(27, 111, 224, 0.35));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+.mh-icon-well {
+  background: linear-gradient(180deg, #e3eeff, #f3f8ff);
+  box-shadow: inset 0 1px 0 #fff, 0 4px 10px -4px rgba(11, 70, 158, 0.25);
+}
+
+.mh-icon-well-gold {
+  background: linear-gradient(180deg, #ffd36e, #ffae13);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7), 0 6px 14px -6px rgba(255, 150, 0, 0.6);
+}
+
+.mh-product-shadow {
+  position: absolute;
+  left: 10%;
+  right: 10%;
+  bottom: -6%;
+  height: 16%;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(11, 36, 81, 0.28), rgba(11, 36, 81, 0));
+  filter: blur(6px);
+}
+
+/* ---------- Keyframes ---------- */
+
+@keyframes mh-float {
+  0%, 100% { transform: translate3d(0, 0, 0) rotate(var(--mh-rotate, 0deg)); }
+  50% { transform: translate3d(0, var(--mh-lift, -10px), 0) rotate(var(--mh-rotate, 0deg)); }
+}
+
+@keyframes mh-float-tilt {
+  0%, 100% { transform: translate3d(0, 0, 0) rotateY(var(--mh-ry, 0deg)) rotateX(var(--mh-rx, 0deg)) rotate(var(--mh-rotate, 0deg)); }
+  50% { transform: translate3d(0, var(--mh-lift, -12px), 0) rotateY(calc(var(--mh-ry, 0deg) + 3deg)) rotateX(calc(var(--mh-rx, 0deg) - 2deg)) rotate(var(--mh-rotate, 0deg)); }
+}
+
+@keyframes mh-bounce {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  45% { transform: translate3d(0, -16px, 0); }
+  55% { transform: translate3d(0, -16px, 0) scaleY(1.02); }
+}
+
+@keyframes mh-bounce-shadow {
+  0%, 100% { transform: scale(1); opacity: 0.5; }
+  50% { transform: scale(0.7); opacity: 0.25; }
+}
+
+@keyframes mh-orbit {
+  from { transform: rotateZ(0deg); }
+  to { transform: rotateZ(360deg); }
+}
+
+@keyframes mh-sweep {
+  0% { left: -60%; }
+  35%, 100% { left: 140%; }
+}
+
+@keyframes mh-glow-drift {
+  from { background-position: 0% 0%, 0% 0%, 0% 0%, 0% 0%; transform: translate3d(0, 0, 0); }
+  to { background-position: 4% 6%, -5% 4%, 3% -5%, 0% 0%; transform: translate3d(0, -6px, 0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mh-scene :is(.mh-glow, .mh-ring, .mh-float, .mh-float-tilt, .mh-bounce, .mh-bounce-shadow, .mh-spark, .mh-sweep::after) {
+    animation: none;
+  }
+}
