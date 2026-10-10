@@ -1,4 +1,4 @@
-const WHATSAPP_PHONE = '917200537033'
+const WHATSAPP_PHONE = '917200537071'
 const WHATSAPP_MESSAGE = 'Hi! 👋 Welcome to Gloaro. Thank you for contacting us. How can we help you today?'
 
 export default function FloatingWhatsApp() {

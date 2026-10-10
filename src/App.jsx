@@ -6,193 +6,209 @@ import { lazy, Suspense } from 'react'
 
 import { Toaster } from 'react-hot-toast'
 import { adminNav, customerNav, membershipNav, memberNav, vendorNav, secretaryNav, regionDirectorNav, stateDirectorNav, districtDirectorNav, chapterDirectorNav, presidentNav, vicePresidentNav } from './constants/navigation'
-import DashboardLayout from './layouts/DashboardLayout'
+const DashboardLayout = lazy(() => import('./layouts/DashboardLayout'))
 import PublicLayout from './layouts/PublicLayout'
 import ProtectedRoute from './routes/ProtectedRoute'
 import RoleRedirect from './routes/RoleRedirect'
 import LoadingScreen from './components/common/LoadingScreen'
 import Seo from './components/Seo'
+import GlobalExplore from './components/explore/GlobalExplore'
 const SolutionsPage = lazy(() => import('./pages/solutions/SolutionsPage'))
 const BusinessThemesPage = lazy(() => import('./pages/solutions/BusinessThemesPage'))
 const EnquiryPage = lazy(() => import('./pages/solutions/EnquiryPage'))
+const TechServicePage = lazy(() => import('./pages/tech/ServicePage'))
 const PrototypeShell = lazy(() => import('./prototypes/PrototypeShell'))
+const NetworkHome = lazy(() => import('./pages/public/NetworkHome'))
 import { useAuth } from './hooks/useAuth'
-import AuthLayout from './pages/auth/AuthLayout'
-import Login from './pages/auth/Login'
-import Register from './pages/auth/Register'
-import ForgotPassword from './pages/auth/ForgotPassword'
-import ResetPassword from './pages/auth/ResetPassword'
-import VerifyEmail from './pages/auth/VerifyEmail'
-import AdminDashboard from './pages/admin/AdminDashboard'
-import AdminAnalytics from './pages/admin/AdminAnalytics'
-import AnalyticsPage from './pages/analytics/AnalyticsPage'
-import AdminManagementPage from './pages/admin/AdminManagementPage'
-import RegionDirectorManagementPage from './pages/admin/RegionDirectorManagementPage'
-import AdminVendorApplicationsPage from './pages/admin/AdminVendorApplicationsPage'
-import AdminVendorCategoryApprovalsPage from './pages/admin/AdminVendorCategoryApprovalsPage'
-import AdminShippingPage from './pages/admin/AdminShippingPage'
-import ApprovedVendorsPage from './pages/shared/ApprovedVendorsPage'
-import {
-  AdminReferralTrackingPage,
-  AuditLogsPage,
-  DashboardConfigurationPage,
-  FeatureManagementPage,
-  // PermissionMatrixPage,
-  ReferralManagementPage,
-
-  ReportsCenterPage,
-  AdminEnterpriseDashboard,
-  SuperAdminDashboardPage,
-  SuperAdminModulePage,
-  SystemLogsPage,
-} from './pages/admin/SuperAdminPages'
+const AuthLayout = lazy(() => import('./pages/auth/AuthLayout'))
+const Login = lazy(() => import('./pages/auth/Login'))
+const Register = lazy(() => import('./pages/auth/Register'))
+const ForgotPassword = lazy(() => import('./pages/auth/ForgotPassword'))
+const ResetPassword = lazy(() => import('./pages/auth/ResetPassword'))
+const VerifyEmail = lazy(() => import('./pages/auth/VerifyEmail'))
+const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'))
+const AdminAnalytics = lazy(() => import('./pages/admin/AdminAnalytics'))
+const AnalyticsPage = lazy(() => import('./pages/analytics/AnalyticsPage'))
+const AdminManagementPage = lazy(() => import('./pages/admin/AdminManagementPage'))
+const RegionDirectorManagementPage = lazy(() => import('./pages/admin/RegionDirectorManagementPage'))
+const AdminVendorApplicationsPage = lazy(() => import('./pages/admin/AdminVendorApplicationsPage'))
+const AdminVendorCategoryApprovalsPage = lazy(() => import('./pages/admin/AdminVendorCategoryApprovalsPage'))
+const AdminShippingPage = lazy(() => import('./pages/admin/AdminShippingPage'))
+const ApprovedVendorsPage = lazy(() => import('./pages/shared/ApprovedVendorsPage'))
+const AdminReferralTrackingPage = lazy(() => import('./pages/admin/SuperAdminPages').then((m) => ({ default: m.AdminReferralTrackingPage })))
+const AuditLogsPage = lazy(() => import('./pages/admin/SuperAdminPages').then((m) => ({ default: m.AuditLogsPage })))
+const DashboardConfigurationPage = lazy(() => import('./pages/admin/SuperAdminPages').then((m) => ({ default: m.DashboardConfigurationPage })))
+const FeatureManagementPage = lazy(() => import('./pages/admin/SuperAdminPages').then((m) => ({ default: m.FeatureManagementPage })))
+const ReferralManagementPage = lazy(() => import('./pages/admin/SuperAdminPages').then((m) => ({ default: m.ReferralManagementPage })))
+const ReportsCenterPage = lazy(() => import('./pages/admin/SuperAdminPages').then((m) => ({ default: m.ReportsCenterPage })))
+const AdminEnterpriseDashboard = lazy(() => import('./pages/admin/SuperAdminPages').then((m) => ({ default: m.AdminEnterpriseDashboard })))
+const SuperAdminDashboardPage = lazy(() => import('./pages/admin/SuperAdminPages').then((m) => ({ default: m.SuperAdminDashboardPage })))
+const SuperAdminModulePage = lazy(() => import('./pages/admin/SuperAdminPages').then((m) => ({ default: m.SuperAdminModulePage })))
+const SystemLogsPage = lazy(() => import('./pages/admin/SuperAdminPages').then((m) => ({ default: m.SystemLogsPage })))
 import { superAdminModuleConfigs } from './constants/superAdminModuleConfigs'
 import { buildAdminRoute } from './utils/permissions'
-import {
-  ActivityCenterPage,
-  AIInsightsPage,
-  BusinessWallManagementPage,
-  BusinessNetworkingPage,
-  ChapterManagementPage,
-  ChapterDashboardPage,
-  EnterpriseCalendarPage,
-  EnterpriseReportBuilderPage,
-  ExecutiveDashboardPage,
-  GlobalSearchPage,
-  HierarchyAssignmentPage,
-  MarketplaceApprovalPage,
-  MeetingManagementPage,
-  MemberJourneyPage,
-  NotificationAutomationPage,
-  OrganizationManagementPage,
-  PerformanceScorecardPage,
-  ReferralPipelinePage,
-  TestimonialsManagementPage,
-  TaskManagementPage,
-  TrainingManagementPage,
-  VendorApprovalWorkflowPage,
-  VisitorConversionEnginePage,
-  VisitorManagementPage,
-  WorkflowEnginePage,
-} from './pages/admin/EnterpriseManagementPages'
-import {
-  AdminBannersPage,
-  AdminLeadersPage,
-  AdminGalleryPage,
-  AdminCategoriesPage,
-  AdminEventsPage,
-  AdminFaqsPage,
-  AdminModuleApplicationsPage,
-  AdminMembershipApplicationsPage,
-  AdminMembershipsPage,
-  AdminMembersPage,
-  AdminPaymentsPage,
-  AdminOrdersPage,
-  AdminProductsPage,
-  AdminReferralsPage,
-  AdminReviewsPage,
-  AdminServicesPage,
-  AdminSettingsPage,
-  AdminSupportPage,
-  AdminUsersPage,
-  AdminVendorsPage,
-} from './pages/admin/AdminResourcePages'
-import LocationsManagementPage from './pages/admin/LocationsManagementPage'
-import VendorDashboard from './pages/vendor/VendorDashboard'
-import VendorCategoryApprovalsPage from './pages/vendor/VendorCategoryApprovalsPage'
-import {
-  VendorLeadsPage,
-  VendorNotificationsPage,
-  VendorPaymentsPage,
-  VendorAnalyticsPage,
-  VendorProductsPage,
-  VendorProfilePage,
-  VendorServiceEnquiriesPage,
-  VendorReviewsPage,
-  VendorServicesPage,
-  VendorOrdersPage,
-} from './pages/vendor/VendorPages'
-import {
-  CategoriesPage,
-  CustomerNotificationsPage,
-  CustomerSupportPage,
-  EventsPage,
-  NearbyPage,
-  ReferralPage,
-  ReviewsPage,
-  ServicesPage,
-  VendorsPage,
-} from './pages/customer/ListingPages'
-import { CartPage, CheckoutPage, DetailPage, OrderDetailPage, OrdersPage, ProductsPage, WishlistPage as ShopWishlistPage } from './pages/customer/ShopPages'
-import { CustomerAddressesPage, CustomerDashboardPage, CustomerProfileFoundationPage } from './pages/customer/CustomerFoundationPages'
-import CustomerBusinessPage from './pages/customer/CustomerBusinessPage'
-import NotificationsPage from './pages/shared/NotificationsPage'
-import ProfilePage from './pages/shared/ProfilePage'
-import EnterpriseScorecardPage from './pages/shared/EnterpriseScorecardPage'
+const ActivityCenterPage = lazy(() => import('./pages/admin/EnterpriseManagementPages').then((m) => ({ default: m.ActivityCenterPage })))
+const AIInsightsPage = lazy(() => import('./pages/admin/EnterpriseManagementPages').then((m) => ({ default: m.AIInsightsPage })))
+const BusinessWallManagementPage = lazy(() => import('./pages/admin/EnterpriseManagementPages').then((m) => ({ default: m.BusinessWallManagementPage })))
+const BusinessNetworkingPage = lazy(() => import('./pages/admin/EnterpriseManagementPages').then((m) => ({ default: m.BusinessNetworkingPage })))
+const ChapterManagementPage = lazy(() => import('./pages/admin/EnterpriseManagementPages').then((m) => ({ default: m.ChapterManagementPage })))
+const ChapterDashboardPage = lazy(() => import('./pages/admin/EnterpriseManagementPages').then((m) => ({ default: m.ChapterDashboardPage })))
+const EnterpriseCalendarPage = lazy(() => import('./pages/admin/EnterpriseManagementPages').then((m) => ({ default: m.EnterpriseCalendarPage })))
+const EnterpriseReportBuilderPage = lazy(() => import('./pages/admin/EnterpriseManagementPages').then((m) => ({ default: m.EnterpriseReportBuilderPage })))
+const ExecutiveDashboardPage = lazy(() => import('./pages/admin/EnterpriseManagementPages').then((m) => ({ default: m.ExecutiveDashboardPage })))
+const GlobalSearchPage = lazy(() => import('./pages/admin/EnterpriseManagementPages').then((m) => ({ default: m.GlobalSearchPage })))
+const HierarchyAssignmentPage = lazy(() => import('./pages/admin/EnterpriseManagementPages').then((m) => ({ default: m.HierarchyAssignmentPage })))
+const MarketplaceApprovalPage = lazy(() => import('./pages/admin/EnterpriseManagementPages').then((m) => ({ default: m.MarketplaceApprovalPage })))
+const MeetingManagementPage = lazy(() => import('./pages/admin/EnterpriseManagementPages').then((m) => ({ default: m.MeetingManagementPage })))
+const MemberJourneyPage = lazy(() => import('./pages/admin/EnterpriseManagementPages').then((m) => ({ default: m.MemberJourneyPage })))
+const NotificationAutomationPage = lazy(() => import('./pages/admin/EnterpriseManagementPages').then((m) => ({ default: m.NotificationAutomationPage })))
+const OrganizationManagementPage = lazy(() => import('./pages/admin/EnterpriseManagementPages').then((m) => ({ default: m.OrganizationManagementPage })))
+const PerformanceScorecardPage = lazy(() => import('./pages/admin/EnterpriseManagementPages').then((m) => ({ default: m.PerformanceScorecardPage })))
+const ReferralPipelinePage = lazy(() => import('./pages/admin/EnterpriseManagementPages').then((m) => ({ default: m.ReferralPipelinePage })))
+const TestimonialsManagementPage = lazy(() => import('./pages/admin/EnterpriseManagementPages').then((m) => ({ default: m.TestimonialsManagementPage })))
+const TaskManagementPage = lazy(() => import('./pages/admin/EnterpriseManagementPages').then((m) => ({ default: m.TaskManagementPage })))
+const TrainingManagementPage = lazy(() => import('./pages/admin/EnterpriseManagementPages').then((m) => ({ default: m.TrainingManagementPage })))
+const VendorApprovalWorkflowPage = lazy(() => import('./pages/admin/EnterpriseManagementPages').then((m) => ({ default: m.VendorApprovalWorkflowPage })))
+const VisitorConversionEnginePage = lazy(() => import('./pages/admin/EnterpriseManagementPages').then((m) => ({ default: m.VisitorConversionEnginePage })))
+const VisitorManagementPage = lazy(() => import('./pages/admin/EnterpriseManagementPages').then((m) => ({ default: m.VisitorManagementPage })))
+const WorkflowEnginePage = lazy(() => import('./pages/admin/EnterpriseManagementPages').then((m) => ({ default: m.WorkflowEnginePage })))
+const AdminBannersPage = lazy(() => import('./pages/admin/AdminResourcePages').then((m) => ({ default: m.AdminBannersPage })))
+const AdminLeadersPage = lazy(() => import('./pages/admin/AdminResourcePages').then((m) => ({ default: m.AdminLeadersPage })))
+const AdminGalleryPage = lazy(() => import('./pages/admin/AdminResourcePages').then((m) => ({ default: m.AdminGalleryPage })))
+const AdminCategoriesPage = lazy(() => import('./pages/admin/AdminResourcePages').then((m) => ({ default: m.AdminCategoriesPage })))
+const AdminEventsPage = lazy(() => import('./pages/admin/AdminResourcePages').then((m) => ({ default: m.AdminEventsPage })))
+const AdminFaqsPage = lazy(() => import('./pages/admin/AdminResourcePages').then((m) => ({ default: m.AdminFaqsPage })))
+const AdminModuleApplicationsPage = lazy(() => import('./pages/admin/AdminResourcePages').then((m) => ({ default: m.AdminModuleApplicationsPage })))
+const AdminMembershipApplicationsPage = lazy(() => import('./pages/admin/AdminResourcePages').then((m) => ({ default: m.AdminMembershipApplicationsPage })))
+const AdminMembershipsPage = lazy(() => import('./pages/admin/AdminResourcePages').then((m) => ({ default: m.AdminMembershipsPage })))
+const AdminMembersPage = lazy(() => import('./pages/admin/AdminResourcePages').then((m) => ({ default: m.AdminMembersPage })))
+const AdminPaymentsPage = lazy(() => import('./pages/admin/AdminResourcePages').then((m) => ({ default: m.AdminPaymentsPage })))
+const AdminOrdersPage = lazy(() => import('./pages/admin/AdminResourcePages').then((m) => ({ default: m.AdminOrdersPage })))
+const AdminProductsPage = lazy(() => import('./pages/admin/AdminResourcePages').then((m) => ({ default: m.AdminProductsPage })))
+const AdminReferralsPage = lazy(() => import('./pages/admin/AdminResourcePages').then((m) => ({ default: m.AdminReferralsPage })))
+const AdminReviewsPage = lazy(() => import('./pages/admin/AdminResourcePages').then((m) => ({ default: m.AdminReviewsPage })))
+const AdminServicesPage = lazy(() => import('./pages/admin/AdminResourcePages').then((m) => ({ default: m.AdminServicesPage })))
+const AdminSettingsPage = lazy(() => import('./pages/admin/AdminResourcePages').then((m) => ({ default: m.AdminSettingsPage })))
+const AdminSupportPage = lazy(() => import('./pages/admin/AdminResourcePages').then((m) => ({ default: m.AdminSupportPage })))
+const AdminUsersPage = lazy(() => import('./pages/admin/AdminResourcePages').then((m) => ({ default: m.AdminUsersPage })))
+const AdminVendorsPage = lazy(() => import('./pages/admin/AdminResourcePages').then((m) => ({ default: m.AdminVendorsPage })))
+const LocationsManagementPage = lazy(() => import('./pages/admin/LocationsManagementPage'))
+const VendorDashboard = lazy(() => import('./pages/vendor/VendorDashboard'))
+const VendorCategoryApprovalsPage = lazy(() => import('./pages/vendor/VendorCategoryApprovalsPage'))
+const VendorLeadsPage = lazy(() => import('./pages/vendor/VendorPages').then((m) => ({ default: m.VendorLeadsPage })))
+const VendorNotificationsPage = lazy(() => import('./pages/vendor/VendorPages').then((m) => ({ default: m.VendorNotificationsPage })))
+const VendorPaymentsPage = lazy(() => import('./pages/vendor/VendorPages').then((m) => ({ default: m.VendorPaymentsPage })))
+const VendorAnalyticsPage = lazy(() => import('./pages/vendor/VendorPages').then((m) => ({ default: m.VendorAnalyticsPage })))
+const VendorProductsPage = lazy(() => import('./pages/vendor/VendorPages').then((m) => ({ default: m.VendorProductsPage })))
+const VendorProfilePage = lazy(() => import('./pages/vendor/VendorPages').then((m) => ({ default: m.VendorProfilePage })))
+const VendorServiceEnquiriesPage = lazy(() => import('./pages/vendor/VendorPages').then((m) => ({ default: m.VendorServiceEnquiriesPage })))
+const VendorReviewsPage = lazy(() => import('./pages/vendor/VendorPages').then((m) => ({ default: m.VendorReviewsPage })))
+const VendorServicesPage = lazy(() => import('./pages/vendor/VendorPages').then((m) => ({ default: m.VendorServicesPage })))
+const VendorOrdersPage = lazy(() => import('./pages/vendor/VendorPages').then((m) => ({ default: m.VendorOrdersPage })))
+const CategoriesPage = lazy(() => import('./pages/customer/ListingPages').then((m) => ({ default: m.CategoriesPage })))
+const CustomerNotificationsPage = lazy(() => import('./pages/customer/ListingPages').then((m) => ({ default: m.CustomerNotificationsPage })))
+const CustomerSupportPage = lazy(() => import('./pages/customer/ListingPages').then((m) => ({ default: m.CustomerSupportPage })))
+const EventsPage = lazy(() => import('./pages/customer/ListingPages').then((m) => ({ default: m.EventsPage })))
+const NearbyPage = lazy(() => import('./pages/customer/ListingPages').then((m) => ({ default: m.NearbyPage })))
+const ReferralPage = lazy(() => import('./pages/customer/ListingPages').then((m) => ({ default: m.ReferralPage })))
+const ReviewsPage = lazy(() => import('./pages/customer/ListingPages').then((m) => ({ default: m.ReviewsPage })))
+const ServicesPage = lazy(() => import('./pages/customer/ListingPages').then((m) => ({ default: m.ServicesPage })))
+const VendorsPage = lazy(() => import('./pages/customer/ListingPages').then((m) => ({ default: m.VendorsPage })))
+const CartPage = lazy(() => import('./pages/customer/ShopPages').then((m) => ({ default: m.CartPage })))
+const CheckoutPage = lazy(() => import('./pages/customer/ShopPages').then((m) => ({ default: m.CheckoutPage })))
+const DetailPage = lazy(() => import('./pages/customer/ShopPages').then((m) => ({ default: m.DetailPage })))
+const OrderDetailPage = lazy(() => import('./pages/customer/ShopPages').then((m) => ({ default: m.OrderDetailPage })))
+const OrdersPage = lazy(() => import('./pages/customer/ShopPages').then((m) => ({ default: m.OrdersPage })))
+const ProductsPage = lazy(() => import('./pages/customer/ShopPages').then((m) => ({ default: m.ProductsPage })))
+const ShopWishlistPage = lazy(() => import('./pages/customer/ShopPages').then((m) => ({ default: m.WishlistPage })))
+const CustomerAddressesPage = lazy(() => import('./pages/customer/CustomerFoundationPages').then((m) => ({ default: m.CustomerAddressesPage })))
+const CustomerDashboardPage = lazy(() => import('./pages/customer/CustomerFoundationPages').then((m) => ({ default: m.CustomerDashboardPage })))
+const CustomerProfileFoundationPage = lazy(() => import('./pages/customer/CustomerFoundationPages').then((m) => ({ default: m.CustomerProfileFoundationPage })))
+const CustomerBusinessPage = lazy(() => import('./pages/customer/CustomerBusinessPage'))
+const NotificationsPage = lazy(() => import('./pages/shared/NotificationsPage'))
+const ProfilePage = lazy(() => import('./pages/shared/ProfilePage'))
+const EnterpriseScorecardPage = lazy(() => import('./pages/shared/EnterpriseScorecardPage'))
 import Home from './pages/Home'
-import MembershipAgreement from './pages/public/MembershipAgreement'
-import MembershipApplication from './pages/public/MembershipApplication'
-import MembershipQualification from './pages/public/MembershipQualification'
-import MembershipApplicationTrack from './pages/public/MembershipApplicationTrack'
-import LegalPage from './pages/public/LegalPage'
+const MembershipAgreement = lazy(() => import('./pages/public/MembershipAgreement'))
+const MembershipApplication = lazy(() => import('./pages/public/MembershipApplication'))
+const MembershipQualification = lazy(() => import('./pages/public/MembershipQualification'))
+const MembershipApplicationTrack = lazy(() => import('./pages/public/MembershipApplicationTrack'))
+const LegalPage = lazy(() => import('./pages/public/LegalPage'))
 const AboutPage = lazy(() => import('./pages/public/AboutPage'))
-import MembershipDashboard from './pages/membership/MembershipDashboard'
-import MemberDashboard from './pages/membership/MemberDashboard'
-import VendorApplicationForm from './pages/membership/VendorApplicationForm'
-import VendorApplicationStatus from './pages/membership/VendorApplicationStatus'
-import MembershipApplicationStatus from './pages/membership/MembershipApplicationStatus'
-import MemberProductsPage from './pages/membership/MemberProductsPage'
-import { RegionDirectorProductsPage, RegionDirectorServicesPage, RegionDirectorVendorsPage } from './pages/region-director/RegionDirectorPages'
-import { StateDirectorProductsPage, StateDirectorServicesPage, StateDirectorVendorsPage } from './pages/state-director/StateDirectorPages'
-import { DistrictDirectorProductsPage, DistrictDirectorServicesPage, DistrictDirectorVendorsPage } from './pages/district-director/DistrictDirectorPages'
-import { LaunchDirectorProductsPage, LaunchDirectorServicesPage, LaunchDirectorVendorsPage } from './pages/launch-director/LaunchDirectorPages'
-import { DirectConsultantProductsPage, DirectConsultantServicesPage, DirectConsultantVendorsPage } from './pages/direct-consultant/DirectConsultantPages'
-import { PresidentProductsPage, PresidentServicesPage, PresidentVendorsPage } from './pages/president/PresidentPages'
-import { VicePresidentProductsPage, VicePresidentServicesPage, VicePresidentVendorsPage } from './pages/vice-president/VicePresidentPages'
-import VicePresidentVendorApplicationsPage from './pages/vice-president/VicePresidentVendorApplicationsPage'
-import { SecretaryProductsPage, SecretaryServicesPage, SecretaryVendorsPage } from './pages/secretary/SecretaryPages'
-import {
-  MembershipBenefitsPage,
-  MembershipEventsPage,
-  MembershipNotificationsPage,
-  MembershipProfilePage,
-  MembershipReferralPage,
-  MembershipSupportPage,
-} from './pages/membership/MembershipPages'
-import MemberProfilePage from './pages/membership/MemberProfilePage'
-import SecretaryDashboard from './pages/secretary/SecretaryDashboard'
-import MembersPage from './pages/secretary/MembersPage'
-import MinutesPage from './pages/secretary/MinutesPage'
-import AttendancePage from './pages/secretary/AttendancePage'
-import DocumentsPage from './pages/secretary/DocumentsPage'
-import ReportsPage from './pages/secretary/ReportsPage'
-import SettingsPage from './pages/secretary/SettingsPage'
-import SecretaryCategoriesPage from './pages/secretary/SecretaryCategoriesPage'
-import SecretaryMemberDetailsPage from './pages/secretary/SecretaryMemberDetailsPage'
-import SecretaryEventsPage from './pages/secretary/SecretaryEventsPage'
-import StateDirectorDashboard from './pages/state-director/StateDirectorDashboard'
-import DistrictDirectorDashboard from './pages/district-director/DistrictDirectorDashboard'
-import ChapterDirectorDashboard from './pages/chapter-director/ChapterDirectorDashboard'
-import UnitApprovalsPage from './pages/chapter-director/UnitApprovalsPage'
-import { ChapterDirectorProductsPage, ChapterDirectorServicesPage, ChapterDirectorVendorsPage } from './pages/chapter-director/ChapterDirectorPages'
-import LaunchDirectorDashboard from './pages/launch-director/LaunchDirectorDashboard'
-import DirectConsultantDashboard from './pages/direct-consultant/DirectConsultantDashboard'
-import PresidentDashboard from './pages/president/PresidentDashboard'
-import VicePresidentDashboard from './pages/vice-president/VicePresidentDashboard'
-import DynamicDashboard from './pages/shared/DynamicDashboard'
+const MartLandingPage = lazy(() => import('./pages/mart/MartLandingPage'))
+const MembershipDashboard = lazy(() => import('./pages/membership/MembershipDashboard'))
+const MemberDashboard = lazy(() => import('./pages/membership/MemberDashboard'))
+const VendorApplicationForm = lazy(() => import('./pages/membership/VendorApplicationForm'))
+const VendorApplicationStatus = lazy(() => import('./pages/membership/VendorApplicationStatus'))
+const MembershipApplicationStatus = lazy(() => import('./pages/membership/MembershipApplicationStatus'))
+const MemberProductsPage = lazy(() => import('./pages/membership/MemberProductsPage'))
+const RegionDirectorProductsPage = lazy(() => import('./pages/region-director/RegionDirectorPages').then((m) => ({ default: m.RegionDirectorProductsPage })))
+const RegionDirectorServicesPage = lazy(() => import('./pages/region-director/RegionDirectorPages').then((m) => ({ default: m.RegionDirectorServicesPage })))
+const RegionDirectorVendorsPage = lazy(() => import('./pages/region-director/RegionDirectorPages').then((m) => ({ default: m.RegionDirectorVendorsPage })))
+const StateDirectorProductsPage = lazy(() => import('./pages/state-director/StateDirectorPages').then((m) => ({ default: m.StateDirectorProductsPage })))
+const StateDirectorServicesPage = lazy(() => import('./pages/state-director/StateDirectorPages').then((m) => ({ default: m.StateDirectorServicesPage })))
+const StateDirectorVendorsPage = lazy(() => import('./pages/state-director/StateDirectorPages').then((m) => ({ default: m.StateDirectorVendorsPage })))
+const DistrictDirectorProductsPage = lazy(() => import('./pages/district-director/DistrictDirectorPages').then((m) => ({ default: m.DistrictDirectorProductsPage })))
+const DistrictDirectorServicesPage = lazy(() => import('./pages/district-director/DistrictDirectorPages').then((m) => ({ default: m.DistrictDirectorServicesPage })))
+const DistrictDirectorVendorsPage = lazy(() => import('./pages/district-director/DistrictDirectorPages').then((m) => ({ default: m.DistrictDirectorVendorsPage })))
+const LaunchDirectorProductsPage = lazy(() => import('./pages/launch-director/LaunchDirectorPages').then((m) => ({ default: m.LaunchDirectorProductsPage })))
+const LaunchDirectorServicesPage = lazy(() => import('./pages/launch-director/LaunchDirectorPages').then((m) => ({ default: m.LaunchDirectorServicesPage })))
+const LaunchDirectorVendorsPage = lazy(() => import('./pages/launch-director/LaunchDirectorPages').then((m) => ({ default: m.LaunchDirectorVendorsPage })))
+const DirectConsultantProductsPage = lazy(() => import('./pages/direct-consultant/DirectConsultantPages').then((m) => ({ default: m.DirectConsultantProductsPage })))
+const DirectConsultantServicesPage = lazy(() => import('./pages/direct-consultant/DirectConsultantPages').then((m) => ({ default: m.DirectConsultantServicesPage })))
+const DirectConsultantVendorsPage = lazy(() => import('./pages/direct-consultant/DirectConsultantPages').then((m) => ({ default: m.DirectConsultantVendorsPage })))
+const PresidentProductsPage = lazy(() => import('./pages/president/PresidentPages').then((m) => ({ default: m.PresidentProductsPage })))
+const PresidentServicesPage = lazy(() => import('./pages/president/PresidentPages').then((m) => ({ default: m.PresidentServicesPage })))
+const PresidentVendorsPage = lazy(() => import('./pages/president/PresidentPages').then((m) => ({ default: m.PresidentVendorsPage })))
+const VicePresidentProductsPage = lazy(() => import('./pages/vice-president/VicePresidentPages').then((m) => ({ default: m.VicePresidentProductsPage })))
+const VicePresidentServicesPage = lazy(() => import('./pages/vice-president/VicePresidentPages').then((m) => ({ default: m.VicePresidentServicesPage })))
+const VicePresidentVendorsPage = lazy(() => import('./pages/vice-president/VicePresidentPages').then((m) => ({ default: m.VicePresidentVendorsPage })))
+const VicePresidentVendorApplicationsPage = lazy(() => import('./pages/vice-president/VicePresidentVendorApplicationsPage'))
+const SecretaryProductsPage = lazy(() => import('./pages/secretary/SecretaryPages').then((m) => ({ default: m.SecretaryProductsPage })))
+const SecretaryServicesPage = lazy(() => import('./pages/secretary/SecretaryPages').then((m) => ({ default: m.SecretaryServicesPage })))
+const SecretaryVendorsPage = lazy(() => import('./pages/secretary/SecretaryPages').then((m) => ({ default: m.SecretaryVendorsPage })))
+const MembershipBenefitsPage = lazy(() => import('./pages/membership/MembershipPages').then((m) => ({ default: m.MembershipBenefitsPage })))
+const MembershipEventsPage = lazy(() => import('./pages/membership/MembershipPages').then((m) => ({ default: m.MembershipEventsPage })))
+const MembershipNotificationsPage = lazy(() => import('./pages/membership/MembershipPages').then((m) => ({ default: m.MembershipNotificationsPage })))
+const MembershipProfilePage = lazy(() => import('./pages/membership/MembershipPages').then((m) => ({ default: m.MembershipProfilePage })))
+const MembershipReferralPage = lazy(() => import('./pages/membership/MembershipPages').then((m) => ({ default: m.MembershipReferralPage })))
+const MembershipSupportPage = lazy(() => import('./pages/membership/MembershipPages').then((m) => ({ default: m.MembershipSupportPage })))
+const MemberProfilePage = lazy(() => import('./pages/membership/MemberProfilePage'))
+const SecretaryDashboard = lazy(() => import('./pages/secretary/SecretaryDashboard'))
+const MembersPage = lazy(() => import('./pages/secretary/MembersPage'))
+const MinutesPage = lazy(() => import('./pages/secretary/MinutesPage'))
+const AttendancePage = lazy(() => import('./pages/secretary/AttendancePage'))
+const DocumentsPage = lazy(() => import('./pages/secretary/DocumentsPage'))
+const ReportsPage = lazy(() => import('./pages/secretary/ReportsPage'))
+const SettingsPage = lazy(() => import('./pages/secretary/SettingsPage'))
+const SecretaryCategoriesPage = lazy(() => import('./pages/secretary/SecretaryCategoriesPage'))
+const SecretaryMemberDetailsPage = lazy(() => import('./pages/secretary/SecretaryMemberDetailsPage'))
+const SecretaryEventsPage = lazy(() => import('./pages/secretary/SecretaryEventsPage'))
+const StateDirectorDashboard = lazy(() => import('./pages/state-director/StateDirectorDashboard'))
+const DistrictDirectorDashboard = lazy(() => import('./pages/district-director/DistrictDirectorDashboard'))
+const ChapterDirectorDashboard = lazy(() => import('./pages/chapter-director/ChapterDirectorDashboard'))
+const UnitApprovalsPage = lazy(() => import('./pages/chapter-director/UnitApprovalsPage'))
+const ChapterDirectorProductsPage = lazy(() => import('./pages/chapter-director/ChapterDirectorPages').then((m) => ({ default: m.ChapterDirectorProductsPage })))
+const ChapterDirectorServicesPage = lazy(() => import('./pages/chapter-director/ChapterDirectorPages').then((m) => ({ default: m.ChapterDirectorServicesPage })))
+const ChapterDirectorVendorsPage = lazy(() => import('./pages/chapter-director/ChapterDirectorPages').then((m) => ({ default: m.ChapterDirectorVendorsPage })))
+const LaunchDirectorDashboard = lazy(() => import('./pages/launch-director/LaunchDirectorDashboard'))
+const DirectConsultantDashboard = lazy(() => import('./pages/direct-consultant/DirectConsultantDashboard'))
+const PresidentDashboard = lazy(() => import('./pages/president/PresidentDashboard'))
+const VicePresidentDashboard = lazy(() => import('./pages/vice-president/VicePresidentDashboard'))
+const DynamicDashboard = lazy(() => import('./pages/shared/DynamicDashboard'))
 
-import MyChapter from './pages/membership/MyChapter'
-import BusinessWall from './pages/membership/BusinessWall'
-import CommunityPage from './pages/membership/community/CommunityPage'
-import ChatSystem from './pages/membership/ChatSystem'
-import ReferralsPipeline from './pages/membership/ReferralsPipeline'
-import BusinessConnectPage from './pages/member/BusinessConnectPage'
-import ReceivedBusinessPage from './pages/member/ReceivedBusinessPage'
-import MeetingsAttendance from './pages/membership/MeetingsAttendance'
-import AssignedTrainingPage from './pages/membership/AssignedTrainingPage'
-import OneToOnesPage from './pages/membership/OneToOnesPage'
-import VisitorsPage from './pages/membership/VisitorsPage'
-import BusinessDirectory from './pages/membership/BusinessDirectory'
+const MyChapter = lazy(() => import('./pages/membership/MyChapter'))
+const BusinessWall = lazy(() => import('./pages/membership/BusinessWall'))
+const CommunityPage = lazy(() => import('./pages/membership/community/CommunityPage'))
+const ChatSystem = lazy(() => import('./pages/membership/ChatSystem'))
+const ReferralsPipeline = lazy(() => import('./pages/membership/ReferralsPipeline'))
+const BusinessConnectPage = lazy(() => import('./pages/member/BusinessConnectPage'))
+const ReceivedBusinessPage = lazy(() => import('./pages/member/ReceivedBusinessPage'))
+const MeetingsAttendance = lazy(() => import('./pages/membership/MeetingsAttendance'))
+const AssignedTrainingPage = lazy(() => import('./pages/membership/AssignedTrainingPage'))
+const OneToOnesPage = lazy(() => import('./pages/membership/OneToOnesPage'))
+const VisitorsPage = lazy(() => import('./pages/membership/VisitorsPage'))
+const BusinessDirectory = lazy(() => import('./pages/membership/BusinessDirectory'))
 import { ROLES } from './constants/roleConfig.js'
 import { getAccountClassification, normalizeRole } from './utils/permissions'
 
@@ -304,7 +320,12 @@ function App() {
     <>
       <Seo />
       <ScrollToTop />
+      {/* Mounted once above the routes so it survives navigation between the
+          public layout and the standalone /mart page. Hides itself elsewhere. */}
+      <GlobalExplore />
+      <Suspense fallback={<LoadingScreen />}>
       <Routes>
+        <Route path="/mart" element={<Suspense fallback={<LoadingScreen />}><MartLandingPage /></Suspense>} />
         <Route path="/prototypes/:businessId/:themeId" element={<Suspense fallback={<LoadingScreen />}><PrototypeShell /></Suspense>} />
         <Route element={<AuthLayout />}>
           <Route path="/login" element={<Login />} />
@@ -319,6 +340,7 @@ function App() {
 
         <Route element={<PublicLayout />}>
           <Route path="/" element={<Home />} />
+          <Route path="/network" element={<Suspense fallback={<LoadingScreen />}><NetworkHome /></Suspense>} />
           <Route path="/nearby" element={<NearbyPage />} />
           <Route path="/categories" element={<CategoriesPage />} />
           <Route path="/vendors" element={<VendorsPage />} />
@@ -344,6 +366,7 @@ function App() {
           <Route path="/membership-application/track" element={<MembershipApplicationTrack />} />
           <Route path="/solutions" element={<Suspense fallback={<LoadingScreen />}><SolutionsPage /></Suspense>} />
           <Route path="/solutions/:businessId" element={<Suspense fallback={<LoadingScreen />}><BusinessThemesPage /></Suspense>} />
+          <Route path="/tech/:slug" element={<Suspense fallback={<LoadingScreen />}><TechServicePage /></Suspense>} />
           <Route path="/contact" element={<Suspense fallback={<LoadingScreen />}><EnquiryPage /></Suspense>} />
           <Route path="/about" element={<Suspense fallback={<LoadingScreen />}><AboutPage /></Suspense>} />
           <Route path="/terms-and-conditions" element={<LegalPage type="terms" />} />
@@ -772,6 +795,7 @@ function App() {
 
         <Route path="/dashboard" element={<RoleRedirect />} />
       </Routes>
+      </Suspense>
       <Toaster position="top-right" />
     </>
   )

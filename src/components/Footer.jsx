@@ -7,15 +7,18 @@ import { motion } from 'framer-motion'
 const links = {
   quick: [
     ['Home', '/#top'],
-    ['Why Gloaro', '/#why-gloaro'],
-    ['Business Categories', '/#business-categories'],
-    ['Features', '/#features'],
-    ['Success Stories', '/#testimonials'],
+    ['Services', '/#services'],
+    ['Website Development', '/tech/website-development'],
+    ['Mobile App Development', '/tech/mobile-app-development'],
+    ['Custom Software', '/tech/custom-software-development'],
+    ['Products', '/#products'],
+    ['Portfolio', '/#portfolio'],
+    ['Gloaro Network', '/network'],
   ],
   useful: [
     ['Membership', '/register'],
     ['About', '/about'],
-    ['Events', '/#events'],
+    ['Contact', '/contact'],
     ['Shop', '/products'],
     ['Services', '/services'],
   ],
@@ -156,13 +159,13 @@ export default function Footer() {
                 </a>
 
                 <a
-                  href="tel:+917200537033"
+                  href="tel:+917200537071"
                   className="group flex items-start gap-2.5 transition duration-200 hover:text-[#ffd36e]"
                 >
                   <div className="mt-0.5 grid h-6.5 w-6.5 shrink-0 place-items-center rounded-md border border-white/10 bg-white/5 transition duration-200 group-hover:border-[#ffae13]/40 group-hover:bg-[#ffae13]/10">
                     <Phone className="h-3 w-3 text-[#ffae13]" />
                   </div>
-                  <span>+91 7200537033</span>
+                  <span>+91 7200537071</span>
                 </a>
 
                 <a

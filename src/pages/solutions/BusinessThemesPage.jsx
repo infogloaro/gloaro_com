@@ -1,5 +1,6 @@
 import { Link, Navigate, useParams } from 'react-router-dom'
 import Seo from '../../components/Seo'
+import { solutionSeo } from '../../lib/seoConfig'
 import { getBusiness, getThemeKey, isThemeLive } from '../../prototypes/catalog'
 
 export default function BusinessThemesPage() {
@@ -9,7 +10,7 @@ export default function BusinessThemesPage() {
 
   return (
     <main className="min-h-screen bg-slate-50 px-4 py-16">
-      <Seo title={`${business.name} Themes | GLOARO`} description={business.tagline} canonical={`/solutions/${business.id}`} />
+      <Seo {...solutionSeo(business)} />
       <div className="mx-auto max-w-6xl">
         <Link to="/solutions" className="text-sm font-bold text-[#0d4697]">← All businesses</Link>
         <h1 className="mt-4 font-playfair text-4xl font-bold text-slate-900">{business.name}</h1>

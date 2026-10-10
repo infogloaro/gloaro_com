@@ -185,8 +185,8 @@ export default function LegalPage({ type }) {
             <p className="mt-2 text-sm leading-6 text-slate-600">Contact our team for assistance regarding this policy.</p>
             <div className="mt-5 flex flex-col gap-4 text-sm font-bold text-slate-800 sm:flex-row sm:flex-wrap sm:gap-7">
               <a className="inline-flex items-center gap-2 transition hover:text-[#c87500]" href="mailto:info@gloaro.com"><Mail aria-hidden="true" size={18} />info@gloaro.com</a>
-              <a className="inline-flex items-center gap-2 transition hover:text-[#c87500]" href="tel:+917200238737"><Phone aria-hidden="true" size={18} />+91 72002 38737</a>
-              <a className="inline-flex items-center gap-2 transition hover:text-[#c87500]" href="tel:+917200537033"><Phone aria-hidden="true" size={18} />+91 72005 37033</a>
+              <a className="inline-flex items-center gap-2 transition hover:text-[#c87500]" href="tel:+917200073704"><Phone aria-hidden="true" size={18} />+91 72000 73704</a>
+              <a className="inline-flex items-center gap-2 transition hover:text-[#c87500]" href="tel:+917200537071"><Phone aria-hidden="true" size={18} />+91 72005 37071</a>
               <a className="transition hover:text-[#c87500]" href="https://www.gloaro.com">www.gloaro.com</a>
             </div>
           </section>

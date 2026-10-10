@@ -1,0 +1,331 @@
+/* GLOARO MART landing — design system.
+   Scoped to .mart-root so nothing leaks into the rest of the app.
+   Rules sit in the utilities layer behind zero-specificity :where() selectors:
+   they beat Tailwind preflight, while any utility class (hidden, sm:flex…) still overrides them. */
+
+@layer utilities {
+:where(.mart-root) {
+  --m-navy: #0b2451;
+  --m-navy-deep: #071a3d;
+  --m-blue: #0b469e;
+  --m-blue-bright: #1b6fe0;
+  --m-gold: #ffae13;
+  --m-gold-soft: #ffd36e;
+  --m-orange: #ff8a00;
+  --m-ice: #eaf2ff;
+  --m-bg: #f7faff;
+  --m-ink: #0b2451;
+  --m-muted: #51627f;
+
+  font-family: var(--font-jakarta);
+  background: var(--m-bg);
+  color: var(--m-ink);
+  overflow-x: clip;
+  -webkit-font-smoothing: antialiased;
+}
+
+:where(.mart-root) ::selection {
+  background: rgba(255, 174, 19, 0.35);
+}
+
+:where(.mart-root :focus-visible) {
+  outline: 2px solid var(--m-gold);
+  outline-offset: 3px;
+  border-radius: 12px;
+}
+
+:where(.mart-root section[id]) {
+  scroll-margin-top: 96px;
+}
+
+/* ---------- Atmosphere ---------- */
+
+:where(.m-sky) {
+  background:
+    radial-gradient(1200px 520px at 85% -10%, rgba(27, 111, 224, 0.16), transparent 60%),
+    radial-gradient(900px 480px at -10% 20%, rgba(255, 211, 110, 0.18), transparent 60%),
+    linear-gradient(180deg, #e9f2ff 0%, #f5f9ff 46%, #ffffff 100%);
+}
+
+:where(.m-cloud) {
+  position: absolute;
+  border-radius: 9999px;
+  background: radial-gradient(closest-side, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0));
+  filter: blur(6px);
+  pointer-events: none;
+}
+
+:where(.m-grid-fade) {
+  background-image:
+    linear-gradient(rgba(11, 70, 158, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(11, 70, 158, 0.06) 1px, transparent 1px);
+  background-size: 56px 56px;
+  mask-image: radial-gradient(ellipse at center, #000 30%, transparent 75%);
+}
+
+/* ---------- Glass ---------- */
+
+:where(.m-glass) {
+  background: rgba(255, 255, 255, 0.58);
+  -webkit-backdrop-filter: blur(20px) saturate(150%);
+  backdrop-filter: blur(20px) saturate(150%);
+  border: 1px solid rgba(255, 255, 255, 0.75);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    0 24px 60px -24px rgba(11, 36, 81, 0.22),
+    0 2px 6px rgba(11, 36, 81, 0.04);
+}
+
+:where(.m-glass-strong) {
+  background: rgba(255, 255, 255, 0.78);
+  -webkit-backdrop-filter: blur(24px) saturate(160%);
+  backdrop-filter: blur(24px) saturate(160%);
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 1),
+    0 30px 80px -30px rgba(11, 36, 81, 0.3),
+    0 2px 8px rgba(11, 36, 81, 0.05);
+}
+
+:where(.m-glass-dark) {
+  background: rgba(255, 255, 255, 0.06);
+  -webkit-backdrop-filter: blur(18px);
+  backdrop-filter: blur(18px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 24px 60px -30px rgba(0, 0, 0, 0.5);
+}
+
+/* The signature gold-rimmed glass panel from the GLOARO MART app. */
+:where(.m-glass-gold) {
+  position: relative;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0.5));
+  -webkit-backdrop-filter: blur(22px) saturate(150%);
+  backdrop-filter: blur(22px) saturate(150%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 1),
+    0 0 0 1px rgba(255, 255, 255, 0.6),
+    0 0 36px -6px rgba(255, 190, 60, 0.45),
+    0 30px 70px -30px rgba(11, 36, 81, 0.28);
+}
+
+:where(.m-glass-gold)::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1.5px;
+  background: linear-gradient(160deg, rgba(255, 214, 120, 0.95), rgba(255, 255, 255, 0.4) 35%, rgba(255, 255, 255, 0.2) 65%, rgba(255, 190, 60, 0.85));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* Soft inset pill used for inputs / search bars (as on the app login). */
+:where(.m-field) {
+  background: linear-gradient(180deg, rgba(240, 246, 255, 0.9), rgba(255, 255, 255, 0.75));
+  border: 1px solid rgba(255, 255, 255, 0.95);
+  box-shadow: inset 0 2px 6px rgba(11, 70, 158, 0.06), 0 8px 22px -14px rgba(11, 36, 81, 0.25);
+}
+
+:where(.m-icon-well) {
+  background: linear-gradient(180deg, #e3eeff, #f3f8ff);
+  box-shadow: inset 0 1px 0 #fff, 0 4px 10px -4px rgba(11, 70, 158, 0.25);
+}
+
+/* ---------- Buttons ---------- */
+
+:where(.m-btn) {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  border-radius: 9999px;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  isolation: isolate;
+  transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.25s ease, background-color 0.25s ease;
+}
+
+:where(.m-btn:hover) {
+  transform: translateY(-2px);
+}
+
+:where(.m-btn:active) {
+  transform: translateY(0) scale(0.98);
+}
+
+:where(.m-btn-navy) {
+  color: #fff;
+  background: linear-gradient(180deg, #1f4590 0%, #0b2451 52%, #081a3d 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.28),
+    inset 0 -10px 18px rgba(27, 111, 224, 0.35),
+    0 0 0 1px rgba(27, 111, 224, 0.55),
+    0 14px 34px -10px rgba(11, 36, 81, 0.6),
+    0 0 26px -8px rgba(27, 111, 224, 0.55);
+}
+
+:where(.m-btn-navy:hover) {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.32),
+    inset 0 -10px 20px rgba(27, 111, 224, 0.5),
+    0 0 0 1px rgba(60, 140, 255, 0.7),
+    0 20px 40px -12px rgba(11, 36, 81, 0.65),
+    0 0 36px -6px rgba(27, 111, 224, 0.7);
+}
+
+:where(.m-btn-navy)::after,
+:where(.m-btn-gold)::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(110deg, transparent 30%, rgba(255, 255, 255, 0.28) 50%, transparent 70%);
+  transform: translateX(-120%);
+  transition: transform 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+:where(.m-btn-navy:hover)::after,
+:where(.m-btn-gold:hover)::after {
+  transform: translateX(120%);
+}
+
+:where(.m-btn-glass) {
+  color: var(--m-navy);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.95), rgba(236, 244, 255, 0.8));
+  border: 1px solid rgba(255, 255, 255, 0.95);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  box-shadow: inset 0 1px 0 #fff, 0 12px 28px -14px rgba(11, 36, 81, 0.35), 0 0 0 1px rgba(11, 70, 158, 0.06);
+}
+
+:where(.m-btn-glass:hover) {
+  box-shadow: inset 0 1px 0 #fff, 0 18px 34px -14px rgba(11, 36, 81, 0.4), 0 0 0 1px rgba(255, 174, 19, 0.45);
+}
+
+:where(.m-btn-gold) {
+  color: var(--m-navy-deep);
+  background: linear-gradient(180deg, #ffd36e 0%, #ffae13 60%, #f59a00 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6), 0 0 0 1px rgba(255, 174, 19, 0.6), 0 14px 30px -12px rgba(255, 140, 0, 0.6);
+}
+
+/* ---------- Typography helpers ---------- */
+
+:where(.m-display) {
+  font-family: var(--font-urbanist);
+  font-weight: 800;
+  letter-spacing: -0.035em;
+  line-height: 1.02;
+}
+
+:where(.m-text-gradient) {
+  background: linear-gradient(100deg, #0b2451 0%, #0b469e 45%, #1b6fe0 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+:where(.m-text-gold) {
+  background: linear-gradient(100deg, #f59a00, #ffae13 40%, #ffcf5a);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+:where(.m-eyebrow) {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  border-radius: 9999px;
+  padding: 0.4rem 0.9rem 0.4rem 0.45rem;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--m-blue);
+}
+
+/* ---------- Device frames ---------- */
+
+:where(.m-phone) {
+  position: relative;
+  border-radius: 2.6rem;
+  padding: 0.55rem;
+  background: linear-gradient(145deg, #f8fbff, #cfdbee 40%, #eef3fb 60%, #b9c8e0);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.9),
+    0 0 0 1px rgba(11, 36, 81, 0.12),
+    0 40px 80px -30px rgba(11, 36, 81, 0.45),
+    0 18px 30px -18px rgba(11, 36, 81, 0.3);
+}
+
+:where(.m-phone-screen) {
+  position: relative;
+  overflow: hidden;
+  border-radius: 2.1rem;
+  background: linear-gradient(180deg, #eaf2ff 0%, #f8fbff 40%, #ffffff 100%);
+}
+
+/* ---------- Animations ---------- */
+
+@keyframes m-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes m-float-sm {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+@keyframes m-dash {
+  to { stroke-dashoffset: -40; }
+}
+
+@keyframes m-ping {
+  0% { transform: scale(0.6); opacity: 0.55; }
+  100% { transform: scale(2.4); opacity: 0; }
+}
+
+@keyframes m-marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+@keyframes m-caret {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+
+@keyframes m-spin-slow {
+  to { transform: rotate(360deg); }
+}
+
+.m-float { animation: m-float 7s ease-in-out infinite; }
+.m-float-sm { animation: m-float-sm 5s ease-in-out infinite; }
+.m-dash { stroke-dasharray: 4 6; animation: m-dash 1.6s linear infinite; }
+.m-ping { animation: m-ping 2.6s cubic-bezier(0, 0, 0.2, 1) infinite; transform-origin: center; transform-box: fill-box; }
+.m-marquee { animation: m-marquee 38s linear infinite; }
+.m-caret { animation: m-caret 1s step-end infinite; }
+.m-spin-slow { animation: m-spin-slow 60s linear infinite; transform-origin: center; transform-box: fill-box; }
+
+.m-marquee-wrap:hover .m-marquee { animation-play-state: paused; }
+
+.m-no-scrollbar { scrollbar-width: none; }
+.m-no-scrollbar::-webkit-scrollbar { display: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  :where(.mart-root *),
+  :where(.mart-root *)::before,
+  :where(.mart-root *)::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+}
+
