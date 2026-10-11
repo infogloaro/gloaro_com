@@ -16,15 +16,30 @@ const HINT_FIRST_MS = 1500
 const HINT_TAP_EVERY_MS = 3500
 const deckSpring = { type: 'spring', stiffness: 170, damping: 22, mass: 0.9 }
 
-function CardBody({ Icon, title, description, delay }) {
+const imageUrl = (id, width = 680) => `https://images.unsplash.com/${id}?auto=format&fit=crop&w=${width}&q=80`
+
+function CardBody({ Icon, title, description, image, delay }) {
   return (
-    <div className="flex items-start gap-4">
-      <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-[#ffae13]/15 text-[#e07b00] transition-transform duration-300 group-hover/tilt:rotate-12">
-        <DrawIcon icon={Icon} className="h-6 w-6" delay={delay} />
-      </span>
-      <div>
-        <h3 className="text-base font-extrabold text-[#0d4697]">{title}</h3>
-        <p className="mt-1 text-sm font-medium leading-6 text-slate-600">{description}</p>
+    <div>
+      <div className="flex items-start gap-4">
+        <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-[#ffae13]/15 text-[#e07b00] transition-transform duration-300 group-hover/tilt:rotate-12">
+          <DrawIcon icon={Icon} className="h-6 w-6" delay={delay} />
+        </span>
+        <div>
+          <h3 className="text-base font-extrabold text-[#0d4697]">{title}</h3>
+          <p className="mt-1 text-sm font-medium leading-6 text-slate-600">{description}</p>
+        </div>
+      </div>
+      {/* Related picture under the copy; a soft brand tint keeps the six photos consistent. */}
+      <div className="relative mt-5 h-40 overflow-hidden rounded-xl bg-[#0d4697]/10 ring-1 ring-[#0d4697]/10">
+        <img
+          src={imageUrl(image)}
+          alt=""
+          loading="lazy"
+          draggable={false}
+          className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover/tilt:scale-110"
+        />
+        <span aria-hidden="true" className="absolute inset-0 bg-gradient-to-t from-[#0d4697]/35 via-transparent to-transparent" />
       </div>
     </div>
   )
@@ -131,7 +146,7 @@ function CardDeck() {
         transition={expanded ? deckSpring : { duration: 5, repeat: Infinity, ease: 'easeInOut' }}
         className="grid place-items-center"
       >
-        {whyChoose.map(([Icon, title, description], i) => {
+        {whyChoose.map(([Icon, title, description, image], i) => {
           const target = expanded ? row[i] : stack[i]
           const isFront = i === count - 1
           const order = count - 1 - i
@@ -214,7 +229,7 @@ function CardDeck() {
                 className="rounded-2xl bg-gradient-to-br from-white to-[#0d4697]/20"
                 innerClassName="bg-[linear-gradient(160deg,#ffffff_0%,#fbfcff_55%,#f3f7ff_100%)] p-6"
               >
-                <CardBody Icon={Icon} title={title} description={description} delay={200 + order * 60} />
+                <CardBody Icon={Icon} title={title} description={description} image={image} delay={200 + order * 60} />
               </TiltCard>
             </motion.div>
           )
@@ -254,7 +269,7 @@ function PhoneDeck() {
             exit={{ opacity: 0, scale: 0.96, transition: { duration: 0.18 } }}
             className="relative mx-auto grid w-full max-w-[340px] place-items-center pb-12 pt-6 text-left"
           >
-            {whyChoose.map(([Icon, title, description], i) => {
+            {whyChoose.map(([Icon, title, description, image], i) => {
               const order = count - 1 - i
               return (
                 <motion.div
@@ -265,7 +280,7 @@ function PhoneDeck() {
                   style={{ zIndex: i }}
                   className="col-start-1 row-start-1 w-full rounded-2xl bg-[linear-gradient(160deg,#ffffff_0%,#fbfcff_55%,#f3f7ff_100%)] p-5 shadow-[0_14px_30px_-14px_rgba(13,70,151,0.35)] ring-1 ring-[#0d4697]/10"
                 >
-                  <CardBody Icon={Icon} title={title} description={description} delay={200 + order * 60} />
+                  <CardBody Icon={Icon} title={title} description={description} image={image} delay={200 + order * 60} />
                 </motion.div>
               )
             })}
@@ -276,7 +291,7 @@ function PhoneDeck() {
         ) : (
           <motion.div key="row" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
             <ul className="-mx-5 flex snap-x snap-mandatory gap-4 overflow-x-auto px-5 pb-4 [scrollbar-width:none]">
-              {whyChoose.map(([Icon, title, description], i) => (
+              {whyChoose.map(([Icon, title, description, image], i) => (
                 <motion.li
                   key={title}
                   initial={{ opacity: 0, x: -i * 60, scale: 0.94 }}
@@ -285,7 +300,7 @@ function PhoneDeck() {
                   className="w-[82%] shrink-0 snap-center"
                 >
                   <div className="h-full rounded-2xl bg-[linear-gradient(160deg,#ffffff_0%,#fbfcff_55%,#f3f7ff_100%)] p-5 shadow-[0_14px_30px_-14px_rgba(13,70,151,0.35)] ring-1 ring-[#0d4697]/10">
-                    <CardBody Icon={Icon} title={title} description={description} delay={200} />
+                    <CardBody Icon={Icon} title={title} description={description} image={image} delay={200} />
                   </div>
                 </motion.li>
               ))}
@@ -311,7 +326,7 @@ function PhoneDeck() {
 function CardGrid() {
   return (
     <ul className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-      {whyChoose.map(([Icon, title, description], index) => (
+      {whyChoose.map(([Icon, title, description, image], index) => (
         <motion.li
           key={title}
           className="h-full"
@@ -322,7 +337,7 @@ function CardGrid() {
           style={{ transformPerspective: 1200 }}
         >
           <TiltCard glow="rgba(255,174,19,0.2)" className="rounded-2xl bg-[#0d4697]/10 shadow-sm" innerClassName="bg-white p-6">
-            <CardBody Icon={Icon} title={title} description={description} delay={200 + (index % 3) * 80} />
+            <CardBody Icon={Icon} title={title} description={description} image={image} delay={200 + (index % 3) * 80} />
           </TiltCard>
         </motion.li>
       ))}

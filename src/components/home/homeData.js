@@ -128,12 +128,12 @@ export const processSteps = [
 ]
 
 export const whyChoose = [
-  [Sparkles, 'Customer-Focused Solutions', 'Every build starts with your workflow, not a template.'],
-  [Cpu, 'Innovative Technology', 'Modern frameworks and AI tooling applied where they genuinely help.'],
-  [LayoutGrid, 'Scalable Platforms', 'Architecture designed to grow with your business, not against it.'],
-  [Globe, 'Professional Networking Ecosystem', 'Backed by the Gloaro Network of verified entrepreneurs and partners.'],
-  [ShieldCheck, 'Reliable Service & Quality Standards', 'Structured sprints, testing and monitoring on every project.'],
-  [Server, 'Trust & Transparency', 'Clear scoping, clear timelines, clear communication.'],
+  [Sparkles, 'Customer-Focused Solutions', 'Every build starts with your workflow, not a template.', 'photo-1542744173-8e7e53415bb0'],
+  [Cpu, 'Innovative Technology', 'Modern frameworks and AI tooling applied where they genuinely help.', 'photo-1518770660439-4636190af475'],
+  [LayoutGrid, 'Scalable Platforms', 'Architecture designed to grow with your business, not against it.', 'photo-1551288049-bebda4e38f71'],
+  [Globe, 'Professional Networking Ecosystem', 'Backed by the Gloaro Network of verified entrepreneurs and partners.', 'photo-1517245386807-bb43f82c33c4'],
+  [ShieldCheck, 'Reliable Service & Quality Standards', 'Structured sprints, testing and monitoring on every project.', 'photo-1461749280684-dccba630e2f6'],
+  [Server, 'Trust & Transparency', 'Clear scoping, clear timelines, clear communication.', 'photo-1450101499163-c8848c66ca85'],
 ]
 
 export const heroStats = [
