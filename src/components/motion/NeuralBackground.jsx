@@ -80,7 +80,9 @@ export default function NeuralBackground({ tone = 'cream', priority = 2, classNa
       canvas.width = Math.round(width * dpr)
       canvas.height = Math.round(height * dpr)
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
-      network = buildNetwork(width, height)
+      // A zero-sized box (collapsed or not laid out yet) would divide by zero in
+      // buildNetwork and give NaN positions; draw nothing until it has a size.
+      network = width >= 1 && height >= 1 ? buildNetwork(width, height) : { nodes: [], edges: [] }
       pulses = []
     }
 
@@ -149,6 +151,7 @@ export default function NeuralBackground({ tone = 'cream', priority = 2, classNa
         const x = points[a][0] + (points[b][0] - points[a][0]) * eased
         const y = points[a][1] + (points[b][1] - points[a][1]) * eased
         const fade = Math.sin(progress * Math.PI)
+        if (!Number.isFinite(x) || !Number.isFinite(y)) continue
         const glow = ctx.createRadialGradient(x, y, 0, x, y, 14)
         glow.addColorStop(0, `rgba(${palette.pulse},${0.55 * fade})`)
         glow.addColorStop(1, `rgba(${palette.pulse},0)`)
