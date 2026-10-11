@@ -16,7 +16,6 @@ import {
   Mail,
   Megaphone,
   Network,
-  Phone,
   Rocket,
   Search,
   ShieldCheck,
@@ -119,6 +118,7 @@ export default function Navbar() {
   const { isAuthenticated, user } = useAuth()
   const navigate = useNavigate()
   const { pathname, hash } = useLocation()
+  const isNetworkPage = pathname === '/network'
   const searchInputRef = useRef(null)
   const [open, setOpen] = useState(false)
   const [networkOpen, setNetworkOpen] = useState(false)
@@ -237,38 +237,7 @@ export default function Navbar() {
 
   return (
     <>
-      {/* Utility bar: in normal flow above the sticky header, so it scrolls
-          away on its own instead of collapsing (which would shift the page). */}
-      <div className="hidden bg-[#061633] font-jakarta text-white/80 lg:block">
-        <div className="mx-auto flex h-10 max-w-[1440px] items-center justify-between px-5 text-xs font-medium lg:px-8">
-          <div className="flex items-center gap-6">
-            <a href="mailto:info@gloaro.com" className="flex items-center gap-2 transition hover:text-white">
-              <Mail className="h-3.5 w-3.5 text-[#ffae13]" /> info@gloaro.com
-            </a>
-            <a href="tel:+917200073704" className="flex items-center gap-2 transition hover:text-white">
-              <Phone className="h-3.5 w-3.5 text-[#ffae13]" /> +91 72000 73704
-            </a>
-          </div>
-          <p className="hidden text-[11px] font-semibold uppercase tracking-[0.22em] text-white/70 xl:block">Software · Web · Mobile · AI · Marketplace · Network</p>
-          <div className="flex items-center gap-5">
-            {isAuthenticated ? (
-              <Link to={getDashboardRoute(user?.role, user)} className="flex items-center gap-2 font-semibold text-white transition hover:text-[#ffd36e]">
-                <img src={loginIcon} alt="" className="h-3.5 w-3.5 object-contain brightness-0 invert" />
-                <span className="max-w-40 truncate">{user?.name || 'Account'}</span>
-              </Link>
-            ) : (
-              <>
-                <Link to="/login" className="flex items-center gap-2 transition hover:text-white">
-                  <img src={loginIcon} alt="" className="h-3.5 w-3.5 object-contain brightness-0 invert" /> Login
-                </Link>
-                <Link to="/register" className="rounded-full border border-white/20 px-3 py-0.5 font-semibold text-white transition hover:border-[#ffae13] hover:text-[#ffd36e]">Register</Link>
-              </>
-            )}
-          </div>
-        </div>
-      </div>
-
-    <header className="sticky top-0 z-50 font-jakarta">
+    <header data-back-anchor className="sticky top-0 z-50 font-jakarta">
       {/* Main bar (floating). Constant height; only colours and the logo's
           transform change on scroll, so nothing below it reflows. */}
       <div className="px-3 pt-2 sm:px-5">
@@ -300,6 +269,23 @@ export default function Navbar() {
             <button type="button" onClick={() => setSearchPanelOpen((value) => !value)} aria-label="Search products and services" aria-expanded={searchPanelOpen} className={iconButton}>
               {searchPanelOpen ? <X className="h-5 w-5" /> : <Search className="h-5 w-5" />}
             </button>
+            {/* Gloaro Network page only: sign-in actions beside the search icon. */}
+            {isNetworkPage && (isAuthenticated ? (
+              <Link to={getDashboardRoute(user?.role, user)} className="ml-1 flex max-w-40 items-center gap-2 rounded-full border border-[#0b469e]/15 bg-white px-3 py-2 text-sm font-semibold text-[#0b469e] transition hover:border-[#0b469e]/30 hover:bg-[#0b469e]/5">
+                <img src={loginIcon} alt="" className="h-4 w-4 shrink-0 object-contain" />
+                <span className="truncate">{user?.name || 'Account'}</span>
+              </Link>
+            ) : (
+              <>
+                <Link to="/login" aria-label="Login" className="ml-1 flex items-center gap-1.5 rounded-full px-2.5 py-2 text-sm font-semibold text-[#0b469e] transition hover:bg-[#0b469e]/10 sm:px-3">
+                  <img src={loginIcon} alt="" className="h-4 w-4 object-contain" />
+                  <span className="hidden sm:inline">Login</span>
+                </Link>
+                <Link to="/register" className="whitespace-nowrap rounded-full bg-[#ffae13] px-3 py-2 text-sm sm:px-4 font-bold text-[#0d2a5c] shadow-[0_8px_18px_rgba(255,174,19,0.3)] transition hover:-translate-y-0.5 hover:bg-[#ffc04a]">
+                  Register
+                </Link>
+              </>
+            ))}
             <Link to="/contact" className="group ml-2 hidden shrink-0 items-center gap-2 whitespace-nowrap rounded-full bg-[linear-gradient(135deg,#0b469e,#1b6fe0)] px-4 py-2.5 2xl:px-5 text-sm font-bold text-white shadow-[0_10px_24px_rgba(11,70,158,0.28)] transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_14px_30px_rgba(11,70,158,0.36)] lg:flex">
               Start a Project
               <ArrowRight className="h-4 w-4 transition group-hover:translate-x-0.5" />
