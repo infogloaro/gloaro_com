@@ -1,4 +1,4 @@
-import { Bell, ChevronDown, ChevronLeft, Menu, Search, LogOut } from 'lucide-react'
+import { Bell, ChevronDown, ChevronLeft, Menu, LogOut } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
@@ -11,6 +11,7 @@ import { buildAdminRoute } from '../utils/permissions'
 import { formatDate } from '../utils/format'
 import { resolveNotificationNavigation } from '../utils/notificationRouting'
 import NotificationDetailsModal from '../components/common/NotificationDetailsModal'
+import BackButton from '../components/common/BackButton'
 import { ROLES } from '../constants/roleConfig.js'
 import { resolveNavigation, NAVIGATION_MODES } from '../utils/navigationResolver'
 
@@ -20,7 +21,7 @@ export default function DashboardLayout({ navItems = [], title = 'Dashboard', th
   const navigate = useNavigate()
   const [open, setOpen] = useState(false)
   const [collapsed, setCollapsed] = useState(false)
-  const [query, setQuery] = useState('')
+  const [query] = useState('')
   const [openGroups, setOpenGroups] = useState({})
   const [impersonating, setImpersonating] = useState(() => Boolean(sessionStorage.getItem('gloaro_superadmin_session')))
   const [chatUnreadCount, setChatUnreadCount] = useState(0)
@@ -473,6 +474,7 @@ export default function DashboardLayout({ navItems = [], title = 'Dashboard', th
           setNotificationUnavailable(false)
         }}
       />
+      <BackButton className="top-20" />
     </main>
   )
 }

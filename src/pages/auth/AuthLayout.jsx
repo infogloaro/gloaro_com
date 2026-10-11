@@ -3,6 +3,7 @@ import { motion } from 'framer-motion'
 import { ArrowRight, BadgeCheck, Sparkles, ShieldCheck } from 'lucide-react'
 import signupImage from '../../assets/signup_img.png'
 import signupLogo from '../../assets/signup_logo.webp'
+import BackButton from '../../components/common/BackButton'
 
 export default function AuthLayout() {
   return (
@@ -79,6 +80,7 @@ export default function AuthLayout() {
           </motion.div>
         </div>
       </section>
+      <BackButton />
     </main>
   )
 }
