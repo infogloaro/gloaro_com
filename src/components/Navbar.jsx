@@ -254,7 +254,7 @@ export default function Navbar() {
             <DesktopNavLink to="/" label="Home" active={isActive('/')} />
             <NavDivider />
             <TechMenu active={pathname.startsWith('/tech') && !isActive('/tech/digital-marketing')} />
-            <DesktopNavLink to="/tech/digital-marketing" label="Digital Marketing" Icon={Megaphone} active={isActive('/tech/digital-marketing')} />
+            <DesktopNavLink to="/tech/digital-marketing" label="Digital Marketing" active={isActive('/tech/digital-marketing')} />
             <NavDivider />
             <PlatformsMenu active={isActive('/mart') || isActive('/network')} onOpenNetwork={() => setNetworkOpen(true)} />
             <NavDivider />
