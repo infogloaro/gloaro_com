@@ -27,7 +27,7 @@ export default function MartLandingPage() {
           Skip to content
         </a>
         <MartNavbar />
-        <BackButton className="top-[92px]" />
+        <BackButton />
         <main id="main">
           <MartHero />
           <MartProductShowcase />

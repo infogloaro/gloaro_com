@@ -25,7 +25,7 @@ export default function PublicLayout() {
       <SmoothScroll />
       <ScrollProgressBar />
       <Navbar />
-      <BackButton className="top-[88px] lg:top-[128px]" />
+      <BackButton />
       <AnimatePresence mode="wait">
         <motion.div
           key={pathname}
