@@ -7,15 +7,14 @@ import { useAuth } from '../hooks/useAuth'
 import { getDashboardRoute } from '../utils/permissions'
 import {
   ArrowRight,
-  Boxes,
   BriefcaseBusiness,
   CalendarDays,
   CircleHelp,
   ChevronDown,
-  Code2,
   Handshake,
   LayoutGrid,
   Mail,
+  Megaphone,
   Network,
   Phone,
   Rocket,
@@ -29,6 +28,7 @@ import {
   Users,
   X,
 } from 'lucide-react'
+import { techGroups, techMenuItems } from './tech/techMenu'
 import logo from '../assets/logo-transparent.webp'
 import networkIcon from '../assets/network_icon.png'
 import loginIcon from '../assets/login_icon.png'
@@ -107,8 +107,7 @@ const panelMotion = {
 
 const navItems = [
   [Rocket, 'Home', '/'],
-  [Code2, 'Services', '/#services'],
-  [Boxes, 'Products', '/#products'],
+  [Megaphone, 'Digital Marketing', '/tech/digital-marketing'],
   [LayoutGrid, 'Portfolio', '/#portfolio'],
   [UserRound, 'About', '/about'],
   [Mail, 'Contact', '/contact'],
@@ -280,58 +279,35 @@ export default function Navbar() {
             <img src={logo} alt="Gloaro" className={`h-14 w-auto origin-left object-contain transition-transform duration-300 ${scrolled ? 'scale-[0.8]' : 'group-hover:scale-[1.04]'}`} />
           </Link>
 
-          {/* Desktop navigation */}
-          <nav aria-label="Primary" className="hidden flex-1 items-center justify-center gap-0.5 lg:flex">
-            {navItems.map(([, label, href]) => {
-              const active = isActive(href)
-              return (
-                <Link key={label} to={href} aria-current={active ? 'page' : undefined} className={`relative rounded-full px-3.5 py-2 text-sm font-semibold transition-colors duration-200 xl:px-4 ${active ? 'text-[#0b469e]' : 'text-slate-600 hover:text-[#0b469e]'}`}>
-                  {active && <motion.span layoutId="nav-active" className="absolute inset-0 -z-10 rounded-full bg-[#0b469e]/10" transition={spring.interactive} />}
-                  {label}
-                  {active && <motion.span layoutId="nav-dot" transition={spring.interactive} className="absolute -bottom-0.5 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full bg-[#ffae13]" />}
-                </Link>
-              )
-            })}
-
-            <span aria-hidden="true" className="mx-2 h-6 w-px bg-slate-200" />
-
-            <div className={`flex items-center overflow-hidden rounded-full border transition duration-200 ${isActive('/network') ? 'border-[#0b469e]/30 bg-[#0b469e]/10' : 'border-slate-200 bg-white hover:border-[#0b469e]/30'}`}>
-              <Link to="/network" className="flex items-center gap-2 py-2 pl-3 pr-2 text-sm font-semibold text-[#0b469e]">
-                <img src={networkIcon} alt="" className="h-4 w-4 object-contain" />
-                Network
-              </Link>
-              <button
-                type="button"
-                onClick={() => setNetworkOpen(true)}
-                aria-label="Open Gloaro Network quick menu"
-                aria-haspopup="dialog"
-                aria-expanded={networkOpen}
-                className="flex h-full items-center border-l border-slate-200 px-2 py-2.5 text-[#0b469e] transition hover:bg-[#0b469e]/10"
-              >
-                <ChevronDown className="h-4 w-4" />
-              </button>
-            </div>
-
-            <Link to="/mart" className={`group relative ml-1.5 flex items-center gap-2 overflow-hidden rounded-full border px-3.5 py-2 text-sm font-bold text-[#0b2451] shadow-[0_8px_20px_rgba(255,174,19,0.25)] transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_12px_26px_rgba(255,174,19,0.35)] ${isActive('/mart') ? 'border-[#ffae13] bg-[#ffae13]' : 'border-amber-200 bg-[linear-gradient(135deg,#ffd36e,#ffae13)]'}`}>
-              <span className="pointer-events-none absolute inset-0 bg-[linear-gradient(110deg,transparent,rgba(255,255,255,0.5),transparent)] bg-[length:200%_100%] opacity-0 transition duration-500 group-hover:animate-[navbar-shine_1.8s_linear_infinite] group-hover:opacity-100" />
-              <ShoppingBag className="relative h-4 w-4" />
-              <span className="relative">Gloaro Mart</span>
-            </Link>
+          {/* Desktop navigation, grouped by what the visitor wants, in order:
+              our services │ our platforms │ partner with us │ proof & company. */}
+          <nav aria-label="Primary" className="hidden flex-1 items-center justify-center gap-0.5 xl:flex">
+            <DesktopNavLink to="/" label="Home" active={isActive('/')} />
+            <NavDivider />
+            <TechMenu active={pathname.startsWith('/tech') && !isActive('/tech/digital-marketing')} />
+            <DesktopNavLink to="/tech/digital-marketing" label="Digital Marketing" Icon={Megaphone} active={isActive('/tech/digital-marketing')} />
+            <NavDivider />
+            <PlatformsMenu active={isActive('/mart') || isActive('/network')} onOpenNetwork={() => setNetworkOpen(true)} />
+            <NavDivider />
+            <PartnersMenu active={isActive('/partners')} />
+            <NavDivider />
+            <DesktopNavLink to="/#portfolio" label="Portfolio" active={isActive('/#portfolio')} />
+            <DesktopNavLink to="/about" label="About" active={isActive('/about')} />
           </nav>
 
           {/* Actions */}
-          <div className="ml-auto flex items-center gap-1 lg:ml-0">
+          <div className="ml-auto flex items-center gap-1 xl:ml-0">
             <button type="button" onClick={() => setSearchPanelOpen((value) => !value)} aria-label="Search products and services" aria-expanded={searchPanelOpen} className={iconButton}>
               {searchPanelOpen ? <X className="h-5 w-5" /> : <Search className="h-5 w-5" />}
             </button>
-            <Link to="/contact" className="group ml-2 hidden items-center gap-2 rounded-full bg-[linear-gradient(135deg,#0b469e,#1b6fe0)] px-5 py-2.5 text-sm font-bold text-white shadow-[0_10px_24px_rgba(11,70,158,0.28)] transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_14px_30px_rgba(11,70,158,0.36)] lg:flex">
+            <Link to="/contact" className="group ml-2 hidden shrink-0 items-center gap-2 whitespace-nowrap rounded-full bg-[linear-gradient(135deg,#0b469e,#1b6fe0)] px-4 py-2.5 2xl:px-5 text-sm font-bold text-white shadow-[0_10px_24px_rgba(11,70,158,0.28)] transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_14px_30px_rgba(11,70,158,0.36)] lg:flex">
               Start a Project
               <ArrowRight className="h-4 w-4 transition group-hover:translate-x-0.5" />
             </Link>
             <button
               type="button"
               onClick={() => setOpen((value) => !value)}
-              className="ml-1 grid h-10 w-10 place-items-center rounded-full bg-[linear-gradient(135deg,#0b469e,#1b6fe0)] text-white shadow-[0_8px_20px_rgba(11,70,158,0.25)] lg:hidden"
+              className="ml-1 grid h-10 w-10 place-items-center rounded-full bg-[linear-gradient(135deg,#0b469e,#1b6fe0)] text-white shadow-[0_8px_20px_rgba(11,70,158,0.25)] xl:hidden"
               aria-label="Toggle menu"
               aria-expanded={open}
             >
@@ -410,7 +386,7 @@ export default function Navbar() {
       {/* Mobile menu */}
       <AnimatePresence>
         {open && (
-          <motion.div {...dropdownMotion} className="absolute inset-x-0 top-full px-3 pt-1 sm:px-5 lg:hidden">
+          <motion.div {...dropdownMotion} className="absolute inset-x-0 top-full px-3 pt-1 sm:px-5 xl:hidden">
             <div className="max-h-[calc(100vh-90px)] overflow-y-auto rounded-[28px] border border-white/70 bg-white/95 p-4 shadow-[0_24px_70px_rgba(15,23,42,0.2)] backdrop-blur-xl">
               <div className="grid grid-cols-2 gap-2">
                 {navItems.map(([Icon, label, href]) => {
@@ -423,6 +399,8 @@ export default function Navbar() {
                   )
                 })}
               </div>
+
+              <MobileTechMenu onNavigate={() => setOpen(false)} />
 
               <div className="mt-3 grid gap-3">
                 <div className="flex items-stretch overflow-hidden rounded-[22px] bg-[linear-gradient(135deg,#0b469e,#1b6fe0)] shadow-[0_14px_28px_rgba(11,70,158,0.22)]">
@@ -455,6 +433,19 @@ export default function Navbar() {
                     <span className="text-left">
                       <span className="block text-sm font-black uppercase tracking-[0.18em]">Gloaro Mart</span>
                       <span className="block text-xs font-medium text-[#0b2451]/70">B2B + B2C marketplace</span>
+                    </span>
+                  </span>
+                  <ArrowRight className="h-5 w-5" />
+                </Link>
+
+                <Link to="/partners" onClick={() => setOpen(false)} className="flex items-center justify-between rounded-[22px] border border-[#0b2451]/10 bg-[#061A3A] px-4 py-3.5 font-semibold text-white">
+                  <span className="flex items-center gap-3">
+                    <span className="grid h-10 w-10 place-items-center rounded-full bg-white/10 ring-1 ring-white/15">
+                      <Handshake className="h-5 w-5 text-[#F5A900]" />
+                    </span>
+                    <span className="text-left">
+                      <span className="block text-sm font-black uppercase tracking-[0.18em]">Partner with us</span>
+                      <span className="block text-xs font-medium text-white/75">Franchise or Channel Partner</span>
                     </span>
                   </span>
                   <ArrowRight className="h-5 w-5" />
@@ -625,5 +616,313 @@ function GloaroNetworkMenu({ onClose }) {
         </aside>
       </motion.div>
     </motion.div>
+  )
+}
+
+// Desktop dropdown behaviour: opens on hover or click, closes on Escape, an
+// outside click or leaving the menu.
+function useHoverMenu() {
+  const [open, setOpen] = useState(false)
+  const rootRef = useRef(null)
+  const closeTimer = useRef(0)
+
+  useEffect(() => {
+    if (!open) return undefined
+    const onKey = (event) => {
+      if (event.key === 'Escape') setOpen(false)
+    }
+    const onPointerDown = (event) => {
+      if (!rootRef.current?.contains(event.target)) setOpen(false)
+    }
+    window.addEventListener('keydown', onKey)
+    document.addEventListener('pointerdown', onPointerDown)
+    return () => {
+      window.removeEventListener('keydown', onKey)
+      document.removeEventListener('pointerdown', onPointerDown)
+    }
+  }, [open])
+
+  useEffect(() => () => window.clearTimeout(closeTimer.current), [])
+
+  return {
+    open,
+    setOpen,
+    rootRef,
+    show: () => {
+      window.clearTimeout(closeTimer.current)
+      setOpen(true)
+    },
+    hide: () => {
+      closeTimer.current = window.setTimeout(() => setOpen(false), 140)
+    },
+    // Keyboard (detail 0) toggles; a pointer click keeps a hover-opened menu open.
+    onClick: (event) => setOpen((value) => (event.detail === 0 ? !value : true)),
+  }
+}
+
+// GLOARO TECH dropdown: the Gloaro Tech services in one glance, grouped by what a
+// client wants to do. Digital Marketing has its own header link.
+function TechMenu({ active }) {
+  const { open, setOpen, rootRef, show, hide, onClick } = useHoverMenu()
+  const close = () => setOpen(false)
+
+  return (
+    <div ref={rootRef} className="relative" onPointerEnter={show} onPointerLeave={hide}>
+      <button
+        type="button"
+        onClick={onClick}
+        aria-expanded={open}
+        aria-controls="tech-menu"
+        className={`relative flex items-center gap-1 whitespace-nowrap rounded-full px-2.5 py-2 text-sm font-semibold transition-colors duration-200 2xl:px-4 ${active || open ? 'text-[#0b469e]' : 'text-slate-600 hover:text-[#0b469e]'}`}
+      >
+        {active && <motion.span layoutId="nav-active" className="absolute inset-0 -z-10 rounded-full bg-[#0b469e]/10" transition={spring.interactive} />}
+        GLOARO TECH
+        <ChevronDown aria-hidden="true" className={`h-4 w-4 transition-transform duration-200 ${open ? 'rotate-180' : ''}`} />
+        {active && <motion.span layoutId="nav-dot" transition={spring.interactive} className="absolute -bottom-0.5 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full bg-[#ffae13]" />}
+      </button>
+      <AnimatePresence>
+        {open && (
+          <div key="tech-menu" className="absolute -left-8 top-full z-[60] w-[min(560px,calc(100vw-2rem))] pt-3">
+            <motion.div
+              id="tech-menu"
+              initial={{ opacity: 0, y: 10, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 6, scale: 0.99 }}
+              transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+              className="origin-top-left overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_24px_60px_rgba(15,23,42,0.18)]"
+            >
+                <div className="grid grid-cols-2 gap-x-2 p-3">
+                  {techGroups.map(([group, label], groupIndex) => (
+                    <div key={group}>
+                      <p className="px-3 pb-1 pt-2 text-[11px] font-black uppercase tracking-[0.2em] text-slate-400">{label}</p>
+                      {techMenuItems.filter((item) => item.group === group).map(({ id, Icon, title, short, href }, index) => (
+                        <motion.div key={id} initial={{ opacity: 0, x: -6 }} animate={{ opacity: 1, x: 0, transition: { delay: 0.04 + (groupIndex * 4 + index) * 0.025 } }}>
+                          <Link to={href} onClick={close} className="group flex items-start gap-3 rounded-xl p-2.5 transition hover:bg-[#f5f8ff]">
+                            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-[#0b469e]/8 text-[#0b469e] ring-1 ring-[#0b469e]/10 transition group-hover:bg-[#0b469e] group-hover:text-white"><Icon className="h-4.5 w-4.5" /></span>
+                            <span className="min-w-0">
+                              <span className="block text-sm font-bold text-[#0b2451]">{title}</span>
+                              <span className="block text-xs font-medium text-slate-500">{short}</span>
+                            </span>
+                          </Link>
+                        </motion.div>
+                      ))}
+                    </div>
+                  ))}
+                </div>
+              <div className="flex flex-wrap items-center gap-x-5 gap-y-2 border-t border-slate-100 bg-[#f8fafc] px-5 py-3 text-xs font-semibold">
+                <Link to="/solutions" onClick={close} className="text-[#0b469e] hover:underline">See live industry demos →</Link>
+                <Link to="/#services" onClick={close} className="text-[#0b469e] hover:underline">View all services →</Link>
+                <Link to="/contact" onClick={close} className="ml-auto inline-flex items-center gap-1.5 rounded-full bg-[#0b469e] px-4 py-2 font-bold text-white transition hover:bg-[#093b85]">
+                  Start a Project <ArrowRight className="h-3.5 w-3.5" />
+                </Link>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+    </div>
+  )
+}
+
+// Mobile version: tap to expand the grouped service list.
+function MobileTechMenu({ onNavigate }) {
+  const [expanded, setExpanded] = useState(false)
+  return (
+    <div className="mt-3 overflow-hidden rounded-[22px] border border-slate-200/80 bg-white">
+      <button
+        type="button"
+        onClick={() => setExpanded((value) => !value)}
+        aria-expanded={expanded}
+        aria-controls="mobile-tech-menu"
+        className="flex w-full items-center justify-between gap-3 px-4 py-3.5 text-left"
+      >
+        <span>
+          <span className="block text-sm font-black uppercase tracking-[0.18em] text-[#0b469e]">GLOARO TECH</span>
+          <span className="block text-xs font-medium text-slate-500">All {techMenuItems.length} services</span>
+        </span>
+        <ChevronDown aria-hidden="true" className={`h-5 w-5 text-[#0b469e] transition-transform duration-200 ${expanded ? 'rotate-180' : ''}`} />
+      </button>
+      <AnimatePresence initial={false}>
+        {expanded && (
+          <motion.div
+            id="mobile-tech-menu"
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+            className="overflow-hidden"
+          >
+            <div className="space-y-3 px-3 pb-4">
+              {techGroups.map(([group, label]) => (
+                <div key={group}>
+                  <p className="px-2 pb-1 text-[11px] font-black uppercase tracking-[0.2em] text-slate-400">{label}</p>
+                  <div className="grid gap-1">
+                    {techMenuItems.filter((item) => item.group === group).map(({ id, Icon, title, href }) => (
+                      <Link key={id} to={href} onClick={onNavigate} className="flex items-center gap-3 rounded-xl px-2 py-2.5 text-sm font-semibold text-slate-800 hover:bg-[#f5f8ff]">
+                        <Icon className="h-4 w-4 text-[#0b469e]" />
+                        {title}
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              ))}
+              <Link to="/solutions" onClick={onNavigate} className="block px-2 pt-1 text-sm font-bold text-[#0b469e]">See live industry demos →</Link>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  )
+}
+
+const partnerLinks = [
+  [Rocket, 'Franchise Partner', 'Run a GLOARO technology business in your area', '/partners/franchise'],
+  [Handshake, 'Channel Partner', 'Introduce businesses. GLOARO delivers.', '/partners/channel-partner'],
+]
+
+// Partners dropdown: the two partnership programmes plus the comparison page.
+function PartnersMenu({ active }) {
+  const { open, setOpen, rootRef, show, hide, onClick } = useHoverMenu()
+  const close = () => setOpen(false)
+
+  return (
+    <div ref={rootRef} className="relative" onPointerEnter={show} onPointerLeave={hide}>
+      <button
+        type="button"
+        onClick={onClick}
+        aria-expanded={open}
+        aria-controls="partners-menu"
+        className={`relative flex items-center gap-1 whitespace-nowrap rounded-full px-2.5 py-2 text-sm font-semibold transition-colors duration-200 2xl:px-4 ${active || open ? 'text-[#0b469e]' : 'text-slate-600 hover:text-[#0b469e]'}`}
+      >
+        {active && <motion.span layoutId="nav-active" className="absolute inset-0 -z-10 rounded-full bg-[#0b469e]/10" transition={spring.interactive} />}
+        Partners
+        <ChevronDown aria-hidden="true" className={`h-4 w-4 transition-transform duration-200 ${open ? 'rotate-180' : ''}`} />
+        {active && <motion.span layoutId="nav-dot" transition={spring.interactive} className="absolute -bottom-0.5 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full bg-[#ffae13]" />}
+      </button>
+      <AnimatePresence>
+        {open && (
+          <div key="partners-menu" className="absolute left-1/2 top-full z-[60] w-[360px] -translate-x-1/2 pt-3">
+            <motion.div
+              id="partners-menu"
+              initial={{ opacity: 0, y: 10, scale: 0.97 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 6, scale: 0.98 }}
+              transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+              className="origin-top overflow-hidden rounded-2xl border border-slate-200 bg-white p-2 shadow-[0_24px_50px_rgba(15,23,42,0.16)]"
+            >
+              {partnerLinks.map(([Icon, title, text, href], index) => (
+                <motion.div key={href} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0, transition: { delay: 0.05 + index * 0.05 } }}>
+                  <Link to={href} onClick={close} className="group flex items-start gap-3 rounded-xl p-3 transition hover:bg-[#F7F9FC]">
+                    <span className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl ${index === 0 ? 'bg-[#061A3A] text-[#F5A900]' : 'bg-[#EAF2FD] text-[#1558B0]'}`}>
+                      <Icon className="h-5 w-5" />
+                    </span>
+                    <span>
+                      <span className="flex items-center gap-1 text-sm font-bold text-[#0b2451]">
+                        {title}
+                        <ArrowRight className="h-3.5 w-3.5 opacity-0 transition group-hover:translate-x-0.5 group-hover:opacity-100" />
+                      </span>
+                      <span className="mt-0.5 block text-xs font-medium text-slate-500">{text}</span>
+                    </span>
+                  </Link>
+                </motion.div>
+              ))}
+              <Link to="/partners" onClick={close} className="mt-1 flex items-center justify-between rounded-xl bg-[#F7F9FC] px-3 py-2.5 text-xs font-semibold text-[#1558B0] transition hover:bg-[#EAF2FD]">
+                Not sure? Compare both paths
+                <ArrowRight className="h-3.5 w-3.5" />
+              </Link>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+    </div>
+  )
+}
+
+// One style for every top-level item: plain text, soft pill + gold dot when active.
+const desktopItemClass = (active) =>
+  `relative flex items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 py-2 text-sm font-semibold transition-colors duration-200 2xl:px-3.5 ${active ? 'text-[#0b469e]' : 'text-slate-600 hover:text-[#0b469e]'}`
+
+function ActiveMarks({ show }) {
+  if (!show) return null
+  return (
+    <>
+      <motion.span layoutId="nav-active" className="absolute inset-0 -z-10 rounded-full bg-[#0b469e]/10" transition={spring.interactive} />
+      <motion.span layoutId="nav-dot" transition={spring.interactive} className="absolute -bottom-0.5 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full bg-[#ffae13]" />
+    </>
+  )
+}
+
+function DesktopNavLink({ to, label, Icon, active }) {
+  return (
+    <Link to={to} aria-current={active ? 'page' : undefined} className={desktopItemClass(active)}>
+      <ActiveMarks show={active} />
+      {Icon && <Icon aria-hidden="true" className="h-4 w-4 text-[#e69500]" />}
+      {label}
+    </Link>
+  )
+}
+
+// Thin divider between groups so the bar reads as four clear sections.
+function NavDivider() {
+  return <span aria-hidden="true" className="mx-1 h-5 w-px shrink-0 bg-slate-200 2xl:mx-1.5" />
+}
+
+// Gloaro's own platforms: the marketplace and the business network.
+function PlatformsMenu({ active, onOpenNetwork }) {
+  const { open, setOpen, rootRef, show, hide, onClick } = useHoverMenu()
+  const close = () => setOpen(false)
+  const items = [
+    [ShoppingBag, 'Gloaro Mart', 'B2B + B2C marketplace for local businesses', '/mart', 'bg-[linear-gradient(135deg,#ffd36e,#ffae13)] text-[#0b2451]'],
+    [Network, 'Gloaro Network', 'Verified business network, membership and connects', '/network', 'bg-[#0b469e]/10 text-[#0b469e]'],
+  ]
+  return (
+    <div ref={rootRef} className="relative" onPointerEnter={show} onPointerLeave={hide}>
+      <button type="button" onClick={onClick} aria-expanded={open} aria-controls="platforms-menu" className={`${desktopItemClass(active)} ${open ? 'text-[#0b469e]' : ''}`}>
+        <ActiveMarks show={active} />
+        Platforms
+        <ChevronDown aria-hidden="true" className={`h-4 w-4 transition-transform duration-200 ${open ? 'rotate-180' : ''}`} />
+      </button>
+      <AnimatePresence>
+        {open && (
+          <div key="platforms-menu" className="absolute left-1/2 top-full z-[60] w-[360px] -translate-x-1/2 pt-3">
+            <motion.div
+              id="platforms-menu"
+              initial={{ opacity: 0, y: 10, scale: 0.97 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 6, scale: 0.98 }}
+              transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+              className="origin-top overflow-hidden rounded-2xl border border-slate-200 bg-white p-2 shadow-[0_24px_50px_rgba(15,23,42,0.16)]"
+            >
+              {items.map(([Icon, title, text, href, tone], index) => (
+                <motion.div key={href} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0, transition: { delay: 0.05 + index * 0.05 } }}>
+                  <Link to={href} onClick={close} className="group flex items-start gap-3 rounded-xl p-3 transition hover:bg-[#F7F9FC]">
+                    <span className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl ${tone}`}><Icon className="h-5 w-5" /></span>
+                    <span>
+                      <span className="flex items-center gap-1 text-sm font-bold text-[#0b2451]">
+                        {title}
+                        <ArrowRight className="h-3.5 w-3.5 opacity-0 transition group-hover:translate-x-0.5 group-hover:opacity-100" />
+                      </span>
+                      <span className="mt-0.5 block text-xs font-medium text-slate-500">{text}</span>
+                    </span>
+                  </Link>
+                </motion.div>
+              ))}
+              <button
+                type="button"
+                onClick={() => {
+                  close()
+                  onOpenNetwork()
+                }}
+                aria-haspopup="dialog"
+                className="mt-1 flex w-full items-center justify-between rounded-xl bg-[#F7F9FC] px-3 py-2.5 text-xs font-semibold text-[#0b469e] transition hover:bg-[#EAF2FD]"
+              >
+                Browse all Gloaro Network sections
+                <ArrowRight className="h-3.5 w-3.5" />
+              </button>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+    </div>
   )
 }
