@@ -1,6 +1,7 @@
 // Single source of truth for per-route SEO. Used in the browser by <Seo /> and at
 // build time by scripts/prerender-seo.mjs, so keep it free of React/DOM code.
 import { matchPath } from 'react-router-dom'
+import { channel, franchise, isPending, landingFaqs } from '../components/partners/partnerConfig'
 
 export const DEFAULT_SITE_NAME = 'GLOARO'
 export const DEFAULT_SITE_URL = import.meta.env?.VITE_SITE_URL || 'https://www.gloaro.com'
@@ -143,7 +144,46 @@ export const noindex = [
   '/membership-qualification',
   '/membership-application/track',
   '/membership-applications',
+  '/partners/franchise/apply',
+  '/partners/channel-partner/apply',
 ]
+
+// Partnership pages: WebPage + FAQPage built only from answered questions, so
+// placeholder answers awaiting approval never reach structured data.
+const partnerSchema = (path, name, description, faqs) => {
+  const answered = faqs.filter(([, answer]) => !isPending(answer))
+  return {
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+        '@type': 'WebPage',
+        '@id': `${structuredUrl(path)}#webpage`,
+        name,
+        url: structuredUrl(path),
+        description,
+        inLanguage: 'en-IN',
+        isPartOf: { '@type': 'WebSite', name: DEFAULT_SITE_NAME, url: DEFAULT_SITE_URL },
+      },
+      ...(answered.length
+        ? [{
+          '@type': 'FAQPage',
+          mainEntity: answered.map(([question, answer]) => ({
+            '@type': 'Question',
+            name: question,
+            acceptedAnswer: { '@type': 'Answer', text: answer },
+          })),
+        }]
+        : []),
+    ],
+  }
+}
+
+const PARTNERS_DESCRIPTION =
+  'Two ways to grow with GLOARO: run an approved GLOARO technology franchise in your area, or introduce businesses to GLOARO as a Channel Partner.'
+const FRANCHISE_DESCRIPTION =
+  'Build a technology business with GLOARO. Learn how a GLOARO franchise works, who can apply, what GLOARO provides and the journey from application to launch.'
+const CHANNEL_DESCRIPTION =
+  'Become a GLOARO Channel Partner. Introduce businesses that need school, hospital, CRM, web, app or marketing solutions, and GLOARO handles the proposal and delivery.'
 
 export const publicRoutes = [
   {
@@ -261,6 +301,39 @@ export const publicRoutes = [
         ORGANIZATION,
       ],
     },
+  },
+  {
+    pattern: '/partners',
+    title: 'Partner with GLOARO | Franchise & Channel Partner Programmes',
+    description: PARTNERS_DESCRIPTION,
+    keywords: 'GLOARO partnership, GLOARO franchise, channel partner programme, technology franchise India, IT referral partner, software reseller India',
+    schema: partnerSchema('/partners', 'Partner with GLOARO', PARTNERS_DESCRIPTION, landingFaqs),
+  },
+  {
+    pattern: '/partners/franchise',
+    title: 'GLOARO Franchise Partner | Build a Technology Business in Your Area',
+    description: FRANCHISE_DESCRIPTION,
+    keywords: 'GLOARO franchise, technology franchise, IT franchise India, software franchise, school management software franchise, franchise application',
+    schema: partnerSchema('/partners/franchise', 'GLOARO Franchise Partner', FRANCHISE_DESCRIPTION, franchise.faqs),
+  },
+  {
+    pattern: '/partners/channel-partner',
+    title: 'GLOARO Channel Partner | Introduce Businesses, We Deliver',
+    description: CHANNEL_DESCRIPTION,
+    keywords: 'GLOARO channel partner, IT referral partner, software referral programme, digital agency partner, business consultant partner India',
+    schema: partnerSchema('/partners/channel-partner', 'GLOARO Channel Partner', CHANNEL_DESCRIPTION, channel.faqs),
+  },
+  {
+    pattern: '/partners/franchise/apply',
+    title: 'Apply as a GLOARO Franchise Partner',
+    description: 'Apply for a GLOARO franchise in five short steps. Your answers are saved on this device as you go.',
+    keywords: 'GLOARO franchise application',
+  },
+  {
+    pattern: '/partners/channel-partner/apply',
+    title: 'Apply as a GLOARO Channel Partner',
+    description: 'Apply to become a GLOARO Channel Partner in five short steps. Your answers are saved on this device as you go.',
+    keywords: 'GLOARO channel partner application',
   },
   {
     pattern: '/vendors',

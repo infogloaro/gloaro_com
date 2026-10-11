@@ -139,6 +139,7 @@ const ADMIN_ROUTE_RULES = [
   { path: '/applications/business-network', module: 'members', section: 'applications' },
   { path: '/applications/vendor', module: 'members', section: 'applications' },
   { path: '/membership-applications', module: 'members', section: 'applications' },
+  { path: '/partnership-applications', module: 'members', section: 'applications' },
   { path: '/plans', module: 'members', section: 'plans' },
   { path: '/meeting-settings', module: 'meetings', section: 'meetings' },
   { path: '/events', module: 'events', section: 'events' },

@@ -137,6 +137,11 @@ const MembershipApplicationTrack = lazy(() => import('./pages/public/MembershipA
 const LegalPage = lazy(() => import('./pages/public/LegalPage'))
 const AboutPage = lazy(() => import('./pages/public/AboutPage'))
 const MartLandingPage = lazy(() => import('./pages/mart/MartLandingPage'))
+const PartnersLanding = lazy(() => import('./pages/partners/PartnersLanding'))
+const FranchisePage = lazy(() => import('./pages/partners/FranchisePage'))
+const ChannelPartnerPage = lazy(() => import('./pages/partners/ChannelPartnerPage'))
+const PartnerApplyPage = lazy(() => import('./pages/partners/PartnerApplyPage'))
+const PartnershipApplicationsPage = lazy(() => import('./pages/admin/PartnershipApplicationsPage'))
 const MembershipDashboard = lazy(() => import('./pages/membership/MembershipDashboard'))
 const MemberDashboard = lazy(() => import('./pages/membership/MemberDashboard'))
 const VendorApplicationForm = lazy(() => import('./pages/membership/VendorApplicationForm'))
@@ -264,6 +269,7 @@ function App() {
     { path: '/chapters', element: <ChapterManagementPage />, roles: [ROLES.ADMIN, ROLES.SUPERADMIN] },
     { path: '/chapter-dashboard', element: <ChapterDashboardPage /> },
     { path: '/membership-applications', element: <AdminMembershipApplicationsPage /> },
+    { path: '/partnership-applications', element: <PartnershipApplicationsPage />, roles: [ROLES.SUPERADMIN, ROLES.ADMIN] },
     { path: '/events', element: <AdminEventsPage /> },
     { path: '/training', element: <TrainingManagementPage /> },
     { path: '/testimonials', element: <TestimonialsManagementPage /> },
@@ -327,6 +333,9 @@ function App() {
       <Suspense fallback={<LoadingScreen />}>
       <Routes>
         <Route path="/mart" element={<Suspense fallback={<LoadingScreen />}><MartLandingPage /></Suspense>} />
+        {/* Partner applications use a focused layout without the site navigation. */}
+        <Route path="/partners/franchise/apply" element={<Suspense fallback={<LoadingScreen />}><PartnerApplyPage pathKey="franchise" /></Suspense>} />
+        <Route path="/partners/channel-partner/apply" element={<Suspense fallback={<LoadingScreen />}><PartnerApplyPage pathKey="channel" /></Suspense>} />
         <Route path="/prototypes/:businessId/:themeId" element={<Suspense fallback={<LoadingScreen />}><PrototypeShell /></Suspense>} />
         <Route element={<AuthLayout />}>
           <Route path="/login" element={<Login />} />
@@ -371,6 +380,9 @@ function App() {
           <Route path="/tech/:slug" element={<Suspense fallback={<LoadingScreen />}><TechServicePage /></Suspense>} />
           <Route path="/contact" element={<Suspense fallback={<LoadingScreen />}><EnquiryPage /></Suspense>} />
           <Route path="/about" element={<Suspense fallback={<LoadingScreen />}><AboutPage /></Suspense>} />
+          <Route path="/partners" element={<Suspense fallback={<LoadingScreen />}><PartnersLanding /></Suspense>} />
+          <Route path="/partners/franchise" element={<Suspense fallback={<LoadingScreen />}><FranchisePage /></Suspense>} />
+          <Route path="/partners/channel-partner" element={<Suspense fallback={<LoadingScreen />}><ChannelPartnerPage /></Suspense>} />
           <Route path="/terms-and-conditions" element={<LegalPage type="terms" />} />
           <Route path="/privacy-policy" element={<LegalPage type="privacy" />} />
           <Route path="/shipping-policy" element={<LegalPage type="shipping" />} />
