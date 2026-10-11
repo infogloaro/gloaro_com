@@ -3,17 +3,19 @@ import { useForm, useWatch } from 'react-hook-form'
 import { Link, useSearchParams } from 'react-router-dom'
 import FormField from '../../components/forms/FormField'
 import { allThemes, parseThemeKey } from '../../prototypes/catalog'
+import { appTemplates, parseAppKey } from '../../prototypes/appCatalog'
 
 const inputClass = 'w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-[#0d4697]'
 
 export default function EnquiryPage() {
   const [params] = useSearchParams()
-  const initialTheme = parseThemeKey(params.get('theme'))
+  const parseKey = (key) => parseThemeKey(key) || parseAppKey(key)
+  const initialTheme = parseKey(params.get('theme'))
   const [submitted, setSubmitted] = useState(false)
   const { register, handleSubmit, control, formState: { errors, isSubmitting } } = useForm({
     defaultValues: { themeKey: initialTheme?.key || '' },
   })
-  const selected = parseThemeKey(useWatch({ control, name: 'themeKey' }))
+  const selected = parseKey(useWatch({ control, name: 'themeKey' }))
 
   // Prototype only: no backend. Simulates a short send, then shows the thank-you screen.
   const onSubmit = async () => {
@@ -47,9 +49,16 @@ export default function EnquiryPage() {
           <FormField label="Theme" error={errors.themeKey?.message}>
             <select className={inputClass} {...register('themeKey', { required: 'Please choose a theme' })}>
               <option value="">Select a theme</option>
-              {allThemes().map(({ business, theme, key }) => (
-                <option key={key} value={key}>{business.name} — {theme.name}</option>
-              ))}
+              <optgroup label="Web app themes">
+                {allThemes().map(({ business, theme, key }) => (
+                  <option key={key} value={key}>{business.name} — {theme.name}</option>
+                ))}
+              </optgroup>
+              <optgroup label="Mobile app templates">
+                {appTemplates.map((app) => (
+                  <option key={app.key} value={app.key}>{app.name}</option>
+                ))}
+              </optgroup>
             </select>
           </FormField>
           <FormField label="Your name" error={errors.name?.message}>

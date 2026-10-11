@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { AnimatePresence, motion, useMotionValueEvent, useReducedMotion, useScroll, useTransform } from 'framer-motion'
 import { ArrowRight, CalendarDays, Check, Users } from 'lucide-react'
 import { transition, variants } from '../../../lib/motion'
-import { businesses } from '../../../prototypes/catalog'
+import { businesses, isThemeLive } from '../../../prototypes/catalog'
 import { products } from '../homeData'
 import GloaroMartHeroVisual from '../mart/GloaroMartHeroVisual'
 import SectionHeading from './SectionHeading'
@@ -11,7 +11,7 @@ import SectionHeading from './SectionHeading'
 const URLS = { prototypes: 'gloaro.com/solutions', network: 'gloaro.com/network' }
 
 function PrototypesScreen() {
-  const live = businesses.filter((b) => b.themes[0].thumb).slice(0, 4)
+  const live = businesses.filter((b) => isThemeLive(b.id, b.themes[0].id)).slice(0, 4)
   return (
     <div className="grid h-full grid-cols-2 gap-2.5 bg-[#f3fbf9] p-4">
       {live.map((business) => (

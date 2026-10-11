@@ -191,6 +191,19 @@ header button:focus-visible,
 .marquee-track:hover,
 .marquee-track[data-paused="true"] { animation-play-state: paused; }
 
+/* Our work rows: one rolls left to right, the other right to left. */
+@keyframes marquee-x-reverse {
+  from { transform: translateX(-50%); }
+  to { transform: translateX(0); }
+}
+.work-roll { animation: marquee-x 40s linear infinite; will-change: transform; }
+.work-roll[data-direction="right"] { animation-name: marquee-x-reverse; }
+.work-roll:hover,
+.work-roll:focus-within { animation-play-state: paused; }
+@media (prefers-reduced-motion: reduce) {
+  .work-roll { animation: none; }
+}
+
 .aurora-blob {
   position: absolute;
   border-radius: 9999px;

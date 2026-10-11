@@ -70,9 +70,9 @@ export default function Home() {
       </section>
 
       <Deferred><ServicesSection /></Deferred>
+      <Deferred><WorkSection /></Deferred>
       <Deferred><JourneySection /></Deferred>
       <Deferred><ProductsSection /></Deferred>
-      <Deferred><WorkSection /></Deferred>
       <Deferred minHeight="70vh"><IndustriesSection /></Deferred>
       <Deferred><TechSection /></Deferred>
       <Deferred><ShowcaseSection /></Deferred>
