@@ -13,7 +13,7 @@ import {
   Video,
 } from 'lucide-react'
 import { mediaUrl } from '../../marketing/media'
-import { JOURNEY_CHIPS } from './journeyChips'
+import { JOURNEY_CHIPS, JOURNEY_DELIVERABLES } from './journeyChips'
 
 // Showcase-style visuals for the four journey steps, in the same language as
 // the Gloaro Mart hero: one main mockup, a layered card behind it, and glass
@@ -325,3 +325,50 @@ export function DeployVisual() {
   )
 }
 
+const DEPTH_LAYERS = [7, 6, 5, 4, 3, 2, 1]
+
+// "What you get" as three 3D tiles under the step text: an isometric block
+// built from stacked layers (real depth via preserve-3d), an icon badge
+// hovering above it and a soft ground shadow. Desktop only; phones show the
+// step picture and tags instead.
+export function DeliverableTiles({ step }) {
+  return (
+    <ul className="mt-10 hidden gap-8 lg:flex" aria-label="What you get at this step">
+      {JOURNEY_DELIVERABLES[step].map(({ Icon, label, from, to }, index) => (
+        <motion.li
+          key={label}
+          initial={{ opacity: 0, y: 18 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.4 }}
+          transition={{ type: 'spring', stiffness: 140, damping: 18, delay: 0.1 + index * 0.12 }}
+          whileHover={{ y: -6 }}
+          className="flex w-32 flex-col items-center text-center"
+        >
+          <div className="mart-float relative h-32 w-32" style={{ '--dur': `${6 + index}s`, '--dist': '-6px', '--delay': `${-index * 1.3}s` }} aria-hidden="true">
+            <span className="absolute bottom-2 left-1/2 h-5 w-24 -translate-x-1/2 rounded-[50%] bg-[#08224B]/20 blur-md" />
+            <div
+              className="absolute left-1/2 top-[58%] -ml-9 -mt-9 h-[72px] w-[72px]"
+              style={{ transformStyle: 'preserve-3d', transform: 'rotateX(56deg) rotateZ(-45deg)' }}
+            >
+              {DEPTH_LAYERS.map((depth) => (
+                <span
+                  key={depth}
+                  className="absolute inset-0 rounded-2xl"
+                  style={{ background: to, filter: `brightness(${0.62 + (7 - depth) * 0.03})`, transform: `translateZ(${-depth * 2.6}px)` }}
+                />
+              ))}
+              <span className="absolute inset-0 overflow-hidden rounded-2xl ring-1 ring-white/50" style={{ background: `linear-gradient(135deg, ${from}, ${to})` }}>
+                <span className="absolute inset-2 rounded-xl border border-white/35" />
+                <span className="absolute -left-4 top-0 h-full w-8 rotate-12 bg-white/25 blur-sm" />
+              </span>
+            </div>
+            <span className="absolute left-1/2 top-[14%] -ml-6 grid h-12 w-12 place-items-center rounded-2xl bg-white shadow-[0_16px_26px_-10px_rgba(8,34,75,0.55)] ring-1 ring-slate-100">
+              <Icon className="h-6 w-6" style={{ color: to }} />
+            </span>
+          </div>
+          <span className="mt-1 text-sm font-bold leading-tight text-[#08224B]">{label}</span>
+        </motion.li>
+      ))}
+    </ul>
+  )
+}

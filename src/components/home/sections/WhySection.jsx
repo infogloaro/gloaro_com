@@ -10,8 +10,6 @@ import { whyChoose } from '../homeData'
 import SectionHeading from './SectionHeading'
 
 const CARD_WIDTH = 340
-const FAN_SPACING_MAX = 200
-const FAN_STEP_DEG = 7
 const STAGGER = 0.055
 // Finger hint timing: delay before the first press, then the gap between presses.
 const HINT_FIRST_MS = 1500
@@ -32,20 +30,16 @@ function CardBody({ Icon, title, description, delay }) {
   )
 }
 
-// Card positions for the fan. Cards sit on an arc: spacing shrinks to fit the
-// stage, the arc radius follows from the spacing so rotation and position agree.
-function fanLayout(count, stageWidth) {
-  const spacing = Math.max(120, Math.min(FAN_SPACING_MAX, (stageWidth - CARD_WIDTH) / Math.max(1, count - 1)))
-  const step = (FAN_STEP_DEG * Math.PI) / 180
-  const radius = spacing / Math.sin(step)
-  return Array.from({ length: count }, (_, i) => {
-    const angle = (i - (count - 1) / 2) * step
-    return {
-      x: Math.sin(angle) * radius,
-      y: (1 - Math.cos(angle)) * radius - 16,
-      rotate: (angle * 180) / Math.PI,
-    }
-  })
+// Spread: the cards split into one straight horizontal row (no arc, no tilt).
+// When six full cards don't fit, they overlap evenly and the hovered or
+// tapped card comes to the front.
+function rowLayout(count, stageWidth) {
+  const spacing = Math.min(CARD_WIDTH + 24, Math.max(60, (stageWidth - CARD_WIDTH) / Math.max(1, count - 1)))
+  return Array.from({ length: count }, (_, i) => ({
+    x: (i - (count - 1) / 2) * spacing,
+    y: 0,
+    rotate: 0,
+  }))
 }
 
 // Collapsed: every card tucked behind the front one with a sliver showing.
@@ -56,7 +50,8 @@ function stackLayout(count) {
   })
 }
 
-// Desktop: the cards are a deck. Hover spreads them, click pins them open.
+// Tablets and desktops: the cards are a deck. Hover or tap spreads them into a
+// straight row; click pins them open.
 function CardDeck() {
   const stageRef = useRef(null)
   const canHover = useCanHover()
@@ -86,7 +81,7 @@ function CardDeck() {
     return () => observer.disconnect()
   }, [])
 
-  const fan = fanLayout(count, stageWidth)
+  const row = rowLayout(count, stageWidth)
   const stack = stackLayout(count)
 
   // First click pins the fan open (even if hover already spread it); the next
@@ -137,14 +132,17 @@ function CardDeck() {
         className="grid place-items-center"
       >
         {whyChoose.map(([Icon, title, description], i) => {
-          const target = expanded ? fan[i] : stack[i]
+          const target = expanded ? row[i] : stack[i]
           const isFront = i === count - 1
           const order = count - 1 - i
           return (
             <motion.div
               key={title}
               onPointerEnter={canHover ? () => { setHover(true); if (expanded) setFront(i) } : undefined}
-              onClick={toggle}
+              onClick={() => {
+                if (expanded && !canHover && front !== i) setFront(i)
+                else toggle()
+              }}
               role={isFront ? 'button' : undefined}
               aria-expanded={isFront ? expanded : undefined}
               aria-label={isFront ? (expanded ? 'Stack the cards' : 'Spread the cards') : undefined}
@@ -237,7 +235,79 @@ function CardDeck() {
   )
 }
 
-// Everything else: the plain responsive grid.
+// Phones: one card on top; a tap splits the deck into a horizontal row you can
+// swipe through.
+function PhoneDeck() {
+  const [open, setOpen] = useState(false)
+  const count = whyChoose.length
+  const stack = stackLayout(count)
+
+  return (
+    <div className="mt-10">
+      <AnimatePresence mode="wait" initial={false}>
+        {!open ? (
+          <motion.button
+            key="stack"
+            type="button"
+            onClick={() => setOpen(true)}
+            aria-label="Spread the cards"
+            exit={{ opacity: 0, scale: 0.96, transition: { duration: 0.18 } }}
+            className="relative mx-auto grid w-full max-w-[340px] place-items-center pb-12 pt-6 text-left"
+          >
+            {whyChoose.map(([Icon, title, description], i) => {
+              const order = count - 1 - i
+              return (
+                <motion.div
+                  key={title}
+                  initial={false}
+                  animate={{ y: stack[i].y, rotate: stack[i].rotate, scale: stack[i].scale }}
+                  transition={deckSpring}
+                  style={{ zIndex: i }}
+                  className="col-start-1 row-start-1 w-full rounded-2xl bg-[linear-gradient(160deg,#ffffff_0%,#fbfcff_55%,#f3f7ff_100%)] p-5 shadow-[0_14px_30px_-14px_rgba(13,70,151,0.35)] ring-1 ring-[#0d4697]/10"
+                >
+                  <CardBody Icon={Icon} title={title} description={description} delay={200 + order * 60} />
+                </motion.div>
+              )
+            })}
+            <span className="absolute bottom-0 left-1/2 flex -translate-x-1/2 items-center gap-1.5 whitespace-nowrap rounded-full bg-white/80 px-3 py-1.5 text-[11px] font-black uppercase tracking-[0.18em] text-[#0d4697] shadow-sm">
+              <Pointer aria-hidden="true" className="h-3.5 w-3.5" /> Tap to spread
+            </span>
+          </motion.button>
+        ) : (
+          <motion.div key="row" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+            <ul className="-mx-5 flex snap-x snap-mandatory gap-4 overflow-x-auto px-5 pb-4 [scrollbar-width:none]">
+              {whyChoose.map(([Icon, title, description], i) => (
+                <motion.li
+                  key={title}
+                  initial={{ opacity: 0, x: -i * 60, scale: 0.94 }}
+                  animate={{ opacity: 1, x: 0, scale: 1 }}
+                  transition={{ ...deckSpring, delay: i * STAGGER }}
+                  className="w-[82%] shrink-0 snap-center"
+                >
+                  <div className="h-full rounded-2xl bg-[linear-gradient(160deg,#ffffff_0%,#fbfcff_55%,#f3f7ff_100%)] p-5 shadow-[0_14px_30px_-14px_rgba(13,70,151,0.35)] ring-1 ring-[#0d4697]/10">
+                    <CardBody Icon={Icon} title={title} description={description} delay={200} />
+                  </div>
+                </motion.li>
+              ))}
+            </ul>
+            <p className="mt-1 text-center text-xs font-semibold text-slate-500">Swipe to see all {count}</p>
+            <div className="mt-4 flex justify-center">
+              <button
+                type="button"
+                onClick={() => setOpen(false)}
+                className="inline-flex items-center gap-2 rounded-full border border-[#0d4697]/10 bg-white/70 px-4 py-2 text-xs font-black uppercase tracking-[0.2em] text-[#0d4697] shadow-sm"
+              >
+                <Layers className="h-3.5 w-3.5" /> Stack cards
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  )
+}
+
+// Reduced motion: the plain responsive grid.
 function CardGrid() {
   return (
     <ul className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
@@ -262,14 +332,13 @@ function CardGrid() {
 
 export default function WhySection() {
   const reduce = useReducedMotion()
-  const desktop = useMediaQuery('(min-width: 1024px)')
-  const deck = desktop && !reduce
+  const wide = useMediaQuery('(min-width: 768px)')
 
   return (
     <section id="why" className="scroll-mt-28 overflow-x-clip bg-[#fdf9e9] px-5 py-16 sm:py-24 lg:px-8">
       <SectionEnter className="mx-auto max-w-7xl">
         <SectionHeading eyebrow="The Gloaro difference" title="Why choose Gloaro" highlight="Gloaro" />
-        {deck ? <CardDeck /> : <CardGrid />}
+        {reduce ? <CardGrid /> : wide ? <CardDeck /> : <PhoneDeck />}
       </SectionEnter>
     </section>
   )
