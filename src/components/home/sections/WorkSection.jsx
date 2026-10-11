@@ -3,17 +3,18 @@ import { Link } from 'react-router-dom'
 import { LayoutGroup, motion, useReducedMotion } from 'framer-motion'
 import { CalendarCheck, MonitorSmartphone, PlayCircle, Smartphone } from 'lucide-react'
 import { spring } from '../../../lib/motion'
-import { businesses, getThemeKey, isThemeLive } from '../../../prototypes/catalog'
+import { businesses, getBusiness, getThemeKey, isThemeLive, softwareTypes } from '../../../prototypes/catalog'
 import { appTemplates } from '../../../prototypes/appCatalog'
 import SectionHeading from './SectionHeading'
 
-const GROUPS = {
-  Commerce: ['food', 'retail', 'pos'],
-  Services: ['healthcare', 'education', 'services', 'hospitality'],
-  Operations: ['logistics', 'crm', 'realestate'],
+// Filters: 'all', a business type (`industry:<id>`) or a software type (`software:<id>`).
+const INDUSTRY_FILTERS = businesses.filter((b) => b.kind === 'industry').map((b) => ({ value: `industry:${b.id}`, label: b.name }))
+const SOFTWARE_FILTERS = softwareTypes.map((t) => ({ value: `software:${t.id}`, label: t.label }))
+const matches = (business, filter) => {
+  if (filter === 'all') return true
+  const [kind, id] = filter.split(':')
+  return kind === 'industry' ? business?.id === id : Boolean(business?.software?.includes(id))
 }
-const FILTERS = ['All', ...Object.keys(GROUPS)]
-const groupOf = (industry) => Object.keys(GROUPS).find((group) => GROUPS[group].includes(industry))
 // Each rolling row repeats its cards until one copy is at least this long, so
 // the loop never shows a gap even when a filter leaves only a few cards.
 const MIN_PER_COPY = 8
@@ -31,7 +32,7 @@ const webApps = businesses.map((business) => {
     href: `/solutions/${business.id}`,
     book: `/contact?theme=${encodeURIComponent(getThemeKey(business.id, theme.id))}`,
     demo: live ? `/prototypes/${business.id}/${theme.id}` : null,
-    group: groupOf(business.id),
+    business,
   }
 })
 
@@ -39,7 +40,7 @@ const apps = appTemplates.map((app) => ({
   ...app,
   href: null,
   book: `/contact?theme=${encodeURIComponent(app.key)}`,
-  group: groupOf(app.industry),
+  business: getBusiness(app.industry),
 }))
 
 const ROWS = [
@@ -149,25 +150,37 @@ function AppCard({ item, inert }) {
   )
 }
 
-function Filters({ value, onChange }) {
+function FilterChip({ value, label, selected, onChange }) {
   return (
-    <div role="tablist" aria-label="Filter work by industry" className="flex flex-wrap justify-center gap-2">
-      {FILTERS.map((filter) => {
-        const selected = filter === value
-        return (
-          <button
-            key={filter}
-            type="button"
-            role="tab"
-            aria-selected={selected}
-            onClick={() => onChange(filter)}
-            className={`relative rounded-full px-4 py-2 text-sm font-bold transition-colors ${selected ? 'text-[#0b2451]' : 'text-slate-500 hover:text-[#0d4697]'}`}
-          >
-            {selected && <motion.span layoutId="work-filter" transition={spring.interactive} className="absolute inset-0 -z-10 rounded-full bg-[#ffae13]" />}
-            {filter}
-          </button>
-        )
-      })}
+    <button
+      type="button"
+      role="tab"
+      aria-selected={selected}
+      onClick={() => onChange(value)}
+      className={`relative whitespace-nowrap rounded-full px-3.5 py-1.5 text-sm font-bold transition-colors ${selected ? 'text-[#0b2451]' : 'text-slate-500 hover:bg-[#0d4697]/5 hover:text-[#0d4697]'}`}
+    >
+      {selected && <motion.span layoutId="work-filter" transition={spring.interactive} className="absolute inset-0 -z-10 rounded-full bg-[#ffae13]" />}
+      {label}
+    </button>
+  )
+}
+
+// Two rows sharing one selection: every business type, then software types.
+function Filters({ value, onChange }) {
+  const rows = [
+    { label: 'Business type', chips: [{ value: 'all', label: 'All' }, ...INDUSTRY_FILTERS] },
+    { label: 'Software', chips: SOFTWARE_FILTERS },
+  ]
+  return (
+    <div role="tablist" aria-label="Filter work by business or software type" className="mx-auto grid max-w-5xl gap-3">
+      {rows.map((row) => (
+        <div key={row.label} className="flex flex-wrap items-center justify-center gap-1.5">
+          <span className="mr-1 text-[11px] font-black uppercase tracking-[0.2em] text-slate-400">{row.label}</span>
+          {row.chips.map((chip) => (
+            <FilterChip key={chip.value} {...chip} selected={chip.value === value} onChange={onChange} />
+          ))}
+        </div>
+      ))}
     </div>
   )
 }
@@ -237,8 +250,8 @@ function RollingRow({ row, items, reduce }) {
 // mobile apps right to left. Hover or keyboard focus pauses a row.
 export default function WorkSection() {
   const reduce = useReducedMotion()
-  const [filter, setFilter] = useState('All')
-  const pick = (items) => (filter === 'All' ? items : items.filter((item) => item.group === filter))
+  const [filter, setFilter] = useState('all')
+  const pick = (items) => items.filter((item) => matches(item.business, filter))
 
   return (
     <section id="portfolio" className="relative scroll-mt-28 overflow-x-clip border-y border-slate-200 bg-[linear-gradient(180deg,#fbfdff,#ffffff)] py-16 sm:py-24">
@@ -265,7 +278,10 @@ export default function WorkSection() {
             {items.length ? (
               <RollingRow key={filter} row={row} items={items} reduce={reduce} />
             ) : (
-              <p className="px-5 text-sm font-medium text-slate-500 lg:px-8">No {row.label.toLowerCase()} templates in this group yet.</p>
+              <p className="mx-auto max-w-7xl px-5 text-sm font-medium text-slate-500 lg:px-8">
+                No {row.label.toLowerCase()} template for this type yet.{' '}
+                <Link to="/contact" className="font-bold text-[#0d4697] underline-offset-4 hover:underline">Ask us to build one</Link>
+              </p>
             )}
           </div>
         )
