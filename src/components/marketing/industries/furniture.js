@@ -1,0 +1,51 @@
+// Illustrative example: fictional furniture brand, licensed stock photography (media/CREDITS.md).
+export default {
+  id: 'furniture',
+  label: 'Furniture',
+  status: 'example',
+  accent: '#a0673a',
+  brand: { name: 'Teakline Studio', short: 'TS', location: 'Furniture showroom' },
+  pitch: 'Showroom-quality visuals that bring buyers in with their room size ready.',
+  ideas: ['Sofa, bedroom & interior promotions', 'Product showcase posts and short videos', 'Festival and seasonal campaigns', 'WhatsApp catalogue & enquiry journeys'],
+  whatsapp: 'Hi GloAro, I run a furniture shop / manufacturing business and would like to discuss digital marketing.',
+  scenes: [
+    {
+      type: 'social-post',
+      step: 'Product post',
+      image: 'furniture/post.webp',
+      alt: 'A green velvet sofa in a bright room',
+      caption: 'Velvet comfort, made to your room size 🛋️ Visit our showroom this weekend.',
+      tags: ['#HomeDecor', '#SofaSet'],
+    },
+    {
+      type: 'reel',
+      step: 'Showroom video',
+      poster: 'furniture/reel.webp',
+      alt: 'A modern living room with a grey sectional sofa',
+      headline: 'Built for living rooms that get lived in',
+      sub: 'Custom sizes · Solid wood · Showroom visits',
+      cta: 'Get a quote',
+    },
+    {
+      type: 'search',
+      step: 'Local search',
+      query: 'sofa showroom near me',
+      alt: 'Teakline Studio in local search results with call and directions buttons',
+      category: 'Furniture store',
+      hours: 'Open · Closes 9 pm',
+      snippet: 'Sofas, beds and dining sets made to your size. Visit the showroom or ask for the catalogue on WhatsApp.',
+      url: 'teakline.example',
+    },
+    {
+      type: 'enquiry',
+      step: 'Buyer enquiry',
+      alt: 'A buyer asks for a 3+2 sofa set quote on WhatsApp',
+      messages: [
+        { from: 'customer', text: 'Hi, saw your sofa video. Do you make 3+2 sets in grey fabric?' },
+        { from: 'business', text: 'Yes, we do! Share your room size and we will send our catalogue with prices.' },
+        { from: 'customer', text: 'Room is 12 × 14 ft.' },
+        { from: 'business', text: 'Perfect, sending three designs now. You are welcome to visit the showroom too.' },
+      ],
+    },
+  ],
+}

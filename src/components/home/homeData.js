@@ -11,6 +11,7 @@ import {
   GraduationCap,
   Hotel,
   LayoutGrid,
+  Megaphone,
   Palette,
   Rocket,
   Server,
@@ -55,6 +56,8 @@ export const services = [
   { id: 'ai', Icon: Bot, accent: '#CB9015', title: 'AI & Intelligent Automation', short: 'Assistants & smart workflows', description: 'AI-driven features — lead scoring, automated workflows, assistants — built on modern LLM tooling.' },
   { id: 'crm', Icon: Workflow, accent: '#e07b00', title: 'CRM, ERP & Business Automation', short: 'Operations in one place', description: 'CRM, ERP and automation tooling that streamlines operations and customer relationships.' },
   { id: 'cloud', Icon: Cloud, accent: '#0e7490', title: 'Cloud, DevOps & IT Solutions', short: 'Reliable infrastructure', description: 'Cloud architecture, CI/CD pipelines, infrastructure support and IT consulting for reliable scale.' },
+  // Featured: wider card on the home grid and its own interactive page.
+  { id: 'marketing', Icon: Megaphone, accent: '#d6336c', title: 'Digital Marketing', short: 'Social, ads, SEO & WhatsApp leads', description: 'Social media content, Reels, Meta Ads, SEO, Google Business Profile and WhatsApp follow-ups, planned and managed to turn local attention into enquiries.', featured: true, highlights: ['Social media & Reels', 'Meta Ads', 'SEO & Google Business', 'WhatsApp lead follow-up', 'Monthly reporting'] },
 ]
 
 export const products = [

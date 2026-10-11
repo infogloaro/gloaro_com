@@ -1,0 +1,23 @@
+/* Scene progress bar. Its animationend advances the showcase, so pausing the
+   animation (animation-play-state) pauses the timer too. */
+@keyframes mk-progress {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+.mk-progress {
+  transform-origin: left;
+  animation-name: mk-progress;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+}
+
+@keyframes mk-typing {
+  0%, 60%, 100% { transform: translateY(0); opacity: 0.5; }
+  30% { transform: translateY(-3px); opacity: 1; }
+}
+.mk-typing { animation: mk-typing 1s ease-in-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .mk-progress { animation: none; transform: scaleX(1); }
+  .mk-typing { animation: none; }
+}

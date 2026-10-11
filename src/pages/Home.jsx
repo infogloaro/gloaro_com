@@ -1,9 +1,9 @@
-import { lazy, Suspense, useEffect } from 'react'
-import { useLocation } from 'react-router-dom'
+import { lazy, Suspense } from 'react'
 import Seo from '../components/Seo'
 import Hero from '../components/home/Hero'
 import { allTech } from '../components/home/homeData'
 import { Marquee } from '../components/motion/Ambient'
+import { useHashScroll } from '../hooks/useHashScroll'
 
 // Everything below the fold is split into its own chunk so the hero paints first.
 const ServicesSection = lazy(() => import('../components/home/sections/ServicesSection'))
@@ -21,24 +21,6 @@ const CtaSection = lazy(() => import('../components/home/sections/CtaSection'))
 // Reserves roughly the section's height while its chunk loads.
 function Deferred({ children, minHeight = '100vh' }) {
   return <Suspense fallback={<div aria-hidden="true" style={{ minHeight }} />}>{children}</Suspense>
-}
-
-// Scroll to a #hash once its (lazy) section has mounted.
-function useHashScroll() {
-  const { hash } = useLocation()
-  useEffect(() => {
-    const id = hash.slice(1)
-    if (!id) return undefined
-    let frame
-    const started = performance.now()
-    const tryScroll = () => {
-      const target = document.getElementById(id)
-      if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' })
-      else if (performance.now() - started < 3000) frame = window.requestAnimationFrame(tryScroll)
-    }
-    frame = window.requestAnimationFrame(tryScroll)
-    return () => window.cancelAnimationFrame(frame)
-  }, [hash])
 }
 
 export default function Home() {

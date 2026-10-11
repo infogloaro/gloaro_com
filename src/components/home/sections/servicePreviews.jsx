@@ -1,8 +1,9 @@
 import { useRef } from 'react'
 import { motion } from 'framer-motion'
-import { Bot, CheckCircle2, GitBranch, Rocket, Server, TestTube2 } from 'lucide-react'
+import { Bot, CheckCircle2, GitBranch, Heart, Rocket, Search, Server, Star, TestTube2 } from 'lucide-react'
 import { ease, transition } from '../../../lib/motion'
 import { useAmbient } from '../../../hooks/useMotionEnv'
+import marketingPost from '../../marketing/media/furniture/post.webp'
 
 // Compact CSS interface mockups, one per service, shown in the showcase panel.
 // Each fills its parent; looping ones respect the shared ambient budget.
@@ -234,6 +235,44 @@ function CloudPreview() {
   )
 }
 
+// A post, a local search listing and the WhatsApp enquiry they lead to.
+function MarketingPreview() {
+  const ref = useRef(null)
+  const active = useAmbient(ref, { priority: 1, amount: 0.5 })
+  const pop = (delay) => (active
+    ? { animate: { opacity: [0, 1, 1, 0], y: [8, 0, 0, 0] }, transition: { ...LOOP, times: [delay, delay + 0.08, 0.9, 1] } }
+    : { animate: { opacity: 1, y: 0 }, transition: transition.micro })
+  return (
+    <div ref={ref} className="flex h-full items-center gap-4 bg-[#fdf2f6] p-4">
+      <div className="w-[34%] max-w-[150px] shrink-0 self-center overflow-hidden rounded-2xl border-4 border-[#08224B] bg-white shadow-lg">
+        <div className="flex items-center gap-1.5 px-2 py-1.5">
+          <span className="h-4 w-4 rounded-full bg-[#d6336c]" />
+          <span className="h-1.5 w-12 rounded-full bg-[#08224B]/20" />
+        </div>
+        <img src={marketingPost} alt="" loading="lazy" decoding="async" className="aspect-[4/5] w-full object-cover" />
+        <div className="flex gap-1.5 px-2 py-1.5 text-[#d6336c]">
+          <Heart className="h-3 w-3 fill-current" />
+          <span className="h-1.5 flex-1 self-center rounded-full bg-[#08224B]/10" />
+        </div>
+      </div>
+      <div className="flex min-w-0 flex-1 flex-col gap-2.5">
+        <motion.div {...pop(0.05)} className="rounded-xl bg-white p-2.5 shadow-sm">
+          <p className="flex items-center gap-1.5 text-[10px] font-semibold text-slate-400"><Search className="h-3 w-3" />sofa showroom near me</p>
+          <p className="mt-1 text-xs font-extrabold text-[#1a0dab]">Your Business · Furniture</p>
+          <p className="flex items-center gap-1 text-[10px] font-semibold text-slate-500"><Star className="h-3 w-3 fill-amber-400 text-amber-400" />Open now · Directions · Call</p>
+        </motion.div>
+        <motion.div {...pop(0.22)} className="self-end rounded-xl rounded-tr-sm bg-[#d9fdd3] px-2.5 py-1.5 text-[11px] font-medium text-[#111b21] shadow-sm">
+          Hi, is the green sofa available? 🛋️
+        </motion.div>
+        <motion.div {...pop(0.38)} className="self-start rounded-xl rounded-tl-sm bg-white px-2.5 py-1.5 text-[11px] font-medium text-[#111b21] shadow-sm">
+          Yes! Sharing sizes &amp; prices now.
+        </motion.div>
+        <span className="mt-1 text-[10px] font-bold uppercase tracking-wider text-[#08224B]/40">Illustrative example</span>
+      </div>
+    </div>
+  )
+}
+
 const PREVIEWS = {
   software: SoftwarePreview,
   design: DesignPreview,
@@ -243,6 +282,7 @@ const PREVIEWS = {
   ai: AiPreview,
   crm: CrmPreview,
   cloud: CloudPreview,
+  marketing: MarketingPreview,
 }
 
 export default function ServicePreview({ id }) {

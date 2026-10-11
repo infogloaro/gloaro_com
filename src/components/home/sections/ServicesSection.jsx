@@ -86,7 +86,7 @@ function ShowcasePanel({ service }) {
                 <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
               </Link>
             )}
-            <Link to="/contact" className="group inline-flex items-center gap-2 text-sm font-bold text-[#CB9015]">
+            <Link to={id === 'marketing' ? `/tech/${slug}#enquiry` : '/contact'} className="group inline-flex items-center gap-2 text-sm font-bold text-[#CB9015]">
               <span className="link-wipe">Discuss this service</span>
               <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
             </Link>
@@ -94,6 +94,59 @@ function ShowcasePanel({ service }) {
         </motion.div>
       </AnimatePresence>
     </div>
+  )
+}
+
+// Wide, dark card for the featured service. The tab button and the "Learn more"
+// link are siblings (a link can't sit inside a button).
+function FeaturedCard({ service, selected, tabId, onSelect }) {
+  const { id, Icon, accent, title, short, highlights } = service
+  const slug = techServiceById(id)?.slug
+  return (
+    <TiltCard
+      max={3}
+      glow={`${accent}55`}
+      className={`rounded-2xl shadow-[0_18px_40px_rgba(8,34,75,0.18)] ${selected ? 'bg-[#CB9015]' : 'bg-[#08224B]/20'}`}
+      innerClassName="bg-[radial-gradient(circle_at_85%_0%,rgba(214,51,108,0.35),transparent_55%),linear-gradient(135deg,#08224B,#0d3a86)]"
+    >
+      <div className="relative p-5">
+        <button
+          id={tabId}
+          type="button"
+          role="tab"
+          aria-selected={selected}
+          aria-controls="service-panel"
+          tabIndex={selected ? 0 : -1}
+          onClick={onSelect}
+          className="flex w-full items-start gap-4 text-left after:absolute after:inset-0 after:content-['']"
+        >
+          <span className="grid h-12 w-12 shrink-0 place-items-center rounded-xl text-white shadow-lg transition-transform duration-300 group-hover/tilt:-rotate-12 group-hover/tilt:scale-110" style={{ background: accent }}>
+            <Icon className="h-6 w-6" />
+          </span>
+          <span className="min-w-0">
+            <span className="flex flex-wrap items-center gap-2">
+              <span className="text-base font-extrabold text-white">{title}</span>
+              <span className="rounded-full bg-[#ffae13] px-2 py-0.5 text-[10px] font-black uppercase tracking-wider text-[#08224B]">Grow with us</span>
+            </span>
+            <span className="mt-1 block text-xs font-medium text-white/70">{short}</span>
+          </span>
+        </button>
+        <ul className="mt-4 flex flex-wrap gap-1.5" aria-label={`${title} includes`}>
+          {highlights.map((item) => (
+            <li key={item} className="rounded-full border border-white/15 bg-white/10 px-2.5 py-1 text-[11px] font-semibold text-white/85">{item}</li>
+          ))}
+        </ul>
+        {slug && (
+          <Link
+            to={`/tech/${slug}`}
+            className="group/link relative z-10 mt-4 inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-xs font-extrabold text-[#08224B] shadow-md transition hover:bg-[#ffae13]"
+          >
+            Learn more
+            <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover/link:translate-x-1" />
+          </Link>
+        )}
+      </div>
+    </TiltCard>
   )
 }
 
@@ -156,8 +209,20 @@ export default function ServicesSection() {
             variants={variants.container(0.15, 0.25)}
             className="hidden gap-4 lg:grid lg:grid-cols-2"
           >
-            {services.map(({ id, Icon, accent, title, short }, i) => {
+            {services.map(({ id, Icon, accent, title, short, featured, highlights }, i) => {
               const selected = i === index
+              if (featured) {
+                return (
+                  <motion.div key={id} variants={cardEntrance} className="mt-8 lg:col-span-2">
+                    <FeaturedCard
+                      service={{ id, Icon, accent, title, short, highlights }}
+                      selected={selected}
+                      tabId={`service-card-${i}`}
+                      onSelect={() => setIndex(i)}
+                    />
+                  </motion.div>
+                )
+              }
               return (
                 <motion.div key={id} variants={cardEntrance} className={i % 2 === 1 ? 'lg:translate-y-8' : ''}>
                   <TiltCard

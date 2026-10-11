@@ -17,6 +17,7 @@ const SolutionsPage = lazy(() => import('./pages/solutions/SolutionsPage'))
 const BusinessThemesPage = lazy(() => import('./pages/solutions/BusinessThemesPage'))
 const EnquiryPage = lazy(() => import('./pages/solutions/EnquiryPage'))
 const TechServicePage = lazy(() => import('./pages/tech/ServicePage'))
+const DigitalMarketingPage = lazy(() => import('./pages/tech/DigitalMarketingPage'))
 const PrototypeShell = lazy(() => import('./prototypes/PrototypeShell'))
 const NetworkHome = lazy(() => import('./pages/public/NetworkHome'))
 import { useAuth } from './hooks/useAuth'
@@ -366,6 +367,7 @@ function App() {
           <Route path="/membership-application/track" element={<MembershipApplicationTrack />} />
           <Route path="/solutions" element={<Suspense fallback={<LoadingScreen />}><SolutionsPage /></Suspense>} />
           <Route path="/solutions/:businessId" element={<Suspense fallback={<LoadingScreen />}><BusinessThemesPage /></Suspense>} />
+          <Route path="/tech/digital-marketing" element={<Suspense fallback={<LoadingScreen />}><DigitalMarketingPage /></Suspense>} />
           <Route path="/tech/:slug" element={<Suspense fallback={<LoadingScreen />}><TechServicePage /></Suspense>} />
           <Route path="/contact" element={<Suspense fallback={<LoadingScreen />}><EnquiryPage /></Suspense>} />
           <Route path="/about" element={<Suspense fallback={<LoadingScreen />}><AboutPage /></Suspense>} />

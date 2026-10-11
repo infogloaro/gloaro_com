@@ -1,0 +1,51 @@
+// Illustrative example: fictional restaurant, licensed stock photography (media/CREDITS.md).
+export default {
+  id: 'restaurant',
+  label: 'Restaurants & food',
+  status: 'example',
+  accent: '#e0793a',
+  brand: { name: 'Saffron Leaf Kitchen', short: 'SL', location: 'South Indian restaurant' },
+  pitch: 'Food content that gets people hungry, and makes it easy to find, call or order.',
+  ideas: ['Food photography & promotional Reels', 'Menu highlights and seasonal specials', 'Local discovery on search and maps', 'Table booking & order enquiries'],
+  whatsapp: 'Hi GloAro, I run a restaurant / food business and would like to discuss digital marketing.',
+  scenes: [
+    {
+      type: 'social-post',
+      step: 'Menu highlight',
+      image: 'restaurant/post.webp',
+      alt: 'Soft idlis and a crisp vada with sambar and chutneys',
+      caption: 'Breakfast is served ☀️ Soft idlis, crisp vadas and fresh chutneys from 7 AM.',
+      tags: ['#Tiffin', '#SouthIndianFood'],
+    },
+    {
+      type: 'reel',
+      step: 'Food Reel',
+      poster: 'restaurant/reel.webp',
+      alt: 'Bowls of curry and rice served at the table',
+      headline: 'This weekend’s special curry thali',
+      sub: 'Dine-in · Takeaway · Family packs',
+      cta: 'Reserve a table',
+    },
+    {
+      type: 'search',
+      step: 'Local discovery',
+      query: 'breakfast near me',
+      alt: 'Saffron Leaf Kitchen in local search results with call and directions buttons',
+      category: 'South Indian restaurant',
+      hours: 'Open · Closes 10:30 pm',
+      snippet: 'Tiffin, meals and weekend specials. Call to reserve a table or order a family pack.',
+      url: 'saffronleaf.example',
+    },
+    {
+      type: 'enquiry',
+      step: 'Booking enquiry',
+      alt: 'A customer books a family table on WhatsApp',
+      messages: [
+        { from: 'customer', text: 'Hi, can I book a table for 6 this Sunday lunch?' },
+        { from: 'business', text: 'Of course! Would 1 PM work? We will keep a family table ready.' },
+        { from: 'customer', text: '1 PM is perfect 🙏' },
+        { from: 'business', text: 'Booked! See you on Sunday. The special thali menu is attached.' },
+      ],
+    },
+  ],
+}
