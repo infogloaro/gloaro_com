@@ -1,4 +1,4 @@
-import { Bell, ChevronDown, ChevronLeft, Menu, Search, LogOut } from 'lucide-react'
+import { Bell, ChevronDown, ChevronLeft, Menu, LogOut } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
@@ -11,6 +11,7 @@ import { buildAdminRoute } from '../utils/permissions'
 import { formatDate } from '../utils/format'
 import { resolveNotificationNavigation } from '../utils/notificationRouting'
 import NotificationDetailsModal from '../components/common/NotificationDetailsModal'
+import BackButton from '../components/common/BackButton'
 import { ROLES } from '../constants/roleConfig.js'
 import { resolveNavigation, NAVIGATION_MODES } from '../utils/navigationResolver'
 
@@ -20,7 +21,7 @@ export default function DashboardLayout({ navItems = [], title = 'Dashboard', th
   const navigate = useNavigate()
   const [open, setOpen] = useState(false)
   const [collapsed, setCollapsed] = useState(false)
-  const [query, setQuery] = useState('')
+  const [query] = useState('')
   const [openGroups, setOpenGroups] = useState({})
   const [impersonating, setImpersonating] = useState(() => Boolean(sessionStorage.getItem('gloaro_superadmin_session')))
   const [chatUnreadCount, setChatUnreadCount] = useState(0)
@@ -392,7 +393,7 @@ export default function DashboardLayout({ navItems = [], title = 'Dashboard', th
       <div className={`fixed inset-y-0 left-0 z-30 hidden transition-[width] lg:block ${collapsed ? 'w-20' : 'w-72'}`}>{Sidebar}</div>
       {open && <div className={isLightShell ? 'fixed inset-0 z-40 bg-slate-200/70 lg:hidden' : 'fixed inset-0 z-40 bg-slate-950/50 lg:hidden'} onClick={() => setOpen(false)}><div className="h-full w-72" onClick={(event) => event.stopPropagation()}>{Sidebar}</div></div>}
       <div className={`transition-[padding] ${collapsed ? 'lg:pl-20' : 'lg:pl-72'}`}>
-        <header className={isLightShell ? 'sticky top-0 z-20 flex h-16 items-center justify-between border-b border-slate-200 bg-white/95 px-4 backdrop-blur sm:px-6' : 'sticky top-0 z-20 flex h-16 items-center justify-between border-b border-slate-200 bg-white/95 px-4 backdrop-blur dark:border-slate-800 dark:bg-slate-950/95 sm:px-6'}>
+        <header data-back-anchor className={isLightShell ? 'sticky top-0 z-20 flex h-16 items-center justify-between border-b border-slate-200 bg-white/95 px-4 backdrop-blur sm:px-6' : 'sticky top-0 z-20 flex h-16 items-center justify-between border-b border-slate-200 bg-white/95 px-4 backdrop-blur dark:border-slate-800 dark:bg-slate-950/95 sm:px-6'}>
           <div className="flex items-center gap-3">
             <button onClick={() => setOpen(true)} className={isLightShell ? 'grid h-9 w-9 place-items-center rounded-md border border-slate-200 lg:hidden' : 'grid h-9 w-9 place-items-center rounded-md border border-slate-200 lg:hidden dark:border-slate-800'} aria-label="Open menu"><Menu className="h-4 w-4" /></button>
             <div>
@@ -473,6 +474,7 @@ export default function DashboardLayout({ navItems = [], title = 'Dashboard', th
           setNotificationUnavailable(false)
         }}
       />
+      <BackButton />
     </main>
   )
 }

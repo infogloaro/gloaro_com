@@ -11,6 +11,7 @@ import {
   GraduationCap,
   Hotel,
   LayoutGrid,
+  Megaphone,
   Palette,
   Rocket,
   Server,
@@ -55,6 +56,8 @@ export const services = [
   { id: 'ai', Icon: Bot, accent: '#CB9015', title: 'AI & Intelligent Automation', short: 'Assistants & smart workflows', description: 'AI-driven features — lead scoring, automated workflows, assistants — built on modern LLM tooling.' },
   { id: 'crm', Icon: Workflow, accent: '#e07b00', title: 'CRM, ERP & Business Automation', short: 'Operations in one place', description: 'CRM, ERP and automation tooling that streamlines operations and customer relationships.' },
   { id: 'cloud', Icon: Cloud, accent: '#0e7490', title: 'Cloud, DevOps & IT Solutions', short: 'Reliable infrastructure', description: 'Cloud architecture, CI/CD pipelines, infrastructure support and IT consulting for reliable scale.' },
+  // Featured: wider card on the home grid and its own interactive page.
+  { id: 'marketing', Icon: Megaphone, accent: '#d6336c', title: 'Digital Marketing', short: 'Social, ads, SEO & WhatsApp leads', description: 'Social media content, Reels, Meta Ads, SEO, Google Business Profile and WhatsApp follow-ups, planned and managed to turn local attention into enquiries.', featured: true, highlights: ['Social media & Reels', 'Meta Ads', 'SEO & Google Business', 'WhatsApp lead follow-up', 'Monthly reporting'] },
 ]
 
 export const products = [
@@ -125,12 +128,12 @@ export const processSteps = [
 ]
 
 export const whyChoose = [
-  [Sparkles, 'Customer-Focused Solutions', 'Every build starts with your workflow, not a template.'],
-  [Cpu, 'Innovative Technology', 'Modern frameworks and AI tooling applied where they genuinely help.'],
-  [LayoutGrid, 'Scalable Platforms', 'Architecture designed to grow with your business, not against it.'],
-  [Globe, 'Professional Networking Ecosystem', 'Backed by the Gloaro Network of verified entrepreneurs and partners.'],
-  [ShieldCheck, 'Reliable Service & Quality Standards', 'Structured sprints, testing and monitoring on every project.'],
-  [Server, 'Trust & Transparency', 'Clear scoping, clear timelines, clear communication.'],
+  [Sparkles, 'Customer-Focused Solutions', 'Every build starts with your workflow, not a template.', 'photo-1542744173-8e7e53415bb0'],
+  [Cpu, 'Innovative Technology', 'Modern frameworks and AI tooling applied where they genuinely help.', 'photo-1518770660439-4636190af475'],
+  [LayoutGrid, 'Scalable Platforms', 'Architecture designed to grow with your business, not against it.', 'photo-1551288049-bebda4e38f71'],
+  [Globe, 'Professional Networking Ecosystem', 'Backed by the Gloaro Network of verified entrepreneurs and partners.', 'photo-1517245386807-bb43f82c33c4'],
+  [ShieldCheck, 'Reliable Service & Quality Standards', 'Structured sprints, testing and monitoring on every project.', 'photo-1461749280684-dccba630e2f6'],
+  [Server, 'Trust & Transparency', 'Clear scoping, clear timelines, clear communication.', 'photo-1450101499163-c8848c66ca85'],
 ]
 
 export const heroStats = [

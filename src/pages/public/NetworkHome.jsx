@@ -155,6 +155,8 @@ const networkDetailGroups = [
       ['apply-franchise', 'Apply Franchise', 'The district franchise model is ₹21.30 lakhs, royalty-free, with a one-year agreement and 35% franchise commission.'],
       ['franchise-partners', 'Franchise Partners', 'Partners receive district control, unit expansion opportunities, website access, regional leadership and recurring member-revenue potential.'],
     ],
+    // The GLOARO technology franchise and Channel Partner programme are separate; point visitors there.
+    note: ['Looking for the GLOARO technology franchise or Channel Partner programme?', 'See GLOARO Partnerships', '/partners'],
   },
   {
     title: 'Leaders & Achievements',
@@ -732,6 +734,12 @@ export default function NetworkHome() {
                           </div>
                         ))}
                       </div>
+                      {group.note && (
+                        <p className="mt-3 rounded-2xl bg-[#f5f8ff] px-4 py-3 font-urbanist text-sm font-semibold leading-6 text-slate-700">
+                          {group.note[0]}{' '}
+                          <Link to={group.note[2]} className="font-extrabold text-[#0d4697] underline underline-offset-4 hover:text-[#ff9500]">{group.note[1]} →</Link>
+                        </p>
+                      )}
                     </div>
                   </article>
                 </Reveal>

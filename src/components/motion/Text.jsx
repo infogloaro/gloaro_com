@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { Fragment, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { AnimatePresence, motion, useInView, useReducedMotion } from 'framer-motion'
 import { ease, stagger, transition, viewportOnce } from '../../lib/motion'
 import { usePageVisible, usePointerEffects } from '../../hooks/useMotionEnv'
@@ -27,7 +27,7 @@ export function ShimmerWord({ children, tone = 'dark', delay = 0, className = ''
         <motion.span
           key={run}
           aria-hidden="true"
-          className="pointer-events-none absolute inset-y-0 left-0 w-[40%] overflow-hidden [mask-image:linear-gradient(90deg,transparent,black,transparent)]"
+          className="pointer-events-none absolute inset-y-0 left-0 w-[40%] select-none overflow-hidden [mask-image:linear-gradient(90deg,transparent,black,transparent)]"
           initial={{ x: '-100%' }}
           animate={{ x: '250%' }}
           transition={sweep}
@@ -78,7 +78,8 @@ export function SplitWords({
         const special = isHighlight(word)
         const wordDelay = special ? highlightDelay : delay + plainOrder[index] * gap
         return (
-          <span key={`${word}-${index}`} aria-hidden="true" className={`${MASK} mr-[0.26em] last:mr-0`}>
+          <Fragment key={`${word}-${index}`}>
+          <span aria-hidden="true" className={MASK}>
             <motion.span
               className="relative inline-block"
               variants={{
@@ -112,6 +113,9 @@ export function SplitWords({
               )}
             </motion.span>
           </span>
+          {/* A real space (not margin) so copied headings keep their word breaks. */}
+          {index < words.length - 1 && ' '}
+          </Fragment>
         )
       })}
     </Tag>

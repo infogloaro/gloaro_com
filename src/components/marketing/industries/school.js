@@ -1,0 +1,52 @@
+// Illustrative example: fictional school, licensed stock photography (media/CREDITS.md).
+export default {
+  id: 'school',
+  label: 'Education & schools',
+  status: 'example',
+  accent: '#3b6fd8',
+  brand: { name: 'Lumen Grove School', short: 'LG', location: 'Admissions office' },
+  pitch: 'Admission campaigns that turn curious parents into campus visits.',
+  ideas: ['Admission announcement posts & Reels', 'Campus and classroom photography', 'Local search for “schools near me”', 'Admission enquiry & follow-up journeys'],
+  whatsapp: 'Hi GloAro, I run a school / educational institution and would like to discuss digital marketing for admissions.',
+  scenes: [
+    {
+      type: 'social-post',
+      step: 'Admissions post',
+      image: 'school/post.webp',
+      alt: 'A bright classroom ready for the new academic year',
+      caption: 'Admissions open for 2027–28 🎒 Book a campus visit and meet our teachers.',
+      tags: ['#Admissions2027', '#SchoolLife'],
+    },
+    {
+      type: 'reel',
+      step: 'Campus video',
+      poster: 'school/reel.webp',
+      alt: 'The school campus with its main building and lawn',
+      headline: 'A day at Lumen Grove',
+      sub: 'Smart classrooms · Sports · Transport',
+      cta: 'Book a campus visit',
+    },
+    {
+      type: 'search',
+      step: 'Local search',
+      query: 'cbse school near me',
+      alt: 'Lumen Grove School in local search results with call and directions buttons',
+      category: 'School',
+      hours: 'Office open · Closes 4 pm',
+      snippet: 'Admissions open for 2027–28. Book a campus visit, view facilities and transport routes.',
+      url: 'lumengrove.example',
+    },
+    {
+      type: 'enquiry',
+      step: 'Parent enquiry',
+      alt: 'A parent asks about Grade 3 admission and a campus visit on WhatsApp',
+      messages: [
+        { from: 'customer', text: 'Hi, is admission open for Grade 3? Do you have a school bus near our area?' },
+        { from: 'business', text: 'Yes! Admissions for 2027–28 are open. Please share your location and we will send bus route details.' },
+        { from: 'customer', type: 'location', text: 'Home location' },
+        { from: 'business', text: 'Thank you. Would Saturday 10 AM suit you for a campus visit?' },
+        { from: 'customer', text: 'Saturday works 👍' },
+      ],
+    },
+  ],
+}

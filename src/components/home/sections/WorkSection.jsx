@@ -1,162 +1,291 @@
-import { useLayoutEffect, useRef, useState } from 'react'
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { AnimatePresence, LayoutGroup, motion, useReducedMotion, useScroll, useSpring, useTransform } from 'framer-motion'
-import { ArrowUpRight } from 'lucide-react'
-import { spring, transition } from '../../../lib/motion'
-import { useMediaQuery } from '../../../hooks/useMotionEnv'
-import { businesses, isThemeLive } from '../../../prototypes/catalog'
+import { LayoutGroup, motion, useReducedMotion } from 'framer-motion'
+import { CalendarCheck, MonitorSmartphone, PlayCircle, Smartphone } from 'lucide-react'
+import { spring } from '../../../lib/motion'
+import { businesses, getBusiness, getThemeKey, isThemeLive, softwareTypes } from '../../../prototypes/catalog'
+import { appTemplates } from '../../../prototypes/appCatalog'
 import SectionHeading from './SectionHeading'
 
-const GROUPS = {
-  Commerce: ['food', 'retail', 'pos'],
-  Services: ['healthcare', 'education', 'services', 'hospitality'],
-  Operations: ['logistics', 'crm', 'realestate'],
+// Filters: 'all', a business type (`industry:<id>`) or a software type (`software:<id>`).
+const INDUSTRY_FILTERS = businesses.filter((b) => b.kind === 'industry').map((b) => ({ value: `industry:${b.id}`, label: b.name }))
+const SOFTWARE_FILTERS = softwareTypes.map((t) => ({ value: `software:${t.id}`, label: t.label }))
+const matches = (business, filter) => {
+  if (filter === 'all') return true
+  const [kind, id] = filter.split(':')
+  return kind === 'industry' ? business?.id === id : Boolean(business?.software?.includes(id))
 }
-const FILTERS = ['All', ...Object.keys(GROUPS)]
+// Each rolling row repeats its cards until one copy is at least this long, so
+// the loop never shows a gap even when a filter leaves only a few cards.
+const MIN_PER_COPY = 8
+const SECONDS_PER_CARD = 5
 
-const work = businesses.map((business) => {
+const webApps = businesses.map((business) => {
   const theme = business.themes[0]
+  const live = isThemeLive(business.id, theme.id)
   return {
-    ...business,
-    theme,
-    live: isThemeLive(business.id, theme.id),
-    group: Object.keys(GROUPS).find((group) => GROUPS[group].includes(business.id)),
+    id: business.id,
+    name: business.name,
+    tagline: business.tagline,
+    accent: business.accent,
+    thumb: theme.thumb,
+    href: `/solutions/${business.id}`,
+    book: `/contact?theme=${encodeURIComponent(getThemeKey(business.id, theme.id))}`,
+    demo: live ? `/prototypes/${business.id}/${theme.id}` : null,
+    business,
   }
 })
 
-function WorkCard({ item }) {
-  const { id, name, tagline, accent, theme, live } = item
-  return (
-    <Link to={`/solutions/${id}`} className="group block h-full rounded-[24px] border border-slate-200 bg-white p-3 shadow-[0_14px_36px_rgba(15,23,42,0.08)] transition-shadow duration-300 hover:shadow-[0_24px_50px_rgba(13,70,151,0.16)]">
-      <div className="relative aspect-[4/3] overflow-hidden rounded-[18px]" style={{ background: `linear-gradient(135deg, ${accent}, #0b2451)` }}>
-        {theme.thumb ? (
-          <img
-            src={theme.thumb}
-            alt={`${name} prototype`}
-            loading="lazy"
-            decoding="async"
-            width="640"
-            height="480"
-            className="h-full w-full object-cover transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-110"
-          />
-        ) : (
-          <div className="grid h-full place-items-center transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-110">
-            <span className="font-outfit text-6xl font-semibold text-white/25">{name.charAt(0)}</span>
-          </div>
-        )}
-        <span className={`absolute left-3 top-3 rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-wider ${live ? 'bg-[#17a589] text-white' : 'bg-white/90 text-slate-600'}`}>
-          {live ? 'Live demo' : 'Coming soon'}
-        </span>
-      </div>
-      <div className="flex items-start justify-between gap-3 px-2 pb-1 pt-4">
-        <div>
-          <h3 className="font-extrabold text-[#0d4697]">{name}</h3>
-          <p className="mt-0.5 text-sm font-medium text-slate-500">{tagline}</p>
-        </div>
-        <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[#0d4697]/10 text-[#0d4697] transition-transform duration-300 group-hover:rotate-45 group-hover:bg-[#ffae13] group-hover:text-[#0b2451]">
-          <ArrowUpRight className="h-4 w-4" />
-        </span>
-      </div>
-    </Link>
-  )
-}
+const apps = appTemplates.map((app) => ({
+  ...app,
+  href: null,
+  book: `/contact?theme=${encodeURIComponent(app.key)}`,
+  business: getBusiness(app.industry),
+}))
 
-function Filters({ value, onChange }) {
+const ROWS = [
+  { id: 'web-apps', label: 'Web App', title: 'Web app templates', Icon: MonitorSmartphone, items: webApps, direction: 'right' },
+  { id: 'apps', label: 'App', title: 'Mobile app templates', Icon: Smartphone, items: apps, direction: 'left' },
+]
+
+function CardActions({ item, inert }) {
+  const tab = inert ? -1 : undefined
   return (
-    <div role="tablist" aria-label="Filter work by industry" className="flex flex-wrap justify-center gap-2">
-      {FILTERS.map((filter) => {
-        const selected = filter === value
-        return (
-          <button
-            key={filter}
-            type="button"
-            role="tab"
-            aria-selected={selected}
-            onClick={() => onChange(filter)}
-            className={`relative rounded-full px-4 py-2 text-sm font-bold transition-colors ${selected ? 'text-[#0b2451]' : 'text-slate-500 hover:text-[#0d4697]'}`}
-          >
-            {selected && <motion.span layoutId="work-filter" transition={spring.interactive} className="absolute inset-0 -z-10 rounded-full bg-[#ffae13]" />}
-            {filter}
-          </button>
-        )
-      })}
+    <div className="mt-4 grid grid-cols-2 gap-2">
+      <Link
+        to={item.book}
+        tabIndex={tab}
+        className="inline-flex items-center justify-center gap-1.5 rounded-full bg-[linear-gradient(135deg,#0b469e,#1b6fe0)] px-3 py-2.5 text-xs font-bold text-white shadow-[0_8px_18px_rgba(11,70,158,0.25)] transition hover:-translate-y-0.5"
+      >
+        <CalendarCheck className="h-3.5 w-3.5" /> Book now
+      </Link>
+      {item.demo ? (
+        <Link
+          to={item.demo}
+          tabIndex={tab}
+          className="inline-flex items-center justify-center gap-1.5 rounded-full border border-[#0d4697]/20 bg-white px-3 py-2.5 text-xs font-bold text-[#0d4697] transition hover:-translate-y-0.5 hover:border-[#ffae13] hover:bg-[#ffae13]/10"
+        >
+          <PlayCircle className="h-3.5 w-3.5" /> Use demo
+        </Link>
+      ) : (
+        <span
+          aria-disabled="true"
+          title="Demo coming soon"
+          className="inline-flex cursor-not-allowed items-center justify-center gap-1.5 rounded-full border border-slate-200 bg-slate-50 px-3 py-2.5 text-xs font-bold text-slate-400"
+        >
+          <PlayCircle className="h-3.5 w-3.5" /> Demo soon
+        </span>
+      )}
     </div>
   )
 }
 
-// Desktop: the section pins and vertical scroll drives the track sideways.
-// Touch/small screens and reduced motion get a native swipeable row instead.
-export default function WorkSection() {
-  const reduce = useReducedMotion()
-  const wide = useMediaQuery('(min-width: 1024px)')
-  const pinned = wide && !reduce
-  const [filter, setFilter] = useState('All')
-  const items = filter === 'All' ? work : work.filter((item) => item.group === filter)
-
-  const sectionRef = useRef(null)
-  const viewportRef = useRef(null)
-  const trackRef = useRef(null)
-  const [distance, setDistance] = useState(0)
-
-  useLayoutEffect(() => {
-    if (!pinned) return undefined
-    const measure = () => {
-      const overflow = trackRef.current.scrollWidth - viewportRef.current.clientWidth
-      setDistance(Math.max(0, overflow))
-    }
-    measure()
-    const observer = new ResizeObserver(measure)
-    observer.observe(trackRef.current)
-    observer.observe(viewportRef.current)
-    return () => observer.disconnect()
-  }, [pinned, filter])
-
-  const { scrollYProgress } = useScroll({ target: sectionRef, offset: ['start start', 'end end'] })
-  const smooth = useSpring(scrollYProgress, { stiffness: spring.surface.stiffness, damping: spring.surface.damping, restDelta: 0.001 })
-  const x = useTransform(smooth, [0, 1], [0, -distance])
-  const isPinned = pinned && distance > 0
-
+function StatusBadge({ live }) {
   return (
-    <section
-      id="portfolio"
-      ref={sectionRef}
-      style={isPinned ? { height: `calc(100vh + ${distance}px)` } : undefined}
-      className="relative scroll-mt-28 border-y border-slate-200 bg-[linear-gradient(180deg,#fbfdff,#ffffff)]"
-    >
-      <div className={isPinned ? 'sticky top-0 flex h-screen flex-col justify-center overflow-hidden pt-20' : 'py-16 sm:py-24'}>
-        <div className="px-5 lg:px-8">
-          <SectionHeading eyebrow="Our work" title="Prototypes and platforms we've shipped" highlight="shipped" />
-          <div className="mt-7">
-            <LayoutGroup id="work-filters">
-              <Filters value={filter} onChange={setFilter} />
-            </LayoutGroup>
-          </div>
-        </div>
+    <span className={`absolute left-3 top-3 z-10 rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-wider ${live ? 'bg-[#17a589] text-white' : 'bg-white/90 text-slate-600'}`}>
+      {live ? 'Live demo' : 'Coming soon'}
+    </span>
+  )
+}
 
-        <div ref={viewportRef} className={`mt-10 ${pinned ? 'overflow-visible' : 'overflow-x-auto overscroll-x-contain [scrollbar-width:none]'}`}>
-          <motion.ul
-            ref={trackRef}
-            style={isPinned ? { x } : undefined}
-            className={`flex w-max gap-6 px-5 pb-4 lg:px-[max(2rem,calc((100vw-80rem)/2+2rem))] ${pinned ? '' : 'snap-x snap-mandatory'}`}
-          >
-            <AnimatePresence mode="popLayout" initial={false}>
-              {items.map((item) => (
-                <motion.li
-                  key={item.id}
-                  layout
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.9, transition: transition.exit }}
-                  transition={spring.surface}
-                  className="w-[78vw] max-w-[360px] shrink-0 snap-start sm:w-[340px]"
-                >
-                  <WorkCard item={item} />
-                </motion.li>
-              ))}
-            </AnimatePresence>
-          </motion.ul>
+function WebCard({ item, inert }) {
+  const { name, tagline, accent, thumb, href, demo } = item
+  return (
+    <article className="group h-full rounded-[24px] border border-slate-200 bg-white p-3 shadow-[0_14px_36px_rgba(15,23,42,0.08)] transition-shadow duration-300 hover:shadow-[0_24px_50px_rgba(13,70,151,0.16)]">
+      <Link to={href} tabIndex={inert ? -1 : undefined} className="block">
+        <div className="relative aspect-[4/3] overflow-hidden rounded-[18px]" style={{ background: `linear-gradient(135deg, ${accent}, #0b2451)` }}>
+          {thumb ? (
+            <img src={thumb} alt={`${name} web app template`} loading="lazy" decoding="async" width="640" height="480" draggable={false} className="h-full w-full object-cover transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-110" />
+          ) : (
+            <div className="grid h-full place-items-center transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-110">
+              <span className="font-outfit text-6xl font-semibold text-white/25">{name.charAt(0)}</span>
+            </div>
+          )}
+          <StatusBadge live={Boolean(demo)} />
+        </div>
+        <div className="px-2 pt-4">
+          <h3 className="font-extrabold text-[#0d4697]">{name}</h3>
+          <p className="mt-0.5 line-clamp-1 text-sm font-medium text-slate-500">{tagline}</p>
+        </div>
+      </Link>
+      <div className="px-2 pb-1">
+        <CardActions item={item} inert={inert} />
+      </div>
+    </article>
+  )
+}
+
+// App thumbnail: a phone frame with the template's photo and a sketched app UI.
+function PhoneThumb({ item }) {
+  return (
+    <div className="relative aspect-[4/3] overflow-hidden rounded-[18px]" style={{ background: `linear-gradient(135deg, ${item.accent}, #0b2451)` }}>
+      <div aria-hidden="true" className="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-white/10 blur-2xl" />
+      <div className="absolute bottom-[-18%] left-1/2 w-[44%] -translate-x-1/2 rounded-[22px] border-[5px] border-[#0b1220] bg-white shadow-[0_20px_40px_rgba(0,0,0,0.35)] transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:-translate-y-3">
+        <div className="mx-auto mt-1 h-1.5 w-8 rounded-full bg-[#0b1220]" />
+        <div className="p-1.5">
+          <img src={item.thumb} alt={`${item.name} template`} loading="lazy" decoding="async" draggable={false} className="aspect-[4/3] w-full rounded-lg object-cover" />
+          <div className="mt-1.5 h-1.5 w-3/4 rounded-full bg-slate-300" />
+          <div className="mt-1 h-1.5 w-1/2 rounded-full bg-slate-200" />
+          <div className="mt-2 grid grid-cols-3 gap-1">
+            {[0, 1, 2].map((cell) => <div key={cell} className="h-5 rounded-md" style={{ background: `${item.accent}22` }} />)}
+          </div>
+          <div className="mt-2 h-4 rounded-full" style={{ background: item.accent }} />
         </div>
       </div>
+      <StatusBadge live={Boolean(item.demo)} />
+    </div>
+  )
+}
+
+function AppCard({ item, inert }) {
+  return (
+    <article className="group h-full rounded-[24px] border border-slate-200 bg-white p-3 shadow-[0_14px_36px_rgba(15,23,42,0.08)] transition-shadow duration-300 hover:shadow-[0_24px_50px_rgba(13,70,151,0.16)]">
+      <PhoneThumb item={item} />
+      <div className="px-2 pb-1 pt-4">
+        <h3 className="font-extrabold text-[#0d4697]">{item.name}</h3>
+        <p className="mt-0.5 line-clamp-1 text-sm font-medium text-slate-500">{item.tagline}</p>
+        <CardActions item={item} inert={inert} />
+      </div>
+    </article>
+  )
+}
+
+function FilterChip({ value, label, selected, onChange }) {
+  return (
+    <button
+      type="button"
+      role="tab"
+      aria-selected={selected}
+      onClick={() => onChange(value)}
+      className={`relative whitespace-nowrap rounded-full px-3.5 py-1.5 text-sm font-bold transition-colors ${selected ? 'text-[#0b2451]' : 'text-slate-500 hover:bg-[#0d4697]/5 hover:text-[#0d4697]'}`}
+    >
+      {selected && <motion.span layoutId="work-filter" transition={spring.interactive} className="absolute inset-0 -z-10 rounded-full bg-[#ffae13]" />}
+      {label}
+    </button>
+  )
+}
+
+// Two rows sharing one selection: every business type, then software types.
+function Filters({ value, onChange }) {
+  const rows = [
+    { label: 'Business type', chips: [{ value: 'all', label: 'All' }, ...INDUSTRY_FILTERS] },
+    { label: 'Software', chips: SOFTWARE_FILTERS },
+  ]
+  return (
+    <div role="tablist" aria-label="Filter work by business or software type" className="mx-auto grid max-w-5xl gap-3">
+      {rows.map((row) => (
+        <div key={row.label} className="flex flex-wrap items-center justify-center gap-1.5">
+          <span className="mr-1 text-[11px] font-black uppercase tracking-[0.2em] text-slate-400">{row.label}</span>
+          {row.chips.map((chip) => (
+            <FilterChip key={chip.value} {...chip} selected={chip.value === value} onChange={onChange} />
+          ))}
+        </div>
+      ))}
+    </div>
+  )
+}
+
+// "App | Web App" switch above the heading; each half jumps to its row.
+function KindSwitch() {
+  const jump = (id) => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  return (
+    <div className="mb-6 flex justify-center">
+      <div className="inline-flex items-center rounded-full border border-[#0d4697]/10 bg-white p-1 shadow-[0_10px_28px_-12px_rgba(13,70,151,0.35)]">
+        {[ROWS[1], ROWS[0]].map(({ id, label, Icon }, index) => (
+          <span key={id} className="flex items-center">
+            {index > 0 && <span aria-hidden="true" className="mx-1 h-5 w-px bg-[#0d4697]/15" />}
+            <button
+              type="button"
+              onClick={() => jump(id)}
+              className="inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-black uppercase tracking-[0.14em] text-[#0d4697] transition hover:bg-[#ffae13]/15"
+            >
+              <Icon className="h-4 w-4 text-[#e07b00]" /> {label}
+            </button>
+          </span>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function RollingRow({ row, items, reduce }) {
+  const Card = row.id === 'apps' ? AppCard : WebCard
+
+  // Reduced motion: one plain swipeable row, no animation.
+  if (reduce) {
+    return (
+      <ul className="flex snap-x snap-mandatory gap-6 overflow-x-auto px-5 pb-4 [scrollbar-width:none] lg:px-8">
+        {items.map((item) => (
+          <li key={item.id} className="w-[78vw] max-w-[340px] shrink-0 snap-start sm:w-[320px]"><Card item={item} /></li>
+        ))}
+      </ul>
+    )
+  }
+
+  const repeats = Math.max(1, Math.ceil(MIN_PER_COPY / Math.max(1, items.length)))
+  const copy = Array.from({ length: repeats }, () => items).flat()
+  return (
+    <div className="overflow-hidden [mask-image:linear-gradient(90deg,transparent,black_6%,black_94%,transparent)]">
+      <div
+        className="work-roll flex w-max"
+        data-direction={row.direction}
+        style={{ animationDuration: `${copy.length * SECONDS_PER_CARD}s` }}
+      >
+        {/* Two identical copies; the second is decorative so the loop is seamless. */}
+        {[0, 1].map((half) => (
+          <ul key={half} aria-hidden={half === 1 || undefined} inert={half === 1 || undefined} aria-label={half === 0 ? row.title : undefined} className="flex shrink-0 gap-6 pr-6">
+            {copy.map((item, index) => (
+              <li key={`${item.id}-${index}`} className="w-[78vw] max-w-[320px] shrink-0 py-3 sm:w-[320px]">
+                <Card item={item} inert={half === 1 || index >= items.length} />
+              </li>
+            ))}
+          </ul>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// Two template rows rolling in opposite directions: web apps left to right,
+// mobile apps right to left. Hover or keyboard focus pauses a row.
+export default function WorkSection() {
+  const reduce = useReducedMotion()
+  const [filter, setFilter] = useState('all')
+  const pick = (items) => items.filter((item) => matches(item.business, filter))
+
+  return (
+    <section id="portfolio" className="relative scroll-mt-28 overflow-x-clip border-y border-slate-200 bg-[linear-gradient(180deg,#fbfdff,#ffffff)] py-16 sm:py-24">
+      <div className="px-5 lg:px-8">
+        <KindSwitch />
+        <SectionHeading eyebrow="Our work" title="Prototypes and platforms we've shipped" highlight="shipped" />
+        <div className="mt-7">
+          <LayoutGroup id="work-filters">
+            <Filters value={filter} onChange={setFilter} />
+          </LayoutGroup>
+        </div>
+      </div>
+
+      {ROWS.map((row) => {
+        const items = pick(row.items)
+        const { Icon } = row
+        return (
+          <div key={row.id} id={row.id} className="mt-10 scroll-mt-32">
+            <div className="mx-auto mb-3 flex max-w-7xl items-center gap-3 px-5 lg:px-8">
+              <span className="grid h-9 w-9 place-items-center rounded-xl bg-[#ffae13]/15 text-[#e07b00]"><Icon className="h-5 w-5" /></span>
+              <h3 className="font-outfit text-lg font-semibold text-[#0d4697]">{row.title}</h3>
+              <span className="text-xs font-bold text-slate-400">{items.length}</span>
+            </div>
+            {items.length ? (
+              <RollingRow key={filter} row={row} items={items} reduce={reduce} />
+            ) : (
+              <p className="mx-auto max-w-7xl px-5 text-sm font-medium text-slate-500 lg:px-8">
+                No {row.label.toLowerCase()} template for this type yet.{' '}
+                <Link to="/contact" className="font-bold text-[#0d4697] underline-offset-4 hover:underline">Ask us to build one</Link>
+              </p>
+            )}
+          </div>
+        )
+      })}
     </section>
   )
 }

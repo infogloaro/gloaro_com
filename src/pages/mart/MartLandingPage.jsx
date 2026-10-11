@@ -1,6 +1,7 @@
 import { MotionConfig } from 'framer-motion'
 import '../../components/mart/mart.css'
 import MartNavbar from '../../components/mart/MartNavbar'
+import BackButton from '../../components/common/BackButton'
 import MartHero from '../../components/mart/MartHero'
 import MartProductShowcase from '../../components/mart/MartProductShowcase'
 import MartCustomerFeatures from '../../components/mart/MartCustomerFeatures'
@@ -26,6 +27,7 @@ export default function MartLandingPage() {
           Skip to content
         </a>
         <MartNavbar />
+        <BackButton />
         <main id="main">
           <MartHero />
           <MartProductShowcase />

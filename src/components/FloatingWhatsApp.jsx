@@ -1,8 +1,9 @@
-const WHATSAPP_PHONE = '917200537071'
+import { whatsappLink } from '../lib/contact'
+
 const WHATSAPP_MESSAGE = 'Hi! 👋 Welcome to Gloaro. Thank you for contacting us. How can we help you today?'
 
 export default function FloatingWhatsApp() {
-  const href = 'https://api.whatsapp.com/send?phone=' + WHATSAPP_PHONE + '&text=' + encodeURIComponent(WHATSAPP_MESSAGE)
+  const href = whatsappLink(WHATSAPP_MESSAGE)
 
   return (
     <a

@@ -1,0 +1,51 @@
+// Illustrative example: fictional appliance retailer, licensed stock photography (media/CREDITS.md).
+export default {
+  id: 'appliances',
+  label: 'Home appliances',
+  status: 'example',
+  accent: '#0e8f82',
+  brand: { name: 'VoltNest Appliances', short: 'VN', location: 'Electronics store' },
+  pitch: 'Offer campaigns and product videos that send ready-to-buy shoppers to your store.',
+  ideas: ['TV, refrigerator, washing machine & AC promotions', 'Product comparison creatives', 'Offer campaigns & demo videos', 'Enquiries through social media and WhatsApp'],
+  whatsapp: 'Hi GloAro, I run a home appliances / electronics store and would like to discuss digital marketing.',
+  scenes: [
+    {
+      type: 'social-post',
+      step: 'Offer post',
+      image: 'appliances/post.webp',
+      alt: 'A modern kitchen with a built-in oven and microwave',
+      caption: 'Festive offers on kitchen appliances, refrigerators and ACs. EMI options available in store.',
+      tags: ['#FestiveOffers', '#HomeAppliances'],
+    },
+    {
+      type: 'reel',
+      step: 'Product video',
+      poster: 'appliances/reel.webp',
+      alt: 'A front-load washing machine in a bright laundry room',
+      headline: 'Front-load or top-load? We’ll help you choose',
+      sub: 'Top brands · EMI options · Installation',
+      cta: 'Check offers',
+    },
+    {
+      type: 'search',
+      step: 'Local search',
+      query: 'washing machine shop near me',
+      alt: 'VoltNest Appliances in local search results with call and directions buttons',
+      category: 'Appliance store',
+      hours: 'Open · Closes 9:30 pm',
+      snippet: 'Washing machines, refrigerators, TVs and ACs from leading brands. Ask for prices and EMI on WhatsApp.',
+      url: 'voltnest.example',
+    },
+    {
+      type: 'enquiry',
+      step: 'Shopper enquiry',
+      alt: 'A shopper asks about washing machine stock and a home demo on WhatsApp',
+      messages: [
+        { from: 'customer', text: 'Hi, which 7 kg front-load washing machines do you have in stock?' },
+        { from: 'business', text: 'Hi! We have models from three brands. Shall we send prices and EMI details here?' },
+        { from: 'customer', text: 'Yes please' },
+        { from: 'business', text: 'Sent! We can also book a home demo at a time that suits you.' },
+      ],
+    },
+  ],
+}

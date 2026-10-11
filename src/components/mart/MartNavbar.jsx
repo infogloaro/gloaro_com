@@ -43,7 +43,7 @@ export default function MartNavbar() {
   const glass = scrolled || open
 
   return (
-    <header className="fixed inset-x-0 top-0 z-50">
+    <header data-back-anchor className="fixed inset-x-0 top-0 z-50">
       <motion.div style={{ scaleX: progress }} className="absolute inset-x-0 top-0 h-[3px] origin-left bg-[linear-gradient(90deg,#0b469e,#1b6fe0,#ffae13)]" aria-hidden="true" />
       <motion.nav
         aria-label="GLOARO MART"

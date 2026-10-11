@@ -219,5 +219,38 @@ export const techServices = [
   },
 ]
 
+// Digital marketing has its own interactive page (pages/tech/DigitalMarketingPage.jsx,
+// routed ahead of /tech/:slug). This entry supplies its SEO, FAQs and the
+// related-service links on the other service pages.
+techServices.push({
+  id: 'marketing',
+  slug: 'digital-marketing',
+  name: 'Digital Marketing',
+  metaTitle: 'Digital Marketing Agency in Tamil Nadu | Social Media, Meta Ads, SEO | GLOARO',
+  metaDescription:
+    'GLOARO plans and runs digital marketing for growing businesses: social media content and Reels, Meta Ads, SEO, Google Business Profile, WhatsApp lead follow-up and monthly reporting.',
+  headline: 'Digital marketing that turns local attention into real enquiries',
+  intro:
+    'GLOARO plans, creates and manages the content, ads and search presence that bring customers to your business — then makes sure every enquiry reaches you on a call, a form or WhatsApp.',
+  deliverables: [
+    ['Social media management', 'Monthly content calendar, posts, Reels and stories for Instagram and Facebook.'],
+    ['Meta Ads', 'Campaign planning, audience targeting, creatives and budget management.'],
+    ['SEO & Google Business Profile', 'Local search visibility, profile optimisation and on-page SEO.'],
+    ['Lead generation & WhatsApp', 'Landing pages, lead forms and automated WhatsApp follow-ups.'],
+    ['Brand & reputation', 'Consistent brand presence and timely responses to reviews.'],
+    ['Reporting', 'Monthly reports on reach, enquiries and what we will improve next.'],
+  ],
+  audiences: ['Schools & colleges', 'Furniture showrooms', 'Appliance & electronics retailers', 'Construction & building materials', 'Restaurants', 'Clinics & hospitals', 'Wellness businesses'],
+  tech: ['Meta Business Suite', 'Meta Ads Manager', 'Google Business Profile', 'Google Search Console', 'Google Analytics', 'WhatsApp Business'],
+  faqs: [
+    ['How much does digital marketing cost?', 'It depends on the services, the number of posts and videos each month, and your advertising budget. After understanding your business we share a clear monthly scope and fee before anything starts. Ad spend is paid to Meta or Google separately and stays under your control.'],
+    ['Do you guarantee leads or sales?', 'No honest agency can. Results depend on your market, offer, budget and platform performance. We commit to the agreed deliverables, transparent reporting and continuous improvement based on real data.'],
+    ['Who creates the photos and videos?', 'We plan and design the content. We can work with your existing photos and videos, guide you to shoot simple clips on a phone, or arrange a shoot where needed.'],
+    ['Will the ad and social accounts belong to my business?', 'Yes. We work inside accounts owned by your business, so your pages, ad accounts, audiences and data remain yours.'],
+    ['How do enquiries reach us?', 'Through the routes you prefer — calls, website forms or WhatsApp — with automated replies and follow-up reminders so no enquiry is missed.'],
+    ['How long before we see results?', 'Ads start reaching people as soon as they launch, while SEO and organic social media build steadily over a few months. How quickly enquiries grow depends on your market and budget, so we review progress with you every month.'],
+  ],
+})
+
 export const getTechService = (slug) => techServices.find((service) => service.slug === slug) || null
 export const techServiceById = (id) => techServices.find((service) => service.id === id) || null

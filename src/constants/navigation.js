@@ -90,6 +90,7 @@ export const adminNav = [
     icon: CreditCard,
     children: [
       ['Member Approval', '/membership-applications', ClipboardList],
+      ['Partner Applications', '/partnership-applications', Handshake],
       ['Members', '/members', Users],
       ['Attendance', '/attendance', Activity],
       ['Unit Approvals', '/chapters', Network],
