@@ -2,43 +2,55 @@ import { Suspense, lazy, useCallback, useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import GloaroBot from './GloaroBot'
 import { useCapabilities } from '../../prototypes/core/useCapabilities'
+import { createChat, describeError, sendMessage } from '../../lib/retellChat'
 import './gloaroAiChat.css'
 
-// Retell chat widget config. The public key is designed for browser use
-// (https://docs.retellai.com/deploy/chat-widget); never put a secret key here.
-const RETELL_SCRIPT_ID = 'retell-widget' // the widget reads its config from this id
-const RETELL_SCRIPT_SRC = 'https://dashboard.retellai.com/retell-widget-v2.js'
-const RETELL_ROOT_ID = 'retell-widget-root' // container the widget mounts itself into
-const RETELL_AGENT_ID = 'agent_dd273451492112e295745d4928'
-const RETELL_PUBLIC_KEY = 'public_key_ab1a6cd8f7b6ec60b3b7e' // "GLOARO AI Chatbot" key
 const BOT_NAME = 'GLOARO AI Assistant'
-const RETELL_BOT_NAME = 'GLOARO Assistant'
-const CHAT_TITLE = 'GLOARO AI Assistant'
-const MOUNT_TIMEOUT_MS = 10000
+// Shown locally the moment the panel opens; it is never sent to the agent.
+const WELCOME = [
+  '👋 Welcome to GLOARO!',
+  "🚀 I'm your AI assistant, here to help you explore our services, AI solutions, and digital innovations.",
+  '💡✨ How can I help you today?',
+]
+const SUGGESTIONS = ['Explore GLOARO Services', 'AI Automation Solutions', 'Website Development', 'Talk to the GLOARO Team']
+// One conversation per browser tab: survives close/reopen and page navigation,
+// starts fresh in a new tab.
+const SESSION_KEY = 'gloaro-ai-chat'
 
-const TOPICS = ['Explore GLOARO Services', 'AI Automation Solutions', 'Website Development', 'Talk to the GLOARO Team']
+function loadSession() {
+  try {
+    const saved = JSON.parse(sessionStorage.getItem(SESSION_KEY))
+    if (saved && Array.isArray(saved.messages)) return saved
+  } catch {
+    /* no saved session */
+  }
+  return { chatId: null, messages: [] }
+}
 
-// Load the official widget on demand, with documented attributes only.
-// data-auto-open="true" is the supported way to open it from our own button.
-function injectRetellScript(attempt) {
-  const script = document.createElement('script')
-  script.id = RETELL_SCRIPT_ID
-  script.type = 'module'
-  // A fresh URL on retry so the browser re-executes the module after a failure.
-  script.src = attempt > 0 ? `${RETELL_SCRIPT_SRC}?retry=${attempt}` : RETELL_SCRIPT_SRC
-  Object.entries({
-    'data-public-key': RETELL_PUBLIC_KEY,
-    'data-agent-id': RETELL_AGENT_ID,
-    'data-title': CHAT_TITLE,
-    'data-bot-name': RETELL_BOT_NAME,
-    'data-fab-text': 'Chat with GLOARO',
-    'data-theme-color': '#14244b',
-    'data-component-color': '#1f3a7a',
-    'data-show-ai-popup': 'false',
-    'data-auto-open': 'true',
-  }).forEach(([name, value]) => script.setAttribute(name, value))
-  document.head.appendChild(script)
-  return script
+function saveSession(session) {
+  try {
+    sessionStorage.setItem(SESSION_KEY, JSON.stringify(session))
+  } catch {
+    /* storage unavailable: the chat still works for this page view */
+  }
+}
+
+let nextId = 0
+const makeMessage = (role, content) => ({ id: `${Date.now()}-${nextId++}`, role, content })
+
+// Agent replies use light markdown (**bold**, line breaks, "- " lists).
+// Rendered to React nodes, never as raw HTML.
+function RichText({ text }) {
+  return text.split('\n').map((line, i) => {
+    const parts = line.split(/(\*\*[^*]+\*\*)/g).map((part, j) =>
+      part.startsWith('**') && part.endsWith('**') ? <strong key={j}>{part.slice(2, -2)}</strong> : part,
+    )
+    return (
+      <span key={i} className="gloaro-ai-line">
+        {parts}
+      </span>
+    )
+  })
 }
 
 // Loaded on demand so three.js stays out of the first paint.
@@ -57,18 +69,18 @@ function BotAvatar({ hovered = false, caps, launch, onLand, framing }) {
   )
 }
 
-function CloseIcon() {
+function SendIcon() {
   return (
-    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
-      <path d="M6 6l12 12M18 6L6 18" />
+    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M22 2 11 13M22 2l-7 20-4-9-9-4 20-7z" />
     </svg>
   )
 }
 
-function ChatIcon() {
+function CloseIcon() {
   return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12Z" />
+    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+      <path d="M6 6l12 12M18 6L6 18" />
     </svg>
   )
 }
@@ -80,14 +92,17 @@ export default function GloaroAiChat() {
   const [launch, setLaunch] = useState(0)
   const [boom, setBoom] = useState(false)
   const caps = useCapabilities()
-  // idle → loading → ready | error. "ready" means the widget mounted on the page.
-  const [status, setStatus] = useState(() =>
-    typeof document !== 'undefined' && document.getElementById(RETELL_ROOT_ID) ? 'ready' : 'idle',
-  )
-  const attemptRef = useRef(0)
+  const [session, setSession] = useState(loadSession)
+  const [draft, setDraft] = useState('')
+  const [sending, setSending] = useState(false)
+  const [error, setError] = useState(null) // { text, retry: content }
+  const sessionRef = useRef(session)
   const fabRef = useRef(null)
   const closeRef = useRef(null)
+  const inputRef = useRef(null)
+  const listRef = useRef(null)
   const wasOpenRef = useRef(false)
+  const stickToBottomRef = useRef(true)
 
   const close = useCallback(() => setOpen(false), [])
 
@@ -142,45 +157,93 @@ export default function GloaroAiChat() {
     }
   }, [open])
 
-  // Once the script is requested, wait for the widget to actually mount itself.
   useEffect(() => {
-    if (status !== 'loading') return
-    let finished = false
-    const finish = (next) => {
-      if (finished) return
-      finished = true
-      observer.disconnect()
-      clearTimeout(timer)
-      setStatus(next)
-      if (next === 'ready') setOpen(false) // reveal the Retell chat window
-    }
-    const observer = new MutationObserver(() => {
-      if (document.getElementById(RETELL_ROOT_ID)) finish('ready')
-    })
-    observer.observe(document.body, { childList: true })
-    const timer = setTimeout(() => finish('error'), MOUNT_TIMEOUT_MS)
+    sessionRef.current = session
+    saveSession(session)
+  }, [session])
 
-    let script = document.getElementById(RETELL_SCRIPT_ID)
-    if (!script) script = injectRetellScript(attemptRef.current)
-    const onError = () => finish('error')
-    script.addEventListener('error', onError)
-    if (document.getElementById(RETELL_ROOT_ID)) finish('ready')
+  // Keep the newest message in view, unless the visitor has scrolled up to read.
+  const scrollToBottom = useCallback((force) => {
+    const list = listRef.current
+    if (!list) return
+    if (force || stickToBottomRef.current) list.scrollTop = list.scrollHeight
+  }, [])
 
-    return () => {
-      script.removeEventListener('error', onError)
-      observer.disconnect()
-      clearTimeout(timer)
-    }
-  }, [status])
-
-  const startChat = () => {
-    if (status === 'error') {
-      // Drop the failed tag so a clean one is injected; never touches a mounted widget.
-      document.getElementById(RETELL_SCRIPT_ID)?.remove()
-      attemptRef.current += 1
-    }
-    setStatus('loading')
+  const onListScroll = () => {
+    const list = listRef.current
+    stickToBottomRef.current = list.scrollHeight - list.scrollTop - list.clientHeight < 40
   }
+
+  useEffect(() => {
+    scrollToBottom()
+  }, [session.messages, sending, error, scrollToBottom])
+
+  useEffect(() => {
+    if (!open) return
+    stickToBottomRef.current = true
+    // After the slide-in: jump to the latest message and ready the composer.
+    const timer = setTimeout(() => {
+      scrollToBottom(true)
+      if (!window.matchMedia('(max-width: 639px)').matches) inputRef.current?.focus()
+    }, 380)
+    return () => clearTimeout(timer)
+  }, [open, scrollToBottom])
+
+  // Sends one user message to the real Retell agent. The session is created on
+  // the first message, so opening the panel never starts an unused chat.
+  const send = useCallback(async (content) => {
+    const text = content.trim()
+    if (!text || sending) return
+    setError(null)
+    setSending(true)
+    stickToBottomRef.current = true
+    setSession((prev) => ({ ...prev, messages: [...prev.messages, makeMessage('user', text)] }))
+    try {
+      let chatId = sessionRef.current.chatId
+      if (!chatId) {
+        chatId = await createChat()
+        setSession((prev) => ({ ...prev, chatId }))
+      }
+      const replies = await sendMessage(chatId, text)
+      setSession((prev) => ({
+        ...prev,
+        messages: [...prev.messages, ...replies.map((reply) => makeMessage('agent', reply))],
+      }))
+    } catch (err) {
+      setError({ text: describeError(err), retry: text })
+      // A dead session (e.g. ended server-side) gets a fresh one on retry.
+      if (err?.status === 400 || err?.status === 404) setSession((prev) => ({ ...prev, chatId: null }))
+    } finally {
+      setSending(false)
+    }
+  }, [sending])
+
+  const submit = (event) => {
+    event?.preventDefault()
+    if (!draft.trim()) return
+    const text = draft
+    setDraft('')
+    send(text)
+  }
+
+  const onKeyDown = (event) => {
+    if (event.key === 'Enter' && !event.shiftKey) {
+      event.preventDefault()
+      submit()
+    }
+  }
+
+  const retry = () => {
+    const content = error?.retry
+    // Drop the failed user bubble so the retry doesn't show the message twice.
+    setSession((prev) => {
+      const last = prev.messages[prev.messages.length - 1]
+      return last?.role === 'user' && last.content === content ? { ...prev, messages: prev.messages.slice(0, -1) } : prev
+    })
+    send(content)
+  }
+
+  const hasConversation = session.messages.length > 0
 
   return (
     <div className="gloaro-ai-root">
@@ -230,66 +293,94 @@ export default function GloaroAiChat() {
               </button>
             </header>
 
-            <div className="gloaro-ai-body" aria-live="polite">
-              {/* Local greeting only; it is not sent to the Retell agent. */}
+            <div ref={listRef} className="gloaro-ai-body" onScroll={onListScroll}>
               <div className="gloaro-ai-message">
                 <span className="gloaro-ai-avatar gloaro-ai-avatar--small">
                   <GloaroBot />
                 </span>
                 <div className="gloaro-ai-bubble">
-                  <p>👋 Welcome to GLOARO!</p>
-                  <p>🚀I'm your AI assistant, here to help you explore our services, AI solutions, and digital innovations.</p>
-                  <p>💡✨ How can I help you today?</p>
-                </div>
-              </div>
-
-              <div className="gloaro-ai-topics">
-                <p className="gloaro-ai-label">You can ask about</p>
-                <ul className="gloaro-ai-topic-list">
-                  {TOPICS.map((topic) => (
-                    <li key={topic} className="gloaro-ai-topic">{topic}</li>
+                  {WELCOME.map((line) => (
+                    <p key={line}>{line}</p>
                   ))}
-                </ul>
+                </div>
               </div>
 
-              {status === 'loading' && (
-                <div className="gloaro-ai-status" role="status">
-                  <span className="gloaro-ai-dots" aria-hidden="true"><span /><span /><span /></span>
-                  Connecting to the GLOARO AI Assistant…
+              {!hasConversation && (
+                <div className="gloaro-ai-topics">
+                  <p className="gloaro-ai-label">Try asking</p>
+                  <ul className="gloaro-ai-topic-list">
+                    {SUGGESTIONS.map((topic) => (
+                      <li key={topic}>
+                        <button type="button" className="gloaro-ai-topic" onClick={() => send(topic)} disabled={sending} tabIndex={open ? 0 : -1}>
+                          {topic}
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
                 </div>
               )}
-              {status === 'ready' && (
-                <div className="gloaro-ai-status">
-                  <strong>Your live chat runs in the GLOARO chat window.</strong> If it's closed, tap the
-                  {' '}"{CHAT_TITLE}" button just above the WhatsApp icon to continue your conversation.
-                </div>
-              )}
-              {status === 'error' && (
-                <div className="gloaro-ai-status gloaro-ai-status--error" role="alert">
-                  <strong>We couldn't start the AI chat right now.</strong> Please try again, or reach the
-                  GLOARO team on the green WhatsApp button at the bottom of the page.
-                </div>
-              )}
+
+              <div aria-live="polite">
+                {session.messages.map((message) => (
+                  <div key={message.id} className={`gloaro-ai-message gloaro-ai-message--${message.role}`}>
+                    {message.role === 'agent' && (
+                      <span className="gloaro-ai-avatar gloaro-ai-avatar--small">
+                        <GloaroBot />
+                      </span>
+                    )}
+                    <div className="gloaro-ai-bubble">
+                      <RichText text={message.content} />
+                    </div>
+                  </div>
+                ))}
+
+                {sending && (
+                  <div className="gloaro-ai-message" role="status" aria-label="GLOARO AI is typing">
+                    <span className="gloaro-ai-avatar gloaro-ai-avatar--small">
+                      <GloaroBot />
+                    </span>
+                    <div className="gloaro-ai-bubble gloaro-ai-bubble--typing">
+                      <span className="gloaro-ai-dots" aria-hidden="true"><span /><span /><span /></span>
+                    </div>
+                  </div>
+                )}
+
+                {error && (
+                  <div className="gloaro-ai-status gloaro-ai-status--error" role="alert">
+                    <strong>{error.text}</strong>
+                    <span className="gloaro-ai-status-actions">
+                      <button type="button" className="gloaro-ai-retry" onClick={retry} tabIndex={open ? 0 : -1}>Try again</button>
+                      <span>or message us on WhatsApp using the green button.</span>
+                    </span>
+                  </div>
+                )}
+              </div>
             </div>
 
-            <div className="gloaro-ai-footer">
-              {status !== 'ready' && (
-                <button type="button" className="gloaro-ai-button" onClick={startChat} disabled={status === 'loading'} tabIndex={open ? 0 : -1}>
-                  <ChatIcon />
-                  {status === 'error' ? 'Try again' : status === 'loading' ? 'Connecting…' : 'Start chatting'}
+            <form className="gloaro-ai-footer" onSubmit={submit}>
+              <div className="gloaro-ai-composer">
+                <textarea
+                  ref={inputRef}
+                  className="gloaro-ai-input"
+                  value={draft}
+                  onChange={(event) => setDraft(event.target.value)}
+                  onKeyDown={onKeyDown}
+                  placeholder="Type your message…"
+                  aria-label="Your message"
+                  rows={1}
+                  maxLength={2000}
+                  tabIndex={open ? 0 : -1}
+                />
+                <button type="submit" className="gloaro-ai-send" aria-label="Send message" disabled={sending || !draft.trim()} tabIndex={open ? 0 : -1}>
+                  <SendIcon />
                 </button>
-              )}
-              {status === 'ready' && (
-                <button type="button" className="gloaro-ai-button" onClick={close} tabIndex={open ? 0 : -1}>
-                  Back to the chat window
-                </button>
-              )}
+              </div>
               <p className="gloaro-ai-contact">
                 <a className="gloaro-ai-link" href="mailto:info@gloaro.com" tabIndex={open ? 0 : -1}>info@gloaro.com</a>
                 <a className="gloaro-ai-link" href="tel:+917200537033" tabIndex={open ? 0 : -1}>+91 72005 37033</a>
                 <a className="gloaro-ai-link" href="tel:+917200073704" tabIndex={open ? 0 : -1}>+91 72000 73704</a>
               </p>
-            </div>
+            </form>
           </aside>
         </div>,
         document.body,
