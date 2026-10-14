@@ -4,7 +4,7 @@ import { useLocation, useOutlet } from 'react-router-dom'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
 import FloatingWhatsApp from '../components/FloatingWhatsApp'
-import BackButton from '../components/common/BackButton'
+import GloaroAiChat from '../components/chat/GloaroAiChat'
 import { ScrollProgressBar } from '../components/motion/Scroll'
 import CursorFollower from '../components/motion/CursorFollower'
 import IntroSplash from '../components/motion/IntroSplash'
@@ -25,7 +25,6 @@ export default function PublicLayout() {
       <SmoothScroll />
       <ScrollProgressBar />
       <Navbar />
-      <BackButton />
       <AnimatePresence mode="wait">
         <motion.div
           key={pathname}
@@ -38,6 +37,7 @@ export default function PublicLayout() {
       </AnimatePresence>
       <Footer />
       <FloatingWhatsApp />
+      <GloaroAiChat />
       <CursorFollower />
     </MotionConfig>
   )

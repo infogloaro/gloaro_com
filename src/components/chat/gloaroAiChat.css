@@ -1,0 +1,603 @@
+/* GLOARO AI Assistant — every rule is scoped under the gloaro-ai- namespace so
+   nothing here can leak into the rest of the site or the WhatsApp button. */
+
+.gloaro-ai-root {
+  /* Logo palette */
+  --gloaro-ai-navy: #14244b;
+  --gloaro-ai-gold: #e0a82e;
+  --gloaro-ai-gold-soft: #fdf6e3;
+  --gloaro-ai-ink: #0f172a;
+  --gloaro-ai-muted: #475569;
+  --gloaro-ai-line: #e2e8f0;
+  --gloaro-ai-surface: #ffffff;
+  --gloaro-ai-gradient: linear-gradient(135deg, #24407f 0%, #14244b 60%, #0b1633 100%);
+  /* Mirrors FloatingWhatsApp: h-14 w-14, bottom/right 4 on mobile, 6 from sm. */
+  --gloaro-ai-size: 56px;
+  --gloaro-ai-edge: 16px;
+  --gloaro-ai-gap: 12px;
+  font-family: inherit;
+}
+
+@media (min-width: 640px) {
+  .gloaro-ai-root {
+    --gloaro-ai-edge: 24px;
+  }
+}
+
+/* ---------- Floating robot button (sits left of WhatsApp) ---------- */
+
+.gloaro-ai-fab {
+  position: fixed;
+  z-index: 50; /* same layer as the WhatsApp button */
+  bottom: calc(var(--gloaro-ai-edge) + env(safe-area-inset-bottom, 0px) - 4px);
+  right: calc(var(--gloaro-ai-edge) + var(--gloaro-ai-size) + var(--gloaro-ai-gap) - 4px);
+  width: 56px;
+  height: 100px; /* headroom so the head stays visible mid-jump */
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  border: 0;
+  border-radius: 20px;
+  padding: 0;
+  cursor: pointer;
+  background: transparent; /* no disc: the robot stands on its own */
+  transition: transform 0.2s ease;
+}
+
+/* Soft ground shadow under the robot's feet */
+.gloaro-ai-fab::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: 6px;
+  width: 34px;
+  height: 8px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse, rgba(20, 36, 75, 0.35), transparent 70%);
+  transform: translateX(-50%);
+  animation: gloaro-ai-breathe 3s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.gloaro-ai-fab:hover {
+  transform: scale(1.06);
+}
+
+.gloaro-ai-fab:focus {
+  outline: none;
+}
+
+.gloaro-ai-fab:focus-visible {
+  outline: 3px solid var(--gloaro-ai-gold);
+  outline-offset: 3px;
+}
+
+.gloaro-ai-fab .gloaro-ai-bot {
+  width: 44px;
+  height: 44px;
+  margin-bottom: 8px;
+}
+
+.gloaro-ai-tooltip {
+  position: absolute;
+  bottom: calc(100% + 10px);
+  right: 50%;
+  transform: translate(50%, 4px);
+  white-space: nowrap;
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #fff;
+  background: var(--gloaro-ai-ink);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.gloaro-ai-fab:hover .gloaro-ai-tooltip,
+.gloaro-ai-fab:focus-visible .gloaro-ai-tooltip {
+  opacity: 1;
+  transform: translate(50%, 0);
+}
+
+/* Matches the robot's 3-second hop: the shadow shrinks while it's in the air. */
+@keyframes gloaro-ai-breathe {
+  0%, 100% { transform: translateX(-50%) scale(1); opacity: 0.9; }
+  18% { transform: translateX(-50%) scale(1.1); opacity: 1; }
+  30% { transform: translateX(-50%) scale(0.55); opacity: 0.4; }
+  42% { transform: translateX(-50%) scale(1); opacity: 0.9; }
+}
+
+/* Boom: shockwave ring + dust puff from the robot's feet when it lands */
+.gloaro-ai-burst {
+  position: absolute;
+  left: 50%;
+  bottom: 10px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 3px solid var(--gloaro-ai-gold);
+  box-shadow: 0 0 0 0 rgba(224, 168, 46, 0.6), inset 0 0 12px rgba(224, 168, 46, 0.6);
+  transform: translateX(-50%) scale(0);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.gloaro-ai-burst[data-boom='true'] {
+  animation: gloaro-ai-shockwave 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes gloaro-ai-shockwave {
+  0% { transform: translateX(-50%) scale(0.2); opacity: 1; border-width: 6px; }
+  100% { transform: translateX(-50%) scale(7); opacity: 0; border-width: 1px; }
+}
+
+/* ---------- Backdrop + sidebar ---------- */
+
+.gloaro-ai-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  background: rgba(15, 23, 42, 0.35);
+  backdrop-filter: blur(2px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.gloaro-ai-backdrop[data-open='true'] {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.gloaro-ai-panel {
+  position: fixed;
+  z-index: 61;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background: var(--gloaro-ai-surface);
+  color: var(--gloaro-ai-ink);
+  box-shadow: -24px 0 60px -20px rgba(15, 23, 42, 0.45);
+  transform: translateX(105%);
+  visibility: hidden;
+  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), visibility 0s linear 0.35s;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.gloaro-ai-panel[data-open='true'] {
+  transform: translateX(0);
+  visibility: visible;
+  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), visibility 0s;
+}
+
+/* Boom entrance: the panel bursts out of the robot's corner with an overshoot. */
+.gloaro-ai-panel[data-open='true'][data-boom='true'] {
+  transform-origin: 85% 100%;
+  transition: none;
+  animation: gloaro-ai-boom 0.7s cubic-bezier(0.2, 1.4, 0.4, 1) both;
+}
+
+.gloaro-ai-backdrop[data-open='true'][data-boom='true'] {
+  animation: gloaro-ai-flash 0.7s ease-out both;
+}
+
+@keyframes gloaro-ai-boom {
+  0% { transform: translateX(0) scale(0.1); opacity: 0; }
+  55% { transform: translateX(0) scale(1.04); opacity: 1; }
+  75% { transform: translateX(0) scale(0.985); }
+  100% { transform: translateX(0) scale(1); opacity: 1; }
+}
+
+@keyframes gloaro-ai-flash {
+  0% { background: rgba(224, 168, 46, 0.35); }
+  100% { background: rgba(15, 23, 42, 0.35); }
+}
+
+@media (min-width: 640px) {
+  .gloaro-ai-panel {
+    top: 12px;
+    right: 12px;
+    bottom: 12px;
+    height: auto;
+    width: min(420px, calc(100vw - 24px));
+    border-radius: 20px;
+    overflow: hidden;
+  }
+}
+
+@media (min-width: 1024px) {
+  .gloaro-ai-panel {
+    width: 430px;
+  }
+}
+
+/* Header */
+.gloaro-ai-header {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: calc(16px + env(safe-area-inset-top, 0px)) 16px 16px;
+  color: #fff;
+  background: var(--gloaro-ai-gradient);
+  position: relative;
+  overflow: hidden;
+}
+
+@media (min-width: 640px) {
+  .gloaro-ai-header {
+    padding-top: 16px;
+  }
+}
+
+.gloaro-ai-header::after {
+  content: '';
+  position: absolute;
+  width: 220px;
+  height: 220px;
+  right: -80px;
+  top: -120px;
+  border-radius: 9999px;
+  background: radial-gradient(circle, rgba(224, 168, 46, 0.35), transparent 70%);
+  pointer-events: none;
+}
+
+.gloaro-ai-avatar {
+  flex: none;
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fff;
+  border: 2px solid var(--gloaro-ai-gold);
+  box-shadow: 0 6px 16px -6px rgba(0, 0, 0, 0.45);
+}
+
+.gloaro-ai-avatar .gloaro-ai-bot {
+  width: 36px;
+  height: 36px;
+}
+
+.gloaro-ai-avatar--small {
+  width: 34px;
+  height: 34px;
+  border-radius: 11px;
+  border: 1px solid #f1dfb3;
+  box-shadow: 0 4px 10px -6px rgba(20, 36, 75, 0.5);
+}
+
+.gloaro-ai-avatar--small .gloaro-ai-bot {
+  width: 28px;
+  height: 28px;
+}
+
+.gloaro-ai-heading {
+  min-width: 0;
+  flex: 1;
+}
+
+.gloaro-ai-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.gloaro-ai-subtitle {
+  margin: 2px 0 0;
+  font-size: 12.5px;
+  opacity: 0.88;
+}
+
+.gloaro-ai-close {
+  flex: none;
+  position: relative;
+  z-index: 1;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 10px;
+  cursor: pointer;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.16);
+  transition: background 0.15s ease;
+}
+
+.gloaro-ai-close:hover {
+  background: rgba(255, 255, 255, 0.28);
+}
+
+.gloaro-ai-close:focus-visible,
+.gloaro-ai-button:focus-visible,
+.gloaro-ai-link:focus-visible {
+  outline: 3px solid var(--gloaro-ai-gold);
+  outline-offset: 2px;
+}
+
+/* Scrolling body */
+.gloaro-ai-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 20px 16px;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(224, 168, 46, 0.1), transparent 45%),
+    #f8fafc;
+}
+
+.gloaro-ai-message {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.gloaro-ai-bubble {
+  max-width: 85%;
+  padding: 12px 14px;
+  border-radius: 16px 16px 16px 4px;
+  background: var(--gloaro-ai-surface);
+  border: 1px solid var(--gloaro-ai-line);
+  box-shadow: 0 6px 16px -10px rgba(15, 23, 42, 0.25);
+  font-size: 14px;
+  line-height: 1.55;
+  white-space: pre-line;
+  color: var(--gloaro-ai-ink);
+}
+
+.gloaro-ai-bubble p {
+  margin: 0;
+}
+
+.gloaro-ai-bubble p + p {
+  margin-top: 10px;
+}
+
+.gloaro-ai-topics {
+  margin-top: 20px;
+}
+
+.gloaro-ai-label {
+  margin: 0 0 8px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--gloaro-ai-muted);
+}
+
+.gloaro-ai-topic-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.gloaro-ai-topic {
+  padding: 6px 11px;
+  border-radius: 9999px;
+  font-size: 12.5px;
+  color: var(--gloaro-ai-navy);
+  background: var(--gloaro-ai-gold-soft);
+  border: 1px solid #f1dfb3;
+}
+
+.gloaro-ai-status {
+  margin-top: 20px;
+  padding: 14px;
+  border-radius: 14px;
+  font-size: 13.5px;
+  line-height: 1.5;
+  background: var(--gloaro-ai-surface);
+  border: 1px solid var(--gloaro-ai-line);
+  color: var(--gloaro-ai-muted);
+}
+
+.gloaro-ai-status strong {
+  color: var(--gloaro-ai-ink);
+}
+
+.gloaro-ai-status--error {
+  background: #fff7f7;
+  border-color: #fecaca;
+  color: #7f1d1d;
+}
+
+.gloaro-ai-status--error strong {
+  color: #7f1d1d;
+}
+
+.gloaro-ai-dots {
+  display: inline-flex;
+  gap: 4px;
+  margin-right: 8px;
+  vertical-align: middle;
+}
+
+.gloaro-ai-dots span {
+  width: 6px;
+  height: 6px;
+  border-radius: 9999px;
+  background: var(--gloaro-ai-gold);
+  animation: gloaro-ai-dot 1.1s ease-in-out infinite;
+}
+
+.gloaro-ai-dots span:nth-child(2) { animation-delay: 0.15s; }
+.gloaro-ai-dots span:nth-child(3) { animation-delay: 0.3s; }
+
+@keyframes gloaro-ai-dot {
+  0%, 80%, 100% { transform: translateY(0); opacity: 0.4; }
+  40% { transform: translateY(-4px); opacity: 1; }
+}
+
+/* Footer / composer area */
+.gloaro-ai-footer {
+  flex: none;
+  padding: 14px 16px 16px;
+  border-top: 1px solid var(--gloaro-ai-line);
+  background: var(--gloaro-ai-surface);
+}
+
+.gloaro-ai-button {
+  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 48px;
+  padding: 0 18px;
+  border: 0;
+  border-radius: 14px;
+  cursor: pointer;
+  font: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  color: #fff;
+  background: var(--gloaro-ai-gradient);
+  box-shadow: 0 10px 22px -12px rgba(20, 36, 75, 0.85), inset 0 -2px 0 rgba(224, 168, 46, 0.65);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+}
+
+.gloaro-ai-button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 14px 26px -12px rgba(20, 36, 75, 0.95), inset 0 -2px 0 rgba(224, 168, 46, 0.9);
+}
+
+.gloaro-ai-button:disabled {
+  cursor: progress;
+  opacity: 0.75;
+}
+
+.gloaro-ai-button svg {
+  width: 18px;
+  height: 18px;
+}
+
+.gloaro-ai-contact {
+  margin: 12px 0 0;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 4px 14px;
+  font-size: 12px;
+  color: var(--gloaro-ai-muted);
+}
+
+.gloaro-ai-link {
+  color: var(--gloaro-ai-navy);
+  font-weight: 600;
+  text-decoration: none;
+  border-radius: 4px;
+}
+
+.gloaro-ai-link:hover {
+  text-decoration: underline;
+}
+
+/* ---------- Robot animation ---------- */
+
+.gloaro-ai-bot {
+  display: block;
+  overflow: visible;
+}
+
+.gloaro-ai-bot-ring {
+  transform-box: view-box;
+  transform-origin: 32px 32px;
+  animation: gloaro-ai-orbit-breathe 3.6s ease-in-out infinite;
+  transition: transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Half-turn on hover: gold/navy swooshes land back in the logo arrangement. */
+.gloaro-ai-fab:hover .gloaro-ai-bot-ring,
+.gloaro-ai-fab:focus-visible .gloaro-ai-bot-ring {
+  animation: none;
+  transform: rotate(180deg);
+}
+
+.gloaro-ai-bot-eyes rect {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: gloaro-ai-blink 4.5s ease-in-out infinite;
+}
+
+.gloaro-ai-bot-antenna {
+  animation: gloaro-ai-antenna 2.4s ease-in-out infinite;
+}
+
+@keyframes gloaro-ai-orbit-breathe {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.04); }
+}
+
+@keyframes gloaro-ai-blink {
+  0%, 92%, 100% { transform: scaleY(1); }
+  95% { transform: scaleY(0.12); }
+}
+
+@keyframes gloaro-ai-antenna {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.55; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gloaro-ai-fab,
+  .gloaro-ai-panel,
+  .gloaro-ai-backdrop,
+  .gloaro-ai-button,
+  .gloaro-ai-tooltip {
+    transition: none;
+  }
+
+  .gloaro-ai-fab::before,
+  .gloaro-ai-burst,
+  .gloaro-ai-panel[data-open='true'][data-boom='true'],
+  .gloaro-ai-backdrop[data-open='true'][data-boom='true'],
+  .gloaro-ai-dots span,
+  .gloaro-ai-bot-ring,
+  .gloaro-ai-bot-eyes rect,
+  .gloaro-ai-bot-antenna {
+    animation: none;
+  }
+
+  .gloaro-ai-bot-ring {
+    transition: none;
+  }
+
+  .gloaro-ai-fab:hover {
+    transform: none;
+  }
+}
+
+/* ---------- 3D robot canvas ---------- */
+
+.gloaro-ai-bot3d {
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  overflow: hidden;
+}
+
+.gloaro-ai-bot3d > div,
+.gloaro-ai-bot3d canvas {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.gloaro-ai-fab .gloaro-ai-bot3d {
+  width: 56px;
+  height: 100px;
+}
