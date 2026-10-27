@@ -32,4 +32,6 @@ function whatsappDevApi(env) {
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => ({
   plugins: [react(), tailwindcss(), whatsappDevApi(loadEnv(mode, process.cwd(), 'ULTRAMSG_'))],
+  // Local dev has no backend; the voice-call session route is proxied to production.
+  server: { proxy: { '/api/bolna-session': { target: 'https://gloaro.com', changeOrigin: true } } },
 }))

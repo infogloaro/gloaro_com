@@ -5,6 +5,7 @@ import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
 import FloatingWhatsApp from '../components/FloatingWhatsApp'
 import GloaroAiChat from '../components/chat/GloaroAiChat'
+import BolnaVoiceCall from '../components/chat/BolnaVoiceCall'
 import { ScrollProgressBar } from '../components/motion/Scroll'
 import CursorFollower from '../components/motion/CursorFollower'
 import IntroSplash from '../components/motion/IntroSplash'
@@ -38,6 +39,7 @@ export default function PublicLayout() {
       <Footer />
       <FloatingWhatsApp />
       <GloaroAiChat />
+      <BolnaVoiceCall />
       <CursorFollower />
     </MotionConfig>
   )

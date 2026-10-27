@@ -1,0 +1,153 @@
+/* GLOARO AI voice-call pill. Sits directly above the floating robot
+   (robot: edge + 56px + 12px up, 84px tall), right-aligned to the same edge. */
+.gloaro-voice-root {
+  --gv-edge: 16px;
+  position: fixed;
+  z-index: 50;
+  right: var(--gv-edge);
+  bottom: calc(var(--gv-edge) + 56px + 12px + 84px + 4px + env(safe-area-inset-bottom, 0px));
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+  font-family: inherit;
+}
+
+@media (min-width: 640px) {
+  .gloaro-voice-root {
+    --gv-edge: 24px;
+  }
+}
+
+.gloaro-voice-btn,
+.gloaro-voice-live {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px 8px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(34, 211, 238, 0.45);
+  background: linear-gradient(135deg, #0b1630, #14244b);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+  box-shadow: 0 0 0 0 rgba(34, 211, 238, 0.5), 0 8px 22px -8px rgba(34, 211, 238, 0.6);
+}
+
+.gloaro-voice-btn {
+  cursor: pointer;
+  animation: gloaro-voice-pulse 2.4s ease-out infinite;
+  transition: transform 0.15s ease;
+}
+
+.gloaro-voice-btn:hover:not(:disabled) {
+  transform: translateY(-2px) scale(1.03);
+}
+
+.gloaro-voice-btn:focus-visible,
+.gloaro-voice-ctl:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
+
+.gloaro-voice-btn:disabled {
+  opacity: 0.8;
+  cursor: progress;
+  animation: none;
+}
+
+.gloaro-voice-icon {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #22d3ee, #3b82f6 60%, #2563eb);
+}
+
+.gloaro-voice-live {
+  padding: 6px 6px 6px 12px;
+  gap: 10px;
+  border-color: rgba(52, 211, 153, 0.55);
+  box-shadow: 0 8px 22px -8px rgba(52, 211, 153, 0.55);
+}
+
+.gloaro-voice-live-text {
+  min-width: 68px;
+}
+
+.gloaro-voice-wave {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  height: 16px;
+}
+
+.gloaro-voice-wave i {
+  width: 3px;
+  height: 100%;
+  border-radius: 2px;
+  background: #34d399;
+  transform-origin: center;
+  animation: gloaro-voice-wave 0.9s ease-in-out infinite;
+}
+
+.gloaro-voice-wave i:nth-child(2) { animation-delay: 0.15s; }
+.gloaro-voice-wave i:nth-child(3) { animation-delay: 0.3s; }
+.gloaro-voice-wave i:nth-child(4) { animation-delay: 0.45s; }
+
+[data-status='live'] .gloaro-voice-wave i {
+  animation-play-state: running;
+}
+
+.gloaro-voice-ctl {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border: 0;
+  border-radius: 50%;
+  cursor: pointer;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.gloaro-voice-ctl[aria-pressed='true'] {
+  background: #f59e0b;
+}
+
+.gloaro-voice-ctl--end {
+  background: #ef4444;
+}
+
+.gloaro-voice-error {
+  max-width: 230px;
+  margin: 0;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: #3b0d14;
+  border: 1px solid rgba(248, 113, 113, 0.5);
+  color: #fecaca;
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+@keyframes gloaro-voice-pulse {
+  0% { box-shadow: 0 0 0 0 rgba(34, 211, 238, 0.55), 0 8px 22px -8px rgba(34, 211, 238, 0.6); }
+  70% { box-shadow: 0 0 0 14px rgba(34, 211, 238, 0), 0 8px 22px -8px rgba(34, 211, 238, 0.6); }
+  100% { box-shadow: 0 0 0 0 rgba(34, 211, 238, 0), 0 8px 22px -8px rgba(34, 211, 238, 0.6); }
+}
+
+@keyframes gloaro-voice-wave {
+  0%, 100% { transform: scaleY(0.3); }
+  50% { transform: scaleY(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gloaro-voice-btn,
+  .gloaro-voice-wave i {
+    animation: none;
+  }
+}
