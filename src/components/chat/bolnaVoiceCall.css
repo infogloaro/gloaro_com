@@ -37,6 +37,7 @@
 }
 
 .gloaro-voice-btn {
+  text-decoration: none;
   cursor: pointer;
   animation: gloaro-voice-pulse 2.4s ease-out infinite;
   transition: transform 0.15s ease;
