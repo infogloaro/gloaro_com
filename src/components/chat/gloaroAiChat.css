@@ -946,12 +946,15 @@
   font: inherit;
   font-size: 14.5px;
   line-height: 1.45;
-  color: #fff;
+  color: #fff !important; /* beat the global textarea colour in index.css */
+  caret-color: #fff;
+  -webkit-text-fill-color: #fff;
   field-sizing: content; /* grows with the text where supported */
 }
 
 .gloaro-ai-input::placeholder {
-  color: #64748b;
+  color: #94a3b8 !important;
+  -webkit-text-fill-color: #94a3b8;
 }
 
 .gloaro-ai-input:focus {
