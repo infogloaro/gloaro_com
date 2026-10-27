@@ -5,8 +5,8 @@
 // Auth is the *public* key (built for browsers; allowed only from gloaro.com
 // origins). Never put a Retell secret key here.
 const API_BASE = 'https://api.retellai.com'
-export const RETELL_AGENT_ID = 'agent_dd273451492112e295745d4928'
-const RETELL_PUBLIC_KEY = 'public_key_ab1a6cd8f7b6ec60b3b7e' // "GLOARO AI Chatbot" key
+export const RETELL_AGENT_ID = 'agent_b10d33313fa6c75e32928896f3'
+const RETELL_PUBLIC_KEY = 'public_key_0266dc1a7ca16626cb03f'
 
 export class RetellError extends Error {
   constructor(message, status) {
