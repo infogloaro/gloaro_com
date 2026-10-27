@@ -8,7 +8,7 @@ import { useCapabilities } from './useCapabilities'
  * lowers pixel ratio when frame rate drops, and exposes the tier to scene children
  * via the `tier` render-prop argument.
  */
-export default function SceneCanvas({ children, fallback = null, camera, className, style }) {
+export default function SceneCanvas({ children, fallback = null, camera, className, style, shadows = false }) {
   const caps = useCapabilities()
   const [dpr, setDpr] = useState(caps.dpr)
 
@@ -19,6 +19,7 @@ export default function SceneCanvas({ children, fallback = null, camera, classNa
       className={className}
       style={style}
       dpr={dpr}
+      shadows={shadows && caps.tier === 'full'}
       camera={camera ?? { position: [0, 0, 6], fov: 45 }}
       gl={{ antialias: caps.tier === 'full', powerPreference: 'high-performance' }}
     >

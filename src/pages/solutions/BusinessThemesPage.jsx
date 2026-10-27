@@ -1,7 +1,8 @@
 import { Link, Navigate, useParams } from 'react-router-dom'
 import Seo from '../../components/Seo'
 import { solutionSeo } from '../../lib/seoConfig'
-import { getBusiness, getThemeKey, isThemeLive } from '../../prototypes/catalog'
+import ThemePreview from '../../components/common/ThemePreview'
+import { getBusiness, getThemeKey, isThemeLive, previewVariant } from '../../prototypes/catalog'
 
 export default function BusinessThemesPage() {
   const { businessId } = useParams()
@@ -17,16 +18,20 @@ export default function BusinessThemesPage() {
         <p className="mt-2 text-slate-600">{business.tagline}</p>
 
         <div className="mt-10 grid gap-6 md:grid-cols-2">
-          {business.themes.map((theme) => {
+          {business.themes.map((theme, index) => {
             const live = isThemeLive(business.id, theme.id)
             const key = getThemeKey(business.id, theme.id)
             return (
               <article key={theme.id} className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-                <div
-                  className="grid h-48 place-items-center text-sm font-bold uppercase tracking-widest text-white"
-                  style={{ background: `linear-gradient(135deg, ${business.accent}, #0b0b0c)` }}
-                >
-                  {live ? 'Interactive prototype' : 'Coming soon'}
+                <div className="relative aspect-[16/10] border-b border-slate-200" style={{ background: `linear-gradient(135deg, ${business.accent}, #0b0b0c)` }}>
+                  {theme.thumb
+                    ? <img src={theme.thumb} alt={`${theme.name} theme`} loading="lazy" decoding="async" className="h-full w-full object-cover object-top" />
+                    : <ThemePreview business={business} theme={theme} variant={previewVariant(business.id, index)} className="h-full w-full" />}
+                  {live && (
+                    <span className="absolute left-3 top-3 rounded-full bg-white/90 px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-slate-800">
+                      Interactive prototype
+                    </span>
+                  )}
                 </div>
                 <div className="p-5">
                   <h2 className="text-lg font-bold text-slate-900">{theme.name}</h2>

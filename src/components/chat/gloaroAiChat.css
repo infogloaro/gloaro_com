@@ -1,20 +1,34 @@
 /* GLOARO AI Assistant — every rule is scoped under the gloaro-ai- namespace so
-   nothing here can leak into the rest of the site or the WhatsApp button. */
+   nothing here can leak into the rest of the site or the WhatsApp button.
+
+   Open/close runs through data-phase on the button, backdrop and panel:
+   closed → opening (robot launches upward on a thruster trail and spins)
+   → portal (the robot "becomes" the panel: a hologram screen unfolds from
+   where it flew to) → open → closing (screen folds back, robot drops home)
+   → closed. */
 
 .gloaro-ai-root {
-  /* Logo palette */
+  /* Logo palette (robot, small accents) */
   --gloaro-ai-navy: #14244b;
   --gloaro-ai-gold: #e0a82e;
-  --gloaro-ai-gold-soft: #fdf6e3;
-  --gloaro-ai-ink: #0f172a;
-  --gloaro-ai-muted: #475569;
-  --gloaro-ai-line: #e2e8f0;
-  --gloaro-ai-surface: #ffffff;
-  --gloaro-ai-gradient: linear-gradient(135deg, #24407f 0%, #14244b 60%, #0b1633 100%);
+  /* Energy palette (portal, panel accents) */
+  --gloaro-ai-cyan: #22d3ee;
+  --gloaro-ai-blue: #3b82f6;
+  --gloaro-ai-electric: #60a5fa;
+  --gloaro-ai-energy: linear-gradient(135deg, #22d3ee 0%, #3b82f6 55%, #2563eb 100%);
+  /* Dark glass panel */
+  --gloaro-ai-bg: #070d1f;
+  --gloaro-ai-glass: rgba(13, 22, 48, 0.78);
+  --gloaro-ai-glass-strong: rgba(10, 17, 38, 0.92);
+  --gloaro-ai-line: rgba(148, 163, 184, 0.16);
+  --gloaro-ai-text: #e5ecff;
+  --gloaro-ai-muted: #94a3b8;
   /* Mirrors FloatingWhatsApp: h-14 w-14, bottom/right 4 on mobile, 6 from sm. */
   --gloaro-ai-size: 56px;
   --gloaro-ai-edge: 16px;
   --gloaro-ai-gap: 12px;
+  --gloaro-ai-ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --gloaro-ai-ease-in: cubic-bezier(0.55, 0, 1, 0.45);
   font-family: inherit;
 }
 
@@ -24,15 +38,15 @@
   }
 }
 
-/* ---------- Floating robot button (sits left of WhatsApp) ---------- */
+/* ---------- Floating robot button (stands on top of WhatsApp) ---------- */
 
 .gloaro-ai-fab {
   position: fixed;
   z-index: 50; /* same layer as the WhatsApp button */
-  bottom: calc(var(--gloaro-ai-edge) + env(safe-area-inset-bottom, 0px) - 4px);
-  right: calc(var(--gloaro-ai-edge) + var(--gloaro-ai-size) + var(--gloaro-ai-gap) - 4px);
+  bottom: calc(var(--gloaro-ai-edge) + var(--gloaro-ai-size) + var(--gloaro-ai-gap) + env(safe-area-inset-bottom, 0px) - 4px);
+  right: var(--gloaro-ai-edge); /* same width as WhatsApp, so centred above it */
   width: 56px;
-  height: 100px; /* headroom so the head stays visible mid-jump */
+  height: 84px; /* room for the float and the energy base below the feet */
   display: flex;
   align-items: flex-end;
   justify-content: center;
@@ -42,25 +56,116 @@
   cursor: pointer;
   background: transparent; /* no disc: the robot stands on its own */
   transition: transform 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+  overflow: visible;
 }
 
-/* Soft ground shadow under the robot's feet */
-.gloaro-ai-fab::before {
-  content: '';
-  position: absolute;
-  left: 50%;
-  bottom: 6px;
-  width: 34px;
-  height: 8px;
-  border-radius: 50%;
-  background: radial-gradient(ellipse, rgba(20, 36, 75, 0.35), transparent 70%);
-  transform: translateX(-50%);
-  animation: gloaro-ai-breathe 3s ease-in-out infinite;
+/* ----- Launch: the robot flies up and away, then is gone while the panel is open ----- */
+.gloaro-ai-fab .gloaro-ai-bot3d {
+  overflow: visible;
+  transform-origin: 50% 90%;
+}
+
+.gloaro-ai-fab[data-phase='opening'] .gloaro-ai-bot3d {
+  animation: gloaro-ai-launch 0.65s cubic-bezier(0.5, 0, 0.9, 0.4) both;
+}
+
+.gloaro-ai-fab[data-phase='portal'] .gloaro-ai-bot3d,
+.gloaro-ai-fab[data-phase='open'] .gloaro-ai-bot3d {
+  opacity: 0;
   pointer-events: none;
 }
 
+.gloaro-ai-fab[data-phase='closing'] .gloaro-ai-bot3d {
+  animation: gloaro-ai-land 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) 0.3s both;
+}
+
+/* The energy base and tooltip go quiet while the robot is away */
+.gloaro-ai-fab[data-phase='portal'] .gloaro-ai-energy,
+.gloaro-ai-fab[data-phase='open'] .gloaro-ai-energy,
+.gloaro-ai-fab[data-phase='opening'] .gloaro-ai-tooltip,
+.gloaro-ai-fab[data-phase='portal'] .gloaro-ai-tooltip,
+.gloaro-ai-fab[data-phase='open'] .gloaro-ai-tooltip {
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+@keyframes gloaro-ai-launch {
+  0% { transform: translateY(0) scale(1); opacity: 1; }
+  12% { transform: translateY(6px) scale(1.04, 0.94); } /* crouch */
+  80% { opacity: 1; }
+  100% { transform: translateY(-190px) scale(0.35); opacity: 0; }
+}
+
+@keyframes gloaro-ai-land {
+  0% { transform: translateY(-190px) scale(0.35); opacity: 0; }
+  40% { opacity: 1; }
+  100% { transform: translateY(0) scale(1); opacity: 1; }
+}
+
+/* Thruster: a cyan jet under the feet that stretches as the robot climbs,
+   plus a ground flash at lift-off. */
+.gloaro-ai-thruster {
+  position: absolute;
+  left: 50%;
+  bottom: 8px;
+  width: 18px;
+  height: 0;
+  margin-left: -9px;
+  border-radius: 9px 9px 50% 50%;
+  background: linear-gradient(180deg, #ffffff 0%, #a5f3fc 18%, #22d3ee 45%, rgba(59, 130, 246, 0.6) 75%, transparent 100%);
+  filter: blur(0.6px);
+  opacity: 0;
+  transform-origin: 50% 0;
+  pointer-events: none;
+}
+
+.gloaro-ai-thruster::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: -4px;
+  width: 44px;
+  height: 14px;
+  margin-left: -22px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse, rgba(165, 243, 252, 0.9), rgba(34, 211, 238, 0.4) 50%, transparent 72%);
+  opacity: 0;
+}
+
+.gloaro-ai-fab[data-phase='opening'] .gloaro-ai-thruster {
+  animation: gloaro-ai-jet 0.65s cubic-bezier(0.5, 0, 0.9, 0.4) both;
+}
+
+.gloaro-ai-fab[data-phase='opening'] .gloaro-ai-thruster::after {
+  animation: gloaro-ai-liftoff 0.5s ease-out both;
+}
+
+.gloaro-ai-fab[data-phase='closing'] .gloaro-ai-thruster::after {
+  animation: gloaro-ai-liftoff 0.45s ease-out 0.7s both; /* dust puff on landing */
+}
+
+@keyframes gloaro-ai-jet {
+  0% { height: 0; opacity: 0; transform: translateY(0); }
+  15% { height: 26px; opacity: 1; transform: translateY(0); }
+  60% { height: 120px; opacity: 1; transform: translateY(-40px) scaleX(0.9); }
+  100% { height: 160px; opacity: 0; transform: translateY(-150px) scaleX(0.5); }
+}
+
+@keyframes gloaro-ai-liftoff {
+  0% { opacity: 0; transform: scale(0.3); }
+  25% { opacity: 1; }
+  100% { opacity: 0; transform: scale(2.4); }
+}
+
 .gloaro-ai-fab:hover {
-  transform: scale(1.06);
+  transform: translateY(-4px) scale(1.04);
+}
+
+.gloaro-ai-fab:hover .gloaro-ai-energy-glow,
+.gloaro-ai-fab:focus-visible .gloaro-ai-energy-glow {
+  animation-duration: 1.6s;
+  filter: brightness(1.35);
 }
 
 .gloaro-ai-fab:focus {
@@ -68,7 +173,7 @@
 }
 
 .gloaro-ai-fab:focus-visible {
-  outline: 3px solid var(--gloaro-ai-gold);
+  outline: 3px solid var(--gloaro-ai-cyan);
   outline-offset: 3px;
 }
 
@@ -78,9 +183,166 @@
   margin-bottom: 8px;
 }
 
+/* Energy base under the robot: breathing glow + slowly rotating ring.
+   Both are centred on the robot's feet, so the portal opens from there too. */
+.gloaro-ai-energy {
+  position: absolute;
+  left: 50%;
+  bottom: 6px;
+  width: 52px;
+  height: 52px;
+  margin-left: -26px;
+  margin-bottom: -26px;
+  border-radius: 50%;
+  pointer-events: none;
+  transform: scaleY(0.38); /* seen at an angle: a flat disc on the ground */
+  transform-origin: center;
+}
+
+.gloaro-ai-energy-glow {
+  position: absolute;
+  inset: -8px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(34, 211, 238, 0.55) 0%, rgba(59, 130, 246, 0.28) 40%, transparent 70%);
+  animation: gloaro-ai-breathe 3s ease-in-out infinite;
+}
+
+.gloaro-ai-energy-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  padding: 2px;
+  background: conic-gradient(from 0deg, transparent 0 40%, rgba(34, 211, 238, 0.95) 55%, rgba(96, 165, 250, 0.6) 70%, transparent 85%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  animation: gloaro-ai-spin 7s linear infinite;
+}
+
+/* Occasional light sweep across the robot */
+.gloaro-ai-sweep {
+  position: absolute;
+  inset: 0 8px 10px;
+  border-radius: 14px;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.gloaro-ai-sweep::after {
+  content: '';
+  position: absolute;
+  top: -20%;
+  left: -60%;
+  width: 40%;
+  height: 140%;
+  background: linear-gradient(100deg, transparent 0%, rgba(165, 243, 252, 0.32) 50%, transparent 100%);
+  transform: skewX(-18deg);
+  animation: gloaro-ai-sweep 9s ease-in-out infinite;
+}
+
+/* Breathing glow, in step with the robot's float */
+@keyframes gloaro-ai-breathe {
+  0%, 100% { transform: scale(1); opacity: 0.7; }
+  50% { transform: scale(1.12); opacity: 1; }
+}
+
+@keyframes gloaro-ai-spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes gloaro-ai-sweep {
+  0%, 86% { left: -60%; opacity: 0; }
+  88% { opacity: 1; }
+  100% { left: 120%; opacity: 0; }
+}
+
+/* Phase A: activation. The energy base flares the instant the button is pressed. */
+.gloaro-ai-fab[data-phase='opening'] .gloaro-ai-energy-glow,
+.gloaro-ai-fab[data-phase='portal'] .gloaro-ai-energy-glow {
+  animation: none;
+  transform: scale(1.35);
+  opacity: 1;
+  background: radial-gradient(circle, rgba(165, 243, 252, 0.95) 0%, rgba(34, 211, 238, 0.7) 35%, rgba(59, 130, 246, 0.35) 60%, transparent 75%);
+  transition: transform 0.2s var(--gloaro-ai-ease-out), background 0.2s ease;
+}
+
+.gloaro-ai-fab[data-phase='opening'] .gloaro-ai-energy-ring,
+.gloaro-ai-fab[data-phase='portal'] .gloaro-ai-energy-ring {
+  animation-duration: 1.2s;
+  background: conic-gradient(from 0deg, rgba(165, 243, 252, 0.6) 0%, #22d3ee 30%, #60a5fa 60%, rgba(165, 243, 252, 0.6) 100%);
+}
+
+/* Phase B: expanding rings, launched from the robot's feet when it lands. */
+.gloaro-ai-rings {
+  position: absolute;
+  left: 50%;
+  bottom: 6px;
+  width: 40px;
+  height: 40px;
+  margin-left: -20px;
+  margin-bottom: -20px;
+  pointer-events: none;
+}
+
+.gloaro-ai-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 2px solid rgba(34, 211, 238, 0.9);
+  box-shadow: 0 0 18px rgba(34, 211, 238, 0.55), inset 0 0 14px rgba(96, 165, 250, 0.45);
+  opacity: 0;
+  transform: scale(0.2);
+}
+
+.gloaro-ai-ring:nth-child(2) {
+  border-color: rgba(96, 165, 250, 0.8);
+  border-width: 1.5px;
+}
+
+.gloaro-ai-ring:nth-child(3) {
+  border-color: rgba(165, 243, 252, 0.7);
+  border-width: 1px;
+}
+
+.gloaro-ai-ring--pulse {
+  border: 0;
+  background: radial-gradient(circle, rgba(165, 243, 252, 0.8) 0%, rgba(34, 211, 238, 0.35) 40%, transparent 70%);
+  box-shadow: none;
+}
+
+.gloaro-ai-fab[data-phase='portal'] .gloaro-ai-ring {
+  animation: gloaro-ai-ring 0.7s var(--gloaro-ai-ease-out) forwards;
+}
+
+.gloaro-ai-fab[data-phase='portal'] .gloaro-ai-ring:nth-child(2) { animation-delay: 0.09s; animation-duration: 0.8s; }
+.gloaro-ai-fab[data-phase='portal'] .gloaro-ai-ring:nth-child(3) { animation-delay: 0.18s; animation-duration: 0.9s; }
+.gloaro-ai-fab[data-phase='portal'] .gloaro-ai-ring--pulse { animation: gloaro-ai-pulse 0.55s ease-out forwards; }
+
+/* Closing: a small inward collapse so the energy "returns" to the robot. */
+.gloaro-ai-fab[data-phase='closing'] .gloaro-ai-ring:first-child {
+  animation: gloaro-ai-ring-in 0.4s var(--gloaro-ai-ease-in) forwards;
+}
+
+@keyframes gloaro-ai-ring {
+  0% { transform: scale(0.2); opacity: 1; }
+  100% { transform: scale(9); opacity: 0; }
+}
+
+@keyframes gloaro-ai-ring-in {
+  0% { transform: scale(4); opacity: 0; }
+  40% { opacity: 0.8; }
+  100% { transform: scale(0.3); opacity: 0; }
+}
+
+@keyframes gloaro-ai-pulse {
+  0% { transform: scale(0.4); opacity: 1; }
+  100% { transform: scale(5); opacity: 0; }
+}
+
 .gloaro-ai-tooltip {
   position: absolute;
-  bottom: calc(100% + 10px);
+  bottom: calc(100% + 2px);
   right: 50%;
   transform: translate(50%, 4px);
   white-space: nowrap;
@@ -89,7 +351,9 @@
   font-size: 12px;
   font-weight: 600;
   color: #fff;
-  background: var(--gloaro-ai-ink);
+  background: var(--gloaro-ai-bg);
+  border: 1px solid rgba(34, 211, 238, 0.35);
+  box-shadow: 0 6px 20px -8px rgba(34, 211, 238, 0.6);
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.15s ease, transform 0.15s ease;
@@ -101,102 +365,209 @@
   transform: translate(50%, 0);
 }
 
-/* Matches the robot's 3-second hop: the shadow shrinks while it's in the air. */
-@keyframes gloaro-ai-breathe {
-  0%, 100% { transform: translateX(-50%) scale(1); opacity: 0.9; }
-  18% { transform: translateX(-50%) scale(1.1); opacity: 1; }
-  30% { transform: translateX(-50%) scale(0.55); opacity: 0.4; }
-  42% { transform: translateX(-50%) scale(1); opacity: 0.9; }
-}
-
-/* Boom: shockwave ring + dust puff from the robot's feet when it lands */
-.gloaro-ai-burst {
-  position: absolute;
-  left: 50%;
-  bottom: 10px;
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  border: 3px solid var(--gloaro-ai-gold);
-  box-shadow: 0 0 0 0 rgba(224, 168, 46, 0.6), inset 0 0 12px rgba(224, 168, 46, 0.6);
-  transform: translateX(-50%) scale(0);
-  opacity: 0;
-  pointer-events: none;
-}
-
-.gloaro-ai-burst[data-boom='true'] {
-  animation: gloaro-ai-shockwave 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-
-@keyframes gloaro-ai-shockwave {
-  0% { transform: translateX(-50%) scale(0.2); opacity: 1; border-width: 6px; }
-  100% { transform: translateX(-50%) scale(7); opacity: 0; border-width: 1px; }
-}
-
 /* ---------- Backdrop + sidebar ---------- */
 
 .gloaro-ai-backdrop {
   position: fixed;
   inset: 0;
   z-index: 80; /* above the Explore pill (70), below the mobile nav drawer (100) */
-  background: rgba(15, 23, 42, 0.35);
-  backdrop-filter: blur(2px);
+  background: rgba(3, 7, 18, 0.5);
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.3s ease;
+  transition: opacity 0.35s ease;
 }
 
-.gloaro-ai-backdrop[data-open='true'] {
+.gloaro-ai-backdrop[data-phase='portal'],
+.gloaro-ai-backdrop[data-phase='open'] {
   opacity: 1;
   pointer-events: auto;
+}
+
+.gloaro-ai-backdrop[data-phase='portal'] {
+  animation: gloaro-ai-flash 0.7s ease-out both;
+}
+
+@keyframes gloaro-ai-flash {
+  0% { background: rgba(34, 211, 238, 0.22); }
+  100% { background: rgba(3, 7, 18, 0.5); }
+}
+
+.gloaro-ai-stage {
+  position: fixed;
+  inset: 0;
+  z-index: 81;
+  pointer-events: none;
+  perspective: 1400px;
+  perspective-origin: 92% 94%; /* the robot's corner */
 }
 
 .gloaro-ai-panel {
   position: fixed;
   z-index: 81;
+  pointer-events: auto;
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+  will-change: transform, opacity;
   top: 0;
   right: 0;
   bottom: 0;
   width: 100%;
+  height: 100vh;
   height: 100dvh;
   display: flex;
   flex-direction: column;
-  background: var(--gloaro-ai-surface);
-  color: var(--gloaro-ai-ink);
-  box-shadow: -24px 0 60px -20px rgba(15, 23, 42, 0.45);
-  transform: translateX(105%);
+  overflow: hidden;
+  color: var(--gloaro-ai-text);
+  background: var(--gloaro-ai-glass-strong);
+  backdrop-filter: blur(18px) saturate(140%);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+  box-shadow: -24px 0 60px -20px rgba(3, 7, 18, 0.8), 0 0 0 1px rgba(34, 211, 238, 0.12);
+  opacity: 0;
   visibility: hidden;
-  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), visibility 0s linear 0.35s;
+  transform: translateX(60px);
+  transform-origin: 90% 100%;
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
-.gloaro-ai-panel[data-open='true'] {
-  transform: translateX(0);
+/* Phase C+D: hologram screen. The robot has flown to about 70% up the right
+   edge; from that point a bright horizontal line of light flashes open to the
+   panel's full width, then the screen unfolds vertically, with scanlines and a
+   couple of soft flickers while it stabilises. */
+.gloaro-ai-panel[data-phase='portal'] {
   visibility: visible;
-  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), visibility 0s;
+  transform-origin: 85% 68%;
+  animation: gloaro-ai-unfold 0.9s cubic-bezier(0.2, 1, 0.3, 1) both;
 }
 
-/* Boom entrance: the panel bursts out of the robot's corner with an overshoot. */
-.gloaro-ai-panel[data-open='true'][data-boom='true'] {
-  transform-origin: 85% 100%;
-  transition: none;
-  animation: gloaro-ai-boom 0.7s cubic-bezier(0.2, 1.4, 0.4, 1) both;
+.gloaro-ai-panel[data-phase='portal']::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 2;
+  background:
+    repeating-linear-gradient(180deg, rgba(165, 243, 252, 0.12) 0 2px, transparent 2px 5px),
+    linear-gradient(180deg, rgba(34, 211, 238, 0.25), transparent 40%, transparent 60%, rgba(59, 130, 246, 0.25));
+  animation: gloaro-ai-scan 0.9s ease-out both;
 }
 
-.gloaro-ai-backdrop[data-open='true'][data-boom='true'] {
-  animation: gloaro-ai-flash 0.7s ease-out both;
+.gloaro-ai-panel[data-phase='portal']::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 3;
+  background: rgba(165, 243, 252, 0.55);
+  animation: gloaro-ai-flicker 0.9s linear both;
 }
 
-@keyframes gloaro-ai-boom {
-  0% { transform: translateX(0) scale(0.1); opacity: 0; }
-  55% { transform: translateX(0) scale(1.04); opacity: 1; }
-  75% { transform: translateX(0) scale(0.985); }
-  100% { transform: translateX(0) scale(1); opacity: 1; }
+.gloaro-ai-panel[data-phase='open'] {
+  visibility: visible;
+  opacity: 1;
+  transform: none;
 }
 
-@keyframes gloaro-ai-flash {
-  0% { background: rgba(224, 168, 46, 0.35); }
-  100% { background: rgba(15, 23, 42, 0.35); }
+.gloaro-ai-panel[data-phase='closing'] {
+  visibility: visible;
+  transform-origin: 85% 68%;
+  animation: gloaro-ai-fold 0.5s cubic-bezier(0.7, 0, 0.84, 0) both;
+}
+
+@keyframes gloaro-ai-unfold {
+  0% {
+    opacity: 0;
+    transform: scale(0.02, 0.01);
+    box-shadow: 0 0 60px 20px rgba(165, 243, 252, 0.9);
+  }
+  10% {
+    opacity: 1;
+    transform: scale(0.15, 0.012); /* a spark */
+  }
+  38% {
+    transform: scale(1.02, 0.012); /* a bright horizontal line */
+    box-shadow: 0 0 60px 12px rgba(34, 211, 238, 0.7);
+  }
+  48% {
+    transform: scale(1, 0.06);
+  }
+  78% {
+    transform: scale(1, 1.03);
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+    box-shadow: -24px 0 60px -20px rgba(3, 7, 18, 0.8), 0 0 0 1px rgba(34, 211, 238, 0.12);
+  }
+}
+
+@keyframes gloaro-ai-scan {
+  0%, 45% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+@keyframes gloaro-ai-flicker {
+  0%, 40% { opacity: 1; }
+  48% { opacity: 0; }
+  56% { opacity: 0.5; }
+  62% { opacity: 0; }
+  72% { opacity: 0.25; }
+  78%, 100% { opacity: 0; }
+}
+
+/* While the panel pops, its contents pop with it: the header robot spins in
+   and the welcome bubble + chips follow one after another. */
+.gloaro-ai-panel[data-phase='portal'] .gloaro-ai-avatar {
+  animation: gloaro-ai-avatar-in 0.9s cubic-bezier(0.2, 1.2, 0.3, 1) both;
+  animation-delay: 0.5s;
+}
+
+.gloaro-ai-panel[data-phase='portal'] .gloaro-ai-heading,
+.gloaro-ai-panel[data-phase='portal'] .gloaro-ai-close {
+  animation: gloaro-ai-rise 0.5s var(--gloaro-ai-ease-out) both;
+  animation-delay: 0.6s;
+}
+
+.gloaro-ai-panel[data-phase='portal'] .gloaro-ai-body > .gloaro-ai-message:first-child {
+  animation: gloaro-ai-pop 0.55s cubic-bezier(0.2, 1.2, 0.3, 1) both;
+  animation-delay: 0.65s;
+}
+
+.gloaro-ai-panel[data-phase='portal'] .gloaro-ai-topic {
+  animation: gloaro-ai-pop 0.45s cubic-bezier(0.2, 1.2, 0.3, 1) both;
+}
+
+.gloaro-ai-panel[data-phase='portal'] .gloaro-ai-topic-list li:nth-child(1) .gloaro-ai-topic { animation-delay: 0.8s; }
+.gloaro-ai-panel[data-phase='portal'] .gloaro-ai-topic-list li:nth-child(2) .gloaro-ai-topic { animation-delay: 0.88s; }
+.gloaro-ai-panel[data-phase='portal'] .gloaro-ai-topic-list li:nth-child(3) .gloaro-ai-topic { animation-delay: 0.96s; }
+.gloaro-ai-panel[data-phase='portal'] .gloaro-ai-topic-list li:nth-child(4) .gloaro-ai-topic { animation-delay: 1.04s; }
+
+.gloaro-ai-panel[data-phase='portal'] .gloaro-ai-footer {
+  animation: gloaro-ai-rise 0.5s var(--gloaro-ai-ease-out) both;
+  animation-delay: 0.7s;
+}
+
+@keyframes gloaro-ai-avatar-in {
+  0% { transform: rotateY(-540deg) scale(0); opacity: 0; }
+  60% { opacity: 1; }
+  100% { transform: none; opacity: 1; }
+}
+
+@keyframes gloaro-ai-rise {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes gloaro-ai-pop {
+  0% { opacity: 0; transform: scale(0.6) translateY(12px); }
+  100% { opacity: 1; transform: none; }
+}
+
+@keyframes gloaro-ai-fold {
+  0% { opacity: 1; transform: none; }
+  55% { opacity: 1; transform: scale(1.02, 0.012); box-shadow: 0 0 50px 10px rgba(34, 211, 238, 0.7); }
+  100% { opacity: 0; transform: scale(0.02, 0.01); }
 }
 
 @media (min-width: 640px) {
@@ -206,8 +577,7 @@
     bottom: 12px;
     height: auto;
     width: min(420px, calc(100vw - 24px));
-    border-radius: 20px;
-    overflow: hidden;
+    border-radius: 22px;
   }
 }
 
@@ -219,15 +589,13 @@
 
 /* Header */
 .gloaro-ai-header {
-  flex: none;
+  flex: 0 0 auto;
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: calc(16px + env(safe-area-inset-top, 0px)) 16px 16px;
-  color: #fff;
-  background: var(--gloaro-ai-gradient);
+  padding: calc(16px + env(safe-area-inset-top, 0px)) 16px 14px;
   position: relative;
-  overflow: hidden;
+  background: linear-gradient(180deg, rgba(34, 211, 238, 0.1), transparent);
 }
 
 @media (min-width: 640px) {
@@ -236,16 +604,16 @@
   }
 }
 
+/* Cyan accent line under the header */
 .gloaro-ai-header::after {
   content: '';
   position: absolute;
-  width: 220px;
-  height: 220px;
-  right: -80px;
-  top: -120px;
-  border-radius: 9999px;
-  background: radial-gradient(circle, rgba(224, 168, 46, 0.35), transparent 70%);
-  pointer-events: none;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gloaro-ai-cyan) 30%, var(--gloaro-ai-blue) 70%, transparent);
+  box-shadow: 0 0 12px rgba(34, 211, 238, 0.6);
 }
 
 .gloaro-ai-avatar {
@@ -257,8 +625,8 @@
   align-items: center;
   justify-content: center;
   background: #fff;
-  border: 2px solid var(--gloaro-ai-gold);
-  box-shadow: 0 6px 16px -6px rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(34, 211, 238, 0.5);
+  box-shadow: 0 0 16px rgba(34, 211, 238, 0.35);
 }
 
 .gloaro-ai-avatar .gloaro-ai-bot {
@@ -267,16 +635,15 @@
 }
 
 .gloaro-ai-avatar--small {
-  width: 34px;
-  height: 34px;
-  border-radius: 11px;
-  border: 1px solid #f1dfb3;
-  box-shadow: 0 4px 10px -6px rgba(20, 36, 75, 0.5);
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(34, 211, 238, 0.25);
 }
 
 .gloaro-ai-avatar--small .gloaro-ai-bot {
-  width: 28px;
-  height: 28px;
+  width: 26px;
+  height: 26px;
 }
 
 .gloaro-ai-heading {
@@ -289,38 +656,65 @@
   font-size: 16px;
   font-weight: 700;
   line-height: 1.25;
+  color: #fff;
 }
 
 .gloaro-ai-subtitle {
   margin: 2px 0 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
   font-size: 12.5px;
-  opacity: 0.88;
+  color: var(--gloaro-ai-muted);
+}
+
+/* Status dot: only rendered once a real session has answered. */
+.gloaro-ai-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #34d399;
+  box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.6);
+  animation: gloaro-ai-ping 2.2s ease-out infinite;
+}
+
+.gloaro-ai-dot--error {
+  background: #f87171;
+  animation: none;
+}
+
+@keyframes gloaro-ai-ping {
+  0% { box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.6); }
+  100% { box-shadow: 0 0 0 7px rgba(52, 211, 153, 0); }
 }
 
 .gloaro-ai-close {
   flex: none;
-  position: relative;
-  z-index: 1;
   width: 36px;
   height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 0;
+  border: 1px solid var(--gloaro-ai-line);
   border-radius: 10px;
   cursor: pointer;
   color: #fff;
-  background: rgba(255, 255, 255, 0.16);
-  transition: background 0.15s ease;
+  background: rgba(255, 255, 255, 0.06);
+  transition: background 0.15s ease, border-color 0.15s ease;
 }
 
 .gloaro-ai-close:hover {
-  background: rgba(255, 255, 255, 0.28);
+  background: rgba(34, 211, 238, 0.14);
+  border-color: rgba(34, 211, 238, 0.5);
 }
 
 .gloaro-ai-close:focus-visible,
-.gloaro-ai-link:focus-visible {
-  outline: 3px solid var(--gloaro-ai-gold);
+.gloaro-ai-link:focus-visible,
+.gloaro-ai-topic:focus-visible,
+.gloaro-ai-retry:focus-visible,
+.gloaro-ai-send:focus-visible,
+.gloaro-ai-input:focus-visible {
+  outline: 2px solid var(--gloaro-ai-cyan);
   outline-offset: 2px;
 }
 
@@ -338,14 +732,15 @@
   flex-direction: column;
   gap: 12px;
   background:
-    radial-gradient(circle at 100% 0%, rgba(224, 168, 46, 0.1), transparent 45%),
-    #f8fafc;
+    radial-gradient(ellipse at 100% 0%, rgba(34, 211, 238, 0.1), transparent 50%),
+    radial-gradient(ellipse at 0% 100%, rgba(59, 130, 246, 0.1), transparent 50%);
 }
 
 .gloaro-ai-message {
   display: flex;
   align-items: flex-end;
   gap: 8px;
+  animation: gloaro-ai-message-in 0.3s var(--gloaro-ai-ease-out) both;
 }
 
 .gloaro-ai-message + .gloaro-ai-message {
@@ -356,34 +751,30 @@
   justify-content: flex-end;
 }
 
-.gloaro-ai-message--user .gloaro-ai-bubble {
-  border-radius: 16px 16px 4px 16px;
-  color: #fff;
-  background: var(--gloaro-ai-gradient);
-  border-color: transparent;
-}
-
-.gloaro-ai-line {
-  display: block;
-  min-height: 0.6em;
-  overflow-wrap: anywhere;
-}
-
-.gloaro-ai-bubble--typing {
-  padding: 14px 16px;
+@keyframes gloaro-ai-message-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
 }
 
 .gloaro-ai-bubble {
   max-width: 85%;
   padding: 12px 14px;
   border-radius: 16px 16px 16px 4px;
-  background: var(--gloaro-ai-surface);
+  background: var(--gloaro-ai-glass);
   border: 1px solid var(--gloaro-ai-line);
-  box-shadow: 0 6px 16px -10px rgba(15, 23, 42, 0.25);
+  box-shadow: 0 8px 24px -14px rgba(0, 0, 0, 0.7);
   font-size: 14px;
   line-height: 1.55;
   white-space: pre-line;
-  color: var(--gloaro-ai-ink);
+  color: var(--gloaro-ai-text);
+}
+
+.gloaro-ai-message--user .gloaro-ai-bubble {
+  border-radius: 16px 16px 4px 16px;
+  color: #fff;
+  background: var(--gloaro-ai-energy);
+  border-color: transparent;
+  box-shadow: 0 8px 24px -10px rgba(59, 130, 246, 0.7);
 }
 
 .gloaro-ai-bubble p {
@@ -394,15 +785,29 @@
   margin-top: 10px;
 }
 
+.gloaro-ai-line {
+  display: block;
+  min-height: 0.6em;
+  overflow-wrap: anywhere;
+}
+
+.gloaro-ai-bubble strong {
+  color: #fff;
+}
+
+.gloaro-ai-bubble--typing {
+  padding: 14px 16px;
+}
+
 .gloaro-ai-topics {
   margin-top: 8px;
 }
 
 .gloaro-ai-label {
   margin: 0 0 8px;
-  font-size: 12px;
+  font-size: 11.5px;
   font-weight: 600;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--gloaro-ai-muted);
 }
@@ -423,28 +828,21 @@
   font-size: 12.5px;
   font-weight: 500;
   cursor: pointer;
-  color: var(--gloaro-ai-navy);
-  background: var(--gloaro-ai-gold-soft);
-  border: 1px solid #f1dfb3;
-  transition: background 0.15s ease, border-color 0.15s ease;
+  color: #cffafe;
+  background: rgba(34, 211, 238, 0.08);
+  border: 1px solid rgba(34, 211, 238, 0.35);
+  transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 .gloaro-ai-topic:hover:not(:disabled) {
-  background: #fbecc4;
-  border-color: var(--gloaro-ai-gold);
+  background: rgba(34, 211, 238, 0.18);
+  border-color: var(--gloaro-ai-cyan);
+  box-shadow: 0 0 14px rgba(34, 211, 238, 0.3);
 }
 
 .gloaro-ai-topic:disabled {
-  opacity: 0.6;
+  opacity: 0.5;
   cursor: default;
-}
-
-.gloaro-ai-topic:focus-visible,
-.gloaro-ai-retry:focus-visible,
-.gloaro-ai-send:focus-visible,
-.gloaro-ai-input:focus-visible {
-  outline: 3px solid var(--gloaro-ai-gold);
-  outline-offset: 2px;
 }
 
 .gloaro-ai-status {
@@ -453,29 +851,19 @@
   border-radius: 14px;
   font-size: 13.5px;
   line-height: 1.5;
-  background: var(--gloaro-ai-surface);
+  background: var(--gloaro-ai-glass);
   border: 1px solid var(--gloaro-ai-line);
   color: var(--gloaro-ai-muted);
 }
 
-.gloaro-ai-status strong {
-  color: var(--gloaro-ai-ink);
-}
-
 .gloaro-ai-status--error {
-  background: #fff7f7;
-  border-color: #fecaca;
-  color: #7f1d1d;
+  background: rgba(127, 29, 29, 0.35);
+  border-color: rgba(248, 113, 113, 0.45);
+  color: #fecaca;
 }
 
 .gloaro-ai-status--error strong {
-  color: #7f1d1d;
-}
-
-.gloaro-ai-dots {
-  display: inline-flex;
-  gap: 4px;
-  vertical-align: middle;
+  color: #fff;
 }
 
 .gloaro-ai-status-actions {
@@ -487,9 +875,9 @@
   margin-right: 6px;
   padding: 4px 10px;
   border-radius: 8px;
-  border: 1px solid #fca5a5;
-  background: #fff;
-  color: #991b1b;
+  border: 1px solid rgba(248, 113, 113, 0.6);
+  background: rgba(248, 113, 113, 0.15);
+  color: #fff;
   font: inherit;
   font-size: 12.5px;
   font-weight: 600;
@@ -497,14 +885,21 @@
 }
 
 .gloaro-ai-retry:hover {
-  background: #fee2e2;
+  background: rgba(248, 113, 113, 0.3);
+}
+
+.gloaro-ai-dots {
+  display: inline-flex;
+  gap: 4px;
+  vertical-align: middle;
 }
 
 .gloaro-ai-dots span {
   width: 6px;
   height: 6px;
   border-radius: 9999px;
-  background: var(--gloaro-ai-gold);
+  background: var(--gloaro-ai-cyan);
+  box-shadow: 0 0 8px rgba(34, 211, 238, 0.8);
   animation: gloaro-ai-dot 1.1s ease-in-out infinite;
 }
 
@@ -521,7 +916,7 @@
   flex: 0 0 auto;
   padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px));
   border-top: 1px solid var(--gloaro-ai-line);
-  background: var(--gloaro-ai-surface);
+  background: rgba(7, 13, 31, 0.6);
 }
 
 .gloaro-ai-composer {
@@ -530,14 +925,14 @@
   gap: 8px;
   padding: 6px 6px 6px 14px;
   border-radius: 18px;
-  background: #f8fafc;
+  background: rgba(255, 255, 255, 0.05);
   border: 1px solid var(--gloaro-ai-line);
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 .gloaro-ai-composer:focus-within {
-  border-color: var(--gloaro-ai-gold);
-  box-shadow: 0 0 0 3px rgba(224, 168, 46, 0.2);
+  border-color: var(--gloaro-ai-cyan);
+  box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.18), 0 0 18px rgba(34, 211, 238, 0.25);
 }
 
 .gloaro-ai-input {
@@ -551,12 +946,12 @@
   font: inherit;
   font-size: 14.5px;
   line-height: 1.45;
-  color: var(--gloaro-ai-ink);
+  color: #fff;
   field-sizing: content; /* grows with the text where supported */
 }
 
 .gloaro-ai-input::placeholder {
-  color: #94a3b8;
+  color: #64748b;
 }
 
 .gloaro-ai-input:focus {
@@ -574,17 +969,18 @@
   border-radius: 12px;
   cursor: pointer;
   color: #fff;
-  background: var(--gloaro-ai-gradient);
-  box-shadow: 0 6px 14px -8px rgba(20, 36, 75, 0.85);
-  transition: transform 0.15s ease, opacity 0.15s ease;
+  background: var(--gloaro-ai-energy);
+  box-shadow: 0 6px 16px -6px rgba(34, 211, 238, 0.7);
+  transition: transform 0.15s ease, opacity 0.15s ease, box-shadow 0.15s ease;
 }
 
 .gloaro-ai-send:hover:not(:disabled) {
   transform: translateY(-1px);
+  box-shadow: 0 8px 20px -6px rgba(34, 211, 238, 0.9);
 }
 
 .gloaro-ai-send:disabled {
-  opacity: 0.45;
+  opacity: 0.4;
   cursor: default;
 }
 
@@ -599,7 +995,7 @@
 }
 
 .gloaro-ai-link {
-  color: var(--gloaro-ai-navy);
+  color: #a5f3fc;
   font-weight: 600;
   text-decoration: none;
   border-radius: 4px;
@@ -609,7 +1005,7 @@
   text-decoration: underline;
 }
 
-/* ---------- Robot animation ---------- */
+/* ---------- Flat robot (SVG fallback) animation ---------- */
 
 .gloaro-ai-bot {
   display: block;
@@ -620,10 +1016,9 @@
   transform-box: view-box;
   transform-origin: 32px 32px;
   animation: gloaro-ai-orbit-breathe 3.6s ease-in-out infinite;
-  transition: transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+  transition: transform 0.7s var(--gloaro-ai-ease-out);
 }
 
-/* Half-turn on hover: gold/navy swooshes land back in the logo arrangement. */
 .gloaro-ai-fab:hover .gloaro-ai-bot-ring,
 .gloaro-ai-fab:focus-visible .gloaro-ai-bot-ring {
   animation: none;
@@ -655,38 +1050,10 @@
   50% { opacity: 0.55; }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .gloaro-ai-fab,
-  .gloaro-ai-panel,
-  .gloaro-ai-backdrop,
-  .gloaro-ai-send,
-  .gloaro-ai-tooltip {
-    transition: none;
-  }
-
-  .gloaro-ai-fab::before,
-  .gloaro-ai-burst,
-  .gloaro-ai-panel[data-open='true'][data-boom='true'],
-  .gloaro-ai-backdrop[data-open='true'][data-boom='true'],
-  .gloaro-ai-dots span,
-  .gloaro-ai-bot-ring,
-  .gloaro-ai-bot-eyes rect,
-  .gloaro-ai-bot-antenna {
-    animation: none;
-  }
-
-  .gloaro-ai-bot-ring {
-    transition: none;
-  }
-
-  .gloaro-ai-fab:hover {
-    transform: none;
-  }
-}
-
 /* ---------- 3D robot canvas ---------- */
 
 .gloaro-ai-bot3d {
+  position: relative;
   width: 100%;
   height: 100%;
   border-radius: inherit;
@@ -701,5 +1068,58 @@
 
 .gloaro-ai-fab .gloaro-ai-bot3d {
   width: 56px;
-  height: 100px;
+  height: 84px;
+}
+
+/* ---------- Reduced motion: no rings, sweeps or emerge; plain fades ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .gloaro-ai-fab,
+  .gloaro-ai-backdrop,
+  .gloaro-ai-send,
+  .gloaro-ai-tooltip,
+  .gloaro-ai-bot-ring {
+    transition: none;
+  }
+
+  .gloaro-ai-energy-glow,
+  .gloaro-ai-energy-ring,
+  .gloaro-ai-sweep::after,
+  .gloaro-ai-ring,
+  .gloaro-ai-dot,
+  .gloaro-ai-dots span,
+  .gloaro-ai-message,
+  .gloaro-ai-bot-ring,
+  .gloaro-ai-bot-eyes rect,
+  .gloaro-ai-bot-antenna,
+  .gloaro-ai-backdrop[data-phase='portal'] {
+    animation: none;
+  }
+
+  .gloaro-ai-fab:hover {
+    transform: none;
+  }
+
+  .gloaro-ai-panel[data-phase='portal'],
+  .gloaro-ai-panel[data-phase='closing'],
+  .gloaro-ai-panel[data-phase='portal'] *,
+  .gloaro-ai-panel[data-phase='portal']::before,
+  .gloaro-ai-panel[data-phase='portal']::after,
+  .gloaro-ai-fab .gloaro-ai-bot3d,
+  .gloaro-ai-thruster,
+  .gloaro-ai-thruster::after {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+
+  .gloaro-ai-panel[data-phase='portal']::before,
+  .gloaro-ai-panel[data-phase='portal']::after,
+  .gloaro-ai-thruster {
+    opacity: 0;
+  }
+
+  .gloaro-ai-panel[data-phase='closing'] {
+    opacity: 0;
+  }
 }

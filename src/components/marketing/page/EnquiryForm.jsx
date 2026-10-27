@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { CheckCircle2, Mail, MessageCircle, Phone, Send } from 'lucide-react'
 import { whatsappLink } from '../../../lib/contact'
+import { submitForm } from '../../../lib/submitForm'
 import { PHONES } from '../../../lib/seoConfig'
 import { industries } from '../industries'
 import { serviceGroups } from './content'
@@ -35,12 +36,11 @@ function buildMessage(values) {
   ].filter((line) => line !== null).join('\n')
 }
 
-// There's no marketing-leads backend yet, so the enquiry is delivered through
-// channels that already work: it opens WhatsApp to GloAro with every detail
-// filled in, with email as a fallback. Nothing is stored by this page.
+// The enquiry is saved for the GloAro team. If that fails, the visitor gets
+// WhatsApp and email links with every detail filled in.
 export default function EnquiryForm({ preset }) {
   const [sent, setSent] = useState(null)
-  const { register, handleSubmit, setValue, getValues, formState: { errors } } = useForm({
+  const { register, handleSubmit, setValue, getValues, formState: { errors, isSubmitting } } = useForm({
     defaultValues: { business: '', industry: '', name: '', phone: '', email: '', services: [], message: '' },
   })
 
@@ -54,25 +54,48 @@ export default function EnquiryForm({ preset }) {
     }
   }, [preset, setValue, getValues])
 
-  const onSubmit = (values) => {
-    const message = buildMessage(values)
-    window.open(whatsappLink(message), '_blank', 'noopener,noreferrer')
-    setSent(message)
+  const onSubmit = async (values) => {
+    const services = serviceGroups.filter((g) => values.services?.includes(g.id)).map((g) => g.label)
+    const delivered = await submitForm('Digital marketing enquiry', {
+      Business: values.business,
+      Industry: values.industry,
+      Name: values.name,
+      Phone: values.phone,
+      Email: values.email,
+      'Interested in': services.join(', '),
+      Requirements: values.message,
+    })
+    setSent({ message: buildMessage(values), delivered })
+  }
+
+  if (sent?.delivered) {
+    return (
+      <div className="rounded-3xl border border-white/10 bg-white/[0.06] p-6 text-white sm:p-8" role="status">
+        <CheckCircle2 aria-hidden="true" className="h-10 w-10 text-emerald-300" />
+        <h3 className="mt-4 font-outfit text-2xl font-semibold">Enquiry sent</h3>
+        <p className="mt-2 text-sm font-medium leading-6 text-white/70">
+          Our team has your details and will contact you on {getValues('phone')} shortly.
+        </p>
+        <button type="button" onClick={() => setSent(null)} className="mt-6 text-sm font-bold text-[#ffd36e] underline-offset-4 hover:underline">
+          Send another enquiry
+        </button>
+      </div>
+    )
   }
 
   if (sent) {
     return (
       <div className="rounded-3xl border border-white/10 bg-white/[0.06] p-6 text-white sm:p-8" role="status">
-        <CheckCircle2 aria-hidden="true" className="h-10 w-10 text-emerald-300" />
-        <h3 className="mt-4 font-outfit text-2xl font-semibold">Your enquiry is ready in WhatsApp</h3>
+        <Mail aria-hidden="true" className="h-10 w-10 text-[#ffd36e]" />
+        <h3 className="mt-4 font-outfit text-2xl font-semibold">We couldn’t send that automatically</h3>
         <p className="mt-2 text-sm font-medium leading-6 text-white/70">
-          Press send in WhatsApp and our team will reply there. If WhatsApp didn’t open, use one of these instead:
+          Your details are filled in below — send them to us on WhatsApp or by email:
         </p>
         <div className="mt-5 flex flex-wrap gap-3">
-          <a href={whatsappLink(sent)} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 rounded-full bg-[#25D366] px-5 py-3 text-sm font-bold text-white">
-            <MessageCircle aria-hidden="true" className="h-4 w-4" />Open WhatsApp again
+          <a href={whatsappLink(sent.message)} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 rounded-full bg-[#25D366] px-5 py-3 text-sm font-bold text-white">
+            <MessageCircle aria-hidden="true" className="h-4 w-4" />Send on WhatsApp
           </a>
-          <a href={`mailto:${EMAIL}?subject=${encodeURIComponent('Digital marketing enquiry')}&body=${encodeURIComponent(sent)}`} className="inline-flex items-center gap-2 rounded-full border border-white/20 px-5 py-3 text-sm font-bold text-white hover:border-white/40">
+          <a href={`mailto:${EMAIL}?subject=${encodeURIComponent('Digital marketing enquiry')}&body=${encodeURIComponent(sent.message)}`} className="inline-flex items-center gap-2 rounded-full border border-white/20 px-5 py-3 text-sm font-bold text-white hover:border-white/40">
             <Mail aria-hidden="true" className="h-4 w-4" />Send by email
           </a>
         </div>
@@ -129,12 +152,12 @@ export default function EnquiryForm({ preset }) {
         </Field>
       </div>
 
-      <button type="submit" className="group mt-6 inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#ffae13] px-6 py-3.5 text-sm font-extrabold text-[#061633] shadow-[0_12px_28px_rgba(255,174,19,0.3)] transition hover:bg-[#ffbb38]">
+      <button type="submit" disabled={isSubmitting} className="group mt-6 inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#ffae13] px-6 py-3.5 text-sm font-extrabold text-[#061633] shadow-[0_12px_28px_rgba(255,174,19,0.3)] transition hover:bg-[#ffbb38] disabled:opacity-60">
         <Send aria-hidden="true" className="h-4 w-4" />
-        Send my enquiry on WhatsApp
+        {isSubmitting ? 'Sending…' : 'Send my enquiry'}
       </button>
       <p className="mt-3 text-center text-xs font-medium text-white/50">
-        Opens WhatsApp with your details filled in. Prefer to talk? Call{' '}
+        Our team gets your details right away. Prefer to talk? Call{' '}
         <a href={`tel:${PHONES[0].replace(/-/g, '')}`} className="font-bold text-white/80 hover:text-white"><Phone aria-hidden="true" className="mr-0.5 inline h-3 w-3" />{PHONES[0].replace('-', ' ')}</a>
       </p>
     </form>

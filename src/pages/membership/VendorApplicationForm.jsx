@@ -17,6 +17,7 @@ import {
   Clock
 } from 'lucide-react'
 import api from '../../api/axios'
+import { submitForm } from '../../lib/submitForm'
 import LoadingScreen from '../../components/common/LoadingScreen'
 import { customerApi } from '../../api/customer'
 import toast from 'react-hot-toast'
@@ -347,6 +348,13 @@ export default function VendorApplicationForm() {
       const data = buildFormData()
       await api.post('/vendor-applications/my-application/submit', data, {
         headers: { 'Content-Type': 'multipart/form-data' },
+      })
+      submitForm('Vendor application', {
+        Name: step2.personal.fullName,
+        Mobile: step2.personal.mobileNumber,
+        Email: step2.personal.email,
+        Business: step2.details.businessName,
+        Category: step2.details.businessCategory,
       })
       toast.success('Application submitted successfully!')
       navigate(statusPath, { replace: true })

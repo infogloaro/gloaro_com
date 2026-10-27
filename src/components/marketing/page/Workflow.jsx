@@ -20,7 +20,7 @@ function BriefVisual() {
       {[['Industry', 'Furniture showroom'], ['Customers', 'Families within 10 km'], ['Goal', 'More showroom visits'], ['Challenge', 'Few enquiries from Instagram']].map(([k, v], i) => (
         <motion.p key={k} {...rise(i)} className="mt-2 flex items-center justify-between gap-3 rounded-lg bg-slate-50 px-3 py-2 text-xs">
           <span className="font-semibold text-slate-500">{k}</span>
-          <span className="font-bold text-[#08224B]">{v}</span>
+          <span className="text-right font-bold text-[#08224B]">{v}</span>
         </motion.p>
       ))}
     </div>
@@ -62,7 +62,7 @@ function CreateVisual() {
           className="w-[30%] overflow-hidden rounded-xl bg-white shadow-lg ring-1 ring-black/5"
         >
           <img src={mediaUrl(image)} alt="" loading="lazy" decoding="async" className="aspect-[4/5] w-full object-cover" />
-          <figcaption className="flex items-center justify-between px-2 py-1.5 text-[10px] font-bold text-[#08224B]">
+          <figcaption className="flex flex-wrap items-center justify-between gap-1 px-2 py-1.5 text-[10px] font-bold text-[#08224B]">
             {label}<span className="rounded-full bg-emerald-100 px-1.5 text-[9px] text-emerald-700">Approved</span>
           </figcaption>
         </motion.figure>
@@ -146,14 +146,18 @@ function StepCard({ step, index, onActive }) {
   }, [inView, index, onActive])
   const Visual = visuals[step.visual]
   return (
-    <li ref={ref} className="relative pl-14 lg:min-h-[52vh] lg:pl-16">
-      <span className="absolute left-0 top-0 grid h-10 w-10 place-items-center rounded-full bg-[#08224B] font-outfit text-sm font-bold text-[#ffae13] shadow-lg lg:h-12 lg:w-12 lg:text-base">
-        {String(index + 1).padStart(2, '0')}
-      </span>
-      <h3 className="font-outfit text-xl font-semibold tracking-tight text-[#08224B] sm:text-2xl">{step.title}</h3>
-      <p className="mt-2 max-w-md text-[15px] font-medium leading-7 text-slate-600">{step.text}</p>
-      <p className="mt-3 inline-flex items-center gap-2 rounded-full bg-white px-3 py-1.5 text-xs font-bold text-[#0d4697] shadow-sm ring-1 ring-[#08224B]/10">
-        <Check aria-hidden="true" className="h-3.5 w-3.5 text-emerald-500" />
+    <li ref={ref} className="relative min-w-0 lg:min-h-[52vh] lg:pl-16">
+      {/* Phones: badge sits inline with the title so the step uses the full width.
+          Desktop: badge hangs on the timeline rail. */}
+      <div className="flex items-center gap-3 lg:block">
+        <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[#08224B] font-outfit text-sm font-bold text-[#ffae13] shadow-lg lg:absolute lg:left-0 lg:top-0 lg:h-12 lg:w-12 lg:text-base">
+          {String(index + 1).padStart(2, '0')}
+        </span>
+        <h3 className="font-outfit text-xl font-semibold tracking-tight text-[#08224B] sm:text-2xl">{step.title}</h3>
+      </div>
+      <p className="mt-3 max-w-md text-[15px] font-medium leading-relaxed text-slate-600 lg:mt-2 lg:leading-7">{step.text}</p>
+      <p className="mt-3 inline-flex items-start gap-2 rounded-2xl bg-white px-3 py-1.5 text-xs font-bold leading-5 text-[#0d4697] shadow-sm ring-1 ring-[#08224B]/10 lg:rounded-full">
+        <Check aria-hidden="true" className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-500" />
         {step.output}
       </p>
       <div aria-hidden="true" className="mt-5 lg:hidden">
@@ -173,7 +177,7 @@ export default function Workflow({ onPlan }) {
       <div className="mx-auto max-w-6xl">
         <SectionHeading eyebrow="How it works" title="From first conversation to a campaign that keeps improving" highlight="improving" />
 
-        <div className="mt-14 grid gap-12 lg:grid-cols-[1fr_1fr]">
+        <div className="mt-14 grid grid-cols-1 gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
           <div aria-hidden="true" className="hidden lg:block">
             <div className="sticky top-32">
               <div className="mb-4 flex gap-1.5">
@@ -190,7 +194,7 @@ export default function Workflow({ onPlan }) {
             </div>
           </div>
 
-          <ol className="relative space-y-12 before:absolute before:bottom-6 before:left-5 before:top-6 before:w-px before:bg-[#08224B]/15 lg:space-y-0 lg:before:left-6">
+          <ol className="relative space-y-14 before:absolute max-lg:before:hidden before:bottom-6 before:left-5 before:top-6 before:w-px before:bg-[#08224B]/15 lg:space-y-0 lg:before:left-6">
             {workflow.map((step, i) => <StepCard key={step.title} step={step} index={i} onActive={setActive} />)}
           </ol>
         </div>

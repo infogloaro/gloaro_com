@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import BusinessCategories from '../../components/common/BusinessCategories'
-import ThemesShowcase from '../../components/home/ThemesShowcase'
 import { ArrowRight, BadgeCheck, CalendarDays, ChevronDown, Clock3, Mail, MapPin, PhoneCall, ShieldCheck, Sparkles, ShoppingBag, ShoppingCart, Store, Ticket, UserRound, UsersRound } from 'lucide-react'
 import heroNetworkIcon from '../../assets/signup_logo.webp'
 import heroBackground from '../../assets/herobg-1.webp'
@@ -47,7 +46,7 @@ const whyGloaroPoints = [
 
 const serviceItems = [
   'Membership', 'Connects', 'Events', 'Meetings', 'Mobile App',
-  'Analytics', 'Franchise', 'B2B solutions', 'Digital Marketing', 'Themes', 'Resources',
+  'Analytics', 'Franchise', 'B2B solutions', 'Digital Marketing', 'Resources',
 ]
 
 const ecosystemActions = [
@@ -68,6 +67,21 @@ const memberBenefits = [
   ['Business Expo & Trade Events', benefitImage7],
   ['MR.360 lead champion award', benefitImage8],
   ['E-Commerce Business & App Sales Support', benefitImage9],
+]
+
+const unsplash = (id) => `https://images.unsplash.com/photo-${id}?auto=format&fit=crop&w=640&h=400&q=70`
+
+// Hero slider: spells out what a member actually gets from each benefit, in plain words.
+const heroBenefitSlides = [
+  { title: 'One to One Business Connects', what: 'We personally introduce you to verified business owners who can buy from you or refer you.', result: 'Direct new clients', image: unsplash('1600880292203-757bb62b4baf') },
+  { title: 'Connect Meetings', what: 'Regular structured meetings where you pitch your business and receive real referrals.', result: 'Steady referral flow', image: unsplash('1552664730-d307ca884978') },
+  { title: 'Global Business Visits with Leaders', what: 'Travel with network leaders to meet partners and buyers in new cities and countries.', result: 'New markets opened', image: unsplash('1515169067868-5387ec356754') },
+  { title: 'Social Media Marketing', what: 'Our team features and promotes your business across GLOARO social channels.', result: 'More brand visibility', image: unsplash('1611162617213-7d7a39e9b1d7') },
+  { title: 'Business Directory Listing', what: 'A verified listing so customers and members can find, trust and contact you.', result: 'Found by buyers', image: unsplash('1563986768609-322da13575f3') },
+  { title: 'Digital Marketing Support', what: 'Guidance on SEO, ads and campaigns built to bring your business more leads.', result: 'More online leads', image: unsplash('1460925895917-afdab827c52f') },
+  { title: 'Business Expo & Trade Events', what: 'Showcase your products and services at GLOARO expos and trade events.', result: 'Face-to-face sales', image: unsplash('1540575467063-178a50c2df87') },
+  { title: 'MR.360 Lead Champion Award', what: 'Top performers are publicly recognised and awarded across the network.', result: 'Trust & reputation', image: unsplash('1523287562758-66c7fc58967f') },
+  { title: 'E-Commerce & App Sales Support', what: 'Help setting up your online store and app so you can sell beyond your area.', result: 'Sell online 24/7', image: unsplash('1556740758-90de374c12ad') },
 ]
 
 const premiumBenefits = [
@@ -212,36 +226,6 @@ function Reveal({ children, className = '', delay = 0, direction = 'up' }) {
     >
       {children}
     </div>
-  )
-}
-
-// Animates a hero stat ("10,000+") from 0 once it scrolls into view.
-function CountUpStat({ value }) {
-  const match = /^([\d,]+)(.*)$/.exec(value)
-  const numeric = match ? parseInt(match[1].replace(/,/g, ''), 10) : null
-  const suffix = match ? match[2] : ''
-  const [ref, inView] = useInViewOnce(0.4)
-  const [display, setDisplay] = useState(0)
-
-  useEffect(() => {
-    if (!inView || numeric === null) return undefined
-    const duration = 1400
-    const stepTime = 16
-    const totalSteps = Math.max(1, Math.round(duration / stepTime))
-    let step = 0
-    const timer = window.setInterval(() => {
-      step += 1
-      const next = Math.min(Math.round((numeric / totalSteps) * step), numeric)
-      setDisplay(next)
-      if (next >= numeric) window.clearInterval(timer)
-    }, stepTime)
-    return () => window.clearInterval(timer)
-  }, [inView, numeric])
-
-  return (
-    <p ref={ref} className="font-dm-serif text-3xl sm:text-4xl">
-      {numeric === null ? value : `${display.toLocaleString('en-IN')}${suffix}`}
-    </p>
   )
 }
 
@@ -465,6 +449,7 @@ export default function NetworkHome() {
       @keyframes gl-marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
       .gl-marquee { animation: gl-marquee 32s linear infinite; }
       .gl-marquee:hover { animation-play-state: paused; }
+      .gl-benefit-marquee { animation-duration: 60s; }
       @keyframes gl-float-a { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(12px, -20px); } }
       @keyframes gl-float-b { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(-14px, 18px); } }
       .gl-float-a { animation: gl-float-a 9s ease-in-out infinite; }
@@ -484,7 +469,7 @@ export default function NetworkHome() {
     `}</style>
 
     {/* 1. Hero Banner */}
-    <section className="relative isolate overflow-visible bg-[#fdf9e9] pb-24 sm:pb-28">
+    <section className="relative isolate overflow-visible bg-[#fdf9e9] pb-10 sm:pb-12">
       <div className="relative min-h-[530px] overflow-hidden rounded-b-[28px] bg-[#061633] sm:min-h-[610px]">
         {heroSlides.map((slide, index) => <img key={slide} src={slide} alt="Gloaro business network" className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-1000 ${index === activeSlide ? 'opacity-100' : 'opacity-0'}`} />)}
         <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(2,18,50,.78),rgba(3,19,52,.5),rgba(2,12,35,.8))]" />
@@ -513,16 +498,55 @@ export default function NetworkHome() {
             <span className="gl-fade-up mt-2 block sm:mt-3" style={{ animationDelay: '540ms' }}><span className="text-[#ff9515]">We</span> Win Together.</span>
           </h1>
           <p className="gl-fade-up mt-5 max-w-4xl font-urbanist text-sm font-medium leading-6 tracking-[0.03em] text-white sm:text-base md:text-lg md:leading-7 md:tracking-[0.05em]" style={{ animationDelay: '660ms' }}>A trusted network of professionals and entrepreneurs building relationships, creating opportunities,<br className="hidden md:block" /> and shaping future success together.</p>
-          <div className="gl-fade-up mt-5 flex w-full flex-col justify-center gap-3 sm:w-auto sm:flex-row sm:flex-wrap" style={{ animationDelay: '780ms' }}>
-            <Link></Link>
-            <a href="#why-gloaro" className="w-full rounded-lg border border-white/15 bg-slate-700/70 px-6 py-3 text-base font-bold text-white shadow-lg shadow-black/30 backdrop-blur transition duration-300 hover:-translate-y-0.5 hover:bg-slate-700 sm:w-auto sm:text-lg">Explore Network&nbsp; ↗</a>
-          </div>
-          <p className="gl-fade-up mt-5 font-serif text-xl font-bold text-[#f6a600] sm:text-2xl" style={{ animationDelay: '900ms' }}>Connect. Collaborate. Grow Globally</p>
           <div className="mt-5 flex gap-2">{heroSlides.map((_, index) => <button key={index} onClick={() => setActiveSlide(index)} aria-label={`Show slide ${index + 1}`} className={`h-1.5 rounded-full transition-all duration-500 ${index === activeSlide ? 'w-7 bg-[#ffad16]' : 'w-1.5 bg-white/50'}`} />)}</div>
+          <div className="gl-fade-up mt-7 max-w-3xl" style={{ animationDelay: '780ms' }}>
+            <p className="inline-flex items-center gap-2 rounded-full border border-[#ffae13]/60 bg-[#ffae13]/15 px-4 py-1.5 font-urbanist text-xs font-extrabold uppercase tracking-[0.18em] text-[#ffcf6b] sm:text-sm">
+              <Sparkles className="h-4 w-4" /> What do you get as a GLOARO Member?
+            </p>
+            <p className="mt-3 font-urbanist text-sm font-semibold leading-6 text-white/90 sm:text-base">
+              Membership is a yearly plan for business owners. You join the network and we help you <span className="text-[#ffcf6b]">get clients, referrals, promotion and recognition</span> — here is exactly what's included:
+            </p>
+          </div>
         </div>
       </div>
-      <div className="absolute bottom-0 left-1/2 z-10 grid w-[calc(100%-2.5rem)] max-w-5xl -translate-x-1/2 grid-cols-2 overflow-hidden rounded-3xl border border-white/70 bg-[#0d4697] text-center text-white shadow-xl shadow-slate-800/25 lg:grid-cols-4">
-        {[['10,000+', 'Active Members'], ['5,000+', 'Businesses'], ['25+', 'Cities'], ['1,000+', 'Successful Connects']].map(([value, label], index) => <div key={label} className={`px-3 py-5 transition-colors duration-300 hover:bg-white/10 sm:px-4 sm:py-7 ${index === 1 ? 'border-l border-white/35' : ''} ${index === 2 ? 'border-t border-white/35 lg:border-l lg:border-t-0' : ''} ${index === 3 ? 'border-l border-t border-white/35 lg:border-t-0' : ''}`}><CountUpStat value={value} /><p className="mt-1 font-playfair text-base italic sm:text-2xl">{label}</p></div>)}
+      {/* Member benefits card slider — overlaps the hero; each card says in plain words what the member gets */}
+      <div className="relative z-10 -mt-24 overflow-hidden [mask-image:linear-gradient(90deg,transparent,#000_5%,#000_95%,transparent)] sm:-mt-28">
+        <div className="gl-marquee gl-benefit-marquee flex w-max gap-4 px-2 py-4 sm:gap-5">
+          {[...heroBenefitSlides, ...heroBenefitSlides].map((slide, index) => {
+            const isClone = index >= heroBenefitSlides.length
+            const number = String((index % heroBenefitSlides.length) + 1).padStart(2, '0')
+            return (
+              <article key={`${slide.title}-${index}`} aria-hidden={isClone || undefined} className="group flex w-72 shrink-0 flex-col overflow-hidden rounded-3xl border-2 border-white bg-white shadow-xl shadow-slate-800/20 ring-0 ring-[#ffae13] transition duration-300 hover:-translate-y-2 hover:shadow-2xl hover:ring-4 sm:w-80">
+                <div className="relative h-40 overflow-hidden sm:h-44">
+                  <img src={slide.image} alt={slide.title} loading="lazy" className="h-full w-full object-cover transition duration-700 group-hover:scale-110" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#061633]/90 via-[#061633]/20 to-transparent" />
+                  <span className="absolute right-3 top-3 rounded-full bg-[#061633]/70 px-2.5 py-1 font-urbanist text-[11px] font-extrabold text-white backdrop-blur">{number} / {String(heroBenefitSlides.length).padStart(2, '0')}</span>
+                  <h3 className="absolute inset-x-3 bottom-3 font-playfair text-lg font-bold italic leading-tight text-white sm:text-xl">{slide.title}</h3>
+                </div>
+                <div className="flex flex-1 flex-col p-4 text-left">
+                  <p className="font-urbanist text-[10px] font-extrabold uppercase tracking-[0.18em] text-[#0d4697]/70">What you get</p>
+                  <p className="mt-1 min-h-[60px] font-urbanist text-sm font-semibold leading-5 text-[#1f2937]">{slide.what}</p>
+                  <p className="mt-3 inline-flex w-fit items-center gap-1.5 rounded-full bg-[#e6f8ed] px-3 py-1 font-urbanist text-xs font-extrabold text-[#15803d]">
+                    <BadgeCheck className="h-4 w-4" /> {slide.result}
+                  </p>
+                </div>
+                <div className="flex items-center gap-2 bg-[#0d4697] p-3">
+                  <Link to="/register" tabIndex={isClone ? -1 : undefined} className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-[#ffae13] px-3 py-2 font-urbanist text-xs font-extrabold text-[#061633] transition hover:bg-white sm:text-sm">
+                    <UsersRound className="h-4 w-4" /> Become a Member
+                  </Link>
+                  <a href="#join" tabIndex={isClone ? -1 : undefined} className="flex items-center justify-center gap-1.5 rounded-xl border border-white/40 px-3 py-2 font-urbanist text-xs font-extrabold text-white transition hover:bg-white hover:text-[#0d4697] sm:text-sm">
+                    <PhoneCall className="h-4 w-4" /> Contact
+                  </a>
+                </div>
+              </article>
+            )
+          })}
+        </div>
+      </div>
+      <div className="mt-6 flex justify-center px-4">
+        <Link to="/register" className="inline-flex items-center gap-2 rounded-full bg-[#0d4697] px-6 py-3 font-urbanist text-sm font-extrabold text-white shadow-lg shadow-[#0d4697]/25 transition hover:-translate-y-0.5 hover:bg-[#ffae13] hover:text-[#061633] sm:text-base">
+          Join the Network for Membership <ArrowRight className="h-4 w-4" />
+        </Link>
       </div>
     </section>
 
@@ -532,17 +556,13 @@ export default function NetworkHome() {
         <div className="gl-marquee absolute left-0 top-1/2 flex w-max -translate-y-1/2 gap-8 whitespace-nowrap px-4 sm:gap-10 sm:px-6 lg:gap-12">
           {[...serviceItems, ...serviceItems].map((item, index) => (
             <span key={`${item}-${index}`} className="flex items-center gap-2 font-urbanist text-[11px] font-extrabold uppercase tracking-[0.18em] text-[#0d4697]/70 sm:gap-3 sm:text-xs sm:tracking-[0.22em] lg:text-sm lg:tracking-[0.24em]">
-              {item === 'Themes'
-                ? <a href="#themes" className="rounded-full bg-[#ffae13] px-3 py-1 text-[#0b2a55] transition hover:bg-[#0d4697] hover:text-white">Themes</a>
-                : item}
+              {item}
               <span className="text-[#ffae13]">✦</span>
             </span>
           ))}
         </div>
       </div>
     </div>
-
-    <ThemesShowcase />
 
     {/* 2. Why Gloaro */}
     <section id="why-gloaro" className="relative isolate scroll-mt-48 overflow-hidden bg-[#fdf9e9] py-14 sm:py-18 lg:scroll-mt-52 lg:py-24">

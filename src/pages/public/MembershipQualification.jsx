@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { BriefcaseBusiness, FileUp, ShieldCheck, UsersRound } from 'lucide-react'
 import api from '../../api/axios'
+import { submitForm } from '../../lib/submitForm'
 import { membershipApplicationApi } from '../../api/membershipApplication'
 import { clearMembershipDraft, getMembershipDraft, getMembershipFiles, saveMembershipDraft, setMembershipFile } from '../../utils/membershipOnboarding'
 import LoadingScreen from '../../components/common/LoadingScreen'
@@ -185,6 +186,13 @@ export default function MembershipQualification() {
       })
       const response = await membershipApplicationApi.submit(formData)
       const application = response.data?.data
+      submitForm('Membership application', {
+        Name: draftData.personal?.fullName,
+        Mobile: draftData.personal?.mobileNumber,
+        Email: draftData.personal?.emailAddress,
+        Company: draftData.professional?.companyName,
+        'Referral code': referralCode.trim(),
+      })
       clearMembershipDraft()
       await refreshUser?.()
       toast.success('Membership application submitted successfully!')

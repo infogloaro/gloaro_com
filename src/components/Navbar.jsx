@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { useNavigate, useLocation, Link } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import { spring } from '../lib/motion'
@@ -27,6 +28,7 @@ import {
   Users,
   X,
 } from 'lucide-react'
+import { HeaderBackButton } from './common/BackButton'
 import { techGroups, techMenuItems } from './tech/techMenu'
 import logo from '../assets/logo-transparent.webp'
 import networkIcon from '../assets/network_icon.png'
@@ -97,6 +99,24 @@ const dropdownMotion = {
   transition: { duration: 0.24, ease: [0.22, 1, 0.36, 1] },
 }
 
+// Mobile menu: a drawer that glides in slowly from the left and slides back
+// out to the left on close; its blocks follow in one after another.
+const drawerMotion = {
+  initial: { x: '-100%' },
+  animate: { x: 0, transition: { duration: 0.7, ease: [0.22, 1, 0.36, 1] } },
+  exit: { x: '-100%', transition: { duration: 0.55, ease: [0.64, 0, 0.78, 0] } },
+}
+const backdropMotion = {
+  initial: { opacity: 0 },
+  animate: { opacity: 1, transition: { duration: 0.5 } },
+  exit: { opacity: 0, transition: { duration: 0.5, delay: 0.05 } },
+}
+const menuList = { hidden: {}, show: { transition: { staggerChildren: 0.06, delayChildren: 0.25 } } }
+const menuItem = {
+  hidden: { opacity: 0, x: -28 },
+  show: { opacity: 1, x: 0, transition: spring.interactive },
+}
+
 const panelMotion = {
   initial: { opacity: 0, y: -8 },
   animate: { opacity: 1, y: 0 },
@@ -151,6 +171,22 @@ export default function Navbar() {
       document.body.style.overflow = previousOverflow
     }
   }, [networkOpen])
+
+  // Lets page-level floating controls (the Back pill) step aside while the menu is open.
+  // The drawer also locks page scroll and closes on Escape.
+  useEffect(() => {
+    if (!open) return undefined
+    document.documentElement.dataset.menuOpen = ''
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    const onKey = (event) => { if (event.key === 'Escape') setOpen(false) }
+    window.addEventListener('keydown', onKey)
+    return () => {
+      delete document.documentElement.dataset.menuOpen
+      document.body.style.overflow = previousOverflow
+      window.removeEventListener('keydown', onKey)
+    }
+  }, [open])
 
   useEffect(() => {
     if (!searchPanelOpen) return undefined
@@ -290,6 +326,7 @@ export default function Navbar() {
               Start a Project
               <ArrowRight className="h-4 w-4 transition group-hover:translate-x-0.5" />
             </Link>
+            <HeaderBackButton className="ml-1 sm:ml-2" />
             <button
               type="button"
               onClick={() => setOpen((value) => !value)}
@@ -369,102 +406,135 @@ export default function Navbar() {
         {networkOpen && <GloaroNetworkMenu key="network-menu" onClose={() => setNetworkOpen(false)} />}
       </AnimatePresence>
 
-      {/* Mobile menu */}
-      <AnimatePresence>
+    </header>
+
+      {/* Mobile menu: a left-side drawer; its blocks cascade in after it.
+          Portalled to <body> so it sits above every floating widget. */}
+      {createPortal(<AnimatePresence>
         {open && (
-          <motion.div {...dropdownMotion} className="absolute inset-x-0 top-full px-3 pt-1 sm:px-5 xl:hidden">
-            <div className="max-h-[calc(100vh-90px)] overflow-y-auto rounded-[28px] border border-white/70 bg-white/95 p-4 shadow-[0_24px_70px_rgba(15,23,42,0.2)] backdrop-blur-xl">
-              <div className="grid grid-cols-2 gap-2">
-                {navItems.map(([Icon, label, href]) => {
+          <div key="mobile-drawer" className="fixed inset-0 z-[100] xl:hidden">
+            <motion.button
+              type="button"
+              {...backdropMotion}
+              onClick={() => setOpen(false)}
+              aria-label="Close menu"
+              className="absolute inset-0 h-full w-full cursor-default bg-[#061633]/45 backdrop-blur-[2px]"
+            />
+            <motion.nav
+              {...drawerMotion}
+              aria-label="Mobile"
+              className="absolute inset-y-0 left-0 flex w-[86%] max-w-sm flex-col rounded-r-[28px] bg-white shadow-[24px_0_70px_rgba(15,23,42,0.25)]"
+            >
+              <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3">
+                <Link to="/" onClick={() => setOpen(false)} aria-label="Go to home page">
+                  <img src={logo} alt="Gloaro" className="h-11 w-auto object-contain" />
+                </Link>
+                <button
+                  type="button"
+                  onClick={() => setOpen(false)}
+                  aria-label="Close menu"
+                  className="grid h-10 w-10 place-items-center rounded-full bg-slate-100 text-slate-600 transition hover:bg-[#0b469e]/10 hover:text-[#0b469e]"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+            <motion.div
+              variants={menuList}
+              initial="hidden"
+              animate="show"
+              data-lenis-prevent
+              className="flex-1 space-y-2 overflow-y-auto overscroll-contain p-3"
+            >
+              <motion.div variants={menuItem} className="grid grid-cols-3 gap-1.5">
+                {navItems.map(([Icon, label, href], index) => {
                   const active = isActive(href)
+                  // Stretch the last tile across a half-empty final row.
+                  const wide = index === navItems.length - 1 && navItems.length % 3 === 2
                   return (
-                    <Link key={label} to={href} onClick={() => setOpen(false)} className={`flex items-center gap-2 rounded-2xl border px-4 py-3 text-sm font-semibold transition ${active ? 'border-[#0b469e]/30 bg-[#0b469e]/10 text-[#0b469e]' : 'border-slate-200/80 bg-white text-slate-700 hover:border-[#0b469e]/20 hover:text-[#0b469e]'}`}>
+                    <Link key={label} to={href} onClick={() => setOpen(false)} className={`${wide ? 'col-span-2 flex-row gap-2' : 'flex-col gap-1'} flex min-h-[60px] items-center justify-center rounded-2xl border px-1.5 py-2 text-center text-[12px] font-semibold leading-tight transition active:scale-95 ${active ? 'border-[#0b469e]/30 bg-[#0b469e]/10 text-[#0b469e]' : 'border-slate-200/80 bg-white text-slate-700 hover:border-[#0b469e]/20 hover:text-[#0b469e]'}`}>
                       <Icon className={`h-4 w-4 ${active ? 'text-[#0b469e]' : 'text-slate-400'}`} />
                       {label}
                     </Link>
                   )
                 })}
-              </div>
+              </motion.div>
 
-              <MobileTechMenu onNavigate={() => setOpen(false)} />
+              <motion.div variants={menuItem}>
+                <MobileTechMenu onNavigate={() => setOpen(false)} />
+              </motion.div>
 
-              <div className="mt-3 grid gap-3">
-                <div className="flex items-stretch overflow-hidden rounded-[22px] bg-[linear-gradient(135deg,#0b469e,#1b6fe0)] shadow-[0_14px_28px_rgba(11,70,158,0.22)]">
-                  <Link to="/network" onClick={() => setOpen(false)} className="flex flex-1 items-center gap-3 px-4 py-3.5 font-semibold text-white">
-                    <span className="grid h-10 w-10 place-items-center rounded-full bg-white/15 ring-1 ring-white/20">
-                      <img src={networkIcon} alt="" className="h-5 w-5 object-contain" />
-                    </span>
-                    <span className="text-left">
-                      <span className="block text-sm font-black uppercase tracking-[0.18em]">Gloaro Network</span>
-                      <span className="block text-xs font-medium text-white/75">Open the network page</span>
-                    </span>
-                  </Link>
-                  <button
-                    type="button"
-                    onClick={() => setMobileNetworkOpen((value) => !value)}
-                    aria-label="Toggle Gloaro Network quick menu"
-                    aria-expanded={mobileNetworkOpen}
-                    className="flex items-center justify-center border-l border-white/15 px-4 text-xl leading-none text-white transition hover:bg-white/10"
-                  >
-                    {mobileNetworkOpen ? '−' : '+'}
-                  </button>
-                </div>
-                <AnimatePresence>{mobileNetworkOpen && <MobileGloaroNetworkMenu key="mobile-network" onNavigate={() => setOpen(false)} />}</AnimatePresence>
-
-                <Link to="/mart" onClick={() => setOpen(false)} className="flex items-center justify-between rounded-[22px] bg-[linear-gradient(135deg,#ffd36e,#ffae13)] px-4 py-3.5 font-semibold text-[#0b2451] shadow-[0_14px_28px_rgba(255,174,19,0.25)]">
-                  <span className="flex items-center gap-3">
-                    <span className="grid h-10 w-10 place-items-center rounded-full bg-white/50 ring-1 ring-white/70">
-                      <ShoppingBag className="h-5 w-5" />
-                    </span>
-                    <span className="text-left">
-                      <span className="block text-sm font-black uppercase tracking-[0.18em]">Gloaro Mart</span>
-                      <span className="block text-xs font-medium text-[#0b2451]/70">B2B + B2C marketplace</span>
-                    </span>
+              <motion.div variants={menuItem} className="flex items-stretch overflow-hidden rounded-2xl bg-[linear-gradient(135deg,#0b469e,#1b6fe0)] shadow-[0_10px_22px_rgba(11,70,158,0.2)]">
+                <Link to="/network" onClick={() => setOpen(false)} className="flex flex-1 items-center gap-3 px-3 py-2.5 text-white">
+                  <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-white/15 ring-1 ring-white/20">
+                    <img src={networkIcon} alt="" className="h-4 w-4 object-contain" />
                   </span>
-                  <ArrowRight className="h-5 w-5" />
-                </Link>
-
-                <Link to="/partners" onClick={() => setOpen(false)} className="flex items-center justify-between rounded-[22px] border border-[#0b2451]/10 bg-[#061A3A] px-4 py-3.5 font-semibold text-white">
-                  <span className="flex items-center gap-3">
-                    <span className="grid h-10 w-10 place-items-center rounded-full bg-white/10 ring-1 ring-white/15">
-                      <Handshake className="h-5 w-5 text-[#F5A900]" />
-                    </span>
-                    <span className="text-left">
-                      <span className="block text-sm font-black uppercase tracking-[0.18em]">Partner with us</span>
-                      <span className="block text-xs font-medium text-white/75">Franchise or Channel Partner</span>
-                    </span>
+                  <span className="text-left">
+                    <span className="block text-[13px] font-black uppercase tracking-[0.14em]">Gloaro Network</span>
+                    <span className="block text-[11px] font-medium text-white/75">Open the network page</span>
                   </span>
-                  <ArrowRight className="h-5 w-5" />
                 </Link>
+                <button
+                  type="button"
+                  onClick={() => setMobileNetworkOpen((value) => !value)}
+                  aria-label="Toggle Gloaro Network quick menu"
+                  aria-expanded={mobileNetworkOpen}
+                  className="flex w-11 items-center justify-center border-l border-white/15 text-lg leading-none text-white transition hover:bg-white/10"
+                >
+                  {mobileNetworkOpen ? '−' : '+'}
+                </button>
+              </motion.div>
+              <AnimatePresence>{mobileNetworkOpen && <MobileGloaroNetworkMenu key="mobile-network" onNavigate={() => setOpen(false)} />}</AnimatePresence>
 
-                <Link to="/contact" onClick={() => setOpen(false)} className="flex items-center justify-center gap-2 rounded-2xl bg-[#061633] px-4 py-3.5 text-sm font-bold text-white">
+              <motion.div variants={menuItem} className="grid grid-cols-2 gap-2">
+                <Link to="/mart" onClick={() => setOpen(false)} className="flex items-center gap-2.5 rounded-2xl bg-[linear-gradient(135deg,#ffd36e,#ffae13)] px-3 py-2.5 text-[#0b2451] shadow-[0_10px_22px_rgba(255,174,19,0.22)] transition active:scale-95">
+                  <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-white/50 ring-1 ring-white/70">
+                    <ShoppingBag className="h-4 w-4" />
+                  </span>
+                  <span className="min-w-0 text-left">
+                    <span className="block text-[12px] font-black uppercase tracking-[0.1em]">Mart</span>
+                    <span className="block truncate text-[11px] font-medium text-[#0b2451]/70">B2B + B2C</span>
+                  </span>
+                </Link>
+                <Link to="/partners" onClick={() => setOpen(false)} className="flex items-center gap-2.5 rounded-2xl bg-[#061A3A] px-3 py-2.5 text-white transition active:scale-95">
+                  <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-white/10 ring-1 ring-white/15">
+                    <Handshake className="h-4 w-4 text-[#F5A900]" />
+                  </span>
+                  <span className="min-w-0 text-left">
+                    <span className="block text-[12px] font-black uppercase tracking-[0.1em]">Partner</span>
+                    <span className="block truncate text-[11px] font-medium text-white/75">Grow with us</span>
+                  </span>
+                </Link>
+              </motion.div>
+
+              <motion.div variants={menuItem}>
+                <Link to="/contact" onClick={() => setOpen(false)} className="flex items-center justify-center gap-2 rounded-2xl bg-[#061633] px-4 py-2.5 text-sm font-bold text-white transition active:scale-[0.98]">
                   Start a Project <ArrowRight className="h-4 w-4" />
                 </Link>
+              </motion.div>
 
-                <div className="grid grid-cols-2 gap-2">
-                  {isAuthenticated ? (
-                    <Link onClick={() => setOpen(false)} to={getDashboardRoute(user?.role, user)} className="col-span-2 flex items-center justify-center gap-2 rounded-2xl border border-[#0b469e]/10 bg-white px-4 py-3 text-sm font-semibold text-[#0b469e] shadow-sm">
+              <motion.div variants={menuItem} className="grid grid-cols-2 gap-2">
+                {isAuthenticated ? (
+                  <Link onClick={() => setOpen(false)} to={getDashboardRoute(user?.role, user)} className="col-span-2 flex items-center justify-center gap-2 rounded-2xl border border-[#0b469e]/10 bg-white px-4 py-2.5 text-sm font-semibold text-[#0b469e] shadow-sm">
+                    <img src={loginIcon} alt="" className="h-4 w-4 object-contain" />
+                    {user?.name || 'Account'}
+                  </Link>
+                ) : (
+                  <>
+                    <Link onClick={() => setOpen(false)} to="/login" className="flex items-center justify-center gap-2 rounded-2xl border border-[#0b469e]/10 bg-white px-4 py-2.5 text-sm font-semibold text-[#0b469e] shadow-sm transition active:scale-95">
                       <img src={loginIcon} alt="" className="h-4 w-4 object-contain" />
-                      {user?.name || 'Account'}
+                      Login
                     </Link>
-                  ) : (
-                    <>
-                      <Link onClick={() => setOpen(false)} to="/login" className="flex items-center justify-center gap-2 rounded-2xl border border-[#0b469e]/10 bg-white px-4 py-3 text-sm font-semibold text-[#0b469e] shadow-sm">
-                        <img src={loginIcon} alt="" className="h-4 w-4 object-contain" />
-                        Login
-                      </Link>
-                      <Link onClick={() => setOpen(false)} to="/register" className="flex items-center justify-center rounded-2xl bg-[linear-gradient(135deg,#0b469e,#1b6fe0)] px-4 py-3 text-sm font-semibold text-white shadow-[0_14px_28px_rgba(11,70,158,0.2)]">
-                        Register
-                      </Link>
-                    </>
-                  )}
-                </div>
-              </div>
-            </div>
-          </motion.div>
+                    <Link onClick={() => setOpen(false)} to="/register" className="flex items-center justify-center rounded-2xl bg-[linear-gradient(135deg,#0b469e,#1b6fe0)] px-4 py-2.5 text-sm font-semibold text-white shadow-[0_10px_22px_rgba(11,70,158,0.2)] transition active:scale-95">
+                      Register
+                    </Link>
+                  </>
+                )}
+              </motion.div>
+            </motion.div>
+            </motion.nav>
+          </div>
         )}
-      </AnimatePresence>
-    </header>
+      </AnimatePresence>, document.body)}
     </>
   )
 }
@@ -714,17 +784,17 @@ function TechMenu({ active }) {
 function MobileTechMenu({ onNavigate }) {
   const [expanded, setExpanded] = useState(false)
   return (
-    <div className="mt-3 overflow-hidden rounded-[22px] border border-slate-200/80 bg-white">
+    <div className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white">
       <button
         type="button"
         onClick={() => setExpanded((value) => !value)}
         aria-expanded={expanded}
         aria-controls="mobile-tech-menu"
-        className="flex w-full items-center justify-between gap-3 px-4 py-3.5 text-left"
+        className="flex w-full items-center justify-between gap-3 px-3.5 py-2.5 text-left"
       >
         <span>
-          <span className="block text-sm font-black uppercase tracking-[0.18em] text-[#0b469e]">GLOARO TECH</span>
-          <span className="block text-xs font-medium text-slate-500">All {techMenuItems.length} services</span>
+          <span className="block text-[13px] font-black uppercase tracking-[0.14em] text-[#0b469e]">GLOARO TECH</span>
+          <span className="block text-[11px] font-medium text-slate-500">All {techMenuItems.length} services</span>
         </span>
         <ChevronDown aria-hidden="true" className={`h-5 w-5 text-[#0b469e] transition-transform duration-200 ${expanded ? 'rotate-180' : ''}`} />
       </button>

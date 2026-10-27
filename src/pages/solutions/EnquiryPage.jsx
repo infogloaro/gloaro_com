@@ -4,6 +4,7 @@ import { Link, useSearchParams } from 'react-router-dom'
 import FormField from '../../components/forms/FormField'
 import { allThemes, parseThemeKey } from '../../prototypes/catalog'
 import { appTemplates, parseAppKey } from '../../prototypes/appCatalog'
+import { submitForm } from '../../lib/submitForm'
 
 const inputClass = 'w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-[#0d4697]'
 
@@ -17,10 +18,22 @@ export default function EnquiryPage() {
   })
   const selected = parseKey(useWatch({ control, name: 'themeKey' }))
 
-  // Prototype only: no backend. Simulates a short send, then shows the thank-you screen.
-  const onSubmit = async () => {
-    await new Promise((resolve) => setTimeout(resolve, 800))
-    setSubmitted(true)
+  const [sendError, setSendError] = useState('')
+
+  // Saves the booking for the GloAro team.
+  const onSubmit = async (values) => {
+    setSendError('')
+    const theme = parseKey(values.themeKey)
+    const delivered = await submitForm('Theme booking', {
+      Theme: theme ? `${theme.business.name} — ${theme.theme.name}` : values.themeKey,
+      Name: values.name,
+      Email: values.email,
+      Phone: values.phone,
+      Company: values.company,
+      Project: values.message,
+    })
+    if (delivered) setSubmitted(true)
+    else setSendError('We couldn’t send your enquiry. Please try again, or email info@gloaro.com.')
   }
 
   if (submitted) {
@@ -79,6 +92,7 @@ export default function EnquiryPage() {
           <button disabled={isSubmitting} className="w-full rounded-full bg-[#0d4697] px-5 py-3 text-sm font-bold text-white disabled:opacity-60">
             {isSubmitting ? 'Sending…' : 'Send enquiry'}
           </button>
+          {sendError && <p role="alert" className="text-center text-sm font-semibold text-red-600">{sendError}</p>}
         </form>
       </div>
     </main>

@@ -10,8 +10,32 @@ const EDGE = 16
 // so the button always sits right below its bottom edge; pages without one get
 // it in the top-right corner. Goes back in history when the visitor navigated
 // here inside the app; otherwise (opened by link or refresh) falls back to `fallback`.
-export default function BackButton({ fallback = '/' }) {
+function useGoBack(fallback) {
   const navigate = useNavigate()
+  return () => {
+    if ((window.history.state?.idx ?? 0) > 0) navigate(-1)
+    else navigate(fallback, { replace: true })
+  }
+}
+
+// In-header variant: sits in the main navbar's action row (public pages).
+export function HeaderBackButton({ fallback = '/', className = '' }) {
+  const goBack = useGoBack(fallback)
+  return (
+    <button
+      type="button"
+      onClick={goBack}
+      aria-label="Go back"
+      className={`group inline-flex h-10 shrink-0 items-center gap-1.5 rounded-full border border-[#0d4697]/15 bg-white px-2.5 text-xs font-black uppercase tracking-[0.16em] text-[#0d4697] transition hover:border-[#0d4697]/30 hover:bg-[#0b469e]/5 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#ffae13] sm:px-3.5 ${className}`}
+    >
+      <ArrowLeft className="h-4 w-4 transition-transform duration-200 group-hover:-translate-x-0.5" strokeWidth={2.5} />
+      <span className="hidden sm:inline">Back</span>
+    </button>
+  )
+}
+
+export default function BackButton({ fallback = '/' }) {
+  const goBack = useGoBack(fallback)
   const { pathname } = useLocation()
   const [top, setTop] = useState(EDGE)
 
@@ -39,18 +63,13 @@ export default function BackButton({ fallback = '/' }) {
     }
   }, [pathname])
 
-  const goBack = () => {
-    if ((window.history.state?.idx ?? 0) > 0) navigate(-1)
-    else navigate(fallback, { replace: true })
-  }
-
   return (
     <button
       type="button"
       onClick={goBack}
       aria-label="Go back"
       style={{ top }}
-      className="group fixed right-3 z-[60] inline-flex items-center gap-1.5 rounded-full border border-[#0d4697]/15 bg-white/90 py-2 pl-2.5 pr-3.5 text-xs font-black uppercase tracking-[0.16em] text-[#0d4697] shadow-[0_10px_28px_-10px_rgba(13,70,151,0.45)] backdrop-blur transition-[background-color,box-shadow,translate] hover:-translate-y-0.5 hover:bg-white hover:shadow-[0_14px_32px_-10px_rgba(13,70,151,0.55)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#ffae13] sm:right-5"
+      className="group fixed right-3 z-[60] inline-flex items-center gap-1.5 rounded-full border border-[#0d4697]/15 bg-white/90 py-2 pl-2.5 pr-3.5 text-xs font-black uppercase tracking-[0.16em] text-[#0d4697] shadow-[0_10px_28px_-10px_rgba(13,70,151,0.45)] backdrop-blur transition-[background-color,box-shadow,translate] hover:-translate-y-0.5 hover:bg-white hover:shadow-[0_14px_32px_-10px_rgba(13,70,151,0.55)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#ffae13] sm:right-5 [html[data-menu-open]_&]:hidden"
     >
       <ArrowLeft className="h-4 w-4 transition-transform duration-200 group-hover:-translate-x-0.5" strokeWidth={2.5} />
       Back

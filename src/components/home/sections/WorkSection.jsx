@@ -1,11 +1,13 @@
-import { useState } from 'react'
+import { useState, useSyncExternalStore } from 'react'
 import { Link } from 'react-router-dom'
 import { LayoutGroup, motion, useReducedMotion } from 'framer-motion'
-import { CalendarCheck, MonitorSmartphone, PlayCircle, Smartphone } from 'lucide-react'
+import { ArrowRight, CalendarCheck, MonitorSmartphone, PlayCircle, Smartphone } from 'lucide-react'
 import { spring } from '../../../lib/motion'
-import { businesses, getBusiness, getThemeKey, isThemeLive, softwareTypes } from '../../../prototypes/catalog'
+import { businesses, getBusiness, getThemeKey, isThemeLive, previewVariant, softwareTypes } from '../../../prototypes/catalog'
 import { appTemplates } from '../../../prototypes/appCatalog'
 import SectionHeading from './SectionHeading'
+import ThemePreview from '../../common/ThemePreview'
+import AppPreview from '../../common/AppPreview'
 
 // Filters: 'all', a business type (`industry:<id>`) or a software type (`software:<id>`).
 const INDUSTRY_FILTERS = businesses.filter((b) => b.kind === 'industry').map((b) => ({ value: `industry:${b.id}`, label: b.name }))
@@ -19,25 +21,39 @@ const matches = (business, filter) => {
 // the loop never shows a gap even when a filter leaves only a few cards.
 const MIN_PER_COPY = 8
 const SECONDS_PER_CARD = 5
+const MIN_ROLLING = 3
 
-const webApps = businesses.map((business) => {
-  const theme = business.themes[0]
+// One card per theme. The unfiltered and software views show each business's
+// lead theme; picking a business type shows all its themes, titled by theme.
+const webApps = businesses.flatMap((business) => business.themes.map((theme, index) => {
   const live = isThemeLive(business.id, theme.id)
   return {
-    id: business.id,
+    id: getThemeKey(business.id, theme.id),
+    lead: index === 0,
     name: business.name,
     tagline: business.tagline,
+    themeName: theme.name,
     accent: business.accent,
     thumb: theme.thumb,
+    theme,
+    variant: previewVariant(business.id, index),
     href: `/solutions/${business.id}`,
     book: `/contact?theme=${encodeURIComponent(getThemeKey(business.id, theme.id))}`,
     demo: live ? `/prototypes/${business.id}/${theme.id}` : null,
     business,
   }
-})
+}))
 
-const apps = appTemplates.map((app) => ({
+const pickWeb = (filter) => filter.startsWith('industry:')
+  ? webApps.filter((item) => matches(item.business, filter)).map((item) => ({ ...item, name: item.themeName, tagline: item.business.name }))
+  : webApps.filter((item) => item.lead && matches(item.business, filter))
+
+// Layout rotates within each business and is offset per business, so the
+// ten apps of one type and the lead apps side by side all differ.
+const INDUSTRY_ORDER = businesses.map((b) => b.id)
+const apps = appTemplates.map((app, index) => ({
   ...app,
+  variant: appTemplates.slice(0, index).filter((other) => other.industry === app.industry).length + INDUSTRY_ORDER.indexOf(app.industry),
   href: null,
   book: `/contact?theme=${encodeURIComponent(app.key)}`,
   business: getBusiness(app.industry),
@@ -70,7 +86,7 @@ function CardActions({ item, inert }) {
       ) : (
         <span
           aria-disabled="true"
-          title="Demo coming soon"
+          title="Demo not available yet"
           className="inline-flex cursor-not-allowed items-center justify-center gap-1.5 rounded-full border border-slate-200 bg-slate-50 px-3 py-2.5 text-xs font-bold text-slate-400"
         >
           <PlayCircle className="h-3.5 w-3.5" /> Demo soon
@@ -80,16 +96,18 @@ function CardActions({ item, inert }) {
   )
 }
 
+// Only live templates get a badge.
 function StatusBadge({ live }) {
+  if (!live) return null
   return (
-    <span className={`absolute left-3 top-3 z-10 rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-wider ${live ? 'bg-[#17a589] text-white' : 'bg-white/90 text-slate-600'}`}>
-      {live ? 'Live demo' : 'Coming soon'}
+    <span className="absolute left-3 top-3 z-10 rounded-full bg-[#17a589] px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-white">
+      Live demo
     </span>
   )
 }
 
 function WebCard({ item, inert }) {
-  const { name, tagline, accent, thumb, href, demo } = item
+  const { name, tagline, accent, thumb, href, demo, business, theme, variant } = item
   return (
     <article className="group h-full rounded-[24px] border border-slate-200 bg-white p-3 shadow-[0_14px_36px_rgba(15,23,42,0.08)] transition-shadow duration-300 hover:shadow-[0_24px_50px_rgba(13,70,151,0.16)]">
       <Link to={href} tabIndex={inert ? -1 : undefined} className="block">
@@ -97,9 +115,7 @@ function WebCard({ item, inert }) {
           {thumb ? (
             <img src={thumb} alt={`${name} web app template`} loading="lazy" decoding="async" width="640" height="480" draggable={false} className="h-full w-full object-cover transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-110" />
           ) : (
-            <div className="grid h-full place-items-center transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-110">
-              <span className="font-outfit text-6xl font-semibold text-white/25">{name.charAt(0)}</span>
-            </div>
+            <ThemePreview business={business} theme={theme} variant={variant} className="h-full w-full origin-top transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-105" />
           )}
           <StatusBadge live={Boolean(demo)} />
         </div>
@@ -115,21 +131,15 @@ function WebCard({ item, inert }) {
   )
 }
 
-// App thumbnail: a phone frame with the template's photo and a sketched app UI.
+// App thumbnail: a phone frame showing the template's own app screen.
 function PhoneThumb({ item }) {
   return (
     <div className="relative aspect-[4/3] overflow-hidden rounded-[18px]" style={{ background: `linear-gradient(135deg, ${item.accent}, #0b2451)` }}>
       <div aria-hidden="true" className="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-white/10 blur-2xl" />
-      <div className="absolute bottom-[-18%] left-1/2 w-[44%] -translate-x-1/2 rounded-[22px] border-[5px] border-[#0b1220] bg-white shadow-[0_20px_40px_rgba(0,0,0,0.35)] transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:-translate-y-3">
-        <div className="mx-auto mt-1 h-1.5 w-8 rounded-full bg-[#0b1220]" />
-        <div className="p-1.5">
-          <img src={item.thumb} alt={`${item.name} template`} loading="lazy" decoding="async" draggable={false} className="aspect-[4/3] w-full rounded-lg object-cover" />
-          <div className="mt-1.5 h-1.5 w-3/4 rounded-full bg-slate-300" />
-          <div className="mt-1 h-1.5 w-1/2 rounded-full bg-slate-200" />
-          <div className="mt-2 grid grid-cols-3 gap-1">
-            {[0, 1, 2].map((cell) => <div key={cell} className="h-5 rounded-md" style={{ background: `${item.accent}22` }} />)}
-          </div>
-          <div className="mt-2 h-4 rounded-full" style={{ background: item.accent }} />
+      <div className="absolute bottom-[-30%] left-1/2 w-[46%] -translate-x-1/2 rounded-[24px] border-[5px] border-[#0b1220] bg-[#0b1220] shadow-[0_20px_40px_rgba(0,0,0,0.35)] transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:-translate-y-3">
+        <div className="relative overflow-hidden rounded-[19px]">
+          <AppPreview app={item} variant={item.variant} className="aspect-[9/19.5] w-full" />
+          <span aria-hidden="true" className="absolute left-1/2 top-[1.2%] h-[2.6%] w-[30%] -translate-x-1/2 rounded-full bg-[#0b1220]" />
         </div>
       </div>
       <StatusBadge live={Boolean(item.demo)} />
@@ -156,31 +166,54 @@ function FilterChip({ value, label, selected, onChange }) {
       type="button"
       role="tab"
       aria-selected={selected}
-      onClick={() => onChange(value)}
-      className={`relative whitespace-nowrap rounded-full px-3.5 py-1.5 text-sm font-bold transition-colors ${selected ? 'text-[#0b2451]' : 'text-slate-500 hover:bg-[#0d4697]/5 hover:text-[#0d4697]'}`}
+      onClick={(event) => {
+        onChange(value)
+        event.currentTarget.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' })
+      }}
+      className={`relative isolate min-h-10 shrink-0 snap-start whitespace-nowrap rounded-full border px-4 text-sm font-bold transition-colors ${selected ? 'border-transparent text-[#0b2451]' : 'border-slate-200 bg-white text-slate-600 hover:border-[#0d4697]/30 hover:text-[#0d4697]'}`}
     >
-      {selected && <motion.span layoutId="work-filter" transition={spring.interactive} className="absolute inset-0 -z-10 rounded-full bg-[#ffae13]" />}
+      {selected && <motion.span layoutId="work-filter" transition={spring.interactive} className="absolute inset-0 -z-10 rounded-full bg-[#ffae13] shadow-[0_8px_18px_-8px_rgba(224,123,0,0.6)]" />}
       {label}
     </button>
   )
 }
 
-// Two rows sharing one selection: every business type, then software types.
+const FILTER_GROUPS = [
+  { id: 'industry', label: 'Business type', chips: INDUSTRY_FILTERS },
+  { id: 'software', label: 'Software', chips: SOFTWARE_FILTERS },
+]
+
+// A "Business type | Software" switch, then one row of chips for that group
+// (plus "All"). On phones the row swipes sideways; from `sm` up it wraps.
 function Filters({ value, onChange }) {
-  const rows = [
-    { label: 'Business type', chips: [{ value: 'all', label: 'All' }, ...INDUSTRY_FILTERS] },
-    { label: 'Software', chips: SOFTWARE_FILTERS },
-  ]
+  const [group, setGroup] = useState(value.startsWith('software:') ? 'software' : 'industry')
+  const { chips } = FILTER_GROUPS.find((g) => g.id === group)
   return (
-    <div role="tablist" aria-label="Filter work by business or software type" className="mx-auto grid max-w-5xl gap-3">
-      {rows.map((row) => (
-        <div key={row.label} className="flex flex-wrap items-center justify-center gap-1.5">
-          <span className="mr-1 text-[11px] font-black uppercase tracking-[0.2em] text-slate-400">{row.label}</span>
-          {row.chips.map((chip) => (
-            <FilterChip key={chip.value} {...chip} selected={chip.value === value} onChange={onChange} />
+    <div className="mx-auto max-w-5xl">
+      <div className="flex justify-center">
+        <div className="inline-flex rounded-full bg-slate-100 p-1">
+          {FILTER_GROUPS.map((g) => (
+            <button
+              key={g.id}
+              type="button"
+              aria-pressed={group === g.id}
+              onClick={() => setGroup(g.id)}
+              className={`min-h-9 rounded-full px-4 text-xs font-black uppercase tracking-[0.14em] transition ${group === g.id ? 'bg-white text-[#0d4697] shadow-sm' : 'text-slate-500 hover:text-[#0d4697]'}`}
+            >
+              {g.label}
+            </button>
           ))}
         </div>
-      ))}
+      </div>
+      <div
+        role="tablist"
+        aria-label={`Filter work by ${group === 'software' ? 'software' : 'business'} type`}
+        className="-mx-5 mt-4 flex snap-x gap-2 overflow-x-auto scroll-px-5 px-5 pb-2 [mask-image:linear-gradient(90deg,transparent,black_20px,black_calc(100%-20px),transparent)] [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:justify-center sm:overflow-visible sm:px-0 sm:[mask-image:none] [&::-webkit-scrollbar]:hidden"
+      >
+        {[{ value: 'all', label: 'All' }, ...chips].map((chip) => (
+          <FilterChip key={chip.value} {...chip} selected={chip.value === value} onChange={onChange} />
+        ))}
+      </div>
     </div>
   )
 }
@@ -208,15 +241,27 @@ function KindSwitch() {
   )
 }
 
+const PHONE_QUERY = '(max-width: 639px)'
+const subscribePhone = (callback) => {
+  const media = window.matchMedia(PHONE_QUERY)
+  media.addEventListener('change', callback)
+  return () => media.removeEventListener('change', callback)
+}
+const useIsPhone = () => useSyncExternalStore(subscribePhone, () => window.matchMedia(PHONE_QUERY).matches, () => false)
+
 function RollingRow({ row, items, reduce }) {
   const Card = row.id === 'apps' ? AppCard : WebCard
+  const isPhone = useIsPhone()
 
-  // Reduced motion: one plain swipeable row, no animation.
-  if (reduce) {
+  // Phones, reduced motion and short rows: a swipeable row that snaps card by
+  // card, so the buttons are never a moving target and a filter that leaves one
+  // or two cards never rolls the same thumbnail round and round.
+  const few = items.length < MIN_ROLLING
+  if (reduce || isPhone || few) {
     return (
-      <ul className="flex snap-x snap-mandatory gap-6 overflow-x-auto px-5 pb-4 [scrollbar-width:none] lg:px-8">
+      <ul aria-label={row.title} className={`flex snap-x ${few ? 'sm:justify-center ' : ''} snap-mandatory scroll-px-5 gap-4 overflow-x-auto overscroll-x-contain px-5 py-3 [scrollbar-width:none] sm:gap-6 lg:px-8 [&::-webkit-scrollbar]:hidden`}>
         {items.map((item) => (
-          <li key={item.id} className="w-[78vw] max-w-[340px] shrink-0 snap-start sm:w-[320px]"><Card item={item} /></li>
+          <li key={item.id} className="w-[82%] max-w-[340px] shrink-0 snap-start sm:w-[320px]"><Card item={item} /></li>
         ))}
       </ul>
     )
@@ -231,9 +276,11 @@ function RollingRow({ row, items, reduce }) {
         data-direction={row.direction}
         style={{ animationDuration: `${copy.length * SECONDS_PER_CARD}s` }}
       >
-        {/* Two identical copies; the second is decorative so the loop is seamless. */}
+        {/* Two identical copies so the loop is seamless. The second is hidden from
+            screen readers and the tab order but stays clickable: `inert` would
+            block clicks, and the rolling row often shows only that copy. */}
         {[0, 1].map((half) => (
-          <ul key={half} aria-hidden={half === 1 || undefined} inert={half === 1 || undefined} aria-label={half === 0 ? row.title : undefined} className="flex shrink-0 gap-6 pr-6">
+          <ul key={half} aria-hidden={half === 1 || undefined} aria-label={half === 0 ? row.title : undefined} className="flex shrink-0 gap-6 pr-6">
             {copy.map((item, index) => (
               <li key={`${item.id}-${index}`} className="w-[78vw] max-w-[320px] shrink-0 py-3 sm:w-[320px]">
                 <Card item={item} inert={half === 1 || index >= items.length} />
@@ -251,7 +298,11 @@ function RollingRow({ row, items, reduce }) {
 export default function WorkSection() {
   const reduce = useReducedMotion()
   const [filter, setFilter] = useState('all')
-  const pick = (items) => items.filter((item) => matches(item.business, filter))
+  const pick = (row) => {
+    if (row.id === 'web-apps') return pickWeb(filter)
+    // A business type shows all its app templates; other views show its lead app.
+    return row.items.filter((item) => (filter.startsWith('industry:') || item.lead) && matches(item.business, filter))
+  }
 
   return (
     <section id="portfolio" className="relative scroll-mt-28 overflow-x-clip border-y border-slate-200 bg-[linear-gradient(180deg,#fbfdff,#ffffff)] py-16 sm:py-24">
@@ -266,7 +317,7 @@ export default function WorkSection() {
       </div>
 
       {ROWS.map((row) => {
-        const items = pick(row.items)
+        const items = pick(row)
         const { Icon } = row
         return (
           <div key={row.id} id={row.id} className="mt-10 scroll-mt-32">
@@ -274,6 +325,11 @@ export default function WorkSection() {
               <span className="grid h-9 w-9 place-items-center rounded-xl bg-[#ffae13]/15 text-[#e07b00]"><Icon className="h-5 w-5" /></span>
               <h3 className="font-outfit text-lg font-semibold text-[#0d4697]">{row.title}</h3>
               <span className="text-xs font-bold text-slate-400">{items.length}</span>
+              {items.length > 1 && (
+                <span aria-hidden="true" className="ml-auto inline-flex items-center gap-1 text-[11px] font-bold uppercase tracking-[0.16em] text-slate-400 sm:hidden">
+                  Swipe <ArrowRight className="h-3.5 w-3.5" />
+                </span>
+              )}
             </div>
             {items.length ? (
               <RollingRow key={filter} row={row} items={items} reduce={reduce} />

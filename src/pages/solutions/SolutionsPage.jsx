@@ -21,7 +21,7 @@ export default function SolutionsPage() {
                 <h2 className="mt-4 text-xl font-bold text-slate-900">{business.name}</h2>
                 <p className="mt-1 text-sm text-slate-600">{business.tagline}</p>
                 <p className="mt-4 text-xs font-bold uppercase tracking-wide" style={{ color: business.accent }}>
-                  {liveCount ? `${liveCount} live prototype${liveCount > 1 ? 's' : ''}` : 'Coming soon'}
+                  {liveCount ? `${liveCount} live prototype${liveCount > 1 ? 's' : ''}` : `${business.themes.length} theme${business.themes.length > 1 ? 's' : ''}`}
                 </p>
               </Link>
             )

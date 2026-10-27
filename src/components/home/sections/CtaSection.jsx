@@ -4,6 +4,7 @@ import { useForm } from 'react-hook-form'
 import { AnimatePresence, motion, useAnimationControls } from 'framer-motion'
 import { AlertCircle, ArrowRight, CheckCircle2, Mail, MapPin, PhoneCall, Send } from 'lucide-react'
 import { ease, spring, transition, viewportOnce } from '../../../lib/motion'
+import { submitForm } from '../../../lib/submitForm'
 import { Aurora } from '../../motion/Ambient'
 import { Magnetic } from '../../motion/Interactive'
 import { SplitWords } from '../../motion/Text'
@@ -52,17 +53,20 @@ function Field({ label, error, attempt, children }) {
 
 const input = (hasError) => `relative w-full rounded-xl border bg-white px-4 py-3 text-sm font-medium outline-none transition-colors ${hasError ? 'border-[#ff6b6b]' : 'border-white/20 focus:border-[#ffae13]'}`
 
-// No enquiry API exists yet, so submitting opens the visitor's email client
-// with the details prefilled, addressed to the Gloaro inbox.
+// Submitting saves the enquiry for the GloAro team. If that fails,
+// it falls back to opening the visitor's email client with the details prefilled.
 function EnquiryForm() {
-  const [sent, setSent] = useState(false)
-  const { register, handleSubmit, reset, formState: { errors, submitCount } } = useForm()
+  const [sent, setSent] = useState(null)
+  const { register, handleSubmit, reset, formState: { errors, submitCount, isSubmitting } } = useForm()
 
-  const onSubmit = ({ name, email, message }) => {
-    const subject = encodeURIComponent(`Project enquiry from ${name}`)
-    const body = encodeURIComponent(`${message}\n\n— ${name} (${email})`)
-    window.location.assign(`mailto:${CONTACT_EMAIL}?subject=${subject}&body=${body}`)
-    setSent(true)
+  const onSubmit = async ({ name, email, message }) => {
+    const delivered = await submitForm('Home page enquiry', { Name: name, Email: email, Project: message })
+    if (!delivered) {
+      const subject = encodeURIComponent(`Project enquiry from ${name}`)
+      const body = encodeURIComponent(`${message}\n\n— ${name} (${email})`)
+      window.location.assign(`mailto:${CONTACT_EMAIL}?subject=${subject}&body=${body}`)
+    }
+    setSent(delivered ? 'saved' : 'email')
     reset()
   }
 
@@ -82,11 +86,15 @@ function EnquiryForm() {
             <motion.span initial={{ scale: 0, rotate: -30 }} animate={{ scale: 1, rotate: 0 }} transition={{ ...spring.interactive, delay: 0.1 }}>
               <CheckCircle2 className="h-14 w-14 text-[#4ade80]" />
             </motion.span>
-            <h3 className="mt-4 font-outfit text-2xl font-semibold text-white">Your email is ready to send</h3>
+            <h3 className="mt-4 font-outfit text-2xl font-semibold text-white">
+              {sent === 'saved' ? 'Enquiry sent' : 'Your email is ready to send'}
+            </h3>
             <p className="mt-2 max-w-xs text-sm font-medium text-white/75">
-              We opened your email app with the details filled in. Hit send and we'll reply within one business day.
+              {sent === 'saved'
+                ? "Our team has your details and will reply within one business day."
+                : "We opened your email app with the details filled in. Hit send and we'll reply within one business day."}
             </p>
-            <button type="button" onClick={() => setSent(false)} className="link-wipe mt-6 text-sm font-bold text-[#ffd36e]">
+            <button type="button" onClick={() => setSent(null)} className="link-wipe mt-6 text-sm font-bold text-[#ffd36e]">
               Write another message
             </button>
           </motion.div>
@@ -112,12 +120,13 @@ function EnquiryForm() {
             </Field>
             <motion.button
               type="submit"
+              disabled={isSubmitting}
               whileHover={{ y: -2 }}
               whileTap={{ scale: 0.97 }}
               transition={spring.interactive}
-              className="mt-2 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-white px-6 py-3.5 text-sm font-bold text-[#0d4697]"
+              className="mt-2 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-white px-6 py-3.5 text-sm font-bold text-[#0d4697] disabled:opacity-60"
             >
-              Send enquiry
+              {isSubmitting ? 'Sending…' : 'Send enquiry'}
               <Send className="h-4 w-4" />
             </motion.button>
           </motion.form>

@@ -11,11 +11,8 @@ const WHITE = '#f5f7fc'
 const NAVY = '#14244b'
 const GOLD = '#e8b43a'
 const SCREEN = '#05091a'
-const JUMP_EVERY = 3 // seconds between jumps
-const JUMP_LENGTH = 0.75 // seconds a jump takes
-const JUMP_HEIGHT = 0.7
-const LAUNCH_LENGTH = 0.9 // the bigger jump played on click
-const LAUNCH_HEIGHT = 1.3
+const CYAN = '#67e8f9'
+const WAKE_LENGTH = 0.65 // seconds: eyes flash cyan and the robot spins once as it launches
 
 function useMaterials() {
   return useMemo(
@@ -68,53 +65,51 @@ function Leg({ side, m }) {
   )
 }
 
-function Robot({ hovered, animate, launch, onLand }) {
+function Robot({ hovered, animate, wake }) {
   const m = useMaterials()
   const body = useRef()
   const head = useRef()
   const eyes = useRef()
   const armL = useRef()
   const armR = useRef()
-  // Click-triggered jump: remembers which `launch` tick it started for and when.
-  const launchRef = useRef({ id: 0, start: 0 })
+  // Click-triggered wake-up: remembers which `wake` tick it started for and when.
+  const wakeRef = useRef({ id: 0, start: -10 })
+  const eyeMats = [useRef(), useRef()] // each eye's emissive material, driven per frame
+  const goldEye = useMemo(() => new THREE.Color(GOLD), [])
+  const cyanEye = useMemo(() => new THREE.Color(CYAN), [])
 
   useFrame((state, delta) => {
     if (!animate) return
     const t = state.clock.elapsedTime
-    if (launch !== launchRef.current.id) launchRef.current = { id: launch, start: t }
-    const launching = launch > 0 && t - launchRef.current.start < LAUNCH_LENGTH
-    // Head: gentle look-around, and faces the pointer when it's over the button.
+    if (wake !== wakeRef.current.id) wakeRef.current = { id: wake, start: t }
+    // 0 → 1 → 0 over WAKE_LENGTH: how strongly the wake-up reaction is showing.
+    const w = Math.max(0, Math.min(1, (t - wakeRef.current.start) / WAKE_LENGTH))
+    const waking = wake > 0 && w < 1 ? Math.sin(w * Math.PI) : 0
+
+    // Head: gentle look-around; faces the pointer on hover; looks up when launching.
     const px = hovered ? state.pointer.x : Math.sin(t * 0.7) * 0.3
     const py = hovered ? state.pointer.y : Math.cos(t * 0.9) * 0.15
-    head.current.rotation.y = THREE.MathUtils.damp(head.current.rotation.y, px * 0.45, 4, delta)
-    head.current.rotation.x = THREE.MathUtils.damp(head.current.rotation.x, -py * 0.25, 4, delta)
-    // Blink about every 4 seconds.
+    head.current.rotation.y = THREE.MathUtils.damp(head.current.rotation.y, px * 0.45, 6, delta)
+    head.current.rotation.x = THREE.MathUtils.damp(head.current.rotation.x, -py * 0.25 - waking * 0.35, 6, delta)
+    // Launch spin: one full turn over the flight, easing out.
+    body.current.rotation.y = wake > 0 && w < 1 ? (1 - Math.pow(1 - w, 3)) * Math.PI * 2 : 0
+
+    // Eyes: blink every ~4s; glow brighter on hover; flash cyan while waking.
     const phase = t % 4
     eyes.current.scale.y = phase > 3.75 && phase < 3.95 ? 0.1 : 1
-    // Jump every 3 seconds: crouch, spring up with arms raised, land with a squash.
-    // A click plays the same move bigger, and reports the landing.
-    const jump = launching ? (t - launchRef.current.start) / LAUNCH_LENGTH : (t % JUMP_EVERY) / JUMP_LENGTH
-    const height = launching ? LAUNCH_HEIGHT : JUMP_HEIGHT
-    let y = 0
-    let squash = 1
-    let arms = 0
-    if (jump < 1) {
-      if (jump < 0.18) squash = 1 - Math.sin((jump / 0.18) * Math.PI) * 0.16
-      else {
-        const air = (jump - 0.18) / 0.82
-        y = Math.sin(air * Math.PI) * height
-        arms = Math.sin(air * Math.PI) * 2.4
-        if (launching && air >= 0.97 && !launchRef.current.landed) {
-          launchRef.current.landed = true
-          onLand?.()
-        }
-        squash = air < 0.5 ? 1 + Math.sin(air * Math.PI) * 0.08 : 1 - Math.sin((air - 0.5) * 2 * Math.PI) * 0.1
-      }
+    for (const ref of eyeMats) {
+      const eye = ref.current
+      if (!eye) continue
+      eye.emissiveIntensity = THREE.MathUtils.damp(eye.emissiveIntensity, 1.1 + (hovered ? 0.6 : 0) + waking * 1.8, 10, delta)
+      eye.emissive.copy(goldEye).lerp(cyanEye, waking)
+      eye.color.copy(goldEye).lerp(cyanEye, waking)
     }
-    body.current.position.y = y
-    body.current.scale.set(1 / Math.sqrt(squash), squash, 1 / Math.sqrt(squash))
-    armL.current.rotation.z = THREE.MathUtils.damp(armL.current.rotation.z, -arms, 10, delta)
-    armR.current.rotation.z = THREE.MathUtils.damp(armR.current.rotation.z, arms, 10, delta)
+
+    // Arms sweep back like a rocket as it climbs (the climb itself is CSS on the canvas).
+    armL.current.rotation.z = THREE.MathUtils.damp(armL.current.rotation.z, -waking * 1.2, 8, delta)
+    armR.current.rotation.z = THREE.MathUtils.damp(armR.current.rotation.z, waking * 1.2, 8, delta)
+    armL.current.rotation.x = THREE.MathUtils.damp(armL.current.rotation.x, waking * 0.6, 8, delta)
+    armR.current.rotation.x = THREE.MathUtils.damp(armR.current.rotation.x, waking * 0.6, 8, delta)
   })
 
   return (
@@ -126,12 +121,12 @@ function Robot({ hovered, animate, launch, onLand }) {
         <RoundedBox args={[1.8, 1.22, 0.14]} radius={0.4} smoothness={6} position={[0, 0, 0.64]} material={m.screen} />
         {/* Eyes: gold glow with navy pupils */}
         <group ref={eyes} position={[0, 0.08, 0.72]}>
-          <mesh position={[-0.42, 0, 0]} material={m.goldGlow}>
-            <sphereGeometry args={[0.2, 20, 20]} />
-          </mesh>
-          <mesh position={[0.42, 0, 0]} material={m.goldGlow}>
-            <sphereGeometry args={[0.2, 20, 20]} />
-          </mesh>
+          {[-0.42, 0.42].map((x, i) => (
+            <mesh key={x} position={[x, 0, 0]}>
+              <sphereGeometry args={[0.2, 20, 20]} />
+              <meshStandardMaterial ref={eyeMats[i]} color={GOLD} emissive={GOLD} emissiveIntensity={1.1} roughness={0.3} />
+            </mesh>
+          ))}
           <mesh position={[-0.42, 0.02, 0.19]} material={m.navy}>
             <sphereGeometry args={[0.06, 12, 12]} />
           </mesh>
@@ -203,11 +198,9 @@ function Robot({ hovered, animate, launch, onLand }) {
   )
 }
 
-// `launch` is a counter: each increment plays one big jump, and `onLand` fires
-// the moment that jump touches the ground.
-// `cameraZ` / `offsetY` frame the robot: the floating button uses a tall canvas
-// with the robot standing at the bottom so its head stays in view mid-jump.
-export default function GloaroBot3D({ hovered = false, animate = true, dpr = 1.5, className, launch = 0, onLand, cameraZ = 6, offsetY = -0.25 }) {
+// `wake` is a counter: each increment plays one wake-up reaction (cyan eye flash,
+// head tilt, small lift). `cameraZ` / `offsetY` frame the robot for its container.
+export default function GloaroBot3D({ hovered = false, animate = true, dpr = 1.5, className, wake = 0, cameraZ = 6, offsetY = -0.25 }) {
   return (
     <Canvas
       className={className}
@@ -221,9 +214,10 @@ export default function GloaroBot3D({ hovered = false, animate = true, dpr = 1.5
       <directionalLight position={[3, 5, 6]} intensity={2.4} />
       <directionalLight position={[-4, 1, 3]} intensity={0.8} color={GOLD} />
       <pointLight position={[0, 2.5, 3]} intensity={1.2} color={GOLD} distance={7} />
-      <Float speed={animate ? 2 : 0} rotationIntensity={0} floatIntensity={0.4} floatingRange={[-0.05, 0.05]}>
+      {/* Idle float: ~3.5s cycle, a few pixels of travel, the faintest tilt. */}
+      <Float speed={animate ? 1.8 : 0} rotationIntensity={0.08} floatIntensity={1} floatingRange={[-0.14, 0.14]}>
         <group position={[0, offsetY, 0]}>
-          <Robot hovered={hovered} animate={animate} launch={launch} onLand={onLand} />
+          <Robot hovered={hovered} animate={animate} wake={wake} />
         </group>
       </Float>
     </Canvas>

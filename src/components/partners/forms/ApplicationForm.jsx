@@ -7,6 +7,7 @@ import logo from '../../../assets/logo-transparent.webp'
 import { submitPartnershipApplication } from '../../../api/partnershipApplication'
 import { whatsappLink } from '../../../lib/contact'
 import { trackPartnerEvent } from '../../../lib/partnerAnalytics'
+import { submitForm } from '../../../lib/submitForm'
 import { PARTNERSHIP_API_ENABLED, paths } from '../partnerConfig'
 import { answerFields, fieldId, forms } from './formConfig'
 import { Field } from './FormFields'
@@ -204,6 +205,13 @@ export default function ApplicationForm({ pathKey }) {
     }
     try {
       const result = await submitPartnershipApplication(payload, idempotencyKey.current)
+      submitForm(`${config.type} partner application`, {
+        Reference: result.reference,
+        Name: data.fullName,
+        Phone: `${data.phoneCountryCode || ''} ${data.phone || ''}`,
+        Email: data.email,
+        City: data.city,
+      })
       clearDraft(storageKey)
       setSubmit({ status: 'success', error: '', reference: result.reference })
       trackPartnerEvent('submitted', { path: pathKey })
