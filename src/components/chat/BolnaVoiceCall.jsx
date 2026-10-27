@@ -1,6 +1,6 @@
 import './bolnaVoiceCall.css'
 
-// "Talk to AI Voice" pill above the robot: a plain tel: link that opens the
+// "Talk to AI" pill above the robot: a plain tel: link that opens the
 // device's phone dialer. No SDK, no API call, no WhatsApp.
 const PHONE_HREF = 'tel:+917200537071'
 
@@ -16,11 +16,11 @@ function MicIcon() {
 export default function BolnaVoiceCall() {
   return (
     <div className="gloaro-voice-root">
-      <a className="gloaro-voice-btn" href={PHONE_HREF} aria-label="Talk to AI Voice: call +91 72005 37071">
+      <a className="gloaro-voice-btn" href={PHONE_HREF} aria-label="Talk to AI: call +91 72005 37071">
         <span className="gloaro-voice-icon">
           <MicIcon />
         </span>
-        <span>Talk to AI Voice</span>
+        <span>Talk to AI</span>
       </a>
     </div>
   )
